@@ -3,11 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Opening Day 2026</title>
+  <title>Opening Day 2026 — Go Dodgers!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Bebas+Neue&display=swap');
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Dodger palette ─────────────────────────────────── */
+    :root {
+      --blue-dark:  #001E62;
+      --blue:       #003DA5;
+      --blue-mid:   #0A2E8A;
+      --blue-light: #1040B0;
+      --red:        #EF3E42;
+      --white:      #FFFFFF;
+      --silver:     #C0C8D8;
+      --card-h:     148px;
+      --card-w:     130px;
+    }
 
     body {
       min-height: 100vh;
@@ -15,288 +28,433 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #0a0e17;
+      background: radial-gradient(ellipse at 50% 30%, #002580 0%, #000D3A 55%, #000510 100%);
       font-family: 'Inter', sans-serif;
+      color: var(--white);
       overflow: hidden;
-      color: #fff;
     }
 
-    /* Animated field-green glow at bottom */
-    body::after {
-      content: '';
-      position: fixed;
-      bottom: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 900px;
-      height: 300px;
-      background: radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    /* Stars background */
+    /* Pinstripe overlay — classic Dodgers home uniform */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
-      background-image:
-        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 50% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
-        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
-        radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.2) 0%, transparent 100%),
-        radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.4) 0%, transparent 100%),
-        radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.3) 0%, transparent 100%);
+      background-image: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 28px,
+        rgba(255,255,255,0.025) 28px,
+        rgba(255,255,255,0.025) 29px
+      );
+      pointer-events: none;
+    }
+
+    /* Field glow at bottom */
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -80px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 220px;
+      background: radial-gradient(ellipse, rgba(0,80,30,0.25) 0%, transparent 70%);
       pointer-events: none;
     }
 
     .wrapper {
       position: relative;
-      text-align: center;
-      padding: 2rem;
       z-index: 1;
-    }
-
-    /* Baseball seam arc decoration */
-    .seam {
-      position: fixed;
-      border-radius: 50%;
-      border: 2px solid rgba(220, 38, 38, 0.15);
-      pointer-events: none;
-    }
-    .seam-1 { width: 600px; height: 600px; top: -200px; left: -200px; }
-    .seam-2 { width: 500px; height: 500px; bottom: -200px; right: -200px; }
-
-    .eyebrow {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: #22c55e;
-      margin-bottom: 1rem;
+      text-align: center;
+      padding: 2rem 1.5rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.6rem;
+      gap: 0;
     }
 
-    .eyebrow::before,
-    .eyebrow::after {
-      content: '';
-      height: 1px;
-      width: 40px;
-      background: #22c55e;
-      opacity: 0.5;
+    /* ── Dodgers Logo ───────────────────────────────────── */
+    .logo-wrap {
+      margin-bottom: 1.25rem;
+    }
+    .logo-wrap img {
+      height: 90px;
+      width: auto;
+      filter: drop-shadow(0 4px 24px rgba(0,61,165,0.7));
+    }
+
+    /* ── Heading ────────────────────────────────────────── */
+    .eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--silver);
+      opacity: 0.7;
+      margin-bottom: 0.4rem;
     }
 
     h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(4rem, 14vw, 9rem);
+      font-size: clamp(3.5rem, 12vw, 7.5rem);
       line-height: 0.9;
-      letter-spacing: 0.04em;
-      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      letter-spacing: 0.06em;
+      background: linear-gradient(160deg, #fff 30%, var(--silver) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.15rem;
     }
 
     .subtitle {
-      font-size: clamp(0.9rem, 2vw, 1.1rem);
-      color: #64748b;
+      font-size: 0.85rem;
+      color: var(--silver);
+      opacity: 0.55;
+      letter-spacing: 0.12em;
       font-weight: 300;
-      letter-spacing: 0.08em;
-      margin-bottom: 3.5rem;
+      margin-bottom: 2.5rem;
     }
 
-    /* Countdown grid */
+    /* ── Countdown row ──────────────────────────────────── */
     .countdown {
       display: flex;
-      gap: clamp(1rem, 3vw, 2rem);
-      justify-content: center;
-      margin-bottom: 3rem;
+      align-items: flex-start;
+      gap: clamp(0.6rem, 2.5vw, 1.5rem);
+      margin-bottom: 2.25rem;
     }
 
     .unit {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
-    }
-
-    .unit-value {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3.5rem, 10vw, 7rem);
-      line-height: 1;
-      width: clamp(90px, 18vw, 160px);
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 0.3em 0.2em 0.2em;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-
-    .unit-value::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 50%);
-      pointer-events: none;
-    }
-
-    /* flip line */
-    .unit-value::after {
-      content: '';
-      position: absolute;
-      left: 0; right: 0;
-      top: 50%;
-      height: 1px;
-      background: rgba(0,0,0,0.4);
-    }
-
-    .unit:hover .unit-value {
-      border-color: rgba(34,197,94,0.3);
+      gap: 0.6rem;
     }
 
     .unit-label {
-      font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+      font-size: 0.65rem;
       font-weight: 700;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: #475569;
+      color: var(--silver);
+      opacity: 0.5;
     }
 
-    /* Separator dots */
+    /* Separator */
     .sep {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3rem, 8vw, 5rem);
-      color: rgba(255,255,255,0.15);
+      font-size: calc(var(--card-h) * 0.42);
+      color: rgba(255,255,255,0.2);
       line-height: 1;
-      padding-top: 0.1em;
+      margin-top: calc(var(--card-h) * 0.05);
       align-self: flex-start;
-      margin-top: 0.3em;
+      user-select: none;
     }
 
-    /* Date badge */
+    /* ── Flip Card ──────────────────────────────────────── */
+    .flip-card {
+      position: relative;
+      width: var(--card-w);
+      height: var(--card-h);
+      perspective: 500px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: calc(var(--card-h) * 0.82);
+      line-height: var(--card-h);
+      text-align: center;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+    }
+
+    /* The four card-half layers */
+    .c-top, .c-bot, .f-top, .f-bot {
+      position: absolute;
+      left: 0; right: 0;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+    }
+
+    /* Static top half — upper portion of current number */
+    .c-top {
+      top: 0;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(175deg, var(--blue-light) 0%, var(--blue-mid) 100%);
+      border-bottom: 2px solid rgba(0,0,0,0.45);
+    }
+
+    /* Static bottom half — lower portion of current number */
+    .c-bot {
+      bottom: 0;
+      border-radius: 0 0 10px 10px;
+      background: linear-gradient(175deg, var(--blue-mid) 0%, var(--blue-dark) 100%);
+    }
+
+    /* Shine on top half */
+    .c-top::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* Red divider line between halves */
+    .flip-card::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: calc(50% - 1px);
+      height: 2px;
+      background: var(--red);
+      opacity: 0.7;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Inner number element */
+    .num {
+      position: absolute;
+      left: 0; right: 0;
+      height: var(--card-h);
+      line-height: var(--card-h);
+      color: var(--white);
+      letter-spacing: -0.01em;
+    }
+
+    /* Top halves: anchor to top */
+    .c-top .num, .f-top .num {
+      top: 0;
+    }
+
+    /* Bottom halves: offset up so bottom of number aligns */
+    .c-bot .num, .f-bot .num {
+      top: -100%;
+    }
+
+    /* Animated flip overlays */
+    .f-top {
+      top: 0;
+      border-radius: 10px 10px 0 0;
+      background: linear-gradient(175deg, var(--blue-light) 0%, var(--blue-mid) 100%);
+      transform-origin: bottom center;
+      transform: rotateX(0deg);
+      z-index: 4;
+      display: none;
+    }
+    .f-top::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    .f-bot {
+      bottom: 0;
+      border-radius: 0 0 10px 10px;
+      background: linear-gradient(175deg, var(--blue-mid) 0%, var(--blue-dark) 100%);
+      transform-origin: top center;
+      transform: rotateX(90deg);
+      z-index: 3;
+      display: none;
+    }
+
+    .f-top.go { display: block; animation: flipTop 0.28s cubic-bezier(0.4,0,1,1) forwards; }
+    .f-bot.go { display: block; animation: flipBot 0.28s cubic-bezier(0,0,0.6,1) 0.24s forwards; }
+
+    @keyframes flipTop {
+      0%   { transform: rotateX(0deg);   box-shadow: none; }
+      100% { transform: rotateX(-90deg); box-shadow: 0 6px 12px rgba(0,0,0,0.4); }
+    }
+    @keyframes flipBot {
+      0%   { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
+    }
+
+    /* ── Date badge ─────────────────────────────────────── */
     .date-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.5rem 1.25rem;
+      padding: 0.45rem 1.1rem;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      font-size: 0.85rem;
-      color: #94a3b8;
-      letter-spacing: 0.05em;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      font-size: 0.8rem;
+      color: var(--silver);
+      letter-spacing: 0.06em;
+      opacity: 0.8;
     }
-
-    .date-badge .dot {
+    .dot {
       width: 6px; height: 6px;
-      background: #22c55e;
+      background: var(--red);
       border-radius: 50%;
-      animation: pulse 2s ease infinite;
+      animation: pulse 1.8s ease infinite;
     }
-
     @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-      50%       { opacity: 0.7; transform: scale(0.85); box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+      0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,62,66,0.5); }
+      50%      { opacity: 0.6; box-shadow: 0 0 0 5px rgba(239,62,66,0); }
     }
 
-    /* Finished state */
-    .finished {
+    /* ── Play Ball state ─────────────────────────────────── */
+    .play-ball {
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(3rem, 10vw, 6rem);
-      background: linear-gradient(135deg, #22c55e, #16a34a);
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, #fff, var(--silver));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: pop 0.4s ease;
+      animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
     }
-
     @keyframes pop {
-      0%   { transform: scale(0.8); opacity: 0; }
-      60%  { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
+      0%   { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
     }
 
-    @media (max-width: 500px) {
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 560px) {
+      :root { --card-h: 110px; --card-w: 96px; }
       .sep { display: none; }
-      .countdown { gap: 0.6rem; }
+      .countdown { gap: 0.5rem; }
+      h1 { font-size: 3.2rem; }
     }
   </style>
 </head>
 <body>
+<div class="wrapper">
 
-  <div class="seam seam-1"></div>
-  <div class="seam seam-2"></div>
-
-  <div class="wrapper">
-    <div class="eyebrow">⚾ MLB 2026</div>
-    <h1>Opening Day</h1>
-    <p class="subtitle">March 26, 2026 &nbsp;·&nbsp; Play Ball</p>
-
-    <div class="countdown" id="countdown">
-      <div class="unit">
-        <div class="unit-value" id="days">00</div>
-        <div class="unit-label">Days</div>
-      </div>
-      <div class="sep">:</div>
-      <div class="unit">
-        <div class="unit-value" id="hours">00</div>
-        <div class="unit-label">Hours</div>
-      </div>
-      <div class="sep">:</div>
-      <div class="unit">
-        <div class="unit-value" id="minutes">00</div>
-        <div class="unit-label">Minutes</div>
-      </div>
-      <div class="sep">:</div>
-      <div class="unit">
-        <div class="unit-value" id="seconds">00</div>
-        <div class="unit-label">Seconds</div>
-      </div>
-    </div>
-
-    <div class="date-badge">
-      <span class="dot"></span>
-      Thursday, March 26, 2026
-    </div>
+  <!-- Dodgers Logo -->
+  <div class="logo-wrap">
+    <img
+      src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
+      alt="Los Angeles Dodgers"
+      onerror="this.src='https://www.mlbstatic.com/team-logos/119.svg'"
+    />
   </div>
 
-  <script>
-    const target = new Date('2026-03-26T13:05:00').getTime()
+  <p class="eyebrow">Los Angeles Dodgers · MLB 2026</p>
+  <h1>Opening Day</h1>
+  <p class="subtitle">March 26, 2026 &nbsp;·&nbsp; Play Ball</p>
 
-    const days    = document.getElementById('days')
-    const hours   = document.getElementById('hours')
-    const minutes = document.getElementById('minutes')
-    const seconds = document.getElementById('seconds')
-    const countdown = document.getElementById('countdown')
+  <!-- Flip countdown -->
+  <div class="countdown" id="countdown">
 
-    function pad(n) { return String(n).padStart(2, '0') }
+    <div class="unit">
+      <div class="flip-card" id="fc-days">
+        <div class="c-top"><div class="num">00</div></div>
+        <div class="c-bot"><div class="num">00</div></div>
+        <div class="f-top"><div class="num"></div></div>
+        <div class="f-bot"><div class="num"></div></div>
+      </div>
+      <div class="unit-label">Days</div>
+    </div>
 
-    function tick() {
-      const now  = Date.now()
-      const diff = target - now
+    <div class="sep">:</div>
 
-      if (diff <= 0) {
-        countdown.innerHTML = '<div class="finished">⚾ Play Ball!</div>'
-        return
-      }
+    <div class="unit">
+      <div class="flip-card" id="fc-hours">
+        <div class="c-top"><div class="num">00</div></div>
+        <div class="c-bot"><div class="num">00</div></div>
+        <div class="f-top"><div class="num"></div></div>
+        <div class="f-bot"><div class="num"></div></div>
+      </div>
+      <div class="unit-label">Hours</div>
+    </div>
 
-      const d = Math.floor(diff / 86400000)
-      const h = Math.floor((diff % 86400000) / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
+    <div class="sep">:</div>
 
-      days.textContent    = pad(d)
-      hours.textContent   = pad(h)
-      minutes.textContent = pad(m)
-      seconds.textContent = pad(s)
+    <div class="unit">
+      <div class="flip-card" id="fc-minutes">
+        <div class="c-top"><div class="num">00</div></div>
+        <div class="c-bot"><div class="num">00</div></div>
+        <div class="f-top"><div class="num"></div></div>
+        <div class="f-bot"><div class="num"></div></div>
+      </div>
+      <div class="unit-label">Minutes</div>
+    </div>
+
+    <div class="sep">:</div>
+
+    <div class="unit">
+      <div class="flip-card" id="fc-seconds">
+        <div class="c-top"><div class="num">00</div></div>
+        <div class="c-bot"><div class="num">00</div></div>
+        <div class="f-top"><div class="num"></div></div>
+        <div class="f-bot"><div class="num"></div></div>
+      </div>
+      <div class="unit-label">Seconds</div>
+    </div>
+
+  </div><!-- /countdown -->
+
+  <div class="date-badge">
+    <span class="dot"></span>
+    Thursday, March 26, 2026
+  </div>
+
+</div><!-- /wrapper -->
+
+<script>
+  const TARGET = new Date('2026-03-26T13:05:00').getTime()
+
+  // Cache card elements
+  const cards = {
+    days:    document.getElementById('fc-days'),
+    hours:   document.getElementById('fc-hours'),
+    minutes: document.getElementById('fc-minutes'),
+    seconds: document.getElementById('fc-seconds'),
+  }
+
+  function pad(n) { return String(n).padStart(2, '0') }
+
+  function flip(card, newVal) {
+    const oldVal = card.dataset.val ?? '00'
+    if (oldVal === newVal) return
+    card.dataset.val = newVal
+
+    const cTop = card.querySelector('.c-top .num')
+    const cBot = card.querySelector('.c-bot .num')
+    const fTop = card.querySelector('.f-top')
+    const fBot = card.querySelector('.f-bot')
+    const fTopNum = fTop.querySelector('.num')
+    const fBotNum = fBot.querySelector('.num')
+
+    // Flip overlays: old value flips away, new value flips in
+    fTopNum.textContent = oldVal
+    fBotNum.textContent = newVal
+
+    // Reset animations
+    fTop.classList.remove('go')
+    fBot.classList.remove('go')
+    void fTop.offsetWidth // reflow
+
+    fTop.classList.add('go')
+    fBot.classList.add('go')
+
+    // Update static display immediately to new value
+    cTop.textContent = newVal
+    cBot.textContent = newVal
+  }
+
+  function tick() {
+    const diff = TARGET - Date.now()
+
+    if (diff <= 0) {
+      document.getElementById('countdown').innerHTML =
+        '<div class="play-ball">⚾ Play Ball!</div>'
+      return
     }
 
-    tick()
-    setInterval(tick, 1000)
-  </script>
+    const d = Math.floor(diff / 86400000)
+    const h = Math.floor((diff % 86400000) / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    const s = Math.floor((diff % 60000) / 1000)
+
+    flip(cards.days,    pad(d))
+    flip(cards.hours,   pad(h))
+    flip(cards.minutes, pad(m))
+    flip(cards.seconds, pad(s))
+  }
+
+  tick()
+  setInterval(tick, 1000)
+</script>
 </body>
 </html>
