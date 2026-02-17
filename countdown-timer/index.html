@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opening Day 2026</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Bebas+Neue&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0e17;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    /* Animated field-green glow at bottom */
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(34,197,94,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Stars background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 15%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 85%, rgba(255,255,255,0.3) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      position: relative;
+      text-align: center;
+      padding: 2rem;
+      z-index: 1;
+    }
+
+    /* Baseball seam arc decoration */
+    .seam {
+      position: fixed;
+      border-radius: 50%;
+      border: 2px solid rgba(220, 38, 38, 0.15);
+      pointer-events: none;
+    }
+    .seam-1 { width: 600px; height: 600px; top: -200px; left: -200px; }
+    .seam-2 { width: 500px; height: 500px; bottom: -200px; right: -200px; }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #22c55e;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .eyebrow::before,
+    .eyebrow::after {
+      content: '';
+      height: 1px;
+      width: 40px;
+      background: #22c55e;
+      opacity: 0.5;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 14vw, 9rem);
+      line-height: 0.9;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: #64748b;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      margin-bottom: 3.5rem;
+    }
+
+    /* Countdown grid */
+    .countdown {
+      display: flex;
+      gap: clamp(1rem, 3vw, 2rem);
+      justify-content: center;
+      margin-bottom: 3rem;
+    }
+
+    .unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .unit-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      line-height: 1;
+      width: clamp(90px, 18vw, 160px);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 0.3em 0.2em 0.2em;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .unit-value::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* flip line */
+    .unit-value::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      top: 50%;
+      height: 1px;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .unit:hover .unit-value {
+      border-color: rgba(34,197,94,0.3);
+    }
+
+    .unit-label {
+      font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #475569;
+    }
+
+    /* Separator dots */
+    .sep {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 8vw, 5rem);
+      color: rgba(255,255,255,0.15);
+      line-height: 1;
+      padding-top: 0.1em;
+      align-self: flex-start;
+      margin-top: 0.3em;
+    }
+
+    /* Date badge */
+    .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      font-size: 0.85rem;
+      color: #94a3b8;
+      letter-spacing: 0.05em;
+    }
+
+    .date-badge .dot {
+      width: 6px; height: 6px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+      50%       { opacity: 0.7; transform: scale(0.85); box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+
+    /* Finished state */
+    .finished {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 10vw, 6rem);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pop 0.4s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(0.8); opacity: 0; }
+      60%  { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 500px) {
+      .sep { display: none; }
+      .countdown { gap: 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="seam seam-1"></div>
+  <div class="seam seam-2"></div>
+
+  <div class="wrapper">
+    <div class="eyebrow">⚾ MLB 2026</div>
+    <h1>Opening Day</h1>
+    <p class="subtitle">March 26, 2026 &nbsp;·&nbsp; Play Ball</p>
+
+    <div class="countdown" id="countdown">
+      <div class="unit">
+        <div class="unit-value" id="days">00</div>
+        <div class="unit-label">Days</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-value" id="hours">00</div>
+        <div class="unit-label">Hours</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-value" id="minutes">00</div>
+        <div class="unit-label">Minutes</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="unit">
+        <div class="unit-value" id="seconds">00</div>
+        <div class="unit-label">Seconds</div>
+      </div>
+    </div>
+
+    <div class="date-badge">
+      <span class="dot"></span>
+      Thursday, March 26, 2026
+    </div>
+  </div>
+
+  <script>
+    const target = new Date('2026-03-26T13:05:00').getTime()
+
+    const days    = document.getElementById('days')
+    const hours   = document.getElementById('hours')
+    const minutes = document.getElementById('minutes')
+    const seconds = document.getElementById('seconds')
+    const countdown = document.getElementById('countdown')
+
+    function pad(n) { return String(n).padStart(2, '0') }
+
+    function tick() {
+      const now  = Date.now()
+      const diff = target - now
+
+      if (diff <= 0) {
+        countdown.innerHTML = '<div class="finished">⚾ Play Ball!</div>'
+        return
+      }
+
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+
+      days.textContent    = pad(d)
+      hours.textContent   = pad(h)
+      minutes.textContent = pad(m)
+      seconds.textContent = pad(s)
+    }
+
+    tick()
+    setInterval(tick, 1000)
+  </script>
+</body>
+</html>
