@@ -86,16 +86,40 @@
       transition: color 0.2s;
     }
     .bar-link:hover { color: rgba(255,255,255,0.85); }
+    .na-logo {
+      position: absolute;
+      left: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.65);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+      flex-shrink: 0;
+    }
+    .na-logo:hover {
+      background: rgba(255,255,255,0.12);
+      border-color: #fff;
+    }
     @media (max-width: 480px) {
       .bar-label { display: none; }
       .bar-link  { display: none; }
+      .na-logo   { left: 0.75rem; }
     }
   </style>
 </head>
 <body>
 
   <!-- Opening Day countdown bar -->
-  <div class="opening-day-bar">
+  <div class="opening-day-bar" style="position:relative;">
+    <a href="/" class="na-logo">NA</a>
     <img class="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       onerror="this.src='https://www.mlbstatic.com/team-logos/119.svg'"
