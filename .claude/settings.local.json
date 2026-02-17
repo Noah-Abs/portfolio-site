@@ -3,7 +3,10 @@
     "allow": [
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "WebFetch(domain:noahabrahani.com)"
     ]
   }
 }
