@@ -324,20 +324,12 @@
       justify-content: center;
       width: 46px;
       height: 46px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.55);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.05rem;
-      letter-spacing: 0.06em;
-      color: #fff;
       text-decoration: none;
-      transition: background 0.2s, border-color 0.2s;
       flex-shrink: 0;
+      opacity: 0.75;
+      transition: opacity 0.2s;
     }
-    .na-logo:hover {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.9);
-    }
+    .na-logo:hover { opacity: 1; }
     .home-link {
       font-family: 'Inter', sans-serif;
       font-size: 0.72rem;
@@ -361,7 +353,13 @@
 </head>
 <body>
 <nav class="top-nav">
-  <a href="/" class="na-logo">NA</a>
+  <a href="/" class="na-logo" title="Home">
+    <svg viewBox="0 0 50 50" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="25" cy="25" r="23" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+      <text x="25" y="36" font-family="Bebas Neue, sans-serif" font-size="30"
+        fill="white" text-anchor="middle" textLength="38" lengthAdjust="spacingAndGlyphs">NA</text>
+    </svg>
+  </a>
   <a href="/" class="home-link">← Home</a>
 </nav>
 
