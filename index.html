@@ -89,13 +89,11 @@
     .na-logo {
       position: absolute;
       left: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 46px;
-      height: 46px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      color: #fff;
       text-decoration: none;
-      flex-shrink: 0;
       opacity: 0.8;
       transition: opacity 0.2s;
     }
@@ -111,19 +109,7 @@
 
   <!-- Opening Day countdown bar -->
   <div class="opening-day-bar" style="position:relative;">
-    <a href="/" class="na-logo" title="Home">
-      <svg viewBox="0 0 50 50" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <clipPath id="na-clip-home">
-            <circle cx="25" cy="25" r="24"/>
-          </clipPath>
-        </defs>
-        <circle cx="25" cy="25" r="24" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
-        <text x="25" y="43" font-family="Bebas Neue, sans-serif" font-size="48"
-          fill="white" text-anchor="middle" textLength="47" lengthAdjust="spacingAndGlyphs"
-          clip-path="url(#na-clip-home)">NA</text>
-      </svg>
-    </a>
+    <a href="/" class="na-logo" title="Home">NA</a>
     <img class="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       onerror="this.src='https://www.mlbstatic.com/team-logos/119.svg'"
