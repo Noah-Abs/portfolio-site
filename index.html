@@ -113,9 +113,15 @@
   <div class="opening-day-bar" style="position:relative;">
     <a href="/" class="na-logo" title="Home">
       <svg viewBox="0 0 50 50" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="25" cy="25" r="23" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
-        <text x="25" y="36" font-family="Bebas Neue, sans-serif" font-size="30"
-          fill="white" text-anchor="middle" textLength="38" lengthAdjust="spacingAndGlyphs">NA</text>
+        <defs>
+          <clipPath id="na-clip-home">
+            <circle cx="25" cy="25" r="24"/>
+          </clipPath>
+        </defs>
+        <circle cx="25" cy="25" r="24" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.65)" stroke-width="1.5"/>
+        <text x="25" y="43" font-family="Bebas Neue, sans-serif" font-size="48"
+          fill="white" text-anchor="middle" textLength="47" lengthAdjust="spacingAndGlyphs"
+          clip-path="url(#na-clip-home)">NA</text>
       </svg>
     </a>
     <img class="bar-logo"

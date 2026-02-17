@@ -355,9 +355,15 @@
 <nav class="top-nav">
   <a href="/" class="na-logo" title="Home">
     <svg viewBox="0 0 50 50" width="46" height="46" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="25" cy="25" r="23" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
-      <text x="25" y="36" font-family="Bebas Neue, sans-serif" font-size="30"
-        fill="white" text-anchor="middle" textLength="38" lengthAdjust="spacingAndGlyphs">NA</text>
+      <defs>
+        <clipPath id="na-clip-cd">
+          <circle cx="25" cy="25" r="24"/>
+        </clipPath>
+      </defs>
+      <circle cx="25" cy="25" r="24" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>
+      <text x="25" y="43" font-family="Bebas Neue, sans-serif" font-size="48"
+        fill="white" text-anchor="middle" textLength="47" lengthAdjust="spacingAndGlyphs"
+        clip-path="url(#na-clip-cd)">NA</text>
     </svg>
   </a>
   <a href="/" class="home-link">← Home</a>
