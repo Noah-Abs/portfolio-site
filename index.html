@@ -3,11 +3,139 @@
 <head>
   <title>My Portfolio</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    .opening-day-bar {
+      width: 100%;
+      background: linear-gradient(90deg, #001E62 0%, #003DA5 50%, #001E62 100%);
+      border-bottom: 2px solid #EF3E42;
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      font-family: 'Inter', sans-serif;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .bar-logo {
+      height: 28px;
+      width: auto;
+      filter: drop-shadow(0 0 6px rgba(0,61,165,0.8));
+    }
+    .bar-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .bar-countdown {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+    .bar-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+    }
+    .bar-val {
+      font-size: 1.3rem;
+      min-width: 2ch;
+      text-align: center;
+    }
+    .bar-lbl {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.45rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-top: 1px;
+    }
+    .bar-sep { color: rgba(255,255,255,0.3); font-size: 1.1rem; margin-bottom: 6px; }
+    .bar-dot {
+      width: 6px; height: 6px;
+      background: #EF3E42;
+      border-radius: 50%;
+      animation: bardot 1.8s ease infinite;
+      flex-shrink: 0;
+    }
+    @keyframes bardot {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.3; }
+    }
+    .bar-link {
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: color 0.2s;
+    }
+    .bar-link:hover { color: rgba(255,255,255,0.85); }
+    @media (max-width: 480px) {
+      .bar-label { display: none; }
+      .bar-link  { display: none; }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Opening Day countdown bar -->
+  <div class="opening-day-bar">
+    <img class="bar-logo"
+      src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
+      onerror="this.src='https://www.mlbstatic.com/team-logos/119.svg'"
+      alt="Dodgers" />
+    <span class="bar-label">Opening Day 2026</span>
+    <span class="bar-dot"></span>
+    <div class="bar-countdown" id="bar-countdown">
+      <div class="bar-unit"><span class="bar-val" id="b-days">--</span><span class="bar-lbl">Days</span></div>
+      <span class="bar-sep">:</span>
+      <div class="bar-unit"><span class="bar-val" id="b-hours">--</span><span class="bar-lbl">Hrs</span></div>
+      <span class="bar-sep">:</span>
+      <div class="bar-unit"><span class="bar-val" id="b-mins">--</span><span class="bar-lbl">Min</span></div>
+      <span class="bar-sep">:</span>
+      <div class="bar-unit"><span class="bar-val" id="b-secs">--</span><span class="bar-lbl">Sec</span></div>
+    </div>
+    <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
+  </div>
+
   <h1>Hi, I'm Noah.</h1>
   <p>Welcome to my website!</p>
-  <p><a href="/countdown-timer">⚾ Opening Day 2026 Countdown</a></p>
+
+  <script>
+    const BAR_TARGET = new Date('2026-03-26T13:05:00').getTime()
+    const bDays = document.getElementById('b-days')
+    const bHours = document.getElementById('b-hours')
+    const bMins  = document.getElementById('b-mins')
+    const bSecs  = document.getElementById('b-secs')
+    function pad(n) { return String(n).padStart(2,'0') }
+    function barTick() {
+      const diff = BAR_TARGET - Date.now()
+      if (diff <= 0) {
+        document.getElementById('bar-countdown').textContent = '⚾ Play Ball!'
+        return
+      }
+      bDays.textContent  = pad(Math.floor(diff / 86400000))
+      bHours.textContent = pad(Math.floor((diff % 86400000) / 3600000))
+      bMins.textContent  = pad(Math.floor((diff % 3600000) / 60000))
+      bSecs.textContent  = pad(Math.floor((diff % 60000) / 1000))
+    }
+    barTick()
+    setInterval(barTick, 1000)
+  </script>
   <script src="script.js"></script>
 </body>
-</html> 
+</html>
