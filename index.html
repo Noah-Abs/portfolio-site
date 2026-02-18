@@ -1442,6 +1442,350 @@
       .stat-val   { font-size: 1.2rem; }
       .p-name     { white-space: normal; }
     }
+
+    /* ── Sidebar Nav Tabs ─────────────────────────────── */
+    .sb-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+    .sb-tab {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.52rem 0.75rem;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.42);
+      letter-spacing: 0.02em;
+      text-align: left;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .sb-tab:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.75);
+    }
+    .sb-tab.active {
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+    }
+    .sb-tab-icon {
+      font-size: 0.95rem;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .sb-live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ff4444;
+      margin-left: auto;
+      flex-shrink: 0;
+      animation: livepulse 1.4s ease-in-out infinite;
+    }
+
+    /* ── View sections ────────────────────────────────── */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* ── Full Live Game View ──────────────────────────── */
+    .live-full {
+      min-height: calc(100dvh - 90px);
+      padding: 2rem 2.5rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      position: relative;
+      z-index: 1;
+    }
+    .lf-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .lf-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.1em;
+      color: #fff;
+    }
+    .lf-status {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,80,80,0.9);
+    }
+
+    /* Scoreboard */
+    .lf-scoreboard {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .lf-sb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    .lf-sb-table th {
+      font-size: 0.62rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .lf-sb-table th:first-child { text-align: left; padding-left: 1rem; min-width: 90px; }
+    .lf-sb-table td {
+      text-align: center;
+      padding: 0.55rem 0.5rem;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.7);
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .lf-sb-table td:last-child { border-right: none; }
+    .lf-sb-table td:first-child {
+      text-align: left;
+      padding-left: 1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+    }
+    .lf-sb-table tr:last-child td { border-bottom: none; }
+    .lf-sb-table tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .lf-sb-table td.lf-cur-inn {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+      font-weight: 700;
+    }
+    .lf-sb-table .lf-totals td {
+      border-top: 2px solid rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1.05rem;
+    }
+    .lf-sb-team {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .lf-sb-logo { height: 22px; width: auto; }
+
+    /* Body layout: at-bat + play log side by side */
+    .lf-body {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .lf-body { grid-template-columns: 1fr; }
+      .live-full { padding: 1.25rem 1.25rem 3rem; }
+    }
+
+    /* At-bat panel */
+    .lf-at-bat {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1.1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .lf-at-bat-header {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .lf-matchup {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .lf-matchup-row {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .lf-role {
+      font-size: 0.44rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      padding: 0.12rem 0.3rem;
+      flex-shrink: 0;
+    }
+    .lf-player-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Zone + count row */
+    .lf-zone-count {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .lf-zone-wrap {
+      flex-shrink: 0;
+    }
+    .lf-zone-svg { display: block; }
+
+    /* Count dots in at-bat panel */
+    .lf-count-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding-top: 4px;
+    }
+    .lf-count-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .lf-count-lbl {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+      width: 12px;
+    }
+    .lf-count-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent;
+    }
+    .lf-count-dot.ball   { background: rgba(100,200,100,0.85); border-color: rgba(100,200,100,1); }
+    .lf-count-dot.strike { background: rgba(230,170,40,0.85);  border-color: rgba(230,170,40,1); }
+    .lf-count-dot.out    { background: rgba(220,60,40,0.85);   border-color: rgba(220,60,40,1); }
+
+    /* Pitch log */
+    .lf-pitch-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .lf-pitch-log-label {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 0.4rem;
+    }
+    .lf-pitch-row {
+      display: grid;
+      grid-template-columns: 20px 48px 1fr auto;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.72rem;
+    }
+    .lf-pitch-row:last-child { border-bottom: none; }
+    .lf-pitch-num { color: rgba(255,255,255,0.25); font-size: 0.62rem; }
+    .lf-pitch-speed { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; color: #fff; }
+    .lf-pitch-type { color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lf-pitch-result { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.1rem 0.35rem; border-radius: 3px; }
+    .lf-pitch-result.ball   { color: rgba(100,200,100,0.9); background: rgba(100,200,100,0.12); }
+    .lf-pitch-result.strike { color: rgba(230,170,40,0.9);  background: rgba(230,170,40,0.12); }
+    .lf-pitch-result.foul   { color: rgba(255,200,80,0.9);  background: rgba(255,200,80,0.10); }
+    .lf-pitch-result.inplay { color: rgba(100,160,255,0.9); background: rgba(100,160,255,0.12); }
+
+    /* Play-by-play log */
+    .lf-play-log {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .lf-play-log-header {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      padding: 0.75rem 1rem 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .lf-play-log-scroll {
+      max-height: 420px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    .lf-play-log-scroll::-webkit-scrollbar { width: 4px; }
+    .lf-play-log-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+    .lf-pp-row {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 0.75rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      align-items: flex-start;
+    }
+    .lf-pp-row:last-child { border-bottom: none; }
+    .lf-pp-inn {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      line-height: 1.2;
+      padding-top: 1px;
+    }
+    .lf-pp-event {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 0.2rem;
+    }
+    .lf-pp-desc {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.42);
+      line-height: 1.5;
+    }
+    .lf-empty {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.15);
+    }
   </style>
 </head>
 <body data-team="dodgers">
@@ -1470,6 +1814,22 @@
 
   <!-- Fixed left sidebar -->
   <div class="fixed-sidebar" id="fixed-sidebar">
+    <!-- Vertical nav tabs -->
+    <nav class="sb-nav" id="sb-nav">
+      <button class="sb-tab active" id="sb-tab-home" onclick="switchView('home')">
+        <span class="sb-tab-icon">&#8962;</span>Home
+      </button>
+      <button class="sb-tab" id="sb-tab-live" onclick="switchView('live')">
+        <span class="sb-tab-icon">&#128247;</span>Live Game
+        <span class="sb-live-dot" id="sb-live-dot" style="display:none"></span>
+      </button>
+      <button class="sb-tab" id="sb-tab-schedule" onclick="togglePanel(); switchSideTab('schedule')">
+        <span class="sb-tab-icon">&#128197;</span>Schedule
+      </button>
+      <button class="sb-tab" id="sb-tab-roster" onclick="togglePanel(); switchSideTab('roster')">
+        <span class="sb-tab-icon">&#128100;</span>Roster
+      </button>
+    </nav>
     <div class="dash-label">
       <span class="stats-season">2025 Season</span>
       <span class="stats-divider">·</span>
@@ -1528,6 +1888,8 @@
   <!-- Main scrollable content -->
   <div class="main-content">
 
+  <!-- Home view -->
+  <div class="view-section active" id="view-home">
   <!-- Hero countdown section -->
   <section class="hero-section">
     <img class="hero-logo" id="hero-logo"
@@ -1551,6 +1913,14 @@
     </div>
     <div class="hero-scroll">Scroll ↓</div>
   </section>
+  </div><!-- /view-home -->
+
+  <!-- Live game full view -->
+  <div class="view-section" id="view-live">
+    <div class="live-full" id="live-full-view">
+      <div class="lf-empty">No live game data available.</div>
+    </div>
+  </div><!-- /view-live -->
 
   </div><!-- /main-content -->
 
@@ -2188,9 +2558,29 @@
       } catch (e) { console.warn('Last game fetch failed', e) }
     }
 
+    /* ── View switching ─────────────────────────────────── */
+    let _currentView = 'home'
+
+    function switchView(view) {
+      _currentView = view
+
+      // Update tab active states
+      document.querySelectorAll('.sb-tab[id^="sb-tab-"]').forEach(btn => btn.classList.remove('active'))
+      const activeBtn = document.getElementById(`sb-tab-${view}`)
+      if (activeBtn) activeBtn.classList.add('active')
+
+      // Show/hide view sections
+      document.getElementById('view-home').classList.toggle('active', view === 'home')
+      document.getElementById('view-live').classList.toggle('active', view === 'live')
+
+      // If switching to live, render if data is available
+      if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
+    }
+
     /* ── Live Game Tracker ───────────────────────────────── */
     let _liveGamePk  = null
     let _liveTimer   = null
+    let _lastLiveData = null
     const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 
     async function startLiveTracker() {
@@ -2219,6 +2609,7 @@
     }
 
     function renderLiveGame(data) {
+      _lastLiveData = data
       const card = document.getElementById('live-game-card')
       if (!card) return
 
@@ -2228,6 +2619,10 @@
       const home  = data.gameData.teams.home.team
       const isLive  = gs.abstractGameState === 'Live'
       const isFinal = gs.abstractGameState === 'Final'
+
+      // Show/hide pulsing dot on Live Game tab
+      const liveDot = document.getElementById('sb-live-dot')
+      if (liveDot) liveDot.style.display = isLive ? 'block' : 'none'
 
       const awayRuns = ls.teams?.away?.runs ?? 0
       const homeRuns = ls.teams?.home?.runs ?? 0
@@ -2299,6 +2694,259 @@
       `
 
       if (isFinal && _liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
+
+      // Also update the full live view if it's active
+      if (_currentView === 'live') renderFullLiveGame(data)
+    }
+
+    /* ── Full Live Game View Renderer ────────────────────── */
+    function renderFullLiveGame(data) {
+      const el = document.getElementById('live-full-view')
+      if (!el) return
+
+      const gs      = data.gameData.status
+      const ls      = data.liveData.linescore
+      const away    = data.gameData.teams.away.team
+      const home    = data.gameData.teams.home.team
+      const isLive  = gs.abstractGameState === 'Live'
+      const isFinal = gs.abstractGameState === 'Final'
+
+      if (!isLive && !isFinal) {
+        el.innerHTML = '<div class="lf-empty">No live game data available.</div>'
+        return
+      }
+
+      const innings       = ls.innings ?? []
+      const curInning     = ls.currentInning ?? 0
+      const isTop         = ls.isTopInning ?? true
+      const awayTotals    = ls.teams?.away ?? {}
+      const homeTotals    = ls.teams?.home ?? {}
+
+      const balls   = ls.balls   ?? 0
+      const strikes = ls.strikes ?? 0
+      const outs    = ls.outs    ?? 0
+
+      const cp       = data.liveData.plays?.currentPlay
+      const batter   = cp?.matchup?.batter?.fullName  ?? '—'
+      const pitcher  = cp?.matchup?.pitcher?.fullName ?? '—'
+      const pitchEvts = (cp?.playEvents ?? []).filter(e => e.isPitch)
+      const allPlays  = (data.liveData.plays?.allPlays ?? []).slice().reverse()
+
+      // -- Scoreboard HTML --
+      const maxInn = Math.max(9, innings.length)
+      const innHeaders = Array.from({length: maxInn}, (_, i) => {
+        const n = i + 1
+        const isCur = isLive && n === curInning
+        return `<th${isCur ? ' class="lf-cur-inn"' : ''}>${n}</th>`
+      }).join('')
+
+      function innRow(side) {
+        return Array.from({length: maxInn}, (_, i) => {
+          const n = i + 1
+          const inn = innings.find(x => x.num === n)
+          const val = inn ? (inn[side]?.runs ?? '') : ''
+          const isCur = isLive && n === curInning
+          return `<td${isCur ? ' class="lf-cur-inn"' : ''}>${val !== '' ? val : (n <= (innings.length || 0) ? '0' : '')}</td>`
+        }).join('')
+      }
+
+      const inningStr = isFinal ? 'FINAL' : `${isTop ? '▲' : '▼'} ${curInning}`
+
+      const scoreboardHtml = `
+        <div class="lf-scoreboard">
+          <table class="lf-sb-table">
+            <thead>
+              <tr>
+                <th>Team</th>
+                ${innHeaders}
+                <th>R</th><th>H</th><th>E</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}"><span>${away.abbreviation}</span></div></td>
+                ${innRow('away')}
+                <td><strong>${awayTotals.runs ?? 0}</strong></td>
+                <td>${awayTotals.hits ?? 0}</td>
+                <td>${awayTotals.errors ?? 0}</td>
+              </tr>
+              <tr>
+                <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}"><span>${home.abbreviation}</span></div></td>
+                ${innRow('home')}
+                <td><strong>${homeTotals.runs ?? 0}</strong></td>
+                <td>${homeTotals.hits ?? 0}</td>
+                <td>${homeTotals.errors ?? 0}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>`
+
+      // -- Strike zone SVG --
+      const SVG_W = 180, SVG_H = 220
+      const mapX = px => ((px + 1.5) / 3.0) * SVG_W
+      const mapY = pz => SVG_H - ((pz - 0.5) / 4.5) * SVG_H
+
+      // Determine zone bounds from first pitch or use defaults
+      let szTop = 3.5, szBot = 1.5
+      if (pitchEvts.length > 0) {
+        const szT = pitchEvts[0].pitchData?.sz_top
+        const szB = pitchEvts[0].pitchData?.sz_bot
+        if (szT) szTop = parseFloat(szT)
+        if (szB) szBot = parseFloat(szB)
+      }
+
+      const zx1 = mapX(-0.708), zx2 = mapX(0.708)
+      const zy1 = mapY(szTop),  zy2 = mapY(szBot)
+      const zw  = zx2 - zx1, zh = zy2 - zy1
+      const thirdW = zw / 3, thirdH = zh / 3
+
+      // Home plate polygon (bottom center)
+      const plateX = SVG_W / 2
+      const plateY = SVG_H - 8
+      const platePts = `${plateX},${plateY - 10} ${plateX + 9},${plateY - 5} ${plateX + 9},${plateY} ${plateX - 9},${plateY} ${plateX - 9},${plateY - 5}`
+
+      // Pitch color map
+      const pitchColor = code => {
+        switch (code) {
+          case 'B': return '#4caf50'       // ball - green
+          case 'C': return '#f44336'       // called strike - red
+          case 'S': return '#ff9800'       // swinging strike - orange
+          case 'F': return '#ffeb3b'       // foul - yellow
+          case 'X': return '#2196f3'       // in play - blue
+          default:  return '#9e9e9e'
+        }
+      }
+      const pitchResultLabel = code => {
+        switch(code) {
+          case 'B': return 'Ball'
+          case 'C': return 'Called Strike'
+          case 'S': return 'Swinging Strike'
+          case 'F': return 'Foul'
+          case 'X': return 'In Play'
+          default: return code
+        }
+      }
+      const pitchResultClass = code => {
+        if (code === 'B') return 'ball'
+        if (code === 'C' || code === 'S') return 'strike'
+        if (code === 'F') return 'foul'
+        if (code === 'X') return 'inplay'
+        return ''
+      }
+
+      const pitchDots = pitchEvts.map((e, i) => {
+        const px = e.pitchData?.coordinates?.pX
+        const pz = e.pitchData?.coordinates?.pZ
+        if (px == null || pz == null) return ''
+        const cx = mapX(px), cy = mapY(pz)
+        const code = e.details?.code ?? ''
+        const color = pitchColor(code)
+        const isLast = i === pitchEvts.length - 1
+        const r = isLast ? 8 : 5
+        const num = i + 1
+        return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${color}" fill-opacity="0.82" stroke="#fff" stroke-width="${isLast ? 1.5 : 0.8}" stroke-opacity="0.6"/>
+${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="middle" font-size="8" font-family="Inter,sans-serif" font-weight="700" fill="#fff" stroke="none">${num}</text>` : ''}`
+      }).join('\n')
+
+      const zoneSvg = `<svg class="lf-zone-svg" width="${SVG_W}" height="${SVG_H}" xmlns="http://www.w3.org/2000/svg">
+  <!-- background -->
+  <rect width="${SVG_W}" height="${SVG_H}" fill="none"/>
+  <!-- zone box -->
+  <rect x="${zx1.toFixed(1)}" y="${zy1.toFixed(1)}" width="${zw.toFixed(1)}" height="${zh.toFixed(1)}" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+  <!-- 3x3 grid lines -->
+  <line x1="${(zx1 + thirdW).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <line x1="${(zx1 + thirdW * 2).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW * 2).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH * 2).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH * 2).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <!-- home plate -->
+  <polygon points="${platePts}" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
+  <!-- pitch dots -->
+  ${pitchDots}
+</svg>`
+
+      // -- Count dots --
+      function liveCountDots(count, max, cls) {
+        return Array.from({length: max}, (_, i) =>
+          `<span class="lf-count-dot ${i < count ? cls : ''}"></span>`).join('')
+      }
+
+      const countHtml = `
+        <div class="lf-count-col">
+          <div class="lf-count-row"><span class="lf-count-lbl">B</span>${liveCountDots(balls,   3, 'ball')}</div>
+          <div class="lf-count-row"><span class="lf-count-lbl">S</span>${liveCountDots(strikes, 2, 'strike')}</div>
+          <div class="lf-count-row"><span class="lf-count-lbl">O</span>${liveCountDots(outs,    2, 'out')}</div>
+        </div>`
+
+      // -- Pitch log rows --
+      const pitchLogRows = pitchEvts.length === 0
+        ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.2);padding:0.5rem 0;">No pitches yet</div>'
+        : [...pitchEvts].reverse().map((e, ri) => {
+            const idx = pitchEvts.length - ri
+            const speed = e.pitchData?.startSpeed ? `${Math.round(e.pitchData.startSpeed)}` : '—'
+            const type  = e.details?.type?.description ?? e.details?.description ?? '—'
+            const code  = e.details?.code ?? ''
+            const resCls = pitchResultClass(code)
+            const resLbl = pitchResultLabel(code)
+            return `<div class="lf-pitch-row">
+              <span class="lf-pitch-num">${idx}</span>
+              <span class="lf-pitch-speed">${speed}<small style="font-size:0.55rem;font-family:Inter,sans-serif;color:rgba(255,255,255,0.4)"> mph</small></span>
+              <span class="lf-pitch-type">${type}</span>
+              <span class="lf-pitch-result ${resCls}">${resLbl}</span>
+            </div>`
+          }).join('')
+
+      // -- Play-by-play rows --
+      const ppRows = allPlays.length === 0
+        ? '<div class="lf-empty">No plays yet</div>'
+        : allPlays.map(play => {
+            const inn = play.about?.inning ?? ''
+            const top = play.about?.isTopInning ?? true
+            const innInd = inn ? `${top ? '▲' : '▼'}${inn}` : '—'
+            const event = play.result?.event ?? ''
+            const desc  = play.result?.description ?? ''
+            return `<div class="lf-pp-row">
+              <div class="lf-pp-inn">${innInd}</div>
+              <div>
+                <div class="lf-pp-event">${event}</div>
+                <div class="lf-pp-desc">${desc}</div>
+              </div>
+            </div>`
+          }).join('')
+
+      el.innerHTML = `
+        <div class="lf-header">
+          <span class="lf-title">Live Game</span>
+          ${isLive ? '<span class="lf-status"><span class="live-dot"></span>LIVE</span>' : ''}
+          ${isFinal ? '<span style="font-size:0.65rem;font-weight:700;letter-spacing:0.15em;color:rgba(255,255,255,0.4)">FINAL</span>' : ''}
+          <span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:0.06em;color:rgba(255,255,255,0.5);margin-left:auto">${inningStr}</span>
+        </div>
+
+        ${scoreboardHtml}
+
+        <div class="lf-body">
+          <!-- At-bat panel -->
+          <div class="lf-at-bat">
+            <div class="lf-at-bat-header">Current At-Bat</div>
+            <div class="lf-matchup">
+              <div class="lf-matchup-row"><span class="lf-role">AB</span><span class="lf-player-name">${batter}</span></div>
+              <div class="lf-matchup-row"><span class="lf-role">P</span><span class="lf-player-name">${pitcher}</span></div>
+            </div>
+            <div class="lf-zone-count">
+              <div class="lf-zone-wrap">${zoneSvg}</div>
+              ${countHtml}
+            </div>
+            <div class="lf-pitch-log">
+              <div class="lf-pitch-log-label">Pitch Log</div>
+              ${pitchLogRows}
+            </div>
+          </div>
+
+          <!-- Play-by-play -->
+          <div class="lf-play-log">
+            <div class="lf-play-log-header">Play-by-Play</div>
+            <div class="lf-play-log-scroll">${ppRows}</div>
+          </div>
+        </div>`
     }
 
     /* ── World Series Modal ──────────────────────────────── */
