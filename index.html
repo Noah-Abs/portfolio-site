@@ -321,19 +321,17 @@
     }
     .p-headshot {
       flex-shrink: 0;
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      overflow: hidden;
-      background: linear-gradient(145deg, #0A2E8A, #001E62);
+      background-color: #0A2E8A;
+      background-size: 175%;
+      background-position: center 8%;
+      background-repeat: no-repeat;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .p-headshot img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 15%;
-    }
+    /* img tag is hidden; image is set as background-image via style attr */
+    .p-headshot img { display: none; }
     .p-info {
       display: flex;
       flex-direction: column;
@@ -485,27 +483,21 @@
         <div class="performer-col">
           <div class="performer-section-lbl">Batters</div>
           <div class="performer">
-            <div class="p-headshot">
-              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/660271/headshot/67/current" alt="Shohei Ohtani" />
-            </div>
+            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/660271/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Shohei Ohtani</span>
               <span class="p-line">3-4 · HR · 3 RBI</span>
             </div>
           </div>
           <div class="performer">
-            <div class="p-headshot">
-              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/518692/headshot/67/current" alt="Freddie Freeman" />
-            </div>
+            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/518692/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Freddie Freeman</span>
               <span class="p-line">2-3 · 2B · 2 RBI</span>
             </div>
           </div>
           <div class="performer">
-            <div class="p-headshot">
-              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/605141/headshot/67/current" alt="Mookie Betts" />
-            </div>
+            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/605141/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Mookie Betts</span>
               <span class="p-line">2-4 · HR · BB</span>
@@ -516,9 +508,7 @@
         <div class="performer-col">
           <div class="performer-section-lbl">Pitcher</div>
           <div class="performer">
-            <div class="p-headshot">
-              <img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/808967/headshot/67/current" alt="Yoshinobu Yamamoto" />
-            </div>
+            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/808967/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Yoshinobu Yamamoto</span>
               <span class="p-line">7.0 IP · 1 ER · 10 K · W</span>
