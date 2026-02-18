@@ -1711,6 +1711,35 @@
       transition: color 0.15s;
     }
     .po-back:hover { color: #fff; }
+    /* Bottom back bar inside player overlay */
+    .po-bottom-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .po-bottom-back {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--team-header2, #003DA5);
+      border: 3px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .po-bottom-back:active { opacity: 0.6; }
+    .po-bottom-back img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
     .po-team-label {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 0.8rem;
@@ -2541,7 +2570,7 @@
         position: fixed;
         inset: 0;
         background: rgba(0,0,0,0.5);
-        z-index: 340;
+        z-index: 355;
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.25s ease;
@@ -2563,7 +2592,7 @@
         -webkit-backdrop-filter: blur(28px);
         border-top: 1px solid rgba(255,255,255,0.1);
         border-radius: 22px 22px 0 0;
-        z-index: 345;
+        z-index: 360;
         padding: 0 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
         transform: translateY(100%);
         transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -3081,6 +3110,11 @@
         <div class="pd-loading">Loading…</div>
       </div>
     </div>
+    <div class="po-bottom-bar">
+      <button class="po-bottom-back" onclick="closePlayerOverlay()" aria-label="Back to Roster">
+        <img id="po-back-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Back">
+      </button>
+    </div>
   </div>
 
   <script>
@@ -3580,10 +3614,13 @@
     /* ── Player overlay ─────────────────────────────────── */
     function openPlayerOverlay(id, posType, jersey, name, posAbbr) {
       const teamKey = document.body.dataset.team || 'dodgers'
-      document.getElementById('po-team-label').textContent = TEAMS[teamKey]?.name ?? 'Los Angeles Dodgers'
+      const t = TEAMS[teamKey] ?? TEAMS.dodgers
+      document.getElementById('po-team-label').textContent = t.name
       document.getElementById('po-jersey-num').textContent = jersey ? `#${jersey}` : ''
       document.getElementById('po-name').textContent = name
-      document.getElementById('po-pos').textContent = `${posAbbr} · ${TEAMS[teamKey]?.name ?? 'Los Angeles Dodgers'}`
+      document.getElementById('po-pos').textContent = `${posAbbr} · ${t.name}`
+      const backLogo = document.getElementById('po-back-logo')
+      if (backLogo) backLogo.src = t.logoSrc
       const img = document.getElementById('po-headshot')
       img.src = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/${id}/headshot/silo/current`
       img.alt = name
