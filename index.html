@@ -624,16 +624,172 @@
     .sp-panel { display: none; }
     .sp-panel.active { display: block; }
 
-    /* Schedule rows inside side panel */
+    /* ── Schedule filter bar ─────────────────────────── */
+    .sched-filter-bar {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0.65rem 1.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.15);
+    }
+    .sched-filter-bar::-webkit-scrollbar { display: none; }
+    .sched-filter {
+      flex-shrink: 0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 0.28rem 0.75rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sched-filter.active {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+
+    /* ── Schedule rows ───────────────────────────────── */
     .schedule-list { display: flex; flex-direction: column; }
     .schedule-row {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.6rem 0;
+      padding: 0.6rem 1.25rem;
       border-bottom: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 0.12s;
+      -webkit-tap-highlight-color: transparent;
     }
     .schedule-row:last-child { border-bottom: none; }
+    .schedule-row:hover, .schedule-row:active { background: rgba(255,255,255,0.04); }
+    .sr-chevron {
+      color: rgba(255,255,255,0.2);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+
+    /* ── Game detail view ────────────────────────────── */
+    .game-detail {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .gd-back {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.75rem 1.25rem;
+      background: none;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.5);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.12s;
+      text-align: left;
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .gd-back:hover { color: #fff; }
+    .gd-scroll { flex: 1; overflow-y: auto; padding: 1.5rem 1.25rem 2rem; }
+    .gd-date-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 1.25rem;
+    }
+    .gd-matchup {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .gd-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    .gd-team-logo {
+      height: 52px;
+      width: auto;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+    }
+    .gd-team-name {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.65);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .gd-vs {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: rgba(255,255,255,0.2);
+      flex-shrink: 0;
+    }
+    .gd-info-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1.75rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .gd-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+    .gd-info-label {
+      color: rgba(255,255,255,0.35);
+      font-size: 0.68rem;
+    }
+    .gd-info-val { color: #fff; font-weight: 500; }
+    .gd-tickets-btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, #003DA5 0%, #0052cc 100%);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .gd-tickets-btn:hover { opacity: 0.85; }
+    .gd-no-tickets {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+      margin-top: 0.6rem;
+    }
     .sr-date {
       display: flex;
       flex-direction: column;
@@ -2134,7 +2290,9 @@
   <div class="opening-day-bar" style="position:relative;">
     <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
-      alt="Dodgers" />
+      alt="Dodgers"
+      onclick="switchView('home')"
+      style="cursor:pointer" />
     <div class="bar-team-info">
       <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
@@ -2279,7 +2437,21 @@
     </div>
     <div class="sp-body" id="sp-body">
       <div class="sp-panel active" id="sp-schedule">
+        <!-- Filter bar -->
+        <div class="sched-filter-bar" id="sched-filter-bar">
+          <button class="sched-filter active" data-filter="all"     onclick="setScheduleFilter('all')">All</button>
+          <button class="sched-filter"        data-filter="home"    onclick="setScheduleFilter('home')">Home</button>
+          <button class="sched-filter"        data-filter="away"    onclick="setScheduleFilter('away')">Away</button>
+          <button class="sched-filter"        data-filter="weekday" onclick="setScheduleFilter('weekday')">Weekdays</button>
+          <button class="sched-filter"        data-filter="weekend" onclick="setScheduleFilter('weekend')">Weekend</button>
+        </div>
+        <!-- Game list -->
         <div class="schedule-list" id="schedule-list"></div>
+        <!-- Game detail (shown when a game is tapped) -->
+        <div class="game-detail" id="game-detail" style="display:none">
+          <button class="gd-back" onclick="closeGameDetail()">‹ Schedule</button>
+          <div class="gd-scroll" id="gd-scroll"></div>
+        </div>
       </div>
       <div class="sp-panel" id="sp-roster">
         <div class="roster-placeholder">Roster Coming Soon</div>
@@ -2490,10 +2662,39 @@
     }
 
     /* ── Schedule renderer ──────────────────────────────── */
+    let _allScheduleGames = []
+    let _filteredGames    = []
+    let _scheduleFilter   = 'all'
+
     function renderSchedule(games) {
+      _allScheduleGames = games
+      _applyScheduleFilter()
+    }
+
+    function setScheduleFilter(filter) {
+      _scheduleFilter = filter
+      document.querySelectorAll('.sched-filter').forEach(b =>
+        b.classList.toggle('active', b.dataset.filter === filter)
+      )
+      _applyScheduleFilter()
+    }
+
+    function _applyScheduleFilter() {
+      _filteredGames = _allScheduleGames.filter(g => {
+        if (_scheduleFilter === 'home')    return g.isHome
+        if (_scheduleFilter === 'away')    return !g.isHome
+        if (_scheduleFilter === 'weekday') return !['Saturday','Sunday'].includes(g.weekday)
+        if (_scheduleFilter === 'weekend') return ['Saturday','Sunday'].includes(g.weekday)
+        return true
+      })
       const list = document.getElementById('schedule-list')
-      list.innerHTML = games.map(g => `
-        <div class="schedule-row">
+      if (!list) return
+      if (_filteredGames.length === 0) {
+        list.innerHTML = '<div style="padding:2rem 1.25rem;font-size:0.72rem;color:rgba(255,255,255,0.25);text-align:center">No games match this filter</div>'
+        return
+      }
+      list.innerHTML = _filteredGames.map((g, i) => `
+        <div class="schedule-row" onclick="openGameDetail(${i})">
           <div class="sr-date">
             <span class="sr-day">${g.day}</span>
             <span class="sr-monthday">${g.monthDay}</span>
@@ -2506,7 +2707,67 @@
             </div>
           </div>
           <span class="sr-time">${g.time}</span>
+          <span class="sr-chevron">›</span>
         </div>`).join('')
+    }
+
+    function openGameDetail(idx) {
+      const g = _filteredGames[idx]
+      if (!g) return
+      // Swap list/filter for detail view
+      document.getElementById('schedule-list').style.display    = 'none'
+      document.getElementById('sched-filter-bar').style.display = 'none'
+      document.getElementById('game-detail').style.display      = 'flex'
+
+      const homeName = g.isHome ? 'Los Angeles Dodgers' : g.opponent
+      const awayName = g.isHome ? g.opponent : 'Los Angeles Dodgers'
+      const homeLogoId = g.isHome ? 119 : g.logoId
+      const awayLogoId = g.isHome ? g.logoId : 119
+      const LOGO_BASE = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
+      const ticketUrl = `https://www.mlb.com/dodgers/tickets/single-game-tickets`
+      const mlbUrl    = `https://www.mlb.com/gameday/${g.gamePk}`
+
+      document.getElementById('gd-scroll').innerHTML = `
+        <div class="gd-date-label">${g.fullDate}</div>
+        <div class="gd-matchup">
+          <div class="gd-team">
+            <img class="gd-team-logo" src="${LOGO_BASE}/${awayLogoId}.svg" alt="${awayName}">
+            <span class="gd-team-name">${awayName}</span>
+          </div>
+          <span class="gd-vs">@</span>
+          <div class="gd-team">
+            <img class="gd-team-logo" src="${LOGO_BASE}/${homeLogoId}.svg" alt="${homeName}">
+            <span class="gd-team-name">${homeName}</span>
+          </div>
+        </div>
+        <div class="gd-info-grid">
+          <div class="gd-info-row">
+            <span class="gd-info-label">First Pitch</span>
+            <span class="gd-info-val">${g.time}</span>
+          </div>
+          <div class="gd-info-row">
+            <span class="gd-info-label">Venue</span>
+            <span class="gd-info-val">${g.venueName || '—'}</span>
+          </div>
+          ${g.tv ? `<div class="gd-info-row">
+            <span class="gd-info-label">TV</span>
+            <span class="gd-info-val">${g.tv}</span>
+          </div>` : ''}
+          <div class="gd-info-row">
+            <span class="gd-info-label">Location</span>
+            <span class="gd-info-val">${g.isHome ? 'Home · Dodger Stadium' : 'Away'}</span>
+          </div>
+        </div>
+        <a class="gd-tickets-btn" href="${ticketUrl}" target="_blank" rel="noopener">Get Tickets</a>
+        <div class="gd-no-tickets">
+          <a href="${mlbUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.3);text-decoration:none">View on MLB.com ›</a>
+        </div>`
+    }
+
+    function closeGameDetail() {
+      document.getElementById('game-detail').style.display      = 'none'
+      document.getElementById('schedule-list').style.display    = ''
+      document.getElementById('sched-filter-bar').style.display = ''
     }
 
     /* ── Nav Menu (≡ dropdown) ───────────────────────────── */
@@ -2841,12 +3102,18 @@
               games.push({
                 day:       dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }),
                 monthDay:  dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }),
+                fullDate:  dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }),
                 atVs:      isHome ? 'vs' : '@',
                 opponent:  opp.name,
                 logoId:    opp.id,
+                dodgersLogoId: 119,
                 venueName: g.venue?.name ?? '',
                 time:      dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT',
-                tv:        '',
+                tv:        g.content?.media?.epg?.[0]?.items?.[0]?.callSign ?? '',
+                isHome,
+                gamePk:    g.gamePk,
+                isoDate:   dt.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }),
+                weekday:   dt.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long' }),
               })
             }
           }
