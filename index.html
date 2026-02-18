@@ -1494,6 +1494,101 @@
       animation: livepulse 1.4s ease-in-out infinite;
     }
 
+    /* ── Nav Menu (≡ dropdown) ────────────────────────── */
+    .nav-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 499;
+      display: none;
+    }
+    .nav-backdrop.open { display: block; }
+    .nav-menu {
+      position: fixed;
+      top: 84px;
+      right: 0;
+      width: 260px;
+      background: rgba(0,16,64,0.97);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom-left-radius: 14px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      padding: 0.5rem;
+      gap: 2px;
+      transform: translateY(-8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
+    .nav-menu.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      color: rgba(255,255,255,0.65);
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover {
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+    }
+    .nav-item-icon {
+      font-size: 1.15rem;
+      width: 26px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .nav-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      flex: 1;
+    }
+    .nav-item-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.07em;
+      color: inherit;
+      line-height: 1.1;
+    }
+    .nav-item-sub {
+      font-size: 0.67rem;
+      color: rgba(255,255,255,0.35);
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-live-badge {
+      margin-left: auto;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #ff4444;
+      background: rgba(255,68,68,0.12);
+      border: 1px solid rgba(255,68,68,0.4);
+      border-radius: 4px;
+      padding: 2px 5px;
+      animation: livepulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .nav-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.07);
+      margin: 0.25rem 0.5rem;
+    }
+
     /* ── View sections ────────────────────────────────── */
     .view-section { display: none; }
     .view-section.active { display: block; }
@@ -1800,7 +1895,7 @@
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
     </div>
     <div class="bar-actions">
-      <button class="settings-btn" onclick="togglePanel()" title="Schedule & Roster">≡</button>
+      <button class="settings-btn" onclick="toggleNavMenu()" title="Menu">≡</button>
       <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
     </div>
     <div class="team-dropdown" id="team-dropdown">
@@ -1815,21 +1910,6 @@
   <!-- Fixed left sidebar -->
   <div class="fixed-sidebar" id="fixed-sidebar">
     <!-- Vertical nav tabs -->
-    <nav class="sb-nav" id="sb-nav">
-      <button class="sb-tab active" id="sb-tab-home" onclick="switchView('home')">
-        <span class="sb-tab-icon">&#8962;</span>Home
-      </button>
-      <button class="sb-tab" id="sb-tab-live" onclick="switchView('live')">
-        <span class="sb-tab-icon">&#128247;</span>Live Game
-        <span class="sb-live-dot" id="sb-live-dot" style="display:none"></span>
-      </button>
-      <button class="sb-tab" id="sb-tab-schedule" onclick="togglePanel(); switchSideTab('schedule')">
-        <span class="sb-tab-icon">&#128197;</span>Schedule
-      </button>
-      <button class="sb-tab" id="sb-tab-roster" onclick="togglePanel(); switchSideTab('roster')">
-        <span class="sb-tab-icon">&#128100;</span>Roster
-      </button>
-    </nav>
     <div class="dash-label">
       <span class="stats-season">2025 Season</span>
       <span class="stats-divider">·</span>
@@ -2169,6 +2249,22 @@
           <span class="sr-time">${g.time}</span>
         </div>`).join('')
     }
+
+    /* ── Nav Menu (≡ dropdown) ───────────────────────────── */
+    function toggleNavMenu() {
+      const menu = document.getElementById('nav-menu')
+      if (menu.classList.contains('open')) closeNavMenu()
+      else openNavMenu()
+    }
+    function openNavMenu() {
+      document.getElementById('nav-menu').classList.add('open')
+      document.getElementById('nav-backdrop').classList.add('open')
+    }
+    function closeNavMenu() {
+      document.getElementById('nav-menu').classList.remove('open')
+      document.getElementById('nav-backdrop').classList.remove('open')
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNavMenu() })
 
     /* ── Side panel ─────────────────────────────────────── */
     function togglePanel() {
@@ -2564,11 +2660,6 @@
     function switchView(view) {
       _currentView = view
 
-      // Update tab active states
-      document.querySelectorAll('.sb-tab[id^="sb-tab-"]').forEach(btn => btn.classList.remove('active'))
-      const activeBtn = document.getElementById(`sb-tab-${view}`)
-      if (activeBtn) activeBtn.classList.add('active')
-
       // Show/hide view sections
       document.getElementById('view-home').classList.toggle('active', view === 'home')
       document.getElementById('view-live').classList.toggle('active', view === 'live')
@@ -2620,9 +2711,9 @@
       const isLive  = gs.abstractGameState === 'Live'
       const isFinal = gs.abstractGameState === 'Final'
 
-      // Show/hide pulsing dot on Live Game tab
-      const liveDot = document.getElementById('sb-live-dot')
-      if (liveDot) liveDot.style.display = isLive ? 'block' : 'none'
+      // Show/hide LIVE badge in nav menu
+      const liveDot = document.getElementById('nav-live-badge')
+      if (liveDot) liveDot.style.display = isLive ? 'inline' : 'none'
 
       const awayRuns = ls.teams?.away?.runs ?? 0
       const homeRuns = ls.teams?.home?.runs ?? 0
@@ -3071,6 +3162,41 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWsModal() })
   </script>
   <script src="script.js"></script>
+
+  <!-- Nav Menu -->
+  <div class="nav-backdrop" id="nav-backdrop" onclick="closeNavMenu()"></div>
+  <div class="nav-menu" id="nav-menu">
+    <button class="nav-item" onclick="switchView('home'); closeNavMenu()">
+      <span class="nav-item-icon">⌂</span>
+      <div class="nav-item-info">
+        <span class="nav-item-label">Home</span>
+        <span class="nav-item-sub">Team overview &amp; stats</span>
+      </div>
+    </button>
+    <button class="nav-item" onclick="switchView('live'); closeNavMenu()">
+      <span class="nav-item-icon">⬤</span>
+      <div class="nav-item-info">
+        <span class="nav-item-label">Live Game</span>
+        <span class="nav-item-sub">Real-time pitch tracking</span>
+      </div>
+      <span class="nav-live-badge" id="nav-live-badge" style="display:none">LIVE</span>
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-item" onclick="togglePanel(); closeNavMenu()">
+      <span class="nav-item-icon">📅</span>
+      <div class="nav-item-info">
+        <span class="nav-item-label">Schedule</span>
+        <span class="nav-item-sub">2026 season games</span>
+      </div>
+    </button>
+    <button class="nav-item" onclick="togglePanel(); closeNavMenu()">
+      <span class="nav-item-icon">👥</span>
+      <div class="nav-item-info">
+        <span class="nav-item-label">Roster</span>
+        <span class="nav-item-sub">40-man roster</span>
+      </div>
+    </button>
+  </div>
 
   <!-- WS Championship Modal -->
   <div class="ws-backdrop" id="ws-backdrop" onclick="closeWsModal()"></div>
