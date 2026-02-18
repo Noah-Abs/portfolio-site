@@ -8,6 +8,7 @@
     :root {
       --white:  #FFFFFF;
       --silver: #C0C8D8;
+      --sb-width: 280px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -147,37 +148,29 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
-    /* ── Home layout (sidebar + news) ───────────────────── */
-    .home-section {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      min-height: calc(100dvh - 84px);
-    }
-    .home-layout {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: flex;
-      gap: 1.5rem;
-      align-items: flex-start;
-      padding: 2.5rem 2rem 5rem;
-    }
-    .home-sidebar {
-      width: 360px;
-      flex-shrink: 0;
-      position: sticky;
+    /* ── Fixed left sidebar ──────────────────────────────── */
+    .fixed-sidebar {
+      position: fixed;
       top: 84px;
-      max-height: calc(100dvh - 100px);
+      left: 0;
+      bottom: 0;
+      width: var(--sb-width);
+      z-index: 50;
       overflow-y: auto;
+      scrollbar-width: none;
+      padding: 1.75rem 1.25rem;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
-      scrollbar-width: none;
+      gap: 1rem;
+      background: linear-gradient(180deg, rgba(0,18,72,0.97) 0%, rgba(0,6,28,0.98) 100%);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
-    .home-sidebar::-webkit-scrollbar { display: none; }
-    .home-main {
-      flex: 1;
-      min-width: 0;
+    .fixed-sidebar::-webkit-scrollbar { display: none; }
+    /* ── Main content (offset for sidebar) ──────────────── */
+    .main-content {
+      margin-left: var(--sb-width);
     }
     .dash-label {
       display: flex;
@@ -407,18 +400,10 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.18);
     }
-    @media (max-width: 860px) {
-      .home-layout { flex-direction: column; padding: 1.5rem 1rem 4rem; }
-      .home-sidebar { width: 100%; position: static; max-height: none; overflow-y: visible; flex-direction: row; flex-wrap: wrap; }
-      .home-sidebar .dash-card { flex: 1; min-width: 260px; }
-    }
     @media (max-width: 700px) {
-      .news-grid { grid-template-columns: 1fr 1fr; }
-      .home-sidebar { flex-direction: column; }
-      .home-sidebar .dash-card { min-width: 0; }
-    }
-    @media (max-width: 480px) {
-      .news-grid { grid-template-columns: 1fr; }
+      :root { --sb-width: 0px; }
+      .fixed-sidebar { display: none; }
+      .main-content { margin-left: 0; }
     }
 
     /* ── Side Panel ─────────────────────────────────────── */
@@ -747,7 +732,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
+      padding: 1rem 2rem 8rem;
       gap: 1.5rem;
     }
     .hero-logo {
@@ -1114,6 +1099,49 @@
     </div>
   </div>
 
+  <!-- Fixed left sidebar -->
+  <div class="fixed-sidebar" id="fixed-sidebar">
+    <div class="dash-label">
+      <span class="stats-season">2025 Season</span>
+      <span class="stats-divider">·</span>
+      <span class="stats-division">NL West</span>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-card-label">Team Stats</span>
+      </div>
+      <div class="team-stats">
+        <div class="stat-item"><span class="stat-val">100-62</span><span class="stat-lbl">Record</span><span class="stat-rank">#2 NL West</span></div>
+        <div class="stat-item"><span class="stat-val">.617</span><span class="stat-lbl">Win %</span><span class="stat-rank">#2 NL West</span></div>
+        <div class="stat-item"><span class="stat-val">.263</span><span class="stat-lbl">Team AVG</span><span class="stat-rank">#3 NL</span></div>
+        <div class="stat-item"><span class="stat-val">221</span><span class="stat-lbl">Home Runs</span><span class="stat-rank">#2 NL</span></div>
+        <div class="stat-item"><span class="stat-val">1,418</span><span class="stat-lbl">Hits</span></div>
+        <div class="stat-item"><span class="stat-val">3.61</span><span class="stat-lbl">Team ERA</span><span class="stat-rank">#4 NL</span></div>
+        <div class="stat-item"><span class="stat-val">1,344</span><span class="stat-lbl">Strikeouts</span></div>
+      </div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-card-label">Last Game</span>
+        <span class="performers-date dash-card-sub">Sep 28, 2025</span>
+      </div>
+      <div class="lg-score" id="lg-score">
+        <div class="lgs-side"><span class="lgs-abbr">LAD</span><span class="lgs-num">8</span></div>
+        <span class="lgs-sep">—</span>
+        <div class="lgs-side"><span class="lgs-num">3</span><span class="lgs-abbr">SD</span></div>
+      </div>
+      <div class="performers">
+        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Shohei Ohtani</span><span class="p-line">3-4 · HR · 3 RBI</span></div>
+        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Freddie Freeman</span><span class="p-line">2-3 · 2B · 2 RBI</span></div>
+        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Mookie Betts</span><span class="p-line">2-4 · HR · BB</span></div>
+        <div class="performer"><span class="performer-role">Pit</span><span class="p-name">Y. Yamamoto</span><span class="p-line">7.0 IP · 1 ER · 10 K · W</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main scrollable content -->
+  <div class="main-content">
+
   <!-- Hero countdown section -->
   <section class="hero-section">
     <img class="hero-logo" id="hero-logo"
@@ -1147,64 +1175,7 @@
   <!-- Fixed next-game corner card -->
   <div class="hero-next" id="hero-next"></div>
 
-  <!-- Home: sidebar + main -->
-  <section class="home-section">
-    <div class="home-layout">
-
-      <!-- Sticky left sidebar: season stats + last game -->
-      <aside class="home-sidebar">
-        <div class="dash-label">
-          <span class="stats-season">2025 Season</span>
-          <span class="stats-divider">·</span>
-          <span class="stats-division">NL West</span>
-        </div>
-
-        <!-- Team stats card -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-label">Team Stats</span>
-          </div>
-          <div class="team-stats">
-            <div class="stat-item"><span class="stat-val">100-62</span><span class="stat-lbl">Record</span><span class="stat-rank">#2 NL West</span></div>
-            <div class="stat-item"><span class="stat-val">.617</span><span class="stat-lbl">Win %</span><span class="stat-rank">#2 NL West</span></div>
-            <div class="stat-item"><span class="stat-val">.263</span><span class="stat-lbl">Team AVG</span><span class="stat-rank">#3 NL</span></div>
-            <div class="stat-item"><span class="stat-val">221</span><span class="stat-lbl">Home Runs</span><span class="stat-rank">#2 NL</span></div>
-            <div class="stat-item"><span class="stat-val">1,418</span><span class="stat-lbl">Hits</span></div>
-            <div class="stat-item"><span class="stat-val">3.61</span><span class="stat-lbl">Team ERA</span><span class="stat-rank">#4 NL</span></div>
-            <div class="stat-item"><span class="stat-val">1,344</span><span class="stat-lbl">Strikeouts</span></div>
-          </div>
-        </div>
-
-        <!-- Last game card -->
-        <div class="dash-card">
-          <div class="dash-card-header">
-            <span class="dash-card-label">Last Game</span>
-            <span class="performers-date dash-card-sub">Sep 28, 2025</span>
-          </div>
-          <div class="lg-score" id="lg-score">
-            <div class="lgs-side"><span class="lgs-abbr">LAD</span><span class="lgs-num">8</span></div>
-            <span class="lgs-sep">—</span>
-            <div class="lgs-side"><span class="lgs-num">3</span><span class="lgs-abbr">SD</span></div>
-          </div>
-          <div class="performers">
-            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Shohei Ohtani</span><span class="p-line">3-4 · HR · 3 RBI</span></div>
-            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Freddie Freeman</span><span class="p-line">2-3 · 2B · 2 RBI</span></div>
-            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Mookie Betts</span><span class="p-line">2-4 · HR · BB</span></div>
-            <div class="performer"><span class="performer-role">Pit</span><span class="p-name">Y. Yamamoto</span><span class="p-line">7.0 IP · 1 ER · 10 K · W</span></div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main right: news -->
-      <main class="home-main">
-        <span class="news-section-label">Dodgers News</span>
-        <div class="news-grid" id="news-grid">
-          <div class="news-loading">Loading…</div>
-        </div>
-      </main>
-
-    </div>
-  </section>
+  </div><!-- /main-content -->
 
 
   <!-- Side panel backdrop -->
