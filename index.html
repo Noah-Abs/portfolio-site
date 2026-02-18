@@ -147,124 +147,168 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
-    /* ── Stats Panel ──────────────────────────────────── */
+    /* ── Stats Dashboard ──────────────────────────────── */
     .stats-panel {
       position: relative;
       z-index: 1;
       width: 100%;
-      padding: 2.5rem 2rem 5rem;
+      padding: 2.5rem 2rem 3rem;
       min-height: calc(100dvh - 90px);
     }
-
     .stats-inner {
-      max-width: 900px;
+      max-width: 960px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
     }
-
-    .stats-header {
+    .dash-label {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.45);
+      color: rgba(255,255,255,0.35);
     }
     .stats-divider { opacity: 0.3; }
-
-    .team-stats {
+    .dash-grid {
       display: flex;
-      gap: 0;
+      gap: 1.25rem;
       align-items: flex-start;
     }
-    .stat-item {
+    .dash-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.5rem;
       flex: 1;
+    }
+    .dash-card-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .dash-card-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .dash-card-sub {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.28);
+      letter-spacing: 0.06em;
+    }
+
+    /* Team stats grid */
+    .team-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .stat-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0 0.75rem;
-      border-right: 1px solid rgba(255,255,255,0.08);
+      gap: 0.3rem;
+      padding: 1rem 0.5rem;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .stat-item:first-child { padding-left: 0; }
-    .stat-item:last-child  { border-right: none; }
+    .stat-item:nth-child(4n) { border-right: none; }
+    .stat-item:nth-last-child(-n+4) { border-bottom: none; }
     .stat-val {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.2rem;
+      font-size: 2rem;
       letter-spacing: 0.04em;
       color: #fff;
       line-height: 1;
     }
     .stat-lbl {
-      font-size: 0.65rem;
+      font-size: 0.58rem;
       font-weight: 700;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.45);
+      color: rgba(255,255,255,0.4);
       white-space: nowrap;
     }
     .stat-rank {
-      font-size: 0.6rem;
+      font-size: 0.52rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.22);
       white-space: nowrap;
     }
 
-    .performers-header {
+    /* Last game score */
+    .lg-score {
       display: flex;
-      align-items: baseline;
-      gap: 0.9rem;
-      padding-top: 0.35rem;
-      border-top: 1px solid rgba(255,255,255,0.09);
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      padding: 1.25rem 0 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 1.25rem;
     }
-    .performers-game {
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.7);
+    .lgs-side {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
     }
-    .performers-date {
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.32);
+    .lgs-abbr {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.38);
+    }
+    .lgs-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.8rem;
+      color: #fff;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .lgs-sep {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: rgba(255,255,255,0.15);
     }
 
+    /* Performers */
     .performers {
       display: flex;
-      gap: 0;
-      align-items: flex-start;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.6rem;
     }
     .performer {
       display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      flex: 1;
-      padding: 0.25rem 1.25rem;
-      border-right: 1px solid rgba(255,255,255,0.07);
+      align-items: baseline;
+      gap: 0.75rem;
+      padding: 0.45rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .performer:first-child { padding-left: 0; }
-    .performer:last-child  { border-right: none; }
+    .performer:last-child { border-bottom: none; }
     .performer-role {
-      font-size: 0.58rem;
+      font-size: 0.52rem;
       font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.32);
+      color: rgba(255,255,255,0.28);
+      min-width: 42px;
+      flex-shrink: 0;
     }
     .p-name {
       font-family: 'Inter', sans-serif;
-      font-size: 1rem;
+      font-size: 0.92rem;
       font-weight: 600;
       letter-spacing: 0.01em;
       color: #fff;
+      flex: 1;
       white-space: nowrap;
     }
     .p-line {
@@ -273,6 +317,98 @@
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.48);
     }
+
+    /* ── News Section ────────────────────────────────────── */
+    .news-section {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: 0 2rem 5rem;
+    }
+    .news-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .news-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 1.25rem;
+      display: block;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .news-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .news-card:hover {
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .news-card-img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+      background: rgba(0,30,80,0.5);
+    }
+    .news-card-body {
+      padding: 1rem 1.1rem 1.15rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .news-card-headline {
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #fff;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-card-meta {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-top: auto;
+    }
+    .news-loading {
+      grid-column: 1/-1;
+      padding: 2.5rem 0;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.18);
+    }
+    @media (max-width: 700px) {
+      .news-grid { grid-template-columns: 1fr 1fr; }
+      .dash-grid { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .news-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── Side Panel ─────────────────────────────────────── */
     .panel-backdrop {
       position: fixed;
@@ -999,80 +1135,64 @@
   <!-- Fixed next-game corner card -->
   <div class="hero-next" id="hero-next"></div>
 
-  <!-- Team Stats Panel -->
+  <!-- Stats Dashboard -->
   <section class="stats-panel">
     <div class="stats-inner">
 
-      <div class="stats-header">
+      <div class="dash-label">
         <span class="stats-season">2025 Season</span>
         <span class="stats-divider">·</span>
         <span class="stats-division">NL West</span>
       </div>
 
-      <div class="team-stats">
-        <div class="stat-item">
-          <span class="stat-val">100-62</span>
-          <span class="stat-lbl">Record</span>
-          <span class="stat-rank">#2 NL West</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">.617</span>
-          <span class="stat-lbl">Win %</span>
-          <span class="stat-rank">#2 NL West</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">.263</span>
-          <span class="stat-lbl">Team AVG</span>
-          <span class="stat-rank">#3 NL</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">1,418</span>
-          <span class="stat-lbl">Hits</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">221</span>
-          <span class="stat-lbl">Home Runs</span>
-          <span class="stat-rank">#2 NL</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">3.61</span>
-          <span class="stat-lbl">Team ERA</span>
-          <span class="stat-rank">#4 NL</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-val">1,344</span>
-          <span class="stat-lbl">Strikeouts</span>
-        </div>
-      </div>
+      <div class="dash-grid">
 
-      <div class="performers-header">
-        <span class="performers-game">Last Game &nbsp;·&nbsp; LAD 8, SD 3</span>
-        <span class="performers-date">Sep 28, 2025</span>
-      </div>
+        <!-- Team stats card -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Team Stats</span>
+          </div>
+          <div class="team-stats">
+            <div class="stat-item"><span class="stat-val">100-62</span><span class="stat-lbl">Record</span><span class="stat-rank">#2 NL West</span></div>
+            <div class="stat-item"><span class="stat-val">.617</span><span class="stat-lbl">Win %</span><span class="stat-rank">#2 NL West</span></div>
+            <div class="stat-item"><span class="stat-val">.263</span><span class="stat-lbl">Team AVG</span><span class="stat-rank">#3 NL</span></div>
+            <div class="stat-item"><span class="stat-val">221</span><span class="stat-lbl">Home Runs</span><span class="stat-rank">#2 NL</span></div>
+            <div class="stat-item"><span class="stat-val">1,418</span><span class="stat-lbl">Hits</span></div>
+            <div class="stat-item"><span class="stat-val">3.61</span><span class="stat-lbl">Team ERA</span><span class="stat-rank">#4 NL</span></div>
+            <div class="stat-item"><span class="stat-val">1,344</span><span class="stat-lbl">Strikeouts</span></div>
+          </div>
+        </div>
 
-      <div class="performers">
-        <div class="performer">
-          <span class="performer-role">Batter</span>
-          <span class="p-name">Shohei Ohtani</span>
-          <span class="p-line">3-4 · HR · 3 RBI</span>
+        <!-- Last game card -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-label">Last Game</span>
+            <span class="performers-date dash-card-sub">Sep 28, 2025</span>
+          </div>
+          <div class="lg-score" id="lg-score">
+            <div class="lgs-side"><span class="lgs-abbr">LAD</span><span class="lgs-num">8</span></div>
+            <span class="lgs-sep">—</span>
+            <div class="lgs-side"><span class="lgs-num">3</span><span class="lgs-abbr">SD</span></div>
+          </div>
+          <div class="performers">
+            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Shohei Ohtani</span><span class="p-line">3-4 · HR · 3 RBI</span></div>
+            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Freddie Freeman</span><span class="p-line">2-3 · 2B · 2 RBI</span></div>
+            <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Mookie Betts</span><span class="p-line">2-4 · HR · BB</span></div>
+            <div class="performer"><span class="performer-role">Pit</span><span class="p-name">Y. Yamamoto</span><span class="p-line">7.0 IP · 1 ER · 10 K · W</span></div>
+          </div>
         </div>
-        <div class="performer">
-          <span class="performer-role">Batter</span>
-          <span class="p-name">Freddie Freeman</span>
-          <span class="p-line">2-3 · 2B · 2 RBI</span>
-        </div>
-        <div class="performer">
-          <span class="performer-role">Batter</span>
-          <span class="p-name">Mookie Betts</span>
-          <span class="p-line">2-4 · HR · BB</span>
-        </div>
-        <div class="performer">
-          <span class="performer-role">Pitcher</span>
-          <span class="p-name">Y. Yamamoto</span>
-          <span class="p-line">7.0 IP · 1 ER · 10 K · W</span>
-        </div>
-      </div>
 
+      </div>
+    </div>
+  </section>
+
+  <!-- News Section -->
+  <section class="news-section">
+    <div class="news-inner">
+      <span class="news-section-label">Dodgers News</span>
+      <div class="news-grid" id="news-grid">
+        <div class="news-loading">Loading…</div>
+      </div>
     </div>
   </section>
 
@@ -1217,11 +1337,11 @@
       document.getElementById('bar-team-sub').textContent  = t.division
       barTarget = new Date(t.openingDay).getTime()
 
-      // Header
+      // Dash label
       document.querySelector('.stats-season').textContent  = t.season
       document.querySelector('.stats-division').textContent = t.division
 
-      // Team stats
+      // Team stats grid
       document.querySelector('.team-stats').innerHTML = t.stats.map(s => `
         <div class="stat-item">
           <span class="stat-val">${s.val}</span>
@@ -1229,14 +1349,12 @@
           ${s.rank ? `<span class="stat-rank">${s.rank}</span>` : ''}
         </div>`).join('')
 
-      // Last game
-      document.querySelector('.performers-game').innerHTML = `Last Game &nbsp;·&nbsp; ${t.lastGame}`
+      // Last game date + score + performers
       document.querySelector('.performers-date').textContent = t.lastGameDate
-
-      // Performers
+      renderLgScore(t.lastGame)
       document.querySelector('.performers').innerHTML = t.performers.map(p => `
         <div class="performer">
-          <span class="performer-role">${p.role}</span>
+          <span class="performer-role">${p.role.slice(0,3)}</span>
           <span class="p-name">${p.name}</span>
           <span class="p-line">${p.line}</span>
         </div>`).join('')
@@ -1276,6 +1394,55 @@
           <span class="hero-next-team">${g.opponent}</span>
         </div>
         <div class="hero-next-time">${dateStr ? dateStr + ' · ' : ''}${g.time}</div>`
+    }
+
+    /* ── Last game score display ─────────────────────────── */
+    function renderLgScore(scoreStr) {
+      const el = document.getElementById('lg-score')
+      if (!el || !scoreStr) return
+      // e.g. "LAD 8, SD 3"
+      const parts = scoreStr.split(',').map(s => s.trim())
+      if (parts.length !== 2) return
+      const [a1, s1] = parts[0].split(' ')
+      const [a2, s2] = parts[1].split(' ')
+      el.innerHTML = `
+        <div class="lgs-side"><span class="lgs-abbr">${a1}</span><span class="lgs-num">${s1}</span></div>
+        <span class="lgs-sep">—</span>
+        <div class="lgs-side"><span class="lgs-num">${s2}</span><span class="lgs-abbr">${a2}</span></div>`
+    }
+
+    /* ── News loader ─────────────────────────────────────── */
+    async function loadNews() {
+      const grid = document.getElementById('news-grid')
+      if (!grid) return
+      try {
+        const res  = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=19&limit=6')
+        const data = await res.json()
+        const articles = data.articles ?? []
+        if (!articles.length) { grid.innerHTML = '<div class="news-loading">No articles found</div>'; return }
+        grid.innerHTML = articles.map(a => {
+          const img     = a.images?.[0]?.url ?? ''
+          const href    = a.links?.web?.href ?? '#'
+          const ago     = timeAgo(a.published)
+          const source  = a.categories?.find(c => c.type === 'league')?.description ?? 'ESPN'
+          return `<a class="news-card" href="${href}" target="_blank" rel="noopener">
+            ${img ? `<img class="news-card-img" src="${img}" alt="" loading="lazy">` : ''}
+            <div class="news-card-body">
+              <div class="news-card-headline">${a.headline}</div>
+              <div class="news-card-meta">${ago}</div>
+            </div>
+          </a>`
+        }).join('')
+      } catch (e) {
+        grid.innerHTML = '<div class="news-loading">Could not load news</div>'
+      }
+    }
+    function timeAgo(iso) {
+      if (!iso) return ''
+      const mins = Math.floor((Date.now() - new Date(iso)) / 60000)
+      if (mins < 60)  return `${mins}m ago`
+      if (mins < 1440) return `${Math.floor(mins/60)}h ago`
+      return `${Math.floor(mins/1440)}d ago`
     }
 
     /* ── Schedule renderer ──────────────────────────────── */
@@ -1531,6 +1698,7 @@
     const saved = localStorage.getItem('selectedTeam')
     renderTeam(saved && TEAMS[saved] ? saved : 'dodgers')
     loadLiveData()
+    loadNews()
 
     /* ── Live data from MLB Stats API ───────────────────────── */
     async function loadLiveData() {
@@ -1671,13 +1839,13 @@
           const gd = new Date(lastGame.gameDate)
           const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
           TEAMS.dodgers.lastGame     = `LAD ${myScore}, ${oppAbbr} ${oppScore}`
-          TEAMS.dodgers.lastGameDate = `${mo[gd.getMonth()]} ${gd.getDate()}, 2025`
+          TEAMS.dodgers.lastGameDate = `${mo[gd.getMonth()]} ${gd.getDate()}, ${gd.getFullYear()}`
           TEAMS.dodgers.performers   = performers
-          document.querySelector('.performers-game').innerHTML = `Last Game &nbsp;·&nbsp; ${TEAMS.dodgers.lastGame}`
           document.querySelector('.performers-date').textContent = TEAMS.dodgers.lastGameDate
+          renderLgScore(TEAMS.dodgers.lastGame)
           document.querySelector('.performers').innerHTML = performers.map(p => `
             <div class="performer">
-              <span class="performer-role">${p.role}</span>
+              <span class="performer-role">${p.role.slice(0,3)}</span>
               <span class="p-name">${p.name}</span>
               <span class="p-line">${p.line}</span>
             </div>`).join('')
