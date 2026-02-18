@@ -437,6 +437,111 @@
       flex-shrink: 0;
     }
 
+    /* ── Player Detail View ─────────────────────────────── */
+    .pd-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+    .pd-view.active { display: flex; }
+    .pd-header-info {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .pd-player-meta { display: flex; align-items: center; gap: 0.75rem; }
+    .pd-jersey {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.6rem;
+      color: rgba(255,255,255,0.1);
+      line-height: 1;
+      flex-shrink: 0;
+      min-width: 2.5ch;
+      text-align: right;
+    }
+    .pd-fullname {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.05em;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .pd-pos-label {
+      font-size: 0.57rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-top: 0.1rem;
+    }
+    .pd-body { flex: 1; overflow-y: auto; padding: 0.75rem 1.25rem 2rem; }
+    .pd-section { margin-bottom: 1.25rem; }
+    .pd-section-title {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.65rem;
+    }
+    .pd-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.25rem;
+    }
+    .pd-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.45rem 0.1rem;
+      gap: 0.15rem;
+    }
+    .pd-stat-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+      color: #fff;
+      line-height: 1;
+    }
+    .pd-stat-lbl {
+      font-size: 0.46rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+    }
+    .pd-loading {
+      padding: 2.5rem 0;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.18);
+    }
+    .pd-back {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .pd-back:hover { color: #fff; }
+    .roster-row { cursor: pointer; transition: opacity 0.15s; }
+    .roster-row:hover { opacity: 0.72; }
+    .roster-chevron {
+      color: rgba(255,255,255,0.2);
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
     /* ── Settings Button & Team Dropdown ────────────────── */
     .bar-actions {
       position: absolute;
@@ -654,20 +759,27 @@
 
   <!-- Side panel -->
   <div class="side-panel" id="side-panel">
-    <div class="sp-header">
-      <span class="sp-title">Dodgers</span>
+    <div class="sp-header" id="sp-header">
+      <span class="sp-title" id="sp-title">Dodgers</span>
       <button class="sp-close" onclick="closePanel()">✕</button>
     </div>
-    <div class="sp-tabs">
+    <div class="sp-tabs" id="sp-tabs">
       <button class="sp-tab active" onclick="switchSideTab('schedule')">Schedule</button>
       <button class="sp-tab" onclick="switchSideTab('roster')">40-Man Roster</button>
     </div>
-    <div class="sp-body">
+    <div class="sp-body" id="sp-body">
       <div class="sp-panel active" id="sp-schedule">
         <div class="schedule-list" id="schedule-list"></div>
       </div>
       <div class="sp-panel" id="sp-roster">
         <div class="roster-placeholder">Roster Coming Soon</div>
+      </div>
+    </div>
+    <!-- Player detail drill-down -->
+    <div class="pd-view" id="pd-view">
+      <div class="pd-header-info" id="pd-header-info"></div>
+      <div class="pd-body" id="pd-body">
+        <div class="pd-loading">Loading…</div>
       </div>
     </div>
   </div>
@@ -820,6 +932,7 @@
       document.getElementById('panel-backdrop').classList.toggle('open')
     }
     function closePanel() {
+      closePlayer()
       document.getElementById('side-panel').classList.remove('open')
       document.getElementById('panel-backdrop').classList.remove('open')
     }
@@ -869,12 +982,109 @@
           <div class="roster-group">
             <div class="roster-group-title">${LABELS[k]}</div>
             ${groups[k].map(p => `
-              <div class="roster-row">
+              <div class="roster-row" onclick="openPlayer(${p.person.id},'${(p.position?.type||'').replace(/'/g,"\\'")}','${p.jerseyNumber||''}','${p.person.fullName.replace(/'/g,"\\'")}','${p.position.abbreviation}')">
                 <span class="roster-num">${p.jerseyNumber || '–'}</span>
                 <span class="roster-name">${p.person.fullName}</span>
                 <span class="roster-pos">${p.position.abbreviation}</span>
+                <span class="roster-chevron">›</span>
               </div>`).join('')}
           </div>`).join('')
+    }
+
+    /* ── Player detail ──────────────────────────────────── */
+    function openPlayer(id, posType, jersey, name, posAbbr) {
+      // swap header to show back button
+      document.getElementById('sp-title').innerHTML =
+        `<button class="pd-back" onclick="closePlayer()">← Back</button>`
+      // hide list views, show detail
+      document.getElementById('sp-tabs').style.display = 'none'
+      document.getElementById('sp-body').style.display = 'none'
+      const pdView = document.getElementById('pd-view')
+      pdView.classList.add('active')
+      // player header
+      document.getElementById('pd-header-info').innerHTML = `
+        <div class="pd-player-meta">
+          <span class="pd-jersey">${jersey || '#'}</span>
+          <div>
+            <div class="pd-fullname">${name}</div>
+            <div class="pd-pos-label">${posAbbr} · Los Angeles Dodgers</div>
+          </div>
+        </div>`
+      document.getElementById('pd-body').innerHTML = '<div class="pd-loading">Loading…</div>'
+      fetchPlayerStats(id, posType)
+    }
+
+    function closePlayer() {
+      const pdView = document.getElementById('pd-view')
+      if (!pdView.classList.contains('active')) return
+      pdView.classList.remove('active')
+      document.getElementById('sp-tabs').style.display = ''
+      document.getElementById('sp-body').style.display = ''
+      const teamKey = document.body.dataset.team || 'dodgers'
+      document.getElementById('sp-title').textContent = TEAMS[teamKey]?.name ?? 'Dodgers'
+    }
+
+    async function fetchPlayerStats(playerId, posType) {
+      try {
+        const res = await fetch(
+          `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season,career],season=2025)`
+        )
+        const { people } = await res.json()
+        const stats = people[0]?.stats ?? []
+        const get = (group, type) =>
+          stats.find(s => s.group.displayName === group && s.type.displayName === type)?.splits?.[0]?.stat ?? null
+
+        const isPit = posType === 'Pitcher'
+        const isTW  = posType === 'Two-Way Player'
+        let html = ''
+
+        if (!isPit) {
+          const sh = get('hitting','season'), ch = get('hitting','career')
+          if (sh) html += statSection('2025 Season · Batting', hitGrid(sh))
+          if (ch)  html += statSection('Career · Batting',     hitGrid(ch))
+        }
+        if (isPit || isTW) {
+          const sp = get('pitching','season'), cp = get('pitching','career')
+          if (sp) html += statSection('2025 Season · Pitching', pitGrid(sp))
+          if (cp)  html += statSection('Career · Pitching',     pitGrid(cp))
+        }
+
+        document.getElementById('pd-body').innerHTML =
+          html || '<div class="pd-loading">No stats available</div>'
+      } catch (e) {
+        document.getElementById('pd-body').innerHTML =
+          '<div class="pd-loading">Could not load stats</div>'
+      }
+    }
+
+    function statSection(title, gridHtml) {
+      return `<div class="pd-section">
+        <div class="pd-section-title">${title}</div>
+        <div class="pd-stat-grid">${gridHtml}</div>
+      </div>`
+    }
+    function pdStat(val, lbl) {
+      return `<div class="pd-stat"><span class="pd-stat-val">${val ?? '–'}</span><span class="pd-stat-lbl">${lbl}</span></div>`
+    }
+    function hitGrid(s) {
+      return [
+        pdStat(s.gamesPlayed, 'G'),   pdStat(s.atBats, 'AB'),
+        pdStat(s.hits, 'H'),          pdStat(s.homeRuns, 'HR'),
+        pdStat(s.rbi, 'RBI'),         pdStat(s.stolenBases, 'SB'),
+        pdStat(s.baseOnBalls, 'BB'),  pdStat(s.strikeOuts, 'K'),
+        pdStat(s.avg, 'AVG'),         pdStat(s.obp, 'OBP'),
+        pdStat(s.slg, 'SLG'),         pdStat(s.ops, 'OPS'),
+      ].join('')
+    }
+    function pitGrid(s) {
+      return [
+        pdStat(s.gamesPlayed, 'G'),         pdStat(s.gamesStarted, 'GS'),
+        pdStat(`${s.wins??0}-${s.losses??0}`, 'W-L'), pdStat(s.era, 'ERA'),
+        pdStat(s.inningsPitched, 'IP'),     pdStat(s.strikeOuts, 'K'),
+        pdStat(s.baseOnBalls, 'BB'),        pdStat(s.hits, 'H'),
+        pdStat(s.homeRuns, 'HR'),           pdStat(s.whip, 'WHIP'),
+        pdStat(s.strikeoutsPer9Inn, 'K/9'), pdStat(s.walksPer9Inn, 'BB/9'),
+      ].join('')
     }
 
     /* ── Settings dropdown ──────────────────────────────── */
