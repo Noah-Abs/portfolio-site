@@ -340,6 +340,22 @@
     }
     .home-link:hover { color: rgba(255,255,255,0.85); }
 
+    /* ── Red Sox theme ──────────────────────────────────── */
+    body[data-team="redsox"] {
+      background: radial-gradient(ellipse at 50% 30%, #9B0D0D 0%, #3A0505 55%, #110101 100%);
+    }
+    body[data-team="redsox"] .logo-wrap img {
+      filter: drop-shadow(0 4px 24px rgba(192,24,42,0.8));
+    }
+    body[data-team="redsox"] .c-top,
+    body[data-team="redsox"] .f-top {
+      background: linear-gradient(175deg, #D03040 0%, #A01C29 100%);
+    }
+    body[data-team="redsox"] .c-bot,
+    body[data-team="redsox"] .f-bot {
+      background: linear-gradient(175deg, #A01C29 0%, #5A0A0A 100%);
+    }
+
     /* ── Responsive ─────────────────────────────────────── */
     @media (max-width: 560px) {
       :root { --card-h: 110px; --card-w: 96px; }
@@ -429,7 +445,29 @@
 </div><!-- /wrapper -->
 
 <script>
-  const TARGET = new Date('2026-03-26T13:05:00').getTime()
+  // Apply saved team preference
+  const TIMER_TEAMS = {
+    dodgers: {
+      logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg',
+      logoAlt: 'Los Angeles Dodgers',
+      eyebrow:  'Los Angeles Dodgers · MLB 2026',
+      target:   '2026-03-26T13:05:00',
+    },
+    redsox: {
+      logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg',
+      logoAlt: 'Boston Red Sox',
+      eyebrow:  'Boston Red Sox · MLB 2026',
+      target:   '2026-03-26T16:10:00',
+    },
+  }
+  const savedTeam = localStorage.getItem('selectedTeam') || 'dodgers'
+  const timerTeam = TIMER_TEAMS[savedTeam] || TIMER_TEAMS.dodgers
+  document.body.dataset.team = savedTeam
+  document.querySelector('.logo-wrap img').src = timerTeam.logoSrc
+  document.querySelector('.logo-wrap img').alt = timerTeam.logoAlt
+  document.querySelector('.eyebrow').textContent = timerTeam.eyebrow
+
+  const TARGET = new Date(timerTeam.target).getTime()
 
   // Cache card elements
   const cards = {
