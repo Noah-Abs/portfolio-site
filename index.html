@@ -796,7 +796,7 @@
       padding-top: 9px;
       filter: drop-shadow(0 0 2px rgba(180,140,20,0.85)) drop-shadow(0 0 1px rgba(180,140,20,0.6));
       transition: filter 0.2s, transform 0.2s;
-      cursor: default;
+      cursor: pointer;
     }
     .ws-banner:hover {
       filter: drop-shadow(0 0 5px rgba(220,170,30,1)) drop-shadow(0 0 2px rgba(220,170,30,0.8));
@@ -811,6 +811,161 @@
       color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,0.5);
       user-select: none;
+    }
+
+    /* ── WS Info Modal ───────────────────────────────── */
+    .ws-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 450;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .ws-backdrop.open { opacity: 1; pointer-events: all; }
+    .ws-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 460;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(18px) scale(0.97);
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+    .ws-modal.open { opacity: 1; transform: none; pointer-events: all; }
+    .ws-modal-card {
+      background: linear-gradient(155deg, #001a5c 0%, #000b30 55%, #000510 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 88dvh;
+      overflow-y: auto;
+      scrollbar-width: none;
+      position: relative;
+    }
+    .ws-modal-card::-webkit-scrollbar { display: none; }
+    .ws-modal-header {
+      padding: 1.75rem 1.75rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .ws-modal-year-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4.5rem;
+      line-height: 1;
+      color: rgba(230,170,40,0.92);
+      letter-spacing: 0.04em;
+    }
+    .ws-modal-subtitle {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-top: 0.35rem;
+    }
+    .ws-modal-close {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.45);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+    .ws-modal-close:hover { background: rgba(255,255,255,0.13); color: #fff; }
+    .ws-modal-body {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.5rem 1.75rem 2rem;
+    }
+    .ws-modal-img-wrap {
+      width: 200px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(0,20,70,0.6);
+      border: 1px solid rgba(255,255,255,0.07);
+      aspect-ratio: 3/4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ws-modal-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .ws-modal-img-placeholder {
+      font-size: 2.5rem;
+      opacity: 0.15;
+    }
+    .ws-modal-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .ws-modal-result {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .ws-modal-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .ws-modal-meta-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .ws-modal-meta-label {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      min-width: 55px;
+      flex-shrink: 0;
+    }
+    .ws-modal-meta-value {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+    .ws-modal-desc {
+      font-size: 0.86rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.5);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 1rem;
+    }
+    @media (max-width: 560px) {
+      .ws-modal-body { flex-direction: column; }
+      .ws-modal-img-wrap { width: 100%; aspect-ratio: 16/9; }
     }
     .hero-countdown {
       display: flex;
@@ -1227,15 +1382,15 @@
     </div>
     <span class="hero-champs" id="hero-champs">Back-to-Back World Series Champions</span>
     <div class="ws-banners">
-      <div class="ws-banner"><span class="ws-banner-year">1955</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">1959</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">1963</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">1965</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">1981</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">1988</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">2020</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">2024</span></div>
-      <div class="ws-banner"><span class="ws-banner-year">2025</span></div>
+      <div class="ws-banner" onclick="openWsModal(1955)"><span class="ws-banner-year">1955</span></div>
+      <div class="ws-banner" onclick="openWsModal(1959)"><span class="ws-banner-year">1959</span></div>
+      <div class="ws-banner" onclick="openWsModal(1963)"><span class="ws-banner-year">1963</span></div>
+      <div class="ws-banner" onclick="openWsModal(1965)"><span class="ws-banner-year">1965</span></div>
+      <div class="ws-banner" onclick="openWsModal(1981)"><span class="ws-banner-year">1981</span></div>
+      <div class="ws-banner" onclick="openWsModal(1988)"><span class="ws-banner-year">1988</span></div>
+      <div class="ws-banner" onclick="openWsModal(2020)"><span class="ws-banner-year">2020</span></div>
+      <div class="ws-banner" onclick="openWsModal(2024)"><span class="ws-banner-year">2024</span></div>
+      <div class="ws-banner" onclick="openWsModal(2025)"><span class="ws-banner-year">2025</span></div>
     </div>
     <div class="hero-scroll">Scroll ↓</div>
   </section>
@@ -1874,7 +2029,154 @@
         }
       } catch (e) { console.warn('Last game fetch failed', e) }
     }
+
+    /* ── World Series Modal ──────────────────────────────── */
+    const WS_INFO = {
+      1955: {
+        subtitle: 'Brooklyn Dodgers vs. New York Yankees',
+        result: 'Dodgers win 4–3',
+        mvp: 'Johnny Podres',
+        venue: 'Ebbets Field · Yankee Stadium',
+        desc: "Brooklyn's only World Series title after decades of heartbreak against the Yankees. Johnny Podres threw a shutout in Game 7, and Sandy Amoros made a stunning running catch in the 6th inning to preserve the lead — one of the most iconic defensive plays in baseball history.",
+        wiki: '1955_World_Series'
+      },
+      1959: {
+        subtitle: 'Los Angeles Dodgers vs. Chicago White Sox',
+        result: 'Dodgers win 4–2',
+        mvp: 'Larry Sherry',
+        venue: 'LA Memorial Coliseum · Comiskey Park',
+        desc: "Los Angeles' first championship after relocating from Brooklyn. Down 2–0 in the series, the Dodgers rallied to win four straight. Relief ace Larry Sherry appeared in four games and was unhittable down the stretch.",
+        wiki: '1959_World_Series'
+      },
+      1963: {
+        subtitle: 'Los Angeles Dodgers vs. New York Yankees',
+        result: 'Dodgers win 4–0',
+        mvp: 'Sandy Koufax',
+        venue: 'Yankee Stadium · Dodger Stadium',
+        desc: "A dominant sweep of the mighty Yankees. Sandy Koufax won Games 1 and 4 while striking out 23 batters across the series. The Dodgers' pitching staff held New York to just 4 runs total — one of the most commanding World Series performances ever.",
+        wiki: '1963_World_Series'
+      },
+      1965: {
+        subtitle: 'Los Angeles Dodgers vs. Minnesota Twins',
+        result: 'Dodgers win 4–3',
+        mvp: 'Sandy Koufax',
+        venue: 'Dodger Stadium · Metropolitan Stadium',
+        desc: "Sandy Koufax at his absolute peak. He pitched Games 5 and 7 on short rest, throwing a complete game shutout in the clincher. Koufax struck out 29 batters in the series in one of the greatest individual World Series performances in baseball history.",
+        wiki: '1965_World_Series'
+      },
+      1981: {
+        subtitle: 'Los Angeles Dodgers vs. New York Yankees',
+        result: 'Dodgers win 4–2',
+        mvp: 'Ron Cey · Pedro Guerrero · Steve Yeager',
+        venue: 'Yankee Stadium · Dodger Stadium',
+        desc: "Down 2–0, the Dodgers became the first NL team to come back from an 0–2 deficit to win the World Series. Three players shared the MVP award — Ron Cey, Pedro Guerrero, and Steve Yeager — in one of the most memorable comebacks in Fall Classic history.",
+        wiki: '1981_World_Series'
+      },
+      1988: {
+        subtitle: 'Los Angeles Dodgers vs. Oakland Athletics',
+        result: 'Dodgers win 4–1',
+        mvp: 'Orel Hershiser',
+        venue: 'Dodger Stadium · Oakland Coliseum',
+        desc: "Kirk Gibson, barely able to walk due to injuries, came off the bench to hit a walk-off pinch-hit home run off Dennis Eckersley in Game 1. His fist pump around the bases is one of the most iconic moments in sports history. Orel Hershiser then dominated the rest of the series.",
+        wiki: '1988_World_Series'
+      },
+      2020: {
+        subtitle: 'Los Angeles Dodgers vs. Tampa Bay Rays',
+        result: 'Dodgers win 4–2',
+        mvp: 'Corey Seager',
+        venue: 'Globe Life Field (neutral site, Arlington TX)',
+        desc: "Played in a bubble during the COVID-19 pandemic, the Dodgers ended a 32-year championship drought. Corey Seager hit .400 with 2 home runs. Clayton Kershaw finally got the ring that had eluded him, and Justin Turner's positive COVID test during the celebration made for a bittersweet night.",
+        wiki: '2020_World_Series'
+      },
+      2024: {
+        subtitle: 'Los Angeles Dodgers vs. New York Yankees',
+        result: 'Dodgers win 4–1',
+        mvp: 'Freddie Freeman',
+        venue: 'Dodger Stadium · Yankee Stadium',
+        desc: "Freddie Freeman delivered one of the most dramatic moments in World Series history — a walk-off grand slam in the 10th inning of Game 1 while battling a severe ankle injury. He finished hitting .400 with 12 RBI across the series to claim MVP honors in stunning fashion.",
+        wiki: '2024_World_Series'
+      },
+      2025: {
+        subtitle: 'Los Angeles Dodgers — Back-to-Back Champions',
+        result: 'Dodgers win',
+        mvp: '—',
+        venue: '—',
+        desc: "The Dodgers captured back-to-back World Series titles in 2025, cementing their dynasty as one of the greatest runs in modern baseball history.",
+        wiki: '2025_World_Series'
+      }
+    }
+
+    function openWsModal(year) {
+      const info = WS_INFO[year]
+      if (!info) return
+      document.getElementById('ws-modal-year').textContent = year
+      document.getElementById('ws-modal-subtitle').textContent = info.subtitle
+      document.getElementById('ws-modal-result').textContent = info.result
+      document.getElementById('ws-modal-meta').innerHTML = `
+        <div class="ws-modal-meta-row"><span class="ws-modal-meta-label">Opponent</span><span class="ws-modal-meta-value">${info.subtitle.split(' vs. ')[1] ?? '—'}</span></div>
+        <div class="ws-modal-meta-row"><span class="ws-modal-meta-label">MVP</span><span class="ws-modal-meta-value">${info.mvp}</span></div>
+        <div class="ws-modal-meta-row"><span class="ws-modal-meta-label">Venues</span><span class="ws-modal-meta-value">${info.venue}</span></div>
+      `
+      document.getElementById('ws-modal-desc').textContent = info.desc
+
+      // Reset image
+      const img = document.getElementById('ws-modal-img')
+      const placeholder = document.getElementById('ws-modal-img-placeholder')
+      img.style.display = 'none'
+      img.src = ''
+      placeholder.style.display = 'block'
+
+      // Show modal
+      document.getElementById('ws-backdrop').classList.add('open')
+      document.getElementById('ws-modal').classList.add('open')
+      document.body.style.overflow = 'hidden'
+
+      // Fetch Wikipedia thumbnail
+      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${info.wiki}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.thumbnail?.source) {
+            img.src = data.thumbnail.source
+            img.onload = () => { img.style.display = 'block'; placeholder.style.display = 'none' }
+          }
+        })
+        .catch(() => {})
+    }
+
+    function closeWsModal() {
+      document.getElementById('ws-backdrop').classList.remove('open')
+      document.getElementById('ws-modal').classList.remove('open')
+      document.body.style.overflow = ''
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWsModal() })
   </script>
   <script src="script.js"></script>
+
+  <!-- WS Championship Modal -->
+  <div class="ws-backdrop" id="ws-backdrop" onclick="closeWsModal()"></div>
+  <div class="ws-modal" id="ws-modal">
+    <div class="ws-modal-card" onclick="event.stopPropagation()">
+      <div class="ws-modal-header">
+        <div>
+          <div class="ws-modal-year-num" id="ws-modal-year"></div>
+          <div class="ws-modal-subtitle" id="ws-modal-subtitle"></div>
+        </div>
+        <button class="ws-modal-close" onclick="closeWsModal()">✕</button>
+      </div>
+      <div class="ws-modal-body">
+        <div class="ws-modal-img-wrap">
+          <img class="ws-modal-img" id="ws-modal-img" src="" alt="" />
+          <span class="ws-modal-img-placeholder" id="ws-modal-img-placeholder">🏆</span>
+        </div>
+        <div class="ws-modal-details">
+          <div class="ws-modal-result" id="ws-modal-result"></div>
+          <div class="ws-modal-meta" id="ws-modal-meta"></div>
+          <p class="ws-modal-desc" id="ws-modal-desc"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
