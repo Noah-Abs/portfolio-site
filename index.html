@@ -127,18 +127,30 @@
       transition: color 0.2s;
     }
     .bar-link:hover { color: rgba(255,255,255,0.85); }
-    .na-logo {
+    .bar-next-game {
       position: absolute;
       left: 1.5rem;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.5rem;
-      letter-spacing: 0.08em;
-      color: #fff;
-      text-decoration: none;
-      opacity: 0.8;
-      transition: opacity 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+      line-height: 1;
     }
-    .na-logo:hover { opacity: 1; }
+    .bar-ng-matchup {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      opacity: 0.9;
+      white-space: nowrap;
+    }
+    .bar-ng-time {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      white-space: nowrap;
+    }
     /* ── Stats Panel ──────────────────────────────────── */
     .stats-panel {
       position: relative;
@@ -264,6 +276,243 @@
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.38);
     }
+    /* ── Content Section (below stats) ──────────────────── */
+    .content-section {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: 0 2rem 3rem;
+    }
+    .content-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Next Game Card ──────────────────────────────────── */
+    .next-game-card {
+      padding: 1.5rem 0 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .ng-eyebrow {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .ng-eyebrow-tag {
+      color: rgba(255,255,255,0.18);
+    }
+    .ng-body {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .ng-team {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+    .ng-logo {
+      height: 52px;
+      width: auto;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+    }
+    .ng-team-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .ng-at-vs {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+    .ng-team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.05em;
+      color: #fff;
+      line-height: 1;
+    }
+    .ng-venue {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.3);
+    }
+    .ng-vdivider {
+      width: 1px;
+      height: 44px;
+      background: rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .ng-time-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+    .ng-date {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+      line-height: 1;
+    }
+    .ng-time {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.45);
+    }
+    .ng-tv {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+    }
+
+    /* ── Tab Bar ─────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-top: 1.25rem;
+    }
+    .tab {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.65rem 1.2rem;
+      margin-bottom: -1px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab:first-child { padding-left: 0; }
+    .tab:hover { color: rgba(255,255,255,0.7); }
+    .tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.7); }
+
+    /* ── Tab Panels ──────────────────────────────────────── */
+    .tab-panel { display: none; padding-top: 1.25rem; }
+    .tab-panel.active { display: block; }
+
+    /* ── Schedule List ───────────────────────────────────── */
+    .schedule-list { display: flex; flex-direction: column; }
+    .schedule-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .schedule-row:last-child { border-bottom: none; }
+    .sr-date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 52px;
+      flex-shrink: 0;
+    }
+    .sr-day {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+    .sr-monthday {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.1;
+    }
+    .sr-logo {
+      height: 28px;
+      width: auto;
+      flex-shrink: 0;
+    }
+    .sr-opponent {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .sr-opp-info {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+    .sr-at-vs {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+    .sr-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .sr-venue {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      min-width: 38px;
+      flex-shrink: 0;
+    }
+    .sr-time {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.45);
+      min-width: 70px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .sr-tv {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      min-width: 60px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .roster-placeholder {
+      padding: 2.5rem 0;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.15);
+    }
+
+    @media (max-width: 560px) {
+      .content-section { padding: 0 1rem 2rem; }
+      .ng-body { gap: 1rem; }
+      .sr-tv { display: none; }
+    }
+
     /* ── Settings Button & Team Dropdown ────────────────── */
     .settings-btn {
       position: absolute;
@@ -332,7 +581,7 @@
     @media (max-width: 560px) {
       .bar-label { display: none; }
       .bar-link  { display: none; }
-      .na-logo   { left: 0.75rem; }
+      .bar-next-game { left: 0.75rem; }
       .opening-day-bar { gap: 1rem; padding: 0.75rem 1rem 0.75rem 3rem; }
       .bar-logo  { height: 38px; }
       .bar-val   { font-size: 1.75rem; }
@@ -366,7 +615,10 @@
 
   <!-- Opening Day countdown bar -->
   <div class="opening-day-bar" style="position:relative;">
-    <a href="/" class="na-logo" title="Home">NA</a>
+    <div class="bar-next-game">
+      <span class="bar-ng-matchup" id="bar-ng-matchup">vs Cubs</span>
+      <span class="bar-ng-time" id="bar-ng-time">1:05 PM · Mar 26</span>
+    </div>
     <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
@@ -470,6 +722,52 @@
   </section>
 
 
+  <!-- Content: Next Game + Tabs -->
+  <div class="content-section">
+    <div class="content-inner">
+
+      <!-- Next Game -->
+      <div class="next-game-card" id="next-game-card">
+        <div class="ng-eyebrow">
+          Next Game <span class="ng-eyebrow-tag">· Opening Day</span>
+        </div>
+        <div class="ng-body">
+          <div class="ng-team">
+            <img class="ng-logo" id="ng-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" alt="Cubs">
+            <div class="ng-team-info">
+              <span class="ng-at-vs" id="ng-at-vs">vs</span>
+              <span class="ng-team-name" id="ng-team-name">Chicago Cubs</span>
+              <span class="ng-venue" id="ng-venue">Dodger Stadium</span>
+            </div>
+          </div>
+          <div class="ng-vdivider"></div>
+          <div class="ng-time-block">
+            <span class="ng-date" id="ng-date">Thu, Mar 26</span>
+            <span class="ng-time" id="ng-time">1:05 PM PT</span>
+            <span class="ng-tv" id="ng-tv">SportsNet LA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('schedule')">Schedule</button>
+        <button class="tab" onclick="switchTab('roster')">40-Man Roster</button>
+      </div>
+
+      <!-- Schedule panel -->
+      <div class="tab-panel active" id="panel-schedule">
+        <div class="schedule-list" id="schedule-list"></div>
+      </div>
+
+      <!-- Roster panel -->
+      <div class="tab-panel" id="panel-roster">
+        <div class="roster-placeholder">Roster Coming Soon</div>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     /* ── Team data ──────────────────────────────────────── */
     const TEAMS = {
@@ -496,6 +794,32 @@
           { role: 'Batter',  name: 'Freddie Freeman',  line: '2-3 · 2B · 2 RBI' },
           { role: 'Batter',  name: 'Mookie Betts',     line: '2-4 · HR · BB' },
           { role: 'Pitcher', name: 'Y. Yamamoto',      line: '7.0 IP · 1 ER · 10 K · W' },
+        ],
+        nextGame: {
+          atVs: 'vs',
+          opponent: 'Chicago Cubs',
+          opponentShort: 'Cubs',
+          logoId: 112,
+          date: 'Thu, Mar 26',
+          dateShort: 'Mar 26',
+          time: '1:05 PM PT',
+          tv: 'SportsNet LA',
+          venue: 'Dodger Stadium',
+          tag: 'Opening Day',
+        },
+        schedule: [
+          { day: 'Thu', monthDay: 'Mar 26', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '1:05 PM PT',  tv: 'SNY' },
+          { day: 'Fri', monthDay: 'Mar 27', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '7:10 PM PT',  tv: 'SNY' },
+          { day: 'Sat', monthDay: 'Mar 28', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
+          { day: 'Mon', monthDay: 'Mar 30', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: 'SNY' },
+          { day: 'Tue', monthDay: 'Mar 31', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: 'SNY' },
+          { day: 'Wed', monthDay: 'Apr 1',  atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '3:40 PM PT', tv: '' },
+          { day: 'Fri', monthDay: 'Apr 3',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '7:10 PM PT',  tv: 'SNY' },
+          { day: 'Sat', monthDay: 'Apr 4',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
+          { day: 'Sun', monthDay: 'Apr 5',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '1:10 PM PT',  tv: '' },
+          { day: 'Tue', monthDay: 'Apr 7',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '6:40 PM PT', tv: 'SNY' },
+          { day: 'Wed', monthDay: 'Apr 8',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '6:40 PM PT', tv: '' },
+          { day: 'Thu', monthDay: 'Apr 9',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '12:40 PM PT', tv: '' },
         ],
       },
     }
@@ -554,9 +878,61 @@
           <span class="p-line">${p.line}</span>
         </div>`).join('')
 
+      // Bar next-game
+      const ng = t.nextGame
+      document.getElementById('bar-ng-matchup').textContent = `${ng.atVs} ${ng.opponentShort}`
+      document.getElementById('bar-ng-time').textContent    = `${ng.time} · ${ng.dateShort}`
+
+      // Next-game card
+      document.getElementById('ng-logo').src               = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${ng.logoId}.svg`
+      document.getElementById('ng-logo').alt               = ng.opponentShort
+      document.getElementById('ng-at-vs').textContent      = ng.atVs
+      document.getElementById('ng-team-name').textContent  = ng.opponent
+      document.getElementById('ng-venue').textContent      = ng.venue
+      document.getElementById('ng-date').textContent       = ng.date
+      document.getElementById('ng-time').textContent       = ng.time
+      document.getElementById('ng-tv').textContent         = ng.tv
+      document.querySelector('.ng-eyebrow-tag').textContent = ng.tag ? `· ${ng.tag}` : ''
+
+      // Schedule
+      renderSchedule(t.schedule)
+
       // Dropdown active state
       document.querySelectorAll('.team-dropdown-item').forEach(el => {
         el.classList.toggle('active', el.dataset.team === key)
+      })
+    }
+
+    /* ── Schedule renderer ──────────────────────────────── */
+    function renderSchedule(games) {
+      const list = document.getElementById('schedule-list')
+      list.innerHTML = games.map(g => `
+        <div class="schedule-row">
+          <div class="sr-date">
+            <span class="sr-day">${g.day}</span>
+            <span class="sr-monthday">${g.monthDay}</span>
+          </div>
+          <div class="sr-opponent">
+            <img class="sr-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg" alt="${g.opponent}">
+            <div class="sr-opp-info">
+              <span class="sr-at-vs">${g.atVs}</span>
+              <span class="sr-name">${g.opponent}</span>
+            </div>
+          </div>
+          <span class="sr-venue">${g.venue}</span>
+          <span class="sr-time">${g.time}</span>
+          ${g.tv ? `<span class="sr-tv">${g.tv}</span>` : '<span class="sr-tv"></span>'}
+        </div>`).join('')
+    }
+
+    /* ── Tab switcher ───────────────────────────────────── */
+    function switchTab(id) {
+      document.querySelectorAll('.tab').forEach((btn, i) => {
+        const ids = ['schedule', 'roster']
+        btn.classList.toggle('active', ids[i] === id)
+      })
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('active', p.id === `panel-${id}`)
       })
     }
 
@@ -576,9 +952,9 @@
       }
     })
 
-    // Restore saved team on load
+    // Restore saved team on load (always render to populate all dynamic elements)
     const saved = localStorage.getItem('selectedTeam')
-    if (saved && TEAMS[saved] && saved !== 'dodgers') renderTeam(saved)
+    renderTeam(saved && TEAMS[saved] ? saved : 'dodgers')
   </script>
   <script src="script.js"></script>
 </body>
