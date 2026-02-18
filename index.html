@@ -132,7 +132,7 @@
       position: relative;
       z-index: 1;
       width: 100%;
-      padding: 1.5rem 2rem 1.75rem;
+      padding: 2.5rem 2rem 5rem;
     }
 
     .stats-inner {
@@ -140,18 +140,18 @@
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 1.1rem;
+      gap: 2rem;
     }
 
     .stats-header {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-size: 0.65rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.25em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.45);
     }
     .stats-divider { opacity: 0.3; }
 
@@ -165,54 +165,54 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.3rem;
-      padding: 0 0.5rem;
-      border-right: 1px solid rgba(255,255,255,0.07);
+      gap: 0.4rem;
+      padding: 0 0.75rem;
+      border-right: 1px solid rgba(255,255,255,0.08);
     }
     .stat-item:first-child { padding-left: 0; }
     .stat-item:last-child  { border-right: none; }
     .stat-val {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.7rem;
+      font-size: 2.2rem;
       letter-spacing: 0.04em;
       color: #fff;
       line-height: 1;
     }
     .stat-lbl {
-      font-size: 0.58rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.45);
       white-space: nowrap;
     }
     .stat-rank {
-      font-size: 0.55rem;
+      font-size: 0.6rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.28);
       white-space: nowrap;
     }
 
     .performers-header {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding-top: 0.25rem;
-      border-top: 1px solid rgba(255,255,255,0.07);
+      align-items: baseline;
+      gap: 0.9rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid rgba(255,255,255,0.09);
     }
     .performers-game {
-      font-size: 0.68rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.6);
+      color: rgba(255,255,255,0.7);
     }
     .performers-date {
-      font-size: 0.62rem;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.25);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.32);
     }
 
     .performers {
@@ -224,33 +224,33 @@
     .performer {
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
+      gap: 0.3rem;
       flex: 1;
-      padding: 0 1rem;
+      padding: 0.25rem 1.25rem;
       border-right: 1px solid rgba(255,255,255,0.07);
     }
     .performer:first-child { padding-left: 0; }
     .performer:last-child  { border-right: none; }
     .performer-role {
-      font-size: 0.52rem;
+      font-size: 0.58rem;
       font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.32);
     }
     .p-name {
       font-family: 'Inter', sans-serif;
-      font-size: 0.82rem;
+      font-size: 1rem;
       font-weight: 600;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
       color: #fff;
       white-space: nowrap;
     }
     .p-line {
-      font-size: 0.68rem;
+      font-size: 0.78rem;
       font-weight: 400;
       letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.38);
+      color: rgba(255,255,255,0.48);
     }
     /* ── Side Panel ─────────────────────────────────────── */
     .panel-backdrop {
@@ -437,84 +437,50 @@
       flex-shrink: 0;
     }
 
-    /* ── Player Detail View ─────────────────────────────── */
-    .pd-view {
-      display: none;
-      flex-direction: column;
-      flex: 1;
-      overflow: hidden;
-    }
-    .pd-view.active { display: flex; }
-    .pd-header-info {
-      padding: 1rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      flex-shrink: 0;
-    }
-    .pd-player-meta { display: flex; align-items: center; gap: 0.75rem; }
-    .pd-jersey {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.6rem;
-      color: rgba(255,255,255,0.1);
-      line-height: 1;
-      flex-shrink: 0;
-      min-width: 2.5ch;
-      text-align: right;
-    }
-    .pd-fullname {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.3rem;
-      letter-spacing: 0.05em;
-      color: #fff;
-      line-height: 1.1;
-    }
-    .pd-pos-label {
-      font-size: 0.57rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      margin-top: 0.1rem;
-    }
+    /* ── Player Detail View (legacy, unused) ──────────── */
     .pd-body { flex: 1; overflow-y: auto; padding: 0.75rem 1.25rem 2rem; }
-    .pd-section { margin-bottom: 1.25rem; }
+    .pd-section { margin-bottom: 2rem; }
     .pd-section-title {
-      font-size: 0.5rem;
+      font-size: 0.6rem;
       font-weight: 700;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.28em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.22);
-      padding-bottom: 0.35rem;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      margin-bottom: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 1rem;
     }
     .pd-stat-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0.25rem;
     }
     .pd-stat {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0.45rem 0.1rem;
+      padding: 0.85rem 0.25rem;
+      border-right: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
       gap: 0.15rem;
     }
+    .pd-stat:nth-child(4n) { border-right: none; }
     .pd-stat-val {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
+      font-size: 2rem;
       letter-spacing: 0.02em;
       color: #fff;
       line-height: 1;
     }
     .pd-stat-lbl {
-      font-size: 0.46rem;
+      font-size: 0.55rem;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.38);
+      margin-top: 0.2rem;
     }
     .pd-loading {
-      padding: 2.5rem 0;
+      padding: 3rem 0;
       text-align: center;
       font-size: 0.65rem;
       font-weight: 700;
@@ -724,82 +690,75 @@
       letter-spacing: 0.25em;
       color: rgba(255,255,255,0.2);
     }
-    .po-content {
+
+    /* single scrollable column */
+    .po-scroll {
       flex: 1;
-      display: flex;
-      overflow: hidden;
+      overflow-y: auto;
+      padding: 2.5rem 3rem 4rem;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      box-sizing: border-box;
     }
-    .po-left {
-      width: 38%;
-      max-width: 340px;
+
+    /* image + name row */
+    .po-hero {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 2.5rem;
+    }
+    .po-headshot-wrap {
+      width: 120px;
+      height: 140px;
+      flex-shrink: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: linear-gradient(160deg, rgba(0,40,120,0.35), rgba(0,10,40,0.4));
+      border: 1px solid rgba(255,255,255,0.08);
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .po-deco-num {
-      position: absolute;
-      bottom: -0.12em;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(8rem, 20vw, 16rem);
-      line-height: 1;
-      color: rgba(255,255,255,0.04);
-      pointer-events: none;
-      white-space: nowrap;
-      user-select: none;
     }
     .po-headshot {
-      position: relative;
-      z-index: 1;
       width: 100%;
-      max-width: 300px;
       object-fit: contain;
       object-position: bottom center;
-      filter: drop-shadow(0 0 40px rgba(0,61,165,0.45));
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
     }
-    .po-right {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 2.5rem 2rem 1.5rem;
-      overflow-y: auto;
-      border-left: 1px solid rgba(255,255,255,0.06);
-    }
-    .po-identity { margin-bottom: 1.75rem; flex-shrink: 0; }
+    .po-identity { flex: 1; }
     .po-jersey-num {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1rem;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.25em;
       color: rgba(255,255,255,0.22);
-      margin-bottom: 0.05rem;
+      margin-bottom: 0.1rem;
     }
     .po-name {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2rem, 4.5vw, 3.8rem);
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
       letter-spacing: 0.02em;
       color: #fff;
       line-height: 1;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.45rem;
     }
     .po-pos {
-      font-size: 0.62rem;
+      font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.32);
     }
-    .po-stats { flex: 1; }
+    .po-stats { }
 
     @media (max-width: 600px) {
-      .po-content { flex-direction: column; }
-      .po-left { width: 100%; max-width: none; height: 220px; align-items: center; flex-shrink: 0; }
-      .po-headshot { max-width: 180px; }
-      .po-right { border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 1.25rem 1rem 1.5rem; }
-      .po-name { font-size: 2rem; }
+      .po-scroll { padding: 1.75rem 1.25rem 3rem; }
+      .po-headshot-wrap { width: 90px; height: 108px; }
+      .po-hero { gap: 1.25rem; margin-bottom: 1.75rem; padding-bottom: 1.5rem; }
+      .po-name { font-size: 1.9rem; }
     }
 
     /* ── Tablet ─────────────────────────── */
@@ -1012,20 +971,19 @@
       <button class="po-back" onclick="closePlayerOverlay()">← Back to Roster</button>
       <span class="po-team-label" id="po-team-label">Los Angeles Dodgers</span>
     </div>
-    <div class="po-content">
-      <div class="po-left">
-        <span class="po-deco-num" id="po-deco-num"></span>
-        <img class="po-headshot" id="po-headshot" src="" alt="" />
-      </div>
-      <div class="po-right">
+    <div class="po-scroll" id="po-scroll">
+      <div class="po-hero">
+        <div class="po-headshot-wrap">
+          <img class="po-headshot" id="po-headshot" src="" alt="" />
+        </div>
         <div class="po-identity">
           <div class="po-jersey-num" id="po-jersey-num"></div>
           <div class="po-name" id="po-name"></div>
           <div class="po-pos" id="po-pos"></div>
         </div>
-        <div class="po-stats" id="po-stats">
-          <div class="pd-loading">Loading…</div>
-        </div>
+      </div>
+      <div class="po-stats" id="po-stats">
+        <div class="pd-loading">Loading…</div>
       </div>
     </div>
   </div>
@@ -1250,7 +1208,6 @@
     function openPlayerOverlay(id, posType, jersey, name, posAbbr) {
       const teamKey = document.body.dataset.team || 'dodgers'
       document.getElementById('po-team-label').textContent = TEAMS[teamKey]?.name ?? 'Los Angeles Dodgers'
-      document.getElementById('po-deco-num').textContent = jersey || ''
       document.getElementById('po-jersey-num').textContent = jersey ? `#${jersey}` : ''
       document.getElementById('po-name').textContent = name
       document.getElementById('po-pos').textContent = `${posAbbr} · ${TEAMS[teamKey]?.name ?? 'Los Angeles Dodgers'}`
@@ -1258,6 +1215,7 @@
       img.src = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/${id}/headshot/silo/current`
       img.alt = name
       document.getElementById('po-stats').innerHTML = '<div class="pd-loading">Loading…</div>'
+      document.getElementById('po-scroll').scrollTop = 0
       document.getElementById('player-overlay').classList.add('open')
       document.body.style.overflow = 'hidden'
       fetchPlayerStatsOverlay(id, posType)
@@ -1284,13 +1242,13 @@
 
         if (!isPit) {
           const sh = get('hitting','season'), ch = get('hitting','career')
-          if (sh) html += statSection('2025 Season · Batting', hitGrid(sh))
-          if (ch)  html += statSection('Career · Batting',     hitGrid(ch))
+          if (sh) { const g = hitGrid(sh); html += statSection('2025 Season · Batting', g.primary, g.secondary) }
+          if (ch)  { const g = hitGrid(ch); html += statSection('Career · Batting',     g.primary, g.secondary) }
         }
         if (isPit || isTW) {
           const sp = get('pitching','season'), cp = get('pitching','career')
-          if (sp) html += statSection('2025 Season · Pitching', pitGrid(sp))
-          if (cp)  html += statSection('Career · Pitching',     pitGrid(cp))
+          if (sp) { const g = pitGrid(sp); html += statSection('2025 Season · Pitching', g.primary, g.secondary) }
+          if (cp)  { const g = pitGrid(cp); html += statSection('Career · Pitching',     g.primary, g.secondary) }
         }
 
         document.getElementById('po-stats').innerHTML =
@@ -1301,34 +1259,53 @@
       }
     }
 
-    function statSection(title, gridHtml) {
+    function statSection(title, primaryHtml, secondaryHtml) {
       return `<div class="pd-section">
         <div class="pd-section-title">${title}</div>
-        <div class="pd-stat-grid">${gridHtml}</div>
+        <div class="pd-stat-grid">${primaryHtml}</div>
+        ${secondaryHtml ? `<div class="pd-stat-grid" style="border-top:1px solid rgba(255,255,255,0.05)">${secondaryHtml}</div>` : ''}
       </div>`
     }
     function pdStat(val, lbl) {
       return `<div class="pd-stat"><span class="pd-stat-val">${val ?? '–'}</span><span class="pd-stat-lbl">${lbl}</span></div>`
     }
     function hitGrid(s) {
-      return [
-        pdStat(s.gamesPlayed, 'G'),   pdStat(s.atBats, 'AB'),
-        pdStat(s.hits, 'H'),          pdStat(s.homeRuns, 'HR'),
-        pdStat(s.rbi, 'RBI'),         pdStat(s.stolenBases, 'SB'),
-        pdStat(s.baseOnBalls, 'BB'),  pdStat(s.strikeOuts, 'K'),
-        pdStat(s.avg, 'AVG'),         pdStat(s.obp, 'OBP'),
-        pdStat(s.slg, 'SLG'),         pdStat(s.ops, 'OPS'),
+      const primary = [
+        pdStat(s.avg,       'AVG'),
+        pdStat(s.homeRuns,  'HR'),
+        pdStat(s.rbi,       'RBI'),
+        pdStat(s.ops,       'OPS'),
       ].join('')
+      const secondary = [
+        pdStat(s.gamesPlayed,  'G'),
+        pdStat(s.atBats,       'AB'),
+        pdStat(s.hits,         'H'),
+        pdStat(s.doubles,      '2B'),
+        pdStat(s.stolenBases,  'SB'),
+        pdStat(s.baseOnBalls,  'BB'),
+        pdStat(s.strikeOuts,   'K'),
+        pdStat(s.obp,          'OBP'),
+      ].join('')
+      return { primary, secondary }
     }
     function pitGrid(s) {
-      return [
-        pdStat(s.gamesPlayed, 'G'),         pdStat(s.gamesStarted, 'GS'),
-        pdStat(`${s.wins??0}-${s.losses??0}`, 'W-L'), pdStat(s.era, 'ERA'),
-        pdStat(s.inningsPitched, 'IP'),     pdStat(s.strikeOuts, 'K'),
-        pdStat(s.baseOnBalls, 'BB'),        pdStat(s.hits, 'H'),
-        pdStat(s.homeRuns, 'HR'),           pdStat(s.whip, 'WHIP'),
-        pdStat(s.strikeoutsPer9Inn, 'K/9'), pdStat(s.walksPer9Inn, 'BB/9'),
+      const primary = [
+        pdStat(s.era,                            'ERA'),
+        pdStat(`${s.wins??0}-${s.losses??0}`,    'W-L'),
+        pdStat(s.strikeOuts,                     'K'),
+        pdStat(s.whip,                           'WHIP'),
       ].join('')
+      const secondary = [
+        pdStat(s.gamesPlayed,        'G'),
+        pdStat(s.gamesStarted,       'GS'),
+        pdStat(s.inningsPitched,     'IP'),
+        pdStat(s.hits,               'H'),
+        pdStat(s.baseOnBalls,        'BB'),
+        pdStat(s.homeRuns,           'HR'),
+        pdStat(s.strikeoutsPer9Inn,  'K/9'),
+        pdStat(s.walksPer9Inn,       'BB/9'),
+      ].join('')
+      return { primary, secondary }
     }
 
     /* ── Settings dropdown ──────────────────────────────── */
