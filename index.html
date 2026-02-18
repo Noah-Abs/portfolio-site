@@ -163,6 +163,7 @@
       color: rgba(255,255,255,0.35);
     }
     /* ── Fixed left sidebar ──────────────────────────────── */
+    :root { --rn-width: 170px; }
     .fixed-sidebar {
       position: fixed;
       top: 84px;
@@ -182,10 +183,62 @@
       -webkit-backdrop-filter: blur(16px);
     }
     .fixed-sidebar::-webkit-scrollbar { display: none; }
-    /* ── Main content (offset for sidebar) ──────────────── */
+    /* Right navigation panel */
+    .right-nav {
+      position: fixed;
+      top: 84px;
+      right: 0;
+      bottom: 0;
+      width: var(--rn-width);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, rgba(0,18,72,0.97) 0%, rgba(0,6,28,0.98) 100%);
+      border-left: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 1rem 0;
+    }
+    .rn-label {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(255,255,255,0.2);
+      text-transform: uppercase;
+      padding: 0 1rem 0.6rem;
+    }
+    .rn-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      text-align: left;
+      width: 100%;
+      border-left: 2px solid transparent;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rn-item:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.04); }
+    .rn-item.active { color: #fff; border-left-color: var(--team-header2, #003DA5); background: rgba(255,255,255,0.06); }
+    .rn-badge {
+      font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em;
+      background: #e53; color: #fff; border-radius: 4px; padding: 1px 4px;
+    }
+    /* ── Main content (offset for both sidebars) ──────────────── */
     .main-content {
       margin-left: var(--sb-width);
+      margin-right: var(--rn-width);
     }
+    /* When left sidebar is hidden (non-home views) */
+    body.no-left-sidebar .fixed-sidebar { display: none; }
+    body.no-left-sidebar .main-content  { margin-left: 0; }
     .dash-label {
       display: flex;
       align-items: center;
@@ -419,11 +472,12 @@
     .mob-tabs { display: none; }
 
     @media (max-width: 700px) {
-      :root { --sb-width: 0px; }
+      :root { --sb-width: 0px; --rn-width: 0px; }
 
-      /* Sidebar off on mobile */
+      /* Both sidebars off on mobile */
       .fixed-sidebar { display: none; }
-      .main-content  { margin-left: 0; }
+      .right-nav     { display: none; }
+      .main-content  { margin-left: 0; margin-right: 0; }
 
       /* ── Header: compact iOS nav bar feel ── */
       .opening-day-bar {
@@ -2449,33 +2503,33 @@
       .mob-tabs {
         display: grid;
         grid-template-columns: 1fr auto 1fr;
-        align-items: end;
+        align-items: center;
       }
       /* Center logo tab */
       .mob-tab-center {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--team-header2, #003DA5);
+        border: 3px solid rgba(255,255,255,0.3);
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255,255,255,0.06);
-        border: 1.5px solid rgba(255,255,255,0.14);
-        border-radius: 50%;
-        width: 52px;
-        height: 52px;
-        margin: 0 auto;
-        margin-bottom: 6px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10;
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: background 0.15s;
-        flex-shrink: 0;
-        overflow: hidden;
         padding: 0;
       }
       .mob-tab-center:active { opacity: 0.6; }
       .mob-tab-center img {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         object-fit: contain;
-        display: block;
       }
       .mob-tab-center.active {
         background: rgba(255,255,255,0.12);
@@ -2772,122 +2826,6 @@
       text-overflow: ellipsis;
     }
 
-    /* ── Injured List ─────────────────────────────────────── */
-    .il-wrap {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 2rem 2rem 4rem;
-    }
-    @media (max-width: 700px) {
-      .il-wrap { padding: 1rem 0.75rem 3rem; }
-    }
-    .il-page-header {
-      margin-bottom: 1.5rem;
-    }
-    .il-page-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 2.2rem;
-      letter-spacing: 0.08em;
-      color: #fff;
-      line-height: 1;
-    }
-    .il-page-sub {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.35);
-      margin-top: 0.25rem;
-    }
-    .il-section-label {
-      font-size: 0.56rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      margin-bottom: 0.6rem;
-      margin-top: 1.25rem;
-    }
-    .il-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .il-card {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 10px;
-      padding: 0.75rem 1rem;
-      position: relative;
-      overflow: hidden;
-    }
-    .il-photo {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: rgba(255,255,255,0.06);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .il-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top center;
-    }
-    .il-photo-fallback { font-size: 1.1rem; color: rgba(255,255,255,0.2); }
-    .il-info { flex: 1; min-width: 0; }
-    .il-name {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .il-pos {
-      font-size: 0.58rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.32);
-      margin-top: 0.1rem;
-    }
-    .il-injury {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.5);
-      margin-top: 0.2rem;
-    }
-    .il-type-badge {
-      font-size: 0.52rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 0.18rem 0.55rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .il-type-10 {
-      background: rgba(220,60,40,0.15);
-      border: 1px solid rgba(220,60,40,0.4);
-      color: rgba(220,100,80,0.9);
-    }
-    .il-type-60 {
-      background: rgba(230,120,30,0.15);
-      border: 1px solid rgba(230,120,30,0.4);
-      color: rgba(230,150,60,0.9);
-    }
-    .il-empty {
-      padding: 2.5rem 0;
-      text-align: center;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.15);
-    }
   </style>
 </head>
 <body data-team="dodgers">
@@ -2917,39 +2855,7 @@
 
   <!-- Fixed left sidebar -->
   <div class="fixed-sidebar" id="fixed-sidebar">
-    <!-- Sidebar navigation -->
-    <nav class="sb-nav" id="sb-nav">
-      <button class="sb-nav-item active" data-view="home" onclick="switchView('home')">
-        <span class="sb-tab-icon">⌂</span>
-        <span class="sb-nav-lbl">Home</span>
-      </button>
-      <button class="sb-nav-item" data-view="live" onclick="switchView('live')">
-        <span class="sb-tab-icon">◉</span>
-        <span class="sb-nav-lbl">Live Game</span>
-        <span class="sb-nav-badge" id="sb-live-badge" style="display:none">LIVE</span>
-      </button>
-      <button class="sb-nav-item" data-view="depth" onclick="switchView('depth')">
-        <span class="sb-tab-icon">≡</span>
-        <span class="sb-nav-lbl">Depth Chart</span>
-      </button>
-      <button class="sb-nav-item" data-view="schedule" onclick="openSidePanel('schedule')">
-        <span class="sb-tab-icon">📅</span>
-        <span class="sb-nav-lbl">Schedule</span>
-      </button>
-      <button class="sb-nav-item" data-view="contracts" onclick="switchView('contracts')">
-        <span class="sb-tab-icon">💰</span>
-        <span class="sb-nav-lbl">Contracts</span>
-      </button>
-      <button class="sb-nav-item" data-view="il" onclick="switchView('il')">
-        <span class="sb-tab-icon">🩺</span>
-        <span class="sb-nav-lbl">Injured List</span>
-      </button>
-      <button class="sb-nav-item" data-view="roster" onclick="openSidePanel('roster')">
-        <span class="sb-tab-icon">👤</span>
-        <span class="sb-nav-lbl">Roster</span>
-      </button>
-    </nav>
-    <!-- Vertical nav tabs -->
+    <!-- Stats only — nav is in right-nav -->
     <div class="dash-label">
       <span class="stats-season">2025 Season</span>
       <span class="stats-divider">·</span>
@@ -3054,14 +2960,37 @@
   </div><!-- /view-contracts -->
 
   <!-- Injured List view -->
-  <div class="view-section" id="view-il">
-    <div class="il-wrap" id="il-wrap">
-      <div class="dc-loading">Loading injured list…</div>
-    </div>
-  </div><!-- /view-il -->
-
   </div><!-- /main-content -->
 
+  <!-- Right navigation panel (desktop only) -->
+  <nav class="right-nav" id="right-nav">
+    <div class="rn-label">Navigate</div>
+    <button class="rn-item active" data-view="home" onclick="switchView('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
+      Home
+    </button>
+    <button class="rn-item" data-view="live" onclick="switchView('live')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".5"/><path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".5"/></svg>
+      Live Game
+      <span class="rn-badge" id="sb-live-badge" style="display:none">LIVE</span>
+    </button>
+    <button class="rn-item" data-view="depth" onclick="switchView('depth')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="14" width="3.5" height="7" rx="1"/><rect x="10.25" y="9" width="3.5" height="12" rx="1"/><rect x="16.5" y="5" width="3.5" height="16" rx="1"/></svg>
+      Depth Chart
+    </button>
+    <button class="rn-item" data-view="schedule" onclick="openSidePanel('schedule')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Schedule
+    </button>
+    <button class="rn-item" data-view="contracts" onclick="switchView('contracts')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Contracts
+    </button>
+    <button class="rn-item" data-view="roster" onclick="openSidePanel('roster')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      40-Man Roster
+    </button>
+  </nav>
 
   <!-- Side panel backdrop -->
   <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
@@ -3162,7 +3091,6 @@
     let _lastLiveData     = null
     let _depthLoaded      = false
     let _contractsLoaded  = false
-    let _ilLoaded         = false
 
     const TEAMS = {
       dodgers: {
@@ -3340,7 +3268,6 @@
       _depthLoaded = false
       rosterLoaded = false
       _contractsLoaded = false
-      _ilLoaded = false
 
       // Update mobile center logo
       const centerLogo = document.getElementById('mob-center-logo')
@@ -3582,8 +3509,8 @@
       document.getElementById('side-panel').classList.add('open')
       document.getElementById('panel-backdrop').classList.add('open')
       switchSideTab(tab)
-      // Update sidebar nav active state for schedule/roster
-      document.querySelectorAll('.sb-nav-item[data-view]').forEach(btn => {
+      // Update right-nav active state for schedule/roster
+      document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === tab)
       })
       _setMobTab(tab)
@@ -3979,7 +3906,9 @@
       _currentView = view
       localStorage.setItem('activeView', view)
       closePanel()
-      const allViews = ['home','live','depth','contracts','il']
+      // Toggle left sidebar — only visible on home view
+      document.body.classList.toggle('no-left-sidebar', view !== 'home')
+      const allViews = ['home','live','depth','contracts']
       allViews.forEach(v => {
         const el = document.getElementById(`view-${v}`)
         if (el) el.classList.toggle('active', v === view)
@@ -3987,9 +3916,8 @@
       if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
       if (view === 'depth') loadDepthChart()
       if (view === 'contracts') loadContracts(_currentTeamKey)
-      if (view === 'il') loadIL()
-      // Update sidebar nav active state
-      document.querySelectorAll('.sb-nav-item[data-view]').forEach(btn => {
+      // Update right-nav active state
+      document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view)
       })
       _setMobTab(view)
@@ -4745,81 +4673,6 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       `
     }
 
-    /* ── Injured List ─────────────────────────────────────── */
-    async function loadIL() {
-      if (_ilLoaded) return
-      _ilLoaded = true
-      const wrap = document.getElementById('il-wrap')
-      if (!wrap) return
-
-      const t = TEAMS[_currentTeamKey]
-      const teamId = t?.id ?? 119
-
-      wrap.innerHTML = `
-        <div class="il-wrap" style="padding:0">
-          <div class="il-page-header">
-            <div class="il-page-title">Injured List</div>
-            <div class="il-page-sub">${t?.name ?? ''} · 2026</div>
-          </div>
-          <div class="il-cards" id="il-cards-10">
-            <div class="il-section-label">10-Day IL</div>
-            <div class="il-empty" id="il-loading-10">Loading…</div>
-          </div>
-          <div class="il-cards" id="il-cards-60" style="margin-top:1rem">
-            <div class="il-section-label">60-Day IL</div>
-            <div class="il-empty" id="il-loading-60">Loading…</div>
-          </div>
-        </div>`
-
-      try {
-        const res = await fetch(
-          `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=injured&season=2026`
-        )
-        const data = await res.json()
-        const roster = data.roster ?? []
-
-        const il10 = roster.filter(p => p.status?.description !== '60-Day Injured List')
-        const il60 = roster.filter(p => p.status?.description === '60-Day Injured List')
-
-        function renderILCard(p) {
-          const id   = p.person?.id
-          const name = p.person?.fullName ?? '—'
-          const pos  = p.position?.abbreviation ?? '—'
-          const note = p.note ?? p.status?.description ?? ''
-          const photo = id
-            ? `<img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_auto/v1/people/${id}/headshot/67/current" alt="${name}" onerror="this.parentNode.innerHTML='<span class=\\'il-photo-fallback\\'>◉</span>'">`
-            : '<span class="il-photo-fallback">◉</span>'
-          const ilType = p.status?.description === '60-Day Injured List' ? '60' : '10'
-          return `
-            <div class="il-card">
-              <div class="il-photo">${photo}</div>
-              <div class="il-info">
-                <div class="il-name">${name}</div>
-                <div class="il-pos">${pos}</div>
-                ${note ? `<div class="il-injury">${note}</div>` : ''}
-              </div>
-              <span class="il-type-badge il-type-${ilType}">${ilType}-Day IL</span>
-            </div>`
-        }
-
-        const el10 = document.getElementById('il-loading-10')
-        if (el10) {
-          el10.outerHTML = il10.length === 0
-            ? '<div class="il-empty">No players on 10-Day IL</div>'
-            : il10.map(renderILCard).join('')
-        }
-        const el60 = document.getElementById('il-loading-60')
-        if (el60) {
-          el60.outerHTML = il60.length === 0
-            ? '<div class="il-empty">No players on 60-Day IL</div>'
-            : il60.map(renderILCard).join('')
-        }
-      } catch (e) {
-        console.warn('IL fetch failed:', e)
-        wrap.innerHTML = '<div class="il-wrap" style="padding:0"><div class="il-empty">Could not load injured list.</div></div>'
-      }
-    }
-
     // Restore last active view — must run after all let declarations above
     const savedView = localStorage.getItem('activeView')
     if (savedView && savedView !== 'home') switchView(savedView)
@@ -4877,14 +4730,7 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
         </svg>
         <span>Contracts</span>
       </button>
-      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('il')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-          <path d="M2 17l10 5 10-5"/>
-          <path d="M2 12l10 5 10-5"/>
-        </svg>
-        <span>Injured List</span>
-      </button>
+
       <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('roster')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
           <circle cx="12" cy="7" r="4"/>
