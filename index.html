@@ -15,15 +15,22 @@
       --white:  #FFFFFF;
       --silver: #C0C8D8;
       --sb-width: 280px;
+      /* Team color variables — updated dynamically when team changes */
+      --team-bg1: #002580;
+      --team-bg2: #000D3A;
+      --team-bg3: #000510;
+      --team-header1: #001E62;
+      --team-header2: #003DA5;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       min-height: 100vh;
-      background: radial-gradient(ellipse at 50% 30%, #002580 0%, #000D3A 55%, #000510 100%);
+      background: radial-gradient(ellipse at 50% 30%, var(--team-bg1) 0%, var(--team-bg2) 55%, var(--team-bg3) 100%);
       font-family: 'Inter', sans-serif;
       color: var(--white);
+      transition: background 0.4s ease;
     }
     /* Pinstripe overlay */
     body::before {
@@ -57,7 +64,8 @@
       width: 100%;
       background:
         repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.03) 28px, rgba(255,255,255,0.03) 29px),
-        linear-gradient(90deg, #001E62 0%, #003DA5 50%, #001E62 100%);
+        linear-gradient(90deg, var(--team-header1) 0%, var(--team-header2) 50%, var(--team-header1) 100%);
+      transition: background 0.4s ease;
       border-bottom: 3px solid rgba(255,255,255,0.4);
       padding: 1rem 2rem;
       display: flex;
@@ -626,14 +634,6 @@
     .sp-panel.active { display: block; }
 
     /* ── Schedule filter button + sheet ──────────────── */
-    .sp-panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0.45rem 1.25rem;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      flex-shrink: 0;
-    }
     .filter-trigger-btn {
       display: flex;
       align-items: center;
@@ -2408,6 +2408,10 @@
         <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
         Los Angeles Dodgers
       </div>
+      <div class="team-dropdown-item" data-team="mets" onclick="switchTeam('mets')">
+        <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" alt="NYM">
+        New York Mets
+      </div>
     </div>
   </div>
 
@@ -2480,21 +2484,11 @@
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
     <div class="hero-wordmark">
-      <span class="hero-city">Los Angeles</span>
+      <span class="hero-city" id="hero-city">Los Angeles</span>
       <span class="hero-team-name" id="hero-team-name-display">Dodgers</span>
     </div>
     <span class="hero-champs" id="hero-champs">Back-to-Back World Series Champions</span>
-    <div class="ws-banners">
-      <div class="ws-banner" onclick="openWsModal(1955)"><span class="ws-banner-year">1955</span></div>
-      <div class="ws-banner" onclick="openWsModal(1959)"><span class="ws-banner-year">1959</span></div>
-      <div class="ws-banner" onclick="openWsModal(1963)"><span class="ws-banner-year">1963</span></div>
-      <div class="ws-banner" onclick="openWsModal(1965)"><span class="ws-banner-year">1965</span></div>
-      <div class="ws-banner" onclick="openWsModal(1981)"><span class="ws-banner-year">1981</span></div>
-      <div class="ws-banner" onclick="openWsModal(1988)"><span class="ws-banner-year">1988</span></div>
-      <div class="ws-banner" onclick="openWsModal(2020)"><span class="ws-banner-year">2020</span></div>
-      <div class="ws-banner" onclick="openWsModal(2024)"><span class="ws-banner-year">2024</span></div>
-      <div class="ws-banner" onclick="openWsModal(2025)"><span class="ws-banner-year">2025</span></div>
-    </div>
+    <div class="ws-banners" id="ws-banners"></div>
     <div class="hero-scroll">Scroll ↓</div>
   </section>
   </div><!-- /view-home -->
@@ -2530,6 +2524,13 @@
   <div class="side-panel" id="side-panel">
     <div class="sp-header" id="sp-header">
       <span class="sp-title" id="sp-title">Dodgers</span>
+      <button class="filter-trigger-btn" id="filter-trigger-btn" onclick="toggleFilterSheet()" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
+        </svg>
+        Filter
+        <span class="filter-badge" id="filter-badge" style="display:none">0</span>
+      </button>
       <button class="sp-close" onclick="closePanel()">✕</button>
     </div>
     <div class="sp-tabs" id="sp-tabs">
@@ -2538,16 +2539,6 @@
     </div>
     <div class="sp-body" id="sp-body">
       <div class="sp-panel active" id="sp-schedule">
-        <!-- Filter trigger row -->
-        <div class="sp-panel-header" id="sp-panel-header">
-          <button class="filter-trigger-btn" id="filter-trigger-btn" onclick="toggleFilterSheet()">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
-            </svg>
-            Filter
-            <span class="filter-badge" id="filter-badge" style="display:none">0</span>
-          </button>
-        </div>
         <!-- Filter sheet (hidden until tapped) -->
         <div class="sched-filter-sheet" id="sched-filter-sheet" style="display:none">
           <div class="sched-check-group-label">Location</div>
@@ -2618,14 +2609,31 @@
 
   <script>
     /* ── Team data ──────────────────────────────────────── */
+    let _currentTeamKey = 'dodgers'
+    // Declared early so renderTeam() can reset all state safely on team switch
+    let _liveGamePk   = null
+    let _liveTimer    = null
+    let _lastLiveData = null
+    let _depthLoaded  = false
+
     const TEAMS = {
       dodgers: {
+        id: 119,
         name: 'Los Angeles Dodgers',
+        cityShort: 'Los Angeles',
+        nameShort: 'Dodgers',
+        teamAbbr: 'LAD',
+        espnId: 19,
         logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg',
         logoAlt: 'Dodgers',
+        venueName: 'Dodger Stadium',
         openingDay: '2026-03-26T13:05:00',
         season: '2025 Season',
         division: 'NL West',
+        wsTitles: [1955, 1959, 1963, 1965, 1981, 1988, 2020, 2024, 2025],
+        wsLabel: 'Back-to-Back World Series Champions',
+        bg1: '#002580', bg2: '#000D3A', bg3: '#000510',
+        h1: '#001E62', h2: '#003DA5',
         stats: [
           { val: '100-62', lbl: 'Record',     rank: '#2 NL West' },
           { val: '.617',   lbl: 'Win %',      rank: '#2 NL West' },
@@ -2644,30 +2652,66 @@
           { role: 'Pitcher', name: 'Y. Yamamoto',      line: '7.0 IP · 1 ER · 10 K · W' },
         ],
         nextGame: {
-          atVs: 'vs',
-          opponent: 'Chicago Cubs',
-          opponentShort: 'Cubs',
-          logoId: 112,
-          date: 'Thu, Mar 26',
-          dateShort: 'Mar 26',
-          time: '1:05 PM PT',
-          tv: 'SportsNet LA',
-          venue: 'Dodger Stadium',
-          tag: 'Opening Day',
+          atVs: 'vs', opponent: 'Chicago Cubs', opponentShort: 'Cubs', logoId: 112,
+          date: 'Thu, Mar 26', dateShort: 'Mar 26', time: '1:05 PM PT',
+          tv: 'SportsNet LA', venue: 'Dodger Stadium', tag: 'Opening Day',
         },
         schedule: [
-          { day: 'Thu', monthDay: 'Mar 26', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '1:05 PM PT',  tv: 'SNY' },
-          { day: 'Fri', monthDay: 'Mar 27', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '7:10 PM PT',  tv: 'SNY' },
-          { day: 'Sat', monthDay: 'Mar 28', atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
-          { day: 'Mon', monthDay: 'Mar 30', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: 'SNY' },
-          { day: 'Tue', monthDay: 'Mar 31', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: 'SNY' },
-          { day: 'Wed', monthDay: 'Apr 1',  atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '3:40 PM PT', tv: '' },
-          { day: 'Fri', monthDay: 'Apr 3',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '7:10 PM PT',  tv: 'SNY' },
-          { day: 'Sat', monthDay: 'Apr 4',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
-          { day: 'Sun', monthDay: 'Apr 5',  atVs: 'vs', opponent: 'SF Giants',     logoId: 137, venue: 'Home', time: '1:10 PM PT',  tv: '' },
-          { day: 'Tue', monthDay: 'Apr 7',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '6:40 PM PT', tv: 'SNY' },
-          { day: 'Wed', monthDay: 'Apr 8',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '6:40 PM PT', tv: '' },
-          { day: 'Thu', monthDay: 'Apr 9',  atVs: '@',  opponent: 'Arizona D-backs', logoId: 109, venue: 'Away', time: '12:40 PM PT', tv: '' },
+          { day: 'Thu', monthDay: 'Mar 26', atVs: 'vs', opponent: 'Chicago Cubs',     logoId: 112, venue: 'Home', time: '1:05 PM PT',  tv: 'SNLA' },
+          { day: 'Fri', monthDay: 'Mar 27', atVs: 'vs', opponent: 'Chicago Cubs',     logoId: 112, venue: 'Home', time: '7:10 PM PT',  tv: 'SNLA' },
+          { day: 'Sat', monthDay: 'Mar 28', atVs: 'vs', opponent: 'Chicago Cubs',     logoId: 112, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
+          { day: 'Mon', monthDay: 'Mar 30', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: '' },
+          { day: 'Tue', monthDay: 'Mar 31', atVs: '@',  opponent: 'San Diego Padres', logoId: 135, venue: 'Away', time: '7:40 PM PT', tv: '' },
+          { day: 'Fri', monthDay: 'Apr 3',  atVs: 'vs', opponent: 'SF Giants',        logoId: 137, venue: 'Home', time: '7:10 PM PT',  tv: '' },
+          { day: 'Sat', monthDay: 'Apr 4',  atVs: 'vs', opponent: 'SF Giants',        logoId: 137, venue: 'Home', time: '6:10 PM PT',  tv: 'FS1' },
+        ],
+      },
+      mets: {
+        id: 121,
+        name: 'New York Mets',
+        cityShort: 'New York',
+        nameShort: 'Mets',
+        teamAbbr: 'NYM',
+        espnId: 21,
+        logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg',
+        logoAlt: 'Mets',
+        venueName: 'Citi Field',
+        openingDay: '2026-03-26T13:10:00',
+        season: '2025 Season',
+        division: 'NL East',
+        wsTitles: [1969, 1986],
+        wsLabel: '2× World Series Champions',
+        bg1: '#001840', bg2: '#000E30', bg3: '#000515',
+        h1: '#001840', h2: '#002D72',
+        stats: [
+          { val: '89-73',  lbl: 'Record',     rank: '#3 NL East' },
+          { val: '.549',   lbl: 'Win %',       rank: '#3 NL East' },
+          { val: '.243',   lbl: 'Team AVG',    rank: '#8 NL' },
+          { val: '1,280',  lbl: 'Hits' },
+          { val: '197',    lbl: 'Home Runs',   rank: '#4 NL' },
+          { val: '3.91',   lbl: 'Team ERA',    rank: '#6 NL' },
+          { val: '1,289',  lbl: 'Strikeouts' },
+        ],
+        lastGame: 'NYM 4, PHI 2',
+        lastGameDate: 'Sep 28, 2025',
+        performers: [
+          { role: 'Batter',  name: 'Juan Soto',        line: '2-4 · HR · 2 RBI' },
+          { role: 'Batter',  name: 'Francisco Lindor',  line: '2-3 · 2B · RBI' },
+          { role: 'Pitcher', name: 'Sean Manaea',        line: '6.0 IP · 1 ER · 8 K · W' },
+        ],
+        nextGame: {
+          atVs: 'vs', opponent: 'Milwaukee Brewers', opponentShort: 'Brewers', logoId: 158,
+          date: 'Thu, Mar 26', dateShort: 'Mar 26', time: '1:10 PM ET',
+          tv: 'SNY', venue: 'Citi Field', tag: 'Opening Day',
+        },
+        schedule: [
+          { day: 'Thu', monthDay: 'Mar 26', atVs: 'vs', opponent: 'Milwaukee Brewers', logoId: 158, venue: 'Home', time: '1:10 PM ET',  tv: 'SNY' },
+          { day: 'Fri', monthDay: 'Mar 27', atVs: 'vs', opponent: 'Milwaukee Brewers', logoId: 158, venue: 'Home', time: '7:10 PM ET',  tv: 'SNY' },
+          { day: 'Sat', monthDay: 'Mar 28', atVs: 'vs', opponent: 'Milwaukee Brewers', logoId: 158, venue: 'Home', time: '4:05 PM ET',  tv: 'FS1' },
+          { day: 'Mon', monthDay: 'Mar 30', atVs: '@',  opponent: 'Philadelphia Phillies', logoId: 143, venue: 'Away', time: '3:05 PM ET', tv: 'SNY' },
+          { day: 'Tue', monthDay: 'Mar 31', atVs: '@',  opponent: 'Philadelphia Phillies', logoId: 143, venue: 'Away', time: '6:40 PM ET', tv: '' },
+          { day: 'Fri', monthDay: 'Apr 3',  atVs: 'vs', opponent: 'Atlanta Braves',     logoId: 144, venue: 'Home', time: '7:10 PM ET',  tv: 'SNY' },
+          { day: 'Sat', monthDay: 'Apr 4',  atVs: 'vs', opponent: 'Atlanta Braves',     logoId: 144, venue: 'Home', time: '4:10 PM ET',  tv: 'FS1' },
         ],
       },
     }
@@ -2676,8 +2720,18 @@
     /* ── Team rendering ─────────────────────────────────── */
     function renderTeam(key) {
       const t = TEAMS[key]
+      if (!t) return
+      _currentTeamKey = key
       document.body.dataset.team = key
       localStorage.setItem('selectedTeam', key)
+
+      // Apply team colors via CSS variables
+      const r = document.documentElement.style
+      r.setProperty('--team-bg1', t.bg1)
+      r.setProperty('--team-bg2', t.bg2)
+      r.setProperty('--team-bg3', t.bg3)
+      r.setProperty('--team-header1', t.h1)
+      r.setProperty('--team-header2', t.h2)
 
       // Bar logo + team name
       const logo = document.getElementById('bar-logo')
@@ -2685,6 +2739,24 @@
       logo.alt = t.logoAlt
       document.getElementById('bar-team-name').textContent = t.name
       document.getElementById('bar-team-sub').textContent  = t.division
+
+      // Hero section
+      const heroLogo = document.getElementById('hero-logo')
+      if (heroLogo) { heroLogo.src = t.logoSrc; heroLogo.alt = t.logoAlt }
+      const heroCity = document.getElementById('hero-city')
+      if (heroCity) heroCity.textContent = t.cityShort
+      const heroName = document.getElementById('hero-team-name-display')
+      if (heroName) heroName.textContent = t.nameShort
+      const heroChamps = document.getElementById('hero-champs')
+      if (heroChamps) heroChamps.textContent = t.wsLabel ?? ''
+
+      // WS banners — render from team config
+      const wsEl = document.getElementById('ws-banners')
+      if (wsEl) {
+        wsEl.innerHTML = (t.wsTitles ?? []).map(yr =>
+          `<div class="ws-banner" onclick="openWsModal(${yr})"><span class="ws-banner-year">${yr}</span></div>`
+        ).join('')
+      }
 
       // Dash label
       document.querySelector('.stats-season').textContent  = t.season
@@ -2701,14 +2773,11 @@
       // Last game date + score + performers
       document.querySelector('.performers-date').textContent = t.lastGameDate
       renderLgScore(t.lastGame)
-      document.querySelector('.performers').innerHTML = t.performers.map(p => `
+      document.querySelector('.performers').innerHTML = (t.performers ?? []).map(p => `
         <div class="performer">
           <span class="p-name">${p.name}</span>
           <span class="p-line">${p.line}</span>
         </div>`).join('')
-
-      // Side panel title
-      document.querySelector('.sp-title').textContent = t.name
 
       // Schedule + next game
       renderSchedule(t.schedule)
@@ -2718,20 +2787,35 @@
       document.querySelectorAll('.team-dropdown-item').forEach(el => {
         el.classList.toggle('active', el.dataset.team === key)
       })
+
+      // Reset lazy-load guards so depth chart + roster reload for new team
+      _depthLoaded = false
+      rosterLoaded = false
+
+      // Restart live tracker for new team
+      if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
+      _liveGamePk  = null
+      _lastLiveData = null
+      document.getElementById('live-game-card').style.display = 'none'
+
+      // Reload all live/dynamic data
+      loadLiveData()
+      loadNews()
+      startLiveTracker()
     }
 
     /* ── Next game renderer ─────────────────────────────── */
     function renderNextGame(g) {
       const el = document.getElementById('hero-next')
       if (!el || !g) return
-      const DODGERS = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg'
+      const myLogo  = TEAMS[_currentTeamKey]?.logoSrc ?? 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg'
       const oppLogo = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg`
       const isHome  = g.atVs === 'vs'
       const venue   = g.venueName || g.venue || ''
       const dateStr = g.monthDay || g.dateShort || g.date || ''
       // home: LAD vs OPP  |  away: OPP @ LAD
-      const leftLogo  = isHome ? DODGERS  : oppLogo
-      const rightLogo = isHome ? oppLogo  : DODGERS
+      const leftLogo  = isHome ? myLogo   : oppLogo
+      const rightLogo = isHome ? oppLogo  : myLogo
       el.innerHTML = `
         <div class="hero-next-label">Next Game</div>
         ${venue ? `<div class="hero-next-venue">${venue}</div>` : ''}
@@ -2764,7 +2848,8 @@
       const grid = document.getElementById('news-grid')
       if (!grid) return
       try {
-        const res  = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=19&limit=6')
+        const espnId = TEAMS[_currentTeamKey]?.espnId ?? 19
+        const res  = await fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId}&limit=6`)
         const data = await res.json()
         const articles = data.articles ?? []
         if (!articles.length) { grid.innerHTML = '<div class="news-loading">No articles found</div>'; return }
@@ -2865,18 +2950,20 @@
       const g = _filteredGames[idx]
       if (!g) return
       // Swap list/filter for detail view
-      document.getElementById('sp-panel-header').style.display  = 'none'
+      document.getElementById('filter-trigger-btn').style.display = 'none'
       document.getElementById('sched-filter-sheet').style.display = 'none'
       document.getElementById('schedule-list').style.display    = 'none'
       document.getElementById('game-detail').style.display      = 'flex'
 
-      const homeName = g.isHome ? 'Los Angeles Dodgers' : g.opponent
-      const awayName = g.isHome ? g.opponent : 'Los Angeles Dodgers'
-      const homeLogoId = g.isHome ? 119 : g.logoId
-      const awayLogoId = g.isHome ? g.logoId : 119
+      const t = TEAMS[_currentTeamKey] ?? TEAMS.dodgers
+      const myTeamId = t.id
+      const homeName = g.isHome ? t.name : g.opponent
+      const awayName = g.isHome ? g.opponent : t.name
+      const homeLogoId = g.isHome ? myTeamId : g.logoId
+      const awayLogoId = g.isHome ? g.logoId : myTeamId
       const LOGO_BASE = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
-      const ticketUrl = `https://www.mlb.com/dodgers/tickets/single-game-tickets`
-      const mlbUrl    = `https://www.mlb.com/gameday/${g.gamePk}`
+      const gameUrl = `https://www.mlb.com/gameday/${g.gamePk}`
+      const homeLabel = g.isHome ? `Home · ${t.venueName ?? 'Home Stadium'}` : 'Away'
 
       document.getElementById('gd-scroll').innerHTML = `
         <div class="gd-date-label">${g.fullDate}</div>
@@ -2906,18 +2993,15 @@
           </div>` : ''}
           <div class="gd-info-row">
             <span class="gd-info-label">Location</span>
-            <span class="gd-info-val">${g.isHome ? 'Home · Dodger Stadium' : 'Away'}</span>
+            <span class="gd-info-val">${homeLabel}</span>
           </div>
         </div>
-        <a class="gd-tickets-btn" href="${ticketUrl}" target="_blank" rel="noopener">Get Tickets</a>
-        <div class="gd-no-tickets">
-          <a href="${mlbUrl}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.3);text-decoration:none">View on MLB.com ›</a>
-        </div>`
+        <a class="gd-tickets-btn" href="${gameUrl}" target="_blank" rel="noopener">Get Tickets</a>`
     }
 
     function closeGameDetail() {
       document.getElementById('game-detail').style.display        = 'none'
-      document.getElementById('sp-panel-header').style.display    = ''
+      document.getElementById('filter-trigger-btn').style.display = ''
       document.getElementById('sched-filter-sheet').style.display = 'none'
       document.getElementById('schedule-list').style.display      = ''
     }
@@ -2946,6 +3030,7 @@
     function closePanel() {
       document.getElementById('side-panel').classList.remove('open')
       document.getElementById('panel-backdrop').classList.remove('open')
+      document.getElementById('filter-trigger-btn').style.display = 'none'
       _setMobTab(`mobtab-${_currentView}`)
     }
     function openSidePanel(tab) {
@@ -2957,6 +3042,8 @@
       const titles = { schedule: 'Schedule', roster: '40-Man Roster' }
       const titleEl = document.getElementById('sp-title')
       if (titleEl && titles[tab]) titleEl.textContent = titles[tab]
+      // Show filter button only on schedule tab
+      document.getElementById('filter-trigger-btn').style.display = tab === 'schedule' ? '' : 'none'
     }
     let rosterLoaded = false
     function switchSideTab(id) {
@@ -2974,7 +3061,8 @@
       const el = document.getElementById('sp-roster')
       el.innerHTML = '<div class="roster-placeholder">Loading…</div>'
       try {
-        const res = await fetch('https://statsapi.mlb.com/api/v1/teams/119/roster?rosterType=40Man&season=2026')
+        const teamId = TEAMS[_currentTeamKey]?.id ?? 119
+        const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=2026`)
         const data = await res.json()
         renderRoster(data.roster ?? [])
       } catch (e) {
@@ -3181,14 +3269,13 @@
     // Restore saved team on load (always render to populate all dynamic elements)
     const saved = localStorage.getItem('selectedTeam')
     renderTeam(saved && TEAMS[saved] ? saved : 'dodgers')
-    loadLiveData()
-    loadNews()
-    startLiveTracker()
 
     /* ── Live data from MLB Stats API ───────────────────────── */
     async function loadLiveData() {
+      const key  = _currentTeamKey
+      const t    = TEAMS[key]
+      const TEAM = t.id
       const NL = new Set([109,144,112,113,115,119,146,121,143,134,135,137,138,120,158])
-      const TEAM = 119 // Dodgers
 
       function nlRank(splits, key, asc = false) {
         const nl = splits.filter(s => NL.has(s.team.id))
@@ -3221,9 +3308,9 @@
         const dp = pitSplits.find(s => s.team.id === TEAM)?.stat
 
         if (rec && db && dp) {
-          const divRank = `#${rec.divisionRank} NL West`
+          const divRank = `#${rec.divisionRank} ${t.division}`
           const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
-          TEAMS.dodgers.stats = [
+          TEAMS[key].stats = [
             { val: `${rec.wins}-${rec.losses}`,                  lbl: 'Record',     rank: divRank },
             { val: pct,                                           lbl: 'Win %',      rank: divRank },
             { val: db.avg,                                        lbl: 'Team AVG',   rank: nlRank(batSplits, 'avg') },
@@ -3232,18 +3319,23 @@
             { val: dp.era,                                        lbl: 'Team ERA',   rank: nlRank(pitSplits, 'era', true) },
             { val: parseInt(dp.strikeOuts).toLocaleString(),      lbl: 'Strikeouts' },
           ]
-          document.querySelector('.team-stats').innerHTML = TEAMS.dodgers.stats.map(s => `
-            <div class="stat-item">
-              <span class="stat-val">${s.val}</span>
-              <span class="stat-lbl">${s.lbl}</span>
-              ${s.rank ? `<span class="stat-rank">${s.rank}</span>` : ''}
-            </div>`).join('')
+          // Only update DOM if team hasn't changed while fetching
+          if (_currentTeamKey === key) {
+            document.querySelector('.team-stats').innerHTML = TEAMS[key].stats.map(s => `
+              <div class="stat-item">
+                <span class="stat-val">${s.val}</span>
+                <span class="stat-lbl">${s.lbl}</span>
+                ${s.rank ? `<span class="stat-rank">${s.rank}</span>` : ''}
+              </div>`).join('')
+          }
         }
       } catch (e) { console.warn('Stats fetch failed', e) }
 
       /* ── 2026 schedule ── */
       try {
-        const res = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2026&sportId=1&gameType=R')
+        const tz = TEAM === 121 ? 'America/New_York' : 'America/Los_Angeles'
+        const tzSuffix = TEAM === 121 ? 'ET' : 'PT'
+        const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${TEAM}&season=2026&sportId=1&gameType=R`)
         const data = await res.json()
         if (data.dates?.length) {
           const games = []
@@ -3253,25 +3345,25 @@
               const opp = isHome ? g.teams.away.team : g.teams.home.team
               const dt = new Date(g.gameDate)
               games.push({
-                day:       dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }),
-                monthDay:  dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }),
-                fullDate:  dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Los_Angeles' }),
+                day:       dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: tz }),
+                monthDay:  dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: tz }),
+                fullDate:  dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: tz }),
                 atVs:      isHome ? 'vs' : '@',
                 opponent:  opp.name,
                 logoId:    opp.id,
-                dodgersLogoId: 119,
+                teamLogoId: TEAM,
                 venueName: g.venue?.name ?? '',
-                time:      dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT',
+                time:      dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz }) + ' ' + tzSuffix,
                 tv:        g.content?.media?.epg?.[0]?.items?.[0]?.callSign ?? '',
                 isHome,
                 gamePk:    g.gamePk,
-                isoDate:   dt.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }),
-                weekday:   dt.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long' }),
+                isoDate:   dt.toLocaleDateString('en-CA', { timeZone: tz }),
+                weekday:   dt.toLocaleDateString('en-US', { timeZone: tz, weekday: 'long' }),
               })
             }
           }
-          if (games.length) {
-            TEAMS.dodgers.schedule = games
+          if (games.length && _currentTeamKey === key) {
+            TEAMS[key].schedule = games
             renderSchedule(games)
             renderNextGame(games[0])
           }
@@ -3280,7 +3372,7 @@
 
       /* ── Last game performers ── */
       try {
-        const lsRes = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2025&sportId=1&gameType=R,F,D,L,W&startDate=2025-09-20&endDate=2025-11-10')
+        const lsRes = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${TEAM}&season=2025&sportId=1&gameType=R,F,D,L,W&startDate=2025-09-20&endDate=2025-11-10`)
         const lsData = await lsRes.json()
 
         let lastGame = null
@@ -3326,14 +3418,14 @@
             line: `${s.inningsPitched} IP · ${s.earnedRuns} ER · ${s.strikeOuts} K · W` })
         }
 
-        if (performers.length) {
+        if (performers.length && _currentTeamKey === key) {
           const gd = new Date(lastGame.gameDate)
           const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-          TEAMS.dodgers.lastGame     = `LAD ${myScore}, ${oppAbbr} ${oppScore}`
-          TEAMS.dodgers.lastGameDate = `${mo[gd.getMonth()]} ${gd.getDate()}, ${gd.getFullYear()}`
-          TEAMS.dodgers.performers   = performers
-          document.querySelector('.performers-date').textContent = TEAMS.dodgers.lastGameDate
-          renderLgScore(TEAMS.dodgers.lastGame)
+          TEAMS[key].lastGame     = `${t.teamAbbr} ${myScore}, ${oppAbbr} ${oppScore}`
+          TEAMS[key].lastGameDate = `${mo[gd.getMonth()]} ${gd.getDate()}, ${gd.getFullYear()}`
+          TEAMS[key].performers   = performers
+          document.querySelector('.performers-date').textContent = TEAMS[key].lastGameDate
+          renderLgScore(TEAMS[key].lastGame)
           document.querySelector('.performers').innerHTML = performers.map(p => `
             <div class="performer">
               <span class="p-name">${p.name}</span>
@@ -3364,15 +3456,13 @@
     }
 
     /* ── Live Game Tracker ───────────────────────────────── */
-    let _liveGamePk  = null
-    let _liveTimer   = null
-    let _lastLiveData = null
     const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 
     async function startLiveTracker() {
       const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD local
       try {
-        const res  = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=119&date=${today}`)
+        const liveTeamId = TEAMS[_currentTeamKey]?.id ?? 119
+        const res  = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${liveTeamId}&date=${today}`)
         const data = await res.json()
         const game = data.dates?.[0]?.games?.[0]
         if (!game) return
@@ -3738,7 +3828,6 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     }
 
     /* ── Depth Chart ─────────────────────────────────────── */
-    let _depthLoaded = false
 
     const DC_POS_ORDER = ['C','1B','2B','SS','3B','LF','CF','RF','DH']
     const DC_PIT_ORDER = ['SP','RP','CL']
@@ -3756,7 +3845,7 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       gridPit.innerHTML = ''
 
       try {
-        const teamId = 119
+        const teamId = TEAMS[_currentTeamKey]?.id ?? 119
         const season = new Date().getFullYear()
         const res = await fetch(
           `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=depthChart&season=${season}&hydrate=person`
@@ -3902,7 +3991,24 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
         venue: 'Dodger Stadium · Rogers Centre, Toronto',
         desc: "Called one of the greatest World Series of all time. Game 3 went 18 innings — the second-longest in Series history — before Freddie Freeman hit a walk-off home run for the second straight Fall Classic. The Blue Jays won Games 4 and 5 to take a 3–2 lead, but Yamamoto shut them down in Game 6 to force a decider. In Game 7, with Toronto two outs away from the title, Miguel Rojas tied it with a solo home run. Will Smith followed with the go-ahead shot in the 11th inning. Yamamoto — one day after throwing 96 pitches — came out of the bullpen to close it out, finishing the series with 3 wins and a 1.02 ERA to claim MVP. Game 7 drew over 51 million viewers across the US, Canada, and Japan.",
         wiki: '2025_World_Series'
-      }
+      },
+      // Mets championships
+      1969: {
+        subtitle: 'New York Mets vs. Baltimore Orioles',
+        result: 'Mets win 4–1',
+        mvp: 'Donn Clendenon',
+        venue: 'Memorial Stadium · Shea Stadium',
+        desc: "The original Miracle Mets. After being baseball's worst team since their 1962 expansion, the Mets surged from 9½ games back in mid-August to win the NL East, then swept the Braves in the NLCS. Facing the heavily favored Orioles, the Mets pulled off one of the biggest upsets in World Series history. Tom Seaver, Jerry Koosman, and a stellar outfield defense led the way as New York won four straight after dropping Game 1.",
+        wiki: '1969_World_Series'
+      },
+      1986: {
+        subtitle: 'New York Mets vs. Boston Red Sox',
+        result: 'Mets win 4–3',
+        mvp: 'Ray Knight',
+        venue: 'Shea Stadium · Fenway Park',
+        desc: "One of the most dramatic World Series ever played. Down to their last strike in Game 6, Mookie Wilson's grounder rolled through Bill Buckner's legs as the Mets tied the series. The Mets then rallied from a 3-run deficit in Game 7 to claim the title. Dwight Gooden, Ron Darling, and the high-octane Mets lineup had dominated the NL all season — the team went 108-54 during the regular season.",
+        wiki: '1986_World_Series'
+      },
     }
 
     function openWsModal(year) {
