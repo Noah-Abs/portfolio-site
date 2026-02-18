@@ -1319,27 +1319,6 @@
       },
     }
 
-    /* ── Hero countdown ──────────────────────────────────── */
-    let barTarget = new Date(TEAMS.dodgers.openingDay).getTime()
-    const hDays  = document.getElementById('h-days')
-    const hHours = document.getElementById('h-hours')
-    const hMins  = document.getElementById('h-mins')
-    const hSecs  = document.getElementById('h-secs')
-    function pad(n) { return String(n).padStart(2,'0') }
-    function barTick() {
-      const diff = barTarget - Date.now()
-      if (diff <= 0) {
-        hDays.textContent = hHours.textContent = hMins.textContent = hSecs.textContent = '00'
-        return
-      }
-      const d = pad(Math.floor(diff / 86400000))
-      const h = pad(Math.floor((diff % 86400000) / 3600000))
-      const m = pad(Math.floor((diff % 3600000) / 60000))
-      const s = pad(Math.floor((diff % 60000) / 1000))
-      hDays.textContent = d; hHours.textContent = h; hMins.textContent = m; hSecs.textContent = s
-    }
-    barTick()
-    setInterval(barTick, 1000)
 
     /* ── Team rendering ─────────────────────────────────── */
     function renderTeam(key) {
@@ -1353,7 +1332,6 @@
       logo.alt = t.logoAlt
       document.getElementById('bar-team-name').textContent = t.name
       document.getElementById('bar-team-sub').textContent  = t.division
-      barTarget = new Date(t.openingDay).getTime()
 
       // Dash label
       document.querySelector('.stats-season').textContent  = t.season
