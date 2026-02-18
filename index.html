@@ -2771,6 +2771,10 @@
     loadNews()
     startLiveTracker()
 
+    // Restore last active view
+    const savedView = localStorage.getItem('activeView')
+    if (savedView && savedView !== 'home') switchView(savedView)
+
     /* ── Live data from MLB Stats API ───────────────────────── */
     async function loadLiveData() {
       const NL = new Set([109,144,112,113,115,119,146,121,143,134,135,137,138,120,158])
@@ -2928,6 +2932,7 @@
 
     function switchView(view) {
       _currentView = view
+      localStorage.setItem('activeView', view)
       document.getElementById('view-home').classList.toggle('active', view === 'home')
       document.getElementById('view-live').classList.toggle('active', view === 'live')
       document.getElementById('view-depth').classList.toggle('active', view === 'depth')
