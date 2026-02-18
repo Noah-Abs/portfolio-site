@@ -473,7 +473,9 @@
 
       /* ── Side panel: full-screen, no inner tabs ── */
       .side-panel { width: 100%; top: 0; }
-      .sp-tabs    { display: none; }
+
+      /* Hide WS banners on mobile */
+      .ws-banners { display: none !important; }
 
       /* ── Depth chart ── */
       .dc-grid       { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
@@ -592,7 +594,7 @@
     .sp-close:hover { color: #fff; }
 
     .sp-tabs {
-      display: flex;
+      display: none;
       border-bottom: 1px solid rgba(255,255,255,0.07);
       padding: 0 1.25rem;
       flex-shrink: 0;
