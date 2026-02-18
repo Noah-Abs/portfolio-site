@@ -624,38 +624,138 @@
     .sp-panel { display: none; }
     .sp-panel.active { display: block; }
 
-    /* ── Schedule filter bar ─────────────────────────── */
-    .sched-filter-bar {
+    /* ── Schedule filter button + sheet ──────────────── */
+    .sp-panel-header {
       display: flex;
-      gap: 0.4rem;
-      padding: 0.65rem 1.25rem;
-      overflow-x: auto;
-      scrollbar-width: none;
-      flex-shrink: 0;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0.45rem 1.25rem;
       border-bottom: 1px solid rgba(255,255,255,0.06);
-      background: rgba(0,0,0,0.15);
-    }
-    .sched-filter-bar::-webkit-scrollbar { display: none; }
-    .sched-filter {
       flex-shrink: 0;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 0.28rem 0.75rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.7rem;
-      font-weight: 500;
-      color: rgba(255,255,255,0.45);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
     }
-    .sched-filter.active {
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(255,255,255,0.3);
+    .filter-trigger-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 7px;
+      padding: 0.3rem 0.7rem;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .filter-trigger-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .filter-trigger-btn.has-filters {
+      background: rgba(0,50,160,0.35);
+      border-color: rgba(0,100,255,0.4);
       color: #fff;
     }
+    .filter-badge {
+      background: #003DA5;
+      color: #fff;
+      font-size: 0.58rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 5px;
+      min-width: 16px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .sched-filter-sheet {
+      flex-shrink: 0;
+      background: rgba(0,6,32,0.98);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 0.85rem 1.25rem 1rem;
+    }
+    .sched-check-group-label {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 0.3rem;
+    }
+    .sched-check-group-label + .sched-check-group-label,
+    .sched-check-gap { margin-top: 0.65rem; }
+    .sched-check-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.42rem 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sched-check-row input[type="checkbox"] { display: none; }
+    .sched-check-box {
+      width: 19px;
+      height: 19px;
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 5px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .sched-check-row input:checked ~ .sched-check-box {
+      background: #003DA5;
+      border-color: #003DA5;
+    }
+    .sched-check-row input:checked ~ .sched-check-box::after {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+    .sched-check-label {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.6);
+      transition: color 0.12s;
+    }
+    .sched-check-row input:checked ~ .sched-check-label { color: #fff; }
+    .filter-sheet-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+    }
+    .filter-clear-btn {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.5rem;
+      color: rgba(255,255,255,0.5);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .filter-clear-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .filter-done-btn {
+      flex: 1;
+      background: #003DA5;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .filter-done-btn:hover { opacity: 0.85; }
 
     /* ── Schedule rows ───────────────────────────────── */
     .schedule-list { display: flex; flex-direction: column; }
@@ -2437,13 +2537,44 @@
     </div>
     <div class="sp-body" id="sp-body">
       <div class="sp-panel active" id="sp-schedule">
-        <!-- Filter bar -->
-        <div class="sched-filter-bar" id="sched-filter-bar">
-          <button class="sched-filter active" data-filter="all"     onclick="setScheduleFilter('all')">All</button>
-          <button class="sched-filter"        data-filter="home"    onclick="setScheduleFilter('home')">Home</button>
-          <button class="sched-filter"        data-filter="away"    onclick="setScheduleFilter('away')">Away</button>
-          <button class="sched-filter"        data-filter="weekday" onclick="setScheduleFilter('weekday')">Weekdays</button>
-          <button class="sched-filter"        data-filter="weekend" onclick="setScheduleFilter('weekend')">Weekend</button>
+        <!-- Filter trigger row -->
+        <div class="sp-panel-header" id="sp-panel-header">
+          <button class="filter-trigger-btn" id="filter-trigger-btn" onclick="toggleFilterSheet()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
+            </svg>
+            Filter
+            <span class="filter-badge" id="filter-badge" style="display:none">0</span>
+          </button>
+        </div>
+        <!-- Filter sheet (hidden until tapped) -->
+        <div class="sched-filter-sheet" id="sched-filter-sheet" style="display:none">
+          <div class="sched-check-group-label">Location</div>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-home" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Home Games</span>
+          </label>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-away" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Away Games</span>
+          </label>
+          <div class="sched-check-group-label sched-check-gap">Day of Week</div>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-weekday" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Weekdays</span>
+          </label>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-weekend" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Weekends</span>
+          </label>
+          <div class="filter-sheet-actions">
+            <button class="filter-clear-btn" onclick="clearScheduleFilters()">Clear All</button>
+            <button class="filter-done-btn"  onclick="toggleFilterSheet()">Done</button>
+          </div>
         </div>
         <!-- Game list -->
         <div class="schedule-list" id="schedule-list"></div>
@@ -2664,29 +2795,39 @@
     /* ── Schedule renderer ──────────────────────────────── */
     let _allScheduleGames = []
     let _filteredGames    = []
-    let _scheduleFilter   = 'all'
 
     function renderSchedule(games) {
       _allScheduleGames = games
-      _applyScheduleFilter()
+      applyScheduleFilters()
     }
 
-    function setScheduleFilter(filter) {
-      _scheduleFilter = filter
-      document.querySelectorAll('.sched-filter').forEach(b =>
-        b.classList.toggle('active', b.dataset.filter === filter)
-      )
-      _applyScheduleFilter()
+    function toggleFilterSheet() {
+      const sheet = document.getElementById('sched-filter-sheet')
+      const isOpen = sheet.style.display !== 'none' && sheet.style.display !== ''
+      sheet.style.display = isOpen ? 'none' : 'block'
+      document.getElementById('filter-trigger-btn').classList.toggle('has-filters',
+        !isOpen ? false : document.getElementById('filter-trigger-btn').classList.contains('has-filters'))
     }
 
-    function _applyScheduleFilter() {
+    function applyScheduleFilters() {
+      const homeChk    = document.getElementById('filter-home')?.checked    ?? false
+      const awayChk    = document.getElementById('filter-away')?.checked    ?? false
+      const weekdayChk = document.getElementById('filter-weekday')?.checked ?? false
+      const weekendChk = document.getElementById('filter-weekend')?.checked ?? false
+
       _filteredGames = _allScheduleGames.filter(g => {
-        if (_scheduleFilter === 'home')    return g.isHome
-        if (_scheduleFilter === 'away')    return !g.isHome
-        if (_scheduleFilter === 'weekday') return !['Saturday','Sunday'].includes(g.weekday)
-        if (_scheduleFilter === 'weekend') return ['Saturday','Sunday'].includes(g.weekday)
-        return true
+        const isWeekend  = ['Saturday','Sunday'].includes(g.weekday)
+        const locationOk = (!homeChk && !awayChk) || (homeChk && g.isHome) || (awayChk && !g.isHome)
+        const dayOk      = (!weekdayChk && !weekendChk) || (weekdayChk && !isWeekend) || (weekendChk && isWeekend)
+        return locationOk && dayOk
       })
+
+      const count = [homeChk, awayChk, weekdayChk, weekendChk].filter(Boolean).length
+      const badge = document.getElementById('filter-badge')
+      const btn   = document.getElementById('filter-trigger-btn')
+      if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'inline' : 'none' }
+      if (btn)   btn.classList.toggle('has-filters', count > 0)
+
       const list = document.getElementById('schedule-list')
       if (!list) return
       if (_filteredGames.length === 0) {
@@ -2711,12 +2852,21 @@
         </div>`).join('')
     }
 
+    function clearScheduleFilters() {
+      ['filter-home','filter-away','filter-weekday','filter-weekend'].forEach(id => {
+        const el = document.getElementById(id)
+        if (el) el.checked = false
+      })
+      applyScheduleFilters()
+    }
+
     function openGameDetail(idx) {
       const g = _filteredGames[idx]
       if (!g) return
       // Swap list/filter for detail view
+      document.getElementById('sp-panel-header').style.display  = 'none'
+      document.getElementById('sched-filter-sheet').style.display = 'none'
       document.getElementById('schedule-list').style.display    = 'none'
-      document.getElementById('sched-filter-bar').style.display = 'none'
       document.getElementById('game-detail').style.display      = 'flex'
 
       const homeName = g.isHome ? 'Los Angeles Dodgers' : g.opponent
@@ -2765,9 +2915,10 @@
     }
 
     function closeGameDetail() {
-      document.getElementById('game-detail').style.display      = 'none'
-      document.getElementById('schedule-list').style.display    = ''
-      document.getElementById('sched-filter-bar').style.display = ''
+      document.getElementById('game-detail').style.display        = 'none'
+      document.getElementById('sp-panel-header').style.display    = ''
+      document.getElementById('sched-filter-sheet').style.display = 'none'
+      document.getElementById('schedule-list').style.display      = ''
     }
 
     /* ── Nav Menu (≡ dropdown) ───────────────────────────── */
@@ -2797,6 +2948,7 @@
       _setMobTab(`mobtab-${_currentView}`)
     }
     function openSidePanel(tab) {
+      if (tab === 'schedule') closeGameDetail()
       document.getElementById('side-panel').classList.add('open')
       document.getElementById('panel-backdrop').classList.add('open')
       switchSideTab(tab)
@@ -3196,6 +3348,7 @@
     function switchView(view) {
       _currentView = view
       localStorage.setItem('activeView', view)
+      closePanel()
       document.getElementById('view-home').classList.toggle('active', view === 'home')
       document.getElementById('view-live').classList.toggle('active', view === 'live')
       document.getElementById('view-depth').classList.toggle('active', view === 'depth')
