@@ -818,6 +818,158 @@
     // Restore saved team on load (always render to populate all dynamic elements)
     const saved = localStorage.getItem('selectedTeam')
     renderTeam(saved && TEAMS[saved] ? saved : 'dodgers')
+    loadLiveData()
+
+    /* ── Live data from MLB Stats API ───────────────────────── */
+    async function loadLiveData() {
+      const NL = new Set([109,144,112,113,115,119,146,121,143,134,135,137,138,120,158])
+      const TEAM = 119 // Dodgers
+
+      function nlRank(splits, key, asc = false) {
+        const nl = splits.filter(s => NL.has(s.team.id))
+        const sorted = [...nl].sort((a, b) =>
+          asc ? parseFloat(a.stat[key]) - parseFloat(b.stat[key])
+              : parseFloat(b.stat[key]) - parseFloat(a.stat[key])
+        )
+        const i = sorted.findIndex(s => s.team.id === TEAM)
+        return i >= 0 ? `#${i + 1} NL` : ''
+      }
+
+      /* ── 2025 season stats ── */
+      try {
+        const [standRes, batRes, pitRes] = await Promise.all([
+          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=104&season=2025&standingsTypes=regularSeason'),
+          fetch('https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=2025&sportId=1'),
+          fetch('https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=2025&sportId=1'),
+        ])
+        const [stand, bat, pit] = await Promise.all([standRes.json(), batRes.json(), pitRes.json()])
+
+        let rec = null
+        for (const div of stand.records) {
+          rec = div.teamRecords.find(r => r.team.id === TEAM)
+          if (rec) break
+        }
+
+        const batSplits = bat.stats[0].splits
+        const pitSplits = pit.stats[0].splits
+        const db = batSplits.find(s => s.team.id === TEAM)?.stat
+        const dp = pitSplits.find(s => s.team.id === TEAM)?.stat
+
+        if (rec && db && dp) {
+          const divRank = `#${rec.divisionRank} NL West`
+          const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
+          TEAMS.dodgers.stats = [
+            { val: `${rec.wins}-${rec.losses}`,                  lbl: 'Record',     rank: divRank },
+            { val: pct,                                           lbl: 'Win %',      rank: divRank },
+            { val: db.avg,                                        lbl: 'Team AVG',   rank: nlRank(batSplits, 'avg') },
+            { val: parseInt(db.hits).toLocaleString(),            lbl: 'Hits' },
+            { val: db.homeRuns,                                   lbl: 'Home Runs',  rank: nlRank(batSplits, 'homeRuns') },
+            { val: dp.era,                                        lbl: 'Team ERA',   rank: nlRank(pitSplits, 'era', true) },
+            { val: parseInt(dp.strikeOuts).toLocaleString(),      lbl: 'Strikeouts' },
+          ]
+          document.querySelector('.team-stats').innerHTML = TEAMS.dodgers.stats.map(s => `
+            <div class="stat-item">
+              <span class="stat-val">${s.val}</span>
+              <span class="stat-lbl">${s.lbl}</span>
+              ${s.rank ? `<span class="stat-rank">${s.rank}</span>` : ''}
+            </div>`).join('')
+        }
+      } catch (e) { console.warn('Stats fetch failed', e) }
+
+      /* ── 2026 schedule ── */
+      try {
+        const res = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2026&sportId=1&gameType=R')
+        const data = await res.json()
+        if (data.dates?.length) {
+          const games = []
+          for (const d of data.dates) {
+            for (const g of d.games) {
+              const isHome = g.teams.home.team.id === TEAM
+              const opp = isHome ? g.teams.away.team : g.teams.home.team
+              const dt = new Date(g.gameDate)
+              games.push({
+                day:      dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }),
+                monthDay: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }),
+                atVs:     isHome ? 'vs' : '@',
+                opponent: opp.name,
+                logoId:   opp.id,
+                venue:    isHome ? 'Home' : 'Away',
+                time:     dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT',
+                tv:       '',
+              })
+              if (games.length >= 25) break
+            }
+            if (games.length >= 25) break
+          }
+          if (games.length) { TEAMS.dodgers.schedule = games; renderSchedule(games) }
+        }
+      } catch (e) { console.warn('Schedule fetch failed', e) }
+
+      /* ── Last game performers ── */
+      try {
+        const lsRes = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2025&sportId=1&gameType=R&startDate=2025-09-20&endDate=2025-10-01')
+        const lsData = await lsRes.json()
+
+        let lastGame = null
+        for (const d of [...(lsData.dates ?? [])].reverse()) {
+          const fin = d.games.filter(g => g.status.abstractGameState === 'Final')
+          if (fin.length) { lastGame = fin[fin.length - 1]; break }
+        }
+        if (!lastGame) return
+
+        const bsRes = await fetch(`https://statsapi.mlb.com/api/v1/game/${lastGame.gamePk}/boxscore`)
+        const bs = await bsRes.json()
+
+        const isHome  = lastGame.teams.home.team.id === TEAM
+        const mySide  = isHome ? 'home' : 'away'
+        const oppSide = isHome ? 'away' : 'home'
+        const oppAbbr = lastGame.teams[oppSide].team.abbreviation ?? lastGame.teams[oppSide].team.name.split(' ').pop()
+        const myScore = lastGame.teams[mySide].score
+        const oppScore= lastGame.teams[oppSide].score
+        const players = bs.teams[mySide].players
+
+        const batters = Object.values(players)
+          .filter(p => (p.stats?.batting?.atBats ?? 0) > 0)
+          .sort((a, b) => {
+            const hd = (b.stats.batting.hits ?? 0) - (a.stats.batting.hits ?? 0)
+            return hd !== 0 ? hd : (b.stats.batting.rbi ?? 0) - (a.stats.batting.rbi ?? 0)
+          })
+
+        const wp = Object.values(players).find(p => (p.stats?.pitching?.wins ?? 0) > 0)
+        const performers = []
+
+        for (const p of batters.slice(0, 3)) {
+          const s = p.stats.batting
+          const parts = [`${s.hits}-${s.atBats}`]
+          if (s.homeRuns > 0) parts.push('HR')
+          else if (s.doubles > 0) parts.push('2B')
+          if (s.rbi > 0) parts.push(`${s.rbi} RBI`)
+          if (s.baseOnBalls > 0 && parts.length < 4) parts.push('BB')
+          performers.push({ role: 'Batter', name: p.person.fullName, line: parts.join(' · ') })
+        }
+        if (wp) {
+          const s = wp.stats.pitching
+          performers.push({ role: 'Pitcher', name: wp.person.fullName,
+            line: `${s.inningsPitched} IP · ${s.earnedRuns} ER · ${s.strikeOuts} K · W` })
+        }
+
+        if (performers.length) {
+          const gd = new Date(lastGame.gameDate)
+          const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+          TEAMS.dodgers.lastGame     = `LAD ${myScore}, ${oppAbbr} ${oppScore}`
+          TEAMS.dodgers.lastGameDate = `${mo[gd.getMonth()]} ${gd.getDate()}, 2025`
+          TEAMS.dodgers.performers   = performers
+          document.querySelector('.performers-game').innerHTML = `Last Game &nbsp;·&nbsp; ${TEAMS.dodgers.lastGame}`
+          document.querySelector('.performers-date').textContent = TEAMS.dodgers.lastGameDate
+          document.querySelector('.performers').innerHTML = performers.map(p => `
+            <div class="performer">
+              <span class="performer-role">${p.role}</span>
+              <span class="p-name">${p.name}</span>
+              <span class="p-line">${p.line}</span>
+            </div>`).join('')
+        }
+      } catch (e) { console.warn('Last game fetch failed', e) }
+    }
   </script>
   <script src="script.js"></script>
 </body>
