@@ -127,6 +127,26 @@
       transition: color 0.2s;
     }
     .bar-link:hover { color: rgba(255,255,255,0.85); }
+    .bar-team-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.05rem;
+    }
+    .bar-team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.1em;
+      color: #fff;
+      line-height: 1;
+    }
+    .bar-team-sub {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
     /* ── Stats Panel ──────────────────────────────────── */
     .stats-panel {
       position: relative;
@@ -649,14 +669,21 @@
       50%      { transform: translateX(-50%) translateY(8px); opacity: 0.45; }
     }
 
-    /* ── Hero Next Game ───────────────────────────────── */
+    /* ── Hero Next Game (fixed corner card) ──────────── */
     .hero-next {
-      position: absolute;
-      bottom: 2rem;
-      left: 2.5rem;
+      position: fixed;
+      bottom: 1.75rem;
+      left: 1.75rem;
+      z-index: 50;
       display: flex;
       flex-direction: column;
       gap: 0.45rem;
+      background: rgba(0,8,32,0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 0.9rem 1.15rem;
     }
     .hero-next-label {
       font-size: 0.55rem;
@@ -854,22 +881,15 @@
 </head>
 <body data-team="dodgers">
 
-  <!-- Opening Day countdown bar -->
+  <!-- Team header bar -->
   <div class="opening-day-bar" style="position:relative;">
     <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
-    <span class="bar-dot"></span>
-    <div class="bar-countdown" id="bar-countdown">
-      <div class="bar-unit"><span class="bar-val" id="b-days">--</span><span class="bar-lbl">Days</span></div>
-      <span class="bar-sep">:</span>
-      <div class="bar-unit"><span class="bar-val" id="b-hours">--</span><span class="bar-lbl">Hrs</span></div>
-      <span class="bar-sep">:</span>
-      <div class="bar-unit"><span class="bar-val" id="b-mins">--</span><span class="bar-lbl">Min</span></div>
-      <span class="bar-sep">:</span>
-      <div class="bar-unit"><span class="bar-val" id="b-secs">--</span><span class="bar-lbl">Sec</span></div>
+    <div class="bar-team-info">
+      <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
+      <span class="bar-team-sub" id="bar-team-sub">NL West</span>
     </div>
-    <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
     <div class="bar-actions">
       <button class="settings-btn" onclick="togglePanel()" title="Schedule & Roster">≡</button>
       <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
@@ -911,8 +931,10 @@
       </div>
     </div>
     <div class="hero-scroll">Scroll ↓</div>
-    <div class="hero-next" id="hero-next"></div>
   </section>
+
+  <!-- Fixed next-game corner card -->
+  <div class="hero-next" id="hero-next"></div>
 
   <!-- Team Stats Panel -->
   <section class="stats-panel">
@@ -1094,12 +1116,8 @@
       },
     }
 
-    /* ── Countdown bar + hero ───────────────────────────── */
+    /* ── Hero countdown ──────────────────────────────────── */
     let barTarget = new Date(TEAMS.dodgers.openingDay).getTime()
-    const bDays  = document.getElementById('b-days')
-    const bHours = document.getElementById('b-hours')
-    const bMins  = document.getElementById('b-mins')
-    const bSecs  = document.getElementById('b-secs')
     const hDays  = document.getElementById('h-days')
     const hHours = document.getElementById('h-hours')
     const hMins  = document.getElementById('h-mins')
@@ -1108,7 +1126,6 @@
     function barTick() {
       const diff = barTarget - Date.now()
       if (diff <= 0) {
-        document.getElementById('bar-countdown').textContent = '⚾ Play Ball!'
         hDays.textContent = hHours.textContent = hMins.textContent = hSecs.textContent = '00'
         return
       }
@@ -1116,8 +1133,7 @@
       const h = pad(Math.floor((diff % 86400000) / 3600000))
       const m = pad(Math.floor((diff % 3600000) / 60000))
       const s = pad(Math.floor((diff % 60000) / 1000))
-      bDays.textContent  = d; bHours.textContent = h; bMins.textContent = m; bSecs.textContent = s
-      hDays.textContent  = d; hHours.textContent = h; hMins.textContent = m; hSecs.textContent = s
+      hDays.textContent = d; hHours.textContent = h; hMins.textContent = m; hSecs.textContent = s
     }
     barTick()
     setInterval(barTick, 1000)
@@ -1128,10 +1144,12 @@
       document.body.dataset.team = key
       localStorage.setItem('selectedTeam', key)
 
-      // Bar logo + countdown target
+      // Bar logo + team name
       const logo = document.getElementById('bar-logo')
       logo.src = t.logoSrc
       logo.alt = t.logoAlt
+      document.getElementById('bar-team-name').textContent = t.name
+      document.getElementById('bar-team-sub').textContent  = t.division
       barTarget = new Date(t.openingDay).getTime()
 
       // Header
