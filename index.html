@@ -147,34 +147,51 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
-    /* ── Stats Dashboard ──────────────────────────────── */
-    .stats-panel {
+    /* ── Home layout (sidebar + news) ───────────────────── */
+    .home-section {
       position: relative;
       z-index: 1;
       width: 100%;
-      padding: 2.5rem 2rem 3rem;
-      min-height: calc(100dvh - 90px);
+      min-height: calc(100dvh - 84px);
     }
-    .stats-inner {
-      max-width: 960px;
+    .home-layout {
+      max-width: 1180px;
       margin: 0 auto;
       display: flex;
-      flex-direction: column;
       gap: 1.5rem;
+      align-items: flex-start;
+      padding: 2.5rem 2rem 5rem;
+    }
+    .home-sidebar {
+      width: 360px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 84px;
+      max-height: calc(100dvh - 100px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      scrollbar-width: none;
+    }
+    .home-sidebar::-webkit-scrollbar { display: none; }
+    .home-main {
+      flex: 1;
+      min-width: 0;
     }
     .dash-label {
       display: flex;
       align-items: center;
       gap: 0.6rem;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.32);
     }
     .stats-divider { opacity: 0.3; }
-    .dash-grid {
-      display: flex;
+    /* legacy — no longer used as layout */
+    .stats-panel, .stats-inner, .dash-grid {
       gap: 1.25rem;
       align-items: flex-start;
     }
@@ -318,29 +335,18 @@
       color: rgba(255,255,255,0.48);
     }
 
-    /* ── News Section ────────────────────────────────────── */
-    .news-section {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      padding: 0 2rem 5rem;
-    }
-    .news-inner {
-      max-width: 960px;
-      margin: 0 auto;
-    }
     .news-section-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 1.25rem;
+      color: rgba(255,255,255,0.32);
+      margin-bottom: 1.1rem;
       display: block;
     }
     .news-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
     .news-card {
@@ -401,9 +407,15 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.18);
     }
+    @media (max-width: 860px) {
+      .home-layout { flex-direction: column; padding: 1.5rem 1rem 4rem; }
+      .home-sidebar { width: 100%; position: static; max-height: none; overflow-y: visible; flex-direction: row; flex-wrap: wrap; }
+      .home-sidebar .dash-card { flex: 1; min-width: 260px; }
+    }
     @media (max-width: 700px) {
       .news-grid { grid-template-columns: 1fr 1fr; }
-      .dash-grid { flex-direction: column; }
+      .home-sidebar { flex-direction: column; }
+      .home-sidebar .dash-card { min-width: 0; }
     }
     @media (max-width: 480px) {
       .news-grid { grid-template-columns: 1fr; }
@@ -1135,17 +1147,17 @@
   <!-- Fixed next-game corner card -->
   <div class="hero-next" id="hero-next"></div>
 
-  <!-- Stats Dashboard -->
-  <section class="stats-panel">
-    <div class="stats-inner">
+  <!-- Home: sidebar + main -->
+  <section class="home-section">
+    <div class="home-layout">
 
-      <div class="dash-label">
-        <span class="stats-season">2025 Season</span>
-        <span class="stats-divider">·</span>
-        <span class="stats-division">NL West</span>
-      </div>
-
-      <div class="dash-grid">
+      <!-- Sticky left sidebar: season stats + last game -->
+      <aside class="home-sidebar">
+        <div class="dash-label">
+          <span class="stats-season">2025 Season</span>
+          <span class="stats-divider">·</span>
+          <span class="stats-division">NL West</span>
+        </div>
 
         <!-- Team stats card -->
         <div class="dash-card">
@@ -1181,18 +1193,16 @@
             <div class="performer"><span class="performer-role">Pit</span><span class="p-name">Y. Yamamoto</span><span class="p-line">7.0 IP · 1 ER · 10 K · W</span></div>
           </div>
         </div>
+      </aside>
 
-      </div>
-    </div>
-  </section>
+      <!-- Main right: news -->
+      <main class="home-main">
+        <span class="news-section-label">Dodgers News</span>
+        <div class="news-grid" id="news-grid">
+          <div class="news-loading">Loading…</div>
+        </div>
+      </main>
 
-  <!-- News Section -->
-  <section class="news-section">
-    <div class="news-inner">
-      <span class="news-section-label">Dodgers News</span>
-      <div class="news-grid" id="news-grid">
-        <div class="news-loading">Loading…</div>
-      </div>
     </div>
   </section>
 
