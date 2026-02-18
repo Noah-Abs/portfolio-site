@@ -236,10 +236,6 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.38);
     }
-    .stats-header strong {
-      color: rgba(255,255,255,0.7);
-      font-weight: 700;
-    }
     .stats-divider { opacity: 0.3; }
 
     .team-stats {
@@ -271,6 +267,14 @@
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+    .stat-rank {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
       white-space: nowrap;
     }
 
@@ -319,19 +323,6 @@
       align-items: center;
       gap: 0.65rem;
     }
-    .p-headshot {
-      flex-shrink: 0;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background-color: #0A2E8A;
-      background-size: 120%;
-      background-position: center 8%;
-      background-repeat: no-repeat;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    /* img tag is hidden; image is set as background-image via style attr */
-    .p-headshot img { display: none; }
     .p-info {
       display: flex;
       flex-direction: column;
@@ -438,23 +429,24 @@
       <div class="stats-header">
         <span class="stats-season">2025 Season</span>
         <span class="stats-divider">·</span>
-        <span>NL West &nbsp;<strong>2nd Place</strong></span>
-        <span class="stats-divider">·</span>
-        <span>NL <strong>4th</strong> in ERA &nbsp;·&nbsp; NL <strong>2nd</strong> in HR &nbsp;·&nbsp; NL <strong>3rd</strong> in AVG</span>
+        <span>NL West</span>
       </div>
 
       <div class="team-stats">
         <div class="stat-item">
           <span class="stat-val">100-62</span>
           <span class="stat-lbl">Record</span>
+          <span class="stat-rank">#2 NL West</span>
         </div>
         <div class="stat-item">
           <span class="stat-val">.617</span>
           <span class="stat-lbl">Win %</span>
+          <span class="stat-rank">#2 NL West</span>
         </div>
         <div class="stat-item">
           <span class="stat-val">.263</span>
           <span class="stat-lbl">Team AVG</span>
+          <span class="stat-rank">#3 NL</span>
         </div>
         <div class="stat-item">
           <span class="stat-val">1,418</span>
@@ -463,10 +455,12 @@
         <div class="stat-item">
           <span class="stat-val">221</span>
           <span class="stat-lbl">Home Runs</span>
+          <span class="stat-rank">#2 NL</span>
         </div>
         <div class="stat-item">
           <span class="stat-val">3.61</span>
           <span class="stat-lbl">Team ERA</span>
+          <span class="stat-rank">#4 NL</span>
         </div>
         <div class="stat-item">
           <span class="stat-val">1,344</span>
@@ -483,21 +477,18 @@
         <div class="performer-col">
           <div class="performer-section-lbl">Batters</div>
           <div class="performer">
-            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/660271/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Shohei Ohtani</span>
               <span class="p-line">3-4 · HR · 3 RBI</span>
             </div>
           </div>
           <div class="performer">
-            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/518692/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Freddie Freeman</span>
               <span class="p-line">2-3 · 2B · 2 RBI</span>
             </div>
           </div>
           <div class="performer">
-            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/605141/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Mookie Betts</span>
               <span class="p-line">2-4 · HR · BB</span>
@@ -508,7 +499,6 @@
         <div class="performer-col">
           <div class="performer-section-lbl">Pitcher</div>
           <div class="performer">
-            <div class="p-headshot" style="background-image:url('https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/808967/headshot/67/current')"></div>
             <div class="p-info">
               <span class="p-name">Yoshinobu Yamamoto</span>
               <span class="p-line">7.0 IP · 1 ER · 10 K · W</span>
