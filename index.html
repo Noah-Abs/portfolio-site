@@ -436,6 +436,7 @@
       .bar-team-sub  { font-size: 0.52rem; }
       .bar-actions   { right: 0.75rem; gap: 0.25rem; }
       .settings-btn  { padding: 0.3rem 0.5rem; font-size: 1.1rem; }
+      .team-switcher-btn img { height: 22px; }
 
       /* Hide hamburger — tab bar takes over */
       .settings-btn[title="Menu"] { display: none; }
@@ -1071,29 +1072,35 @@
     }
     .settings-btn:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
-    .team-dropdown {
-      position: absolute;
-      right: 1.5rem;
-      top: calc(100% + 6px);
-      background: rgba(5,7,20,0.97);
-      border: 1px solid rgba(255,255,255,0.12);
+    .team-switcher {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 8px;
-      overflow: hidden;
-      min-width: 210px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-      display: none;
-      z-index: 200;
+      padding: 0.2rem;
     }
-    .team-dropdown.open { display: block; }
-    .team-dropdown-label {
-      padding: 0.55rem 1rem 0.4rem;
-      font-size: 0.55rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.25);
-      border-bottom: 1px solid rgba(255,255,255,0.07);
+    .team-switcher-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      padding: 0.2rem 0.25rem;
+      cursor: pointer;
+      opacity: 0.3;
+      transition: opacity 0.2s, background 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .team-switcher-btn img { height: 26px; width: auto; display: block; }
+    .team-switcher-btn.active {
+      opacity: 1;
+      background: rgba(255,255,255,0.1);
+    }
+    .team-switcher-btn:not(.active):hover { opacity: 0.65; }
+    /* Keep old CSS names for any residual references */
     .team-dropdown-item {
       display: flex;
       align-items: center;
@@ -2399,19 +2406,15 @@
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
     </div>
     <div class="bar-actions">
+      <div class="team-switcher" id="team-switcher">
+        <button class="team-switcher-btn active" id="tsb-dodgers" onclick="switchTeam('dodgers')" title="Los Angeles Dodgers">
+          <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
+        </button>
+        <button class="team-switcher-btn" id="tsb-mets" onclick="switchTeam('mets')" title="New York Mets">
+          <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" alt="NYM">
+        </button>
+      </div>
       <button class="settings-btn" onclick="toggleNavMenu()" title="Menu">≡</button>
-      <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
-    </div>
-    <div class="team-dropdown" id="team-dropdown">
-      <div class="team-dropdown-label">Select Team</div>
-      <div class="team-dropdown-item active" data-team="dodgers" onclick="switchTeam('dodgers')">
-        <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
-        Los Angeles Dodgers
-      </div>
-      <div class="team-dropdown-item" data-team="mets" onclick="switchTeam('mets')">
-        <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" alt="NYM">
-        New York Mets
-      </div>
     </div>
   </div>
 
@@ -2783,9 +2786,9 @@
       renderSchedule(t.schedule)
       renderNextGame(t.nextGame)
 
-      // Dropdown active state
-      document.querySelectorAll('.team-dropdown-item').forEach(el => {
-        el.classList.toggle('active', el.dataset.team === key)
+      // Team switcher active state
+      document.querySelectorAll('.team-switcher-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `tsb-${key}`)
       })
 
       // Reset lazy-load guards so depth chart + roster reload for new team
@@ -3250,21 +3253,10 @@
       return { primary, secondary }
     }
 
-    /* ── Settings dropdown ──────────────────────────────── */
-    function toggleSettings() {
-      document.getElementById('team-dropdown').classList.toggle('open')
-    }
+    /* ── Team switcher ──────────────────────────────────── */
     function switchTeam(key) {
       renderTeam(key)
-      document.getElementById('team-dropdown').classList.remove('open')
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', e => {
-      if (!e.target.closest('.team-dropdown') && !e.target.closest('.settings-btn')) {
-        document.getElementById('team-dropdown').classList.remove('open')
-      }
-    })
 
     // Restore saved team on load (always render to populate all dynamic elements)
     const saved = localStorage.getItem('selectedTeam')
