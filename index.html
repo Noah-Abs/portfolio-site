@@ -189,17 +189,16 @@
       align-items: flex-start;
     }
     .dash-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 1.5rem;
-      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      padding: 1.1rem 1rem;
     }
     .dash-card-header {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin-bottom: 1.25rem;
+      margin-bottom: 0.9rem;
     }
     .dash-card-label {
       font-size: 0.62rem;
@@ -217,39 +216,40 @@
     /* Team stats grid */
     .team-stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0;
     }
     .stat-item {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.3rem;
-      padding: 1rem 0.5rem;
+      gap: 0.25rem;
+      padding: 0.85rem 0.4rem;
       border-right: 1px solid rgba(255,255,255,0.06);
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .stat-item:nth-child(4n) { border-right: none; }
-    .stat-item:nth-last-child(-n+4) { border-bottom: none; }
+    .stat-item:nth-child(2n) { border-right: none; }
+    .stat-item:nth-last-child(-n+2) { border-bottom: none; }
     .stat-val {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 2rem;
-      letter-spacing: 0.04em;
+      font-size: 1.55rem;
+      letter-spacing: 0.03em;
       color: #fff;
       line-height: 1;
     }
     .stat-lbl {
-      font-size: 0.58rem;
+      font-size: 0.54rem;
       font-weight: 700;
-      letter-spacing: 0.16em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.4);
       white-space: nowrap;
+      text-align: center;
     }
     .stat-rank {
-      font-size: 0.52rem;
+      font-size: 0.48rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.22);
       white-space: nowrap;
@@ -260,10 +260,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 1.25rem;
-      padding: 1.25rem 0 1.5rem;
+      gap: 1rem;
+      padding: 0.9rem 0 1.1rem;
       border-bottom: 1px solid rgba(255,255,255,0.07);
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
     .lgs-side {
       display: flex;
@@ -278,7 +278,7 @@
     }
     .lgs-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 3.8rem;
+      font-size: 2.8rem;
       color: #fff;
       line-height: 1;
       letter-spacing: -0.02em;
@@ -290,42 +290,61 @@
     }
 
     /* Performers */
+    .performers-label {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 0.5rem;
+      padding-top: 0.25rem;
+    }
     .performers {
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0;
     }
     .performer {
       display: flex;
-      align-items: baseline;
-      gap: 0.75rem;
-      padding: 0.45rem 0;
+      flex-direction: column;
+      gap: 0.15rem;
+      padding: 0.55rem 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .performer:last-child { border-bottom: none; }
+    .performer-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
     .performer-role {
-      font-size: 0.52rem;
+      font-size: 0.48rem;
       font-weight: 700;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.28);
-      min-width: 42px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      padding: 0.15rem 0.35rem;
       flex-shrink: 0;
     }
     .p-name {
       font-family: 'Inter', sans-serif;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       font-weight: 600;
       letter-spacing: 0.01em;
       color: #fff;
       flex: 1;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .p-line {
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 400;
-      letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.48);
+      letter-spacing: 0.03em;
+      color: rgba(255,255,255,0.42);
+      padding-left: 0.1rem;
     }
 
     .news-section-label {
@@ -736,17 +755,44 @@
       gap: 1.5rem;
     }
     .hero-logo {
-      height: 110px;
+      height: 130px;
       width: auto;
-      filter: drop-shadow(0 0 36px rgba(0,61,165,0.75));
-      opacity: 0.9;
+      filter: drop-shadow(0 0 48px rgba(0,61,165,0.9)) drop-shadow(0 0 16px rgba(0,100,255,0.4));
+      opacity: 0.95;
     }
-    .hero-label {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.6rem, 4vw, 2.6rem);
-      letter-spacing: 0.3em;
+    /* hero wordmark */
+    .hero-wordmark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      line-height: 1;
+    }
+    .hero-city {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(0.75rem, 2vw, 1.05rem);
+      font-weight: 700;
+      letter-spacing: 0.45em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.45);
+    }
+    .hero-team-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 8vw, 5.5rem);
+      letter-spacing: 0.1em;
+      color: #fff;
+      text-shadow: 0 0 80px rgba(0,61,165,0.9), 0 0 160px rgba(0,61,165,0.4);
+    }
+    .hero-champs {
+      font-size: clamp(0.5rem, 1.1vw, 0.65rem);
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(230,170,40,0.8);
+      border: 1px solid rgba(230,170,40,0.25);
+      border-radius: 4px;
+      padding: 0.22rem 0.8rem;
+      margin-top: 0.6rem;
     }
     .hero-countdown {
       display: flex;
@@ -802,21 +848,16 @@
       50%      { transform: translateX(-50%) translateY(8px); opacity: 0.45; }
     }
 
-    /* ── Hero Next Game (fixed corner card) ──────────── */
+    /* ── Next Game card (lives at bottom of sidebar) ────── */
     .hero-next {
-      position: fixed;
-      bottom: 1.75rem;
-      left: 1.75rem;
-      z-index: 50;
+      margin-top: auto;
       display: flex;
       flex-direction: column;
       gap: 0.45rem;
-      background: rgba(0,8,32,0.72);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(0,30,100,0.35);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 12px;
-      padding: 0.9rem 1.15rem;
+      padding: 0.9rem 1.1rem;
     }
     .hero-next-label {
       font-size: 0.55rem;
@@ -1130,13 +1171,28 @@
         <span class="lgs-sep">—</span>
         <div class="lgs-side"><span class="lgs-num">3</span><span class="lgs-abbr">SD</span></div>
       </div>
+      <div class="performers-label">Top Performers</div>
       <div class="performers">
-        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Shohei Ohtani</span><span class="p-line">3-4 · HR · 3 RBI</span></div>
-        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Freddie Freeman</span><span class="p-line">2-3 · 2B · 2 RBI</span></div>
-        <div class="performer"><span class="performer-role">Bat</span><span class="p-name">Mookie Betts</span><span class="p-line">2-4 · HR · BB</span></div>
-        <div class="performer"><span class="performer-role">Pit</span><span class="p-name">Y. Yamamoto</span><span class="p-line">7.0 IP · 1 ER · 10 K · W</span></div>
+        <div class="performer">
+          <div class="performer-top"><span class="performer-role">Batting</span><span class="p-name">Shohei Ohtani</span></div>
+          <span class="p-line">3-4 · HR · 3 RBI</span>
+        </div>
+        <div class="performer">
+          <div class="performer-top"><span class="performer-role">Batting</span><span class="p-name">Freddie Freeman</span></div>
+          <span class="p-line">2-3 · 2B · 2 RBI</span>
+        </div>
+        <div class="performer">
+          <div class="performer-top"><span class="performer-role">Batting</span><span class="p-name">Mookie Betts</span></div>
+          <span class="p-line">2-4 · HR · BB</span>
+        </div>
+        <div class="performer">
+          <div class="performer-top"><span class="performer-role">Pitching</span><span class="p-name">Y. Yamamoto</span></div>
+          <span class="p-line">7.0 IP · 1 ER · 10 K · W</span>
+        </div>
       </div>
     </div>
+    <!-- Next Game card pinned to sidebar bottom -->
+    <div class="hero-next" id="hero-next"></div>
   </div>
 
   <!-- Main scrollable content -->
@@ -1147,7 +1203,11 @@
     <img class="hero-logo" id="hero-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
-    <div class="hero-label">Opening Day 2026</div>
+    <div class="hero-wordmark">
+      <span class="hero-city">Los Angeles</span>
+      <span class="hero-team-name" id="hero-team-name-display">Dodgers</span>
+    </div>
+    <span class="hero-champs" id="hero-champs">2024 World Series Champions</span>
     <div class="hero-countdown">
       <div class="hero-unit">
         <span class="hero-num" id="h-days">--</span>
@@ -1171,9 +1231,6 @@
     </div>
     <div class="hero-scroll">Scroll ↓</div>
   </section>
-
-  <!-- Fixed next-game corner card -->
-  <div class="hero-next" id="hero-next"></div>
 
   </div><!-- /main-content -->
 
