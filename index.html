@@ -133,6 +133,7 @@
       z-index: 1;
       width: 100%;
       padding: 2.5rem 2rem 5rem;
+      min-height: calc(100dvh - 90px);
     }
 
     .stats-inner {
@@ -579,35 +580,35 @@
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      gap: 1.25rem;
+      gap: 1.5rem;
     }
     .hero-logo {
-      height: 90px;
+      height: 110px;
       width: auto;
-      filter: drop-shadow(0 0 32px rgba(0,61,165,0.7));
-      opacity: 0.88;
+      filter: drop-shadow(0 0 36px rgba(0,61,165,0.75));
+      opacity: 0.9;
     }
     .hero-label {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.45em;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.5);
     }
     .hero-countdown {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
     }
     .hero-unit {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
     .hero-num {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(5rem, 14vw, 9.5rem);
+      font-size: clamp(6rem, 16vw, 11rem);
       line-height: 1;
       letter-spacing: -0.02em;
       color: #fff;
@@ -616,15 +617,15 @@
     }
     .hero-lbl {
       font-family: 'Inter', sans-serif;
-      font-size: 0.6rem;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.3em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
+      color: rgba(255,255,255,0.32);
     }
     .hero-sep {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(4rem, 11vw, 7.5rem);
+      font-size: clamp(4.5rem, 13vw, 9rem);
       color: rgba(255,255,255,0.12);
       line-height: 1;
       align-self: flex-start;
@@ -635,17 +636,66 @@
       bottom: 1.75rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.52rem;
+      font-size: 0.58rem;
       font-weight: 700;
       letter-spacing: 0.35em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.22);
       animation: scrollbob 2.2s ease-in-out infinite;
       white-space: nowrap;
     }
     @keyframes scrollbob {
-      0%,100% { transform: translateX(-50%) translateY(0); opacity: 0.18; }
-      50%      { transform: translateX(-50%) translateY(8px); opacity: 0.4; }
+      0%,100% { transform: translateX(-50%) translateY(0); opacity: 0.22; }
+      50%      { transform: translateX(-50%) translateY(8px); opacity: 0.45; }
+    }
+
+    /* ── Hero Next Game ───────────────────────────────── */
+    .hero-next {
+      position: absolute;
+      bottom: 2rem;
+      left: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .hero-next-label {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+    }
+    .hero-next-venue {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.03em;
+    }
+    .hero-next-matchup {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+    .hero-next-logo {
+      height: 30px;
+      width: auto;
+    }
+    .hero-next-sep {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.28);
+    }
+    .hero-next-team {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.01em;
+    }
+    .hero-next-time {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.38);
+      letter-spacing: 0.05em;
     }
 
     /* ── Player Overlay ──────────────────────────────── */
@@ -809,7 +859,6 @@
     <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
-    <span class="bar-label">Opening Day 2026</span>
     <span class="bar-dot"></span>
     <div class="bar-countdown" id="bar-countdown">
       <div class="bar-unit"><span class="bar-val" id="b-days">--</span><span class="bar-lbl">Days</span></div>
@@ -862,6 +911,7 @@
       </div>
     </div>
     <div class="hero-scroll">Scroll ↓</div>
+    <div class="hero-next" id="hero-next"></div>
   </section>
 
   <!-- Team Stats Panel -->
@@ -1111,13 +1161,38 @@
       // Side panel title
       document.querySelector('.sp-title').textContent = t.name
 
-      // Schedule
+      // Schedule + next game
       renderSchedule(t.schedule)
+      renderNextGame(t.nextGame)
 
       // Dropdown active state
       document.querySelectorAll('.team-dropdown-item').forEach(el => {
         el.classList.toggle('active', el.dataset.team === key)
       })
+    }
+
+    /* ── Next game renderer ─────────────────────────────── */
+    function renderNextGame(g) {
+      const el = document.getElementById('hero-next')
+      if (!el || !g) return
+      const DODGERS = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg'
+      const oppLogo = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg`
+      const isHome  = g.atVs === 'vs'
+      const venue   = g.venueName || g.venue || ''
+      const dateStr = g.monthDay || g.dateShort || g.date || ''
+      // home: LAD vs OPP  |  away: OPP @ LAD
+      const leftLogo  = isHome ? DODGERS  : oppLogo
+      const rightLogo = isHome ? oppLogo  : DODGERS
+      el.innerHTML = `
+        <div class="hero-next-label">Next Game</div>
+        ${venue ? `<div class="hero-next-venue">${venue}</div>` : ''}
+        <div class="hero-next-matchup">
+          <img class="hero-next-logo" src="${leftLogo}" alt="">
+          <span class="hero-next-sep">${g.atVs}</span>
+          <img class="hero-next-logo" src="${rightLogo}" alt="${g.opponent}">
+          <span class="hero-next-team">${g.opponent}</span>
+        </div>
+        <div class="hero-next-time">${dateStr ? dateStr + ' · ' : ''}${g.time}</div>`
     }
 
     /* ── Schedule renderer ──────────────────────────────── */
@@ -1397,18 +1472,22 @@
               const opp = isHome ? g.teams.away.team : g.teams.home.team
               const dt = new Date(g.gameDate)
               games.push({
-                day:      dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }),
-                monthDay: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }),
-                atVs:     isHome ? 'vs' : '@',
-                opponent: opp.name,
-                logoId:   opp.id,
-                venue:    isHome ? 'Home' : 'Away',
-                time:     dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT',
-                tv:       '',
+                day:       dt.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'America/Los_Angeles' }),
+                monthDay:  dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' }),
+                atVs:      isHome ? 'vs' : '@',
+                opponent:  opp.name,
+                logoId:    opp.id,
+                venueName: g.venue?.name ?? '',
+                time:      dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' }) + ' PT',
+                tv:        '',
               })
             }
           }
-          if (games.length) { TEAMS.dodgers.schedule = games; renderSchedule(games) }
+          if (games.length) {
+            TEAMS.dodgers.schedule = games
+            renderSchedule(games)
+            renderNextGame(games[0])
+          }
         }
       } catch (e) { console.warn('Schedule fetch failed', e) }
 
