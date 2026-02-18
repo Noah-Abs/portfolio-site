@@ -1494,6 +1494,142 @@
       animation: livepulse 1.4s ease-in-out infinite;
     }
 
+    /* ── Depth Chart ──────────────────────────────────── */
+    .dc-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    .dc-page-header {
+      margin-bottom: 1.75rem;
+    }
+    .dc-page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 1;
+    }
+    .dc-page-sub {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 0.25rem;
+      font-family: 'Inter', sans-serif;
+    }
+    .dc-section-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.6rem;
+      margin-top: 1.75rem;
+    }
+    .dc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+    .dc-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .dc-pos-header {
+      background: rgba(0,30,98,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 0.45rem 0.75rem;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+    .dc-pos-abbr {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      color: #fff;
+    }
+    .dc-pos-name {
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.35);
+      font-family: 'Inter', sans-serif;
+    }
+    .dc-players {
+      display: flex;
+      flex-direction: column;
+    }
+    .dc-player {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      position: relative;
+    }
+    .dc-player:last-child { border-bottom: none; }
+    .dc-player.dc-starter {
+      background: rgba(255,255,255,0.03);
+    }
+    .dc-photo-wrap {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dc-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .dc-photo-fallback {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.2);
+    }
+    .dc-player-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .dc-player-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .dc-player.dc-starter .dc-player-name {
+      color: #fff;
+    }
+    .dc-player:not(.dc-starter) .dc-player-name {
+      color: rgba(255,255,255,0.55);
+      font-weight: 400;
+    }
+    .dc-depth-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.18);
+      flex-shrink: 0;
+    }
+    .dc-starter .dc-depth-num {
+      color: rgba(255,255,255,0.35);
+    }
+    .dc-loading {
+      color: rgba(255,255,255,0.25);
+      font-size: 0.8rem;
+      padding: 3rem 0;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      .dc-grid { grid-template-columns: repeat(2, 1fr); }
+      .dc-wrap { padding: 1rem 1rem 3rem; }
+    }
+
     /* ── Nav Menu (≡ dropdown) ────────────────────────── */
     .nav-backdrop {
       position: fixed;
@@ -1981,6 +2117,20 @@
       <div class="lf-empty">No live game data available.</div>
     </div>
   </div><!-- /view-live -->
+
+  <!-- Depth Chart view -->
+  <div class="view-section" id="view-depth">
+    <div class="dc-wrap">
+      <div class="dc-page-header">
+        <div class="dc-page-title">Depth Chart</div>
+        <div class="dc-page-sub" id="dc-page-sub">Los Angeles Dodgers · 2026</div>
+      </div>
+      <div class="dc-section-label">POSITION PLAYERS</div>
+      <div class="dc-grid" id="dc-grid-pos"></div>
+      <div class="dc-section-label">PITCHERS</div>
+      <div class="dc-grid" id="dc-grid-pit"></div>
+    </div>
+  </div><!-- /view-depth -->
 
   </div><!-- /main-content -->
 
@@ -2644,13 +2794,11 @@
 
     function switchView(view) {
       _currentView = view
-
-      // Show/hide view sections
       document.getElementById('view-home').classList.toggle('active', view === 'home')
       document.getElementById('view-live').classList.toggle('active', view === 'live')
-
-      // If switching to live, render if data is available
+      document.getElementById('view-depth').classList.toggle('active', view === 'depth')
       if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
+      if (view === 'depth') loadDepthChart()
     }
 
     /* ── Live Game Tracker ───────────────────────────────── */
@@ -3025,6 +3173,90 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
         </div>`
     }
 
+    /* ── Depth Chart ─────────────────────────────────────── */
+    let _depthLoaded = false
+
+    const DC_POS_ORDER = ['C','1B','2B','SS','3B','LF','CF','RF','DH']
+    const DC_PIT_ORDER = ['SP','RP','CL']
+    const DC_POS_NAMES = {
+      'C':'Catcher','1B':'First Base','2B':'Second Base','SS':'Shortstop',
+      '3B':'Third Base','LF':'Left Field','CF':'Center Field','RF':'Right Field',
+      'DH':'Designated Hitter','SP':'Starting Pitcher','RP':'Relief Pitcher','CL':'Closer'
+    }
+
+    async function loadDepthChart() {
+      if (_depthLoaded) return
+      const gridPos = document.getElementById('dc-grid-pos')
+      const gridPit = document.getElementById('dc-grid-pit')
+      gridPos.innerHTML = '<div class="dc-loading">Loading depth chart…</div>'
+      gridPit.innerHTML = ''
+
+      try {
+        const teamId = 119
+        const season = new Date().getFullYear()
+        const res = await fetch(
+          `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=depthChart&season=${season}&hydrate=person`
+        )
+        const data = await res.json()
+        const roster = data.roster ?? []
+
+        // Group by position abbreviation, keeping depth order
+        const byPos = {}
+        for (const entry of roster) {
+          const abbr = entry.position?.abbreviation ?? entry.position?.code ?? '?'
+          if (!byPos[abbr]) byPos[abbr] = []
+          byPos[abbr].push(entry)
+        }
+        // Sort each group by depth field
+        for (const key of Object.keys(byPos)) {
+          byPos[key].sort((a, b) => (a.depth ?? 99) - (b.depth ?? 99))
+        }
+
+        function renderCard(abbr) {
+          const players = byPos[abbr]
+          if (!players || players.length === 0) return ''
+          const posName = DC_POS_NAMES[abbr] ?? abbr
+          const playerRows = players.map((entry, i) => {
+            const id   = entry.person?.id
+            const name = entry.person?.fullName ?? '—'
+            const photo = id
+              ? `<img class="dc-photo" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_auto/v1/people/${id}/headshot/67/current" alt="${name}" onerror="this.parentNode.innerHTML='<span class=\\'dc-photo-fallback\\'>◉</span>'">`
+              : '<span class="dc-photo-fallback">◉</span>'
+            return `
+              <div class="dc-player ${i === 0 ? 'dc-starter' : ''}">
+                <div class="dc-photo-wrap">${photo}</div>
+                <div class="dc-player-info">
+                  <div class="dc-player-name">${name}</div>
+                </div>
+                <span class="dc-depth-num">${i + 1}</span>
+              </div>`
+          }).join('')
+          return `
+            <div class="dc-card">
+              <div class="dc-pos-header">
+                <span class="dc-pos-abbr">${abbr}</span>
+                <span class="dc-pos-name">${posName}</span>
+              </div>
+              <div class="dc-players">${playerRows}</div>
+            </div>`
+        }
+
+        // Position players
+        const posHtml = DC_POS_ORDER.map(renderCard).filter(Boolean).join('')
+        gridPos.innerHTML = posHtml || '<div class="dc-loading">No data available.</div>'
+
+        // Pitchers — combine any abbr not in POS_ORDER
+        const pitAbbrs = [...DC_PIT_ORDER, ...Object.keys(byPos).filter(k => !DC_POS_ORDER.includes(k) && !DC_PIT_ORDER.includes(k))]
+        const pitHtml = pitAbbrs.map(renderCard).filter(Boolean).join('')
+        gridPit.innerHTML = pitHtml || '<div class="dc-loading">No data available.</div>'
+
+        _depthLoaded = true
+      } catch(e) {
+        console.warn('Depth chart fetch failed:', e)
+        gridPos.innerHTML = '<div class="dc-loading">Could not load depth chart.</div>'
+      }
+    }
+
     /* ── World Series Modal ──────────────────────────────── */
     const WS_INFO = {
       1955: {
@@ -3157,6 +3389,7 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       <span class="nav-live-badge" id="nav-live-badge" style="display:none">LIVE</span>
     </button>
     <div class="nav-divider"></div>
+    <button class="nav-item" onclick="switchView('depth'); closeNavMenu()">Depth Chart</button>
     <button class="nav-item" onclick="openSidePanel('schedule'); closeNavMenu()">Schedule</button>
     <button class="nav-item" onclick="openSidePanel('roster'); closeNavMenu()">40-Man Roster</button>
   </div>
