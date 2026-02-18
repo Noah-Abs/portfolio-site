@@ -907,7 +907,7 @@
 
       /* ── Last game performers ── */
       try {
-        const lsRes = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2025&sportId=1&gameType=R&startDate=2025-09-20&endDate=2025-10-01')
+        const lsRes = await fetch('https://statsapi.mlb.com/api/v1/schedule?teamId=119&season=2025&sportId=1&gameType=R,F,D,L,W&startDate=2025-09-20&endDate=2025-11-10')
         const lsData = await lsRes.json()
 
         let lastGame = null
