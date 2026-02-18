@@ -2390,6 +2390,504 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.15);
     }
+
+    /* ── Sidebar Nav ─────────────────────────────────────── */
+    .sb-nav {
+      background: rgba(5,7,20,0.55);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+    .sb-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.6rem 0.85rem;
+      border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      text-align: left;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sb-nav-item:last-child { border-bottom: none; }
+    .sb-nav-item:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.8);
+    }
+    .sb-nav-item.active {
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      font-weight: 600;
+    }
+    .sb-nav-lbl { flex: 1; }
+    .sb-nav-badge {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #ff4444;
+      background: rgba(255,68,68,0.12);
+      border: 1px solid rgba(255,68,68,0.35);
+      border-radius: 3px;
+      padding: 1px 4px;
+      animation: livepulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Mobile 3-tab bar updates ──────────────────────────── */
+    @media (max-width: 700px) {
+      .mob-tabs {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: end;
+      }
+      /* Center logo tab */
+      .mob-tab-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.06);
+        border: 1.5px solid rgba(255,255,255,0.14);
+        border-radius: 50%;
+        width: 52px;
+        height: 52px;
+        margin: 0 auto;
+        margin-bottom: 6px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
+        flex-shrink: 0;
+        overflow: hidden;
+        padding: 0;
+      }
+      .mob-tab-center:active { opacity: 0.6; }
+      .mob-tab-center img {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        display: block;
+      }
+      .mob-tab-center.active {
+        background: rgba(255,255,255,0.12);
+        border-color: rgba(255,255,255,0.28);
+      }
+
+      /* More sheet backdrop */
+      .mob-more-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 340;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      .mob-more-backdrop.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      /* More slide-up sheet */
+      .mob-more-sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,7,32,0.98);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-radius: 18px 18px 0 0;
+        z-index: 345;
+        padding: 0 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .mob-more-sheet.open {
+        transform: translateY(0);
+      }
+      .mob-more-handle {
+        width: 36px;
+        height: 4px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 2px;
+        margin: 10px auto 16px;
+      }
+
+      /* More grid */
+      .mob-more-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+      }
+      .mob-more-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 0.9rem 0.5rem 0.8rem;
+        cursor: pointer;
+        color: rgba(255,255,255,0.7);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.68rem;
+        font-weight: 500;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s, color 0.15s;
+      }
+      .mob-more-item:active {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+      }
+
+      /* Hide sidebar nav on mobile */
+      .sb-nav { display: none; }
+    }
+
+    /* ── Contracts & Payroll ─────────────────────────────── */
+    .contracts-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    @media (max-width: 700px) {
+      .contracts-wrap { padding: 1rem 0.75rem 3rem; }
+    }
+    .payroll-bar-wrap {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 1rem 1.1rem 1.1rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .payroll-bar-label {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.6rem;
+    }
+    .payroll-bar-track {
+      background: rgba(255,255,255,0.07);
+      border-radius: 4px;
+      height: 14px;
+      position: relative;
+      overflow: visible;
+    }
+    .payroll-bar {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #003DA5 0%, #0052cc 100%);
+      position: relative;
+      transition: width 0.6s ease;
+    }
+    .payroll-marker {
+      position: absolute;
+      top: -6px;
+      bottom: -6px;
+      width: 2px;
+      background: rgba(230,170,40,0.9);
+      border-radius: 1px;
+    }
+    .payroll-marker-label {
+      position: absolute;
+      top: -18px;
+      left: 4px;
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: rgba(230,170,40,0.9);
+      white-space: nowrap;
+    }
+    .payroll-totals {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.6rem;
+    }
+    .payroll-total-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .payroll-total-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: #fff;
+      line-height: 1;
+    }
+    .payroll-total-lbl {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+    }
+
+    /* Salary chart */
+    .salary-chart {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+    .salary-chart-title {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.85rem;
+    }
+    .salary-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .salary-row:last-child { border-bottom: none; }
+    .salary-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      width: 110px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .salary-bar-wrap {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .salary-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #003DA5 0%, #0052cc 100%);
+    }
+    .salary-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+      min-width: 48px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .salary-pos {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.3);
+      width: 24px;
+      flex-shrink: 0;
+    }
+
+    /* Contract timeline (Gantt) */
+    .contract-timeline {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+    }
+    .contract-timeline-title {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 0.75rem;
+    }
+    .ct-year-labels {
+      display: flex;
+      margin-left: 110px;
+      margin-bottom: 0.3rem;
+    }
+    .ct-year-label {
+      font-size: 0.52rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.22);
+      flex: 1;
+      text-align: center;
+    }
+    .ct-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0.22rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .ct-row:last-child { border-bottom: none; }
+    .ct-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      width: 110px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 0.5rem;
+    }
+    .ct-bar-wrap {
+      flex: 1;
+      position: relative;
+      height: 14px;
+    }
+    .ct-bar {
+      position: absolute;
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, rgba(0,61,165,0.75), rgba(0,82,204,0.65));
+      border: 1px solid rgba(0,82,204,0.5);
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      min-width: 4px;
+    }
+    .ct-bar-aav {
+      font-size: 0.48rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Injured List ─────────────────────────────────────── */
+    .il-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    @media (max-width: 700px) {
+      .il-wrap { padding: 1rem 0.75rem 3rem; }
+    }
+    .il-page-header {
+      margin-bottom: 1.5rem;
+    }
+    .il-page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      color: #fff;
+      line-height: 1;
+    }
+    .il-page-sub {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.35);
+      margin-top: 0.25rem;
+    }
+    .il-section-label {
+      font-size: 0.56rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 0.6rem;
+      margin-top: 1.25rem;
+    }
+    .il-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .il-card {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .il-photo {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .il-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .il-photo-fallback { font-size: 1.1rem; color: rgba(255,255,255,0.2); }
+    .il-info { flex: 1; min-width: 0; }
+    .il-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .il-pos {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.32);
+      margin-top: 0.1rem;
+    }
+    .il-injury {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.2rem;
+    }
+    .il-type-badge {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.18rem 0.55rem;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .il-type-10 {
+      background: rgba(220,60,40,0.15);
+      border: 1px solid rgba(220,60,40,0.4);
+      color: rgba(220,100,80,0.9);
+    }
+    .il-type-60 {
+      background: rgba(230,120,30,0.15);
+      border: 1px solid rgba(230,120,30,0.4);
+      color: rgba(230,150,60,0.9);
+    }
+    .il-empty {
+      padding: 2.5rem 0;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.15);
+    }
   </style>
 </head>
 <body data-team="dodgers">
@@ -2414,12 +2912,43 @@
           <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" alt="NYM">
         </button>
       </div>
-      <button class="settings-btn" onclick="toggleNavMenu()" title="Menu">≡</button>
     </div>
   </div>
 
   <!-- Fixed left sidebar -->
   <div class="fixed-sidebar" id="fixed-sidebar">
+    <!-- Sidebar navigation -->
+    <nav class="sb-nav" id="sb-nav">
+      <button class="sb-nav-item active" data-view="home" onclick="switchView('home')">
+        <span class="sb-tab-icon">⌂</span>
+        <span class="sb-nav-lbl">Home</span>
+      </button>
+      <button class="sb-nav-item" data-view="live" onclick="switchView('live')">
+        <span class="sb-tab-icon">◉</span>
+        <span class="sb-nav-lbl">Live Game</span>
+        <span class="sb-nav-badge" id="sb-live-badge" style="display:none">LIVE</span>
+      </button>
+      <button class="sb-nav-item" data-view="depth" onclick="switchView('depth')">
+        <span class="sb-tab-icon">≡</span>
+        <span class="sb-nav-lbl">Depth Chart</span>
+      </button>
+      <button class="sb-nav-item" data-view="schedule" onclick="openSidePanel('schedule')">
+        <span class="sb-tab-icon">📅</span>
+        <span class="sb-nav-lbl">Schedule</span>
+      </button>
+      <button class="sb-nav-item" data-view="contracts" onclick="switchView('contracts')">
+        <span class="sb-tab-icon">💰</span>
+        <span class="sb-nav-lbl">Contracts</span>
+      </button>
+      <button class="sb-nav-item" data-view="il" onclick="switchView('il')">
+        <span class="sb-tab-icon">🩺</span>
+        <span class="sb-nav-lbl">Injured List</span>
+      </button>
+      <button class="sb-nav-item" data-view="roster" onclick="openSidePanel('roster')">
+        <span class="sb-tab-icon">👤</span>
+        <span class="sb-nav-lbl">Roster</span>
+      </button>
+    </nav>
     <!-- Vertical nav tabs -->
     <div class="dash-label">
       <span class="stats-season">2025 Season</span>
@@ -2516,6 +3045,20 @@
       <div class="dc-grid" id="dc-grid-pit"></div>
     </div>
   </div><!-- /view-depth -->
+
+  <!-- Contracts & Payroll view -->
+  <div class="view-section" id="view-contracts">
+    <div class="contracts-wrap" id="contracts-wrap">
+      <div class="dc-loading">Loading contracts…</div>
+    </div>
+  </div><!-- /view-contracts -->
+
+  <!-- Injured List view -->
+  <div class="view-section" id="view-il">
+    <div class="il-wrap" id="il-wrap">
+      <div class="dc-loading">Loading injured list…</div>
+    </div>
+  </div><!-- /view-il -->
 
   </div><!-- /main-content -->
 
@@ -2614,10 +3157,12 @@
     /* ── Team data ──────────────────────────────────────── */
     let _currentTeamKey = 'dodgers'
     // Declared early so renderTeam() can reset all state safely on team switch
-    let _liveGamePk   = null
-    let _liveTimer    = null
-    let _lastLiveData = null
-    let _depthLoaded  = false
+    let _liveGamePk       = null
+    let _liveTimer        = null
+    let _lastLiveData     = null
+    let _depthLoaded      = false
+    let _contractsLoaded  = false
+    let _ilLoaded         = false
 
     const TEAMS = {
       dodgers: {
@@ -2794,6 +3339,12 @@
       // Reset lazy-load guards so depth chart + roster reload for new team
       _depthLoaded = false
       rosterLoaded = false
+      _contractsLoaded = false
+      _ilLoaded = false
+
+      // Update mobile center logo
+      const centerLogo = document.getElementById('mob-center-logo')
+      if (centerLogo) { centerLogo.src = t.logoSrc; centerLogo.alt = t.logoAlt }
 
       // Restart live tracker for new team
       if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
@@ -3009,21 +3560,11 @@
       document.getElementById('schedule-list').style.display      = ''
     }
 
-    /* ── Nav Menu (≡ dropdown) ───────────────────────────── */
-    function toggleNavMenu() {
-      const menu = document.getElementById('nav-menu')
-      if (menu.classList.contains('open')) closeNavMenu()
-      else openNavMenu()
-    }
-    function openNavMenu() {
-      document.getElementById('nav-menu').classList.add('open')
-      document.getElementById('nav-backdrop').classList.add('open')
-    }
-    function closeNavMenu() {
-      document.getElementById('nav-menu').classList.remove('open')
-      document.getElementById('nav-backdrop').classList.remove('open')
-    }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNavMenu() })
+    /* ── Nav Menu (no-op, kept for safety) ─────────────────── */
+    function toggleNavMenu() {}
+    function openNavMenu() {}
+    function closeNavMenu() {}
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMoreSheet(); closeWsModal() } })
 
     /* ── Side panel ─────────────────────────────────────── */
     function togglePanel() {
@@ -3034,14 +3575,18 @@
       document.getElementById('side-panel').classList.remove('open')
       document.getElementById('panel-backdrop').classList.remove('open')
       document.getElementById('filter-trigger-btn').style.display = 'none'
-      _setMobTab(`mobtab-${_currentView}`)
+      _setMobTab(_currentView)
     }
     function openSidePanel(tab) {
       if (tab === 'schedule') closeGameDetail()
       document.getElementById('side-panel').classList.add('open')
       document.getElementById('panel-backdrop').classList.add('open')
       switchSideTab(tab)
-      _setMobTab(`mobtab-${tab}`)
+      // Update sidebar nav active state for schedule/roster
+      document.querySelectorAll('.sb-nav-item[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === tab)
+      })
+      _setMobTab(tab)
       const titles = { schedule: 'Schedule', roster: '40-Man Roster' }
       const titleEl = document.getElementById('sp-title')
       if (titleEl && titles[tab]) titleEl.textContent = titles[tab]
@@ -3434,17 +3979,35 @@
       _currentView = view
       localStorage.setItem('activeView', view)
       closePanel()
-      document.getElementById('view-home').classList.toggle('active', view === 'home')
-      document.getElementById('view-live').classList.toggle('active', view === 'live')
-      document.getElementById('view-depth').classList.toggle('active', view === 'depth')
+      const allViews = ['home','live','depth','contracts','il']
+      allViews.forEach(v => {
+        const el = document.getElementById(`view-${v}`)
+        if (el) el.classList.toggle('active', v === view)
+      })
       if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
       if (view === 'depth') loadDepthChart()
-      _setMobTab(`mobtab-${view}`)
+      if (view === 'contracts') loadContracts(_currentTeamKey)
+      if (view === 'il') loadIL()
+      // Update sidebar nav active state
+      document.querySelectorAll('.sb-nav-item[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view)
+      })
+      _setMobTab(view)
     }
-    function _setMobTab(id) {
-      document.querySelectorAll('.mob-tab').forEach(b => b.classList.remove('active'))
-      const t = document.getElementById(id)
-      if (t) t.classList.add('active')
+    function _setMobTab(view) {
+      // Only 3 tabs now: mobtab-live, mobtab-home, mobtab-more
+      document.querySelectorAll('.mob-tab, .mob-tab-center').forEach(b => b.classList.remove('active'))
+      if (view === 'live') {
+        const t = document.getElementById('mobtab-live')
+        if (t) t.classList.add('active')
+      } else if (view === 'home') {
+        const t = document.getElementById('mobtab-home')
+        if (t) t.classList.add('active')
+      } else {
+        // depth, contracts, il, schedule, roster -> highlight "More"
+        const t = document.getElementById('mobtab-more')
+        if (t) t.classList.add('active')
+      }
     }
 
     /* ── Live Game Tracker ───────────────────────────────── */
@@ -3488,9 +4051,9 @@
       const isLive  = gs.abstractGameState === 'Live'
       const isFinal = gs.abstractGameState === 'Final'
 
-      // Show/hide LIVE badge in nav menu + mobile tab dot
-      const liveDot = document.getElementById('nav-live-badge')
-      if (liveDot) liveDot.style.display = isLive ? 'inline' : 'none'
+      // Show/hide LIVE badge in sidebar nav + mobile tab dot
+      const sbBadge = document.getElementById('sb-live-badge')
+      if (sbBadge) sbBadge.style.display = isLive ? 'inline' : 'none'
       const mobDot = document.getElementById('mob-live-dot')
       if (mobDot) mobDot.style.display = isLive ? 'block' : 'none'
 
@@ -4046,7 +4609,216 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       document.body.style.overflow = ''
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeWsModal() })
+    /* ── More Sheet ─────────────────────────────────────── */
+    function openMoreSheet() {
+      document.getElementById('mob-more-backdrop').classList.add('open')
+      document.getElementById('mob-more-sheet').classList.add('open')
+      document.body.style.overflow = 'hidden'
+    }
+    function closeMoreSheet() {
+      document.getElementById('mob-more-backdrop').classList.remove('open')
+      document.getElementById('mob-more-sheet').classList.remove('open')
+      document.body.style.overflow = ''
+    }
+
+    /* ── Contracts & Payroll Data ───────────────────────── */
+    const CONTRACTS = {
+      dodgers: {
+        payroll: 286,
+        luxTax: 241,
+        players: [
+          { id: 660271, name: 'Shohei Ohtani',    pos: 'DH', aav: 46.0, total: 700, start: 2024, end: 2033 },
+          { id: 605141, name: 'Mookie Betts',     pos: 'RF', aav: 30.4, total: 365, start: 2021, end: 2032 },
+          { id: 808982, name: 'Y. Yamamoto',      pos: 'SP', aav: 27.1, total: 325, start: 2024, end: 2035 },
+          { id: 518692, name: 'Freddie Freeman',  pos: '1B', aav: 27.0, total: 162, start: 2022, end: 2027 },
+          { id: 607192, name: 'Tyler Glasnow',    pos: 'SP', aav: 19.4, total: 136, start: 2025, end: 2031 },
+          { id: 657136, name: 'Will Smith',       pos: 'C',  aav: 16.0, total: 140, start: 2022, end: 2031 },
+          { id: 606061, name: 'T. Hernández',     pos: 'LF', aav: 14.5, total: 29,  start: 2025, end: 2026 },
+          { id: 669242, name: 'Tommy Edman',      pos: '2B', aav: 12.0, total: 48,  start: 2025, end: 2028 },
+        ]
+      },
+      mets: {
+        payroll: 322,
+        luxTax: 241,
+        players: [
+          { id: 665742, name: 'Juan Soto',        pos: 'RF', aav: 51.0, total: 765, start: 2025, end: 2039 },
+          { id: 596019, name: 'F. Lindor',        pos: 'SS', aav: 34.1, total: 341, start: 2022, end: 2031 },
+          { id: 624413, name: 'Pete Alonso',      pos: '1B', aav: 27.0, total: 54,  start: 2025, end: 2026 },
+          { id: 607680, name: 'Brandon Nimmo',    pos: 'LF', aav: 22.1, total: 162, start: 2023, end: 2030 },
+          { id: 621244, name: 'Edwin Díaz',       pos: 'CL', aav: 20.4, total: 102, start: 2023, end: 2027 },
+          { id: 669923, name: 'Kodai Senga',      pos: 'SP', aav: 15.0, total: 75,  start: 2024, end: 2028 },
+          { id: 648717, name: 'Sean Manaea',      pos: 'SP', aav: 14.0, total: 28,  start: 2025, end: 2026 },
+          { id: 678103, name: 'Mark Vientos',     pos: '3B', aav: 1.2,  total: 2.4, start: 2025, end: 2026 },
+        ]
+      }
+    }
+
+    function loadContracts(key) {
+      if (_contractsLoaded) return
+      _contractsLoaded = true
+      const wrap = document.getElementById('contracts-wrap')
+      if (!wrap) return
+      const data = CONTRACTS[key]
+      if (!data) { wrap.innerHTML = '<div class="dc-loading">No contract data available.</div>'; return }
+
+      const t = TEAMS[key]
+      const accentColor = key === 'mets' ? '#002D72' : '#003DA5'
+      const maxAav = Math.max(...data.players.map(p => p.aav))
+      const luxPct = Math.min(100, (data.luxTax / data.payroll) * 100)
+
+      // Timeline years
+      const minYear = Math.min(...data.players.map(p => p.start))
+      const maxYear = Math.max(...data.players.map(p => p.end))
+      const totalYears = maxYear - minYear + 1
+      const yearLabels = Array.from({length: totalYears}, (_, i) => minYear + i)
+
+      // Payroll bar: how much of total payroll is over lux tax
+      const payrollPct = Math.min(100, (data.payroll / (data.payroll * 1.1)) * 100)
+      const luxPctOfBar = Math.min(100, (data.luxTax / (data.payroll * 1.1)) * 100)
+
+      wrap.innerHTML = `
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.5rem;">
+          <div>
+            <div class="dc-page-title">Contracts &amp; Payroll</div>
+            <div class="dc-page-sub">${t.name} · 2026</div>
+          </div>
+        </div>
+
+        <!-- Payroll Bar -->
+        <div class="payroll-bar-wrap">
+          <div class="payroll-bar-label">2026 Payroll vs. Luxury Tax Threshold</div>
+          <div class="payroll-bar-track">
+            <div class="payroll-bar" style="width:${payrollPct.toFixed(1)}%; background: linear-gradient(90deg, ${accentColor} 0%, rgba(0,82,204,0.8) 100%);">
+            </div>
+            <div class="payroll-marker" style="left:${luxPctOfBar.toFixed(1)}%">
+              <span class="payroll-marker-label">CBT $${data.luxTax}M</span>
+            </div>
+          </div>
+          <div class="payroll-totals">
+            <div class="payroll-total-item">
+              <span class="payroll-total-val">$${data.payroll}M</span>
+              <span class="payroll-total-lbl">Total Payroll</span>
+            </div>
+            <div class="payroll-total-item" style="text-align:right">
+              <span class="payroll-total-val" style="color:${data.payroll > data.luxTax ? 'rgba(220,60,40,0.9)' : 'rgba(100,200,100,0.9)'}">
+                ${data.payroll > data.luxTax ? '+' : '-'}$${Math.abs(data.payroll - data.luxTax)}M
+              </span>
+              <span class="payroll-total-lbl">${data.payroll > data.luxTax ? 'Over CBT' : 'Under CBT'}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Salaries Chart -->
+        <div class="salary-chart">
+          <div class="salary-chart-title">Top Salaries (AAV)</div>
+          ${data.players.map(p => `
+            <div class="salary-row">
+              <span class="salary-pos">${p.pos}</span>
+              <span class="salary-name">${p.name}</span>
+              <div class="salary-bar-wrap">
+                <div class="salary-bar" style="width:${((p.aav / maxAav) * 100).toFixed(1)}%; background:linear-gradient(90deg,${accentColor},rgba(0,82,204,0.7))"></div>
+              </div>
+              <span class="salary-val">$${p.aav}M</span>
+            </div>`).join('')}
+        </div>
+
+        <!-- Contract Timeline -->
+        <div class="contract-timeline">
+          <div class="contract-timeline-title">Contract Timeline</div>
+          <div class="ct-year-labels">
+            ${yearLabels.map(y => `<span class="ct-year-label">${y}</span>`).join('')}
+          </div>
+          ${data.players.map(p => {
+            const leftPct  = ((p.start - minYear) / totalYears) * 100
+            const widthPct = ((p.end - p.start + 1) / totalYears) * 100
+            return `
+            <div class="ct-row">
+              <span class="ct-name">${p.name}</span>
+              <div class="ct-bar-wrap">
+                <div class="ct-bar" style="left:${leftPct.toFixed(2)}%;width:${widthPct.toFixed(2)}%;background:linear-gradient(90deg,${accentColor},rgba(0,82,204,0.6))">
+                  <span class="ct-bar-aav">$${p.aav}M</span>
+                </div>
+              </div>
+            </div>`
+          }).join('')}
+        </div>
+      `
+    }
+
+    /* ── Injured List ─────────────────────────────────────── */
+    async function loadIL() {
+      if (_ilLoaded) return
+      _ilLoaded = true
+      const wrap = document.getElementById('il-wrap')
+      if (!wrap) return
+
+      const t = TEAMS[_currentTeamKey]
+      const teamId = t?.id ?? 119
+
+      wrap.innerHTML = `
+        <div class="il-wrap" style="padding:0">
+          <div class="il-page-header">
+            <div class="il-page-title">Injured List</div>
+            <div class="il-page-sub">${t?.name ?? ''} · 2026</div>
+          </div>
+          <div class="il-cards" id="il-cards-10">
+            <div class="il-section-label">10-Day IL</div>
+            <div class="il-empty" id="il-loading-10">Loading…</div>
+          </div>
+          <div class="il-cards" id="il-cards-60" style="margin-top:1rem">
+            <div class="il-section-label">60-Day IL</div>
+            <div class="il-empty" id="il-loading-60">Loading…</div>
+          </div>
+        </div>`
+
+      try {
+        const res = await fetch(
+          `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=injured&season=2026`
+        )
+        const data = await res.json()
+        const roster = data.roster ?? []
+
+        const il10 = roster.filter(p => p.status?.description !== '60-Day Injured List')
+        const il60 = roster.filter(p => p.status?.description === '60-Day Injured List')
+
+        function renderILCard(p) {
+          const id   = p.person?.id
+          const name = p.person?.fullName ?? '—'
+          const pos  = p.position?.abbreviation ?? '—'
+          const note = p.note ?? p.status?.description ?? ''
+          const photo = id
+            ? `<img src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_auto/v1/people/${id}/headshot/67/current" alt="${name}" onerror="this.parentNode.innerHTML='<span class=\\'il-photo-fallback\\'>◉</span>'">`
+            : '<span class="il-photo-fallback">◉</span>'
+          const ilType = p.status?.description === '60-Day Injured List' ? '60' : '10'
+          return `
+            <div class="il-card">
+              <div class="il-photo">${photo}</div>
+              <div class="il-info">
+                <div class="il-name">${name}</div>
+                <div class="il-pos">${pos}</div>
+                ${note ? `<div class="il-injury">${note}</div>` : ''}
+              </div>
+              <span class="il-type-badge il-type-${ilType}">${ilType}-Day IL</span>
+            </div>`
+        }
+
+        const el10 = document.getElementById('il-loading-10')
+        if (el10) {
+          el10.outerHTML = il10.length === 0
+            ? '<div class="il-empty">No players on 10-Day IL</div>'
+            : il10.map(renderILCard).join('')
+        }
+        const el60 = document.getElementById('il-loading-60')
+        if (el60) {
+          el60.outerHTML = il60.length === 0
+            ? '<div class="il-empty">No players on 60-Day IL</div>'
+            : il60.map(renderILCard).join('')
+        }
+      } catch (e) {
+        console.warn('IL fetch failed:', e)
+        wrap.innerHTML = '<div class="il-wrap" style="padding:0"><div class="il-empty">Could not load injured list.</div></div>'
+      }
+    }
 
     // Restore last active view — must run after all let declarations above
     const savedView = localStorage.getItem('activeView')
@@ -4054,15 +4826,8 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
   </script>
   <script src="script.js"></script>
 
-  <!-- Mobile bottom tab bar -->
+  <!-- Mobile bottom tab bar (3-tab) -->
   <nav class="mob-tabs" id="mob-tabs">
-    <button class="mob-tab active" id="mobtab-home" onclick="switchView('home')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
-        <path d="M9 21V13h6v8"/>
-      </svg>
-      <span class="mob-tab-label">Home</span>
-    </button>
     <button class="mob-tab" id="mobtab-live" onclick="switchView('live')">
       <span class="mob-live-dot" id="mob-live-dot" style="display:none"></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -4072,42 +4837,62 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       </svg>
       <span class="mob-tab-label">Live</span>
     </button>
-    <button class="mob-tab" id="mobtab-depth" onclick="switchView('depth')">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <rect x="4"    y="14" width="3.5" height="7"  rx="1"/>
-        <rect x="10.25" y="9"  width="3.5" height="12" rx="1"/>
-        <rect x="16.5" y="5"  width="3.5" height="16" rx="1"/>
-      </svg>
-      <span class="mob-tab-label">Depth</span>
+    <button class="mob-tab-center" id="mobtab-home" onclick="switchView('home')">
+      <img id="mob-center-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Home">
     </button>
-    <button class="mob-tab" id="mobtab-schedule" onclick="openSidePanel('schedule')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/>
-        <path d="M16 2v4M8 2v4M3 10h18"/>
+    <button class="mob-tab" id="mobtab-more" onclick="openMoreSheet()">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+        <circle cx="5"  cy="12" r="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="19" cy="12" r="2"/>
       </svg>
-      <span class="mob-tab-label">Schedule</span>
-    </button>
-    <button class="mob-tab" id="mobtab-roster" onclick="openSidePanel('roster')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="7" r="4"/>
-        <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
-      </svg>
-      <span class="mob-tab-label">Roster</span>
+      <span class="mob-tab-label">More</span>
     </button>
   </nav>
 
-  <!-- Nav Menu -->
-  <div class="nav-backdrop" id="nav-backdrop" onclick="closeNavMenu()"></div>
-  <div class="nav-menu" id="nav-menu">
-    <button class="nav-item" onclick="switchView('home'); closeNavMenu()">Home</button>
-    <button class="nav-item" onclick="switchView('live'); closeNavMenu()">
-      Live Game
-      <span class="nav-live-badge" id="nav-live-badge" style="display:none">LIVE</span>
-    </button>
-    <div class="nav-divider"></div>
-    <button class="nav-item" onclick="switchView('depth'); closeNavMenu()">Depth Chart</button>
-    <button class="nav-item" onclick="openSidePanel('schedule'); closeNavMenu()">Schedule</button>
-    <button class="nav-item" onclick="openSidePanel('roster'); closeNavMenu()">40-Man Roster</button>
+  <!-- More sheet backdrop + slide-up sheet -->
+  <div class="mob-more-backdrop" id="mob-more-backdrop" onclick="closeMoreSheet()"></div>
+  <div class="mob-more-sheet" id="mob-more-sheet">
+    <div class="mob-more-handle"></div>
+    <div class="mob-more-grid">
+      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('depth')">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+          <rect x="4"    y="14" width="3.5" height="7"  rx="1"/>
+          <rect x="10.25" y="9"  width="3.5" height="12" rx="1"/>
+          <rect x="16.5" y="5"  width="3.5" height="16" rx="1"/>
+        </svg>
+        <span>Depth Chart</span>
+      </button>
+      <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('schedule')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        <span>Schedule</span>
+      </button>
+      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('contracts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <path d="M2 10h20"/>
+        </svg>
+        <span>Contracts</span>
+      </button>
+      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('il')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <span>Injured List</span>
+      </button>
+      <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('roster')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+          <circle cx="12" cy="7" r="4"/>
+          <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+        </svg>
+        <span>Roster</span>
+      </button>
+    </div>
   </div>
 
   <!-- WS Championship Modal -->
