@@ -5,15 +5,9 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    /* ── Dodger palette ─────────────────────────────────── */
     :root {
-      --blue-dark:  #001E62;
-      --blue:       #003DA5;
-      --blue-mid:   #0A2E8A;
-      --blue-light: #1040B0;
-      --red:        #FFFFFF;
-      --white:      #FFFFFF;
-      --silver:     #C0C8D8;
+      --white:  #FFFFFF;
+      --silver: #C0C8D8;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,6 +17,24 @@
       background: radial-gradient(ellipse at 50% 30%, #002580 0%, #000D3A 55%, #000510 100%);
       font-family: 'Inter', sans-serif;
       color: var(--white);
+    }
+    /* ── Red Sox theme ───────────────────────────────────── */
+    body[data-team="redsox"] {
+      background: radial-gradient(ellipse at 50% 30%, #6B0A0A 0%, #0C1525 55%, #040810 100%);
+    }
+    body[data-team="redsox"] .opening-day-bar {
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.03) 28px, rgba(255,255,255,0.03) 29px),
+        linear-gradient(90deg, #0C2340 0%, #BD3039 50%, #0C2340 100%);
+    }
+    body[data-team="redsox"] .bar-logo {
+      filter: drop-shadow(0 0 8px rgba(189,48,57,0.8));
+    }
+    body[data-team="redsox"] .stats-panel {
+      background: linear-gradient(180deg, rgba(12,35,64,0.72) 0%, rgba(5,10,25,0.55) 100%);
+    }
+    body[data-team="redsox"] .hero-photo {
+      background: linear-gradient(145deg, #A01C29 0%, #0C2340 100%);
     }
 
     /* Pinstripe overlay */
@@ -335,6 +347,67 @@
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.38);
     }
+    /* ── Settings Button & Team Picker ──────────────────── */
+    .settings-btn {
+      position: absolute;
+      right: 1.5rem;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 5px;
+      color: rgba(255,255,255,0.5);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.3rem 0.55rem;
+      line-height: 1;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .settings-btn:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+    .team-picker {
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      width: 100%;
+      background: rgba(3,6,22,0.97);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+    }
+    .team-picker.open { max-height: 160px; }
+    .team-picker-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .team-picker-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-right: 0.5rem;
+    }
+    .team-option {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+    }
+    .team-option img { height: 26px; width: auto; }
+    .team-option:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: #fff; }
+    .team-option.active { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.08); color: #fff; }
+
     /* ── Tablet ─────────────────────────── */
     @media (max-width: 680px) {
       .stats-header span:last-child { display: none; }
@@ -383,14 +456,13 @@
     }
   </style>
 </head>
-<body>
+<body data-team="dodgers">
 
   <!-- Opening Day countdown bar -->
   <div class="opening-day-bar" style="position:relative;">
     <a href="/" class="na-logo" title="Home">NA</a>
-    <img class="bar-logo"
+    <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
-      onerror="this.src='https://www.mlbstatic.com/team-logos/119.svg'"
       alt="Dodgers" />
     <span class="bar-label">Opening Day 2026</span>
     <span class="bar-dot"></span>
@@ -404,6 +476,22 @@
       <div class="bar-unit"><span class="bar-val" id="b-secs">--</span><span class="bar-lbl">Sec</span></div>
     </div>
     <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
+    <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
+  </div>
+
+  <!-- Team picker panel -->
+  <div class="team-picker" id="team-picker">
+    <div class="team-picker-inner">
+      <span class="team-picker-label">Team</span>
+      <div class="team-option active" data-team="dodgers" onclick="switchTeam('dodgers')">
+        <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
+        Los Angeles Dodgers
+      </div>
+      <div class="team-option" data-team="redsox" onclick="switchTeam('redsox')">
+        <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" alt="BOS">
+        Boston Red Sox
+      </div>
+    </div>
   </div>
 
   <!-- Team Stats Panel -->
@@ -413,7 +501,7 @@
       <div class="stats-header">
         <span class="stats-season">2025 Season</span>
         <span class="stats-divider">·</span>
-        <span>NL West</span>
+        <span class="stats-division">NL West</span>
       </div>
 
       <div class="team-stats">
@@ -497,18 +585,70 @@
   </div>
 
   <script>
-    const BAR_TARGET = new Date('2026-03-26T13:05:00').getTime()
-    const bDays = document.getElementById('b-days')
+    /* ── Team data ──────────────────────────────────────── */
+    const TEAMS = {
+      dodgers: {
+        name: 'Los Angeles Dodgers',
+        logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg',
+        logoAlt: 'Dodgers',
+        openingDay: '2026-03-26T13:05:00',
+        season: '2025 Season',
+        division: 'NL West',
+        stats: [
+          { val: '100-62', lbl: 'Record',     rank: '#2 NL West' },
+          { val: '.617',   lbl: 'Win %',      rank: '#2 NL West' },
+          { val: '.263',   lbl: 'Team AVG',   rank: '#3 NL' },
+          { val: '1,418',  lbl: 'Hits' },
+          { val: '221',    lbl: 'Home Runs',  rank: '#2 NL' },
+          { val: '3.61',   lbl: 'Team ERA',   rank: '#4 NL' },
+          { val: '1,344',  lbl: 'Strikeouts' },
+        ],
+        lastGame: 'LAD 8, SD 3',
+        lastGameDate: 'Sep 28, 2025',
+        performers: [
+          { role: 'Batter',  name: 'Shohei Ohtani',   line: '3-4 · HR · 3 RBI' },
+          { role: 'Batter',  name: 'Freddie Freeman',  line: '2-3 · 2B · 2 RBI' },
+          { role: 'Batter',  name: 'Mookie Betts',     line: '2-4 · HR · BB' },
+          { role: 'Pitcher', name: 'Y. Yamamoto',      line: '7.0 IP · 1 ER · 10 K · W' },
+        ],
+      },
+      redsox: {
+        name: 'Boston Red Sox',
+        logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg',
+        logoAlt: 'Red Sox',
+        openingDay: '2026-03-26T16:10:00',
+        season: '2025 Season',
+        division: 'AL East',
+        stats: [
+          { val: '95-67',  lbl: 'Record',     rank: '#2 AL East' },
+          { val: '.586',   lbl: 'Win %',      rank: '#2 AL East' },
+          { val: '.261',   lbl: 'Team AVG',   rank: '#2 AL' },
+          { val: '1,398',  lbl: 'Hits' },
+          { val: '195',    lbl: 'Home Runs',  rank: '#3 AL' },
+          { val: '3.89',   lbl: 'Team ERA',   rank: '#3 AL' },
+          { val: '1,287',  lbl: 'Strikeouts' },
+        ],
+        lastGame: 'BOS 6, NYY 2',
+        lastGameDate: 'Sep 28, 2025',
+        performers: [
+          { role: 'Batter',  name: 'Rafael Devers', line: '2-4 · HR · 2 RBI' },
+          { role: 'Batter',  name: 'Jarren Duran',  line: '3-4 · 2B · BB' },
+          { role: 'Batter',  name: 'Triston Casas', line: '2-3 · HR · 3 RBI' },
+          { role: 'Pitcher', name: 'B. Bello',       line: '6.0 IP · 2 ER · 8 K · W' },
+        ],
+      },
+    }
+
+    /* ── Countdown bar ──────────────────────────────────── */
+    let barTarget = new Date(TEAMS.dodgers.openingDay).getTime()
+    const bDays  = document.getElementById('b-days')
     const bHours = document.getElementById('b-hours')
     const bMins  = document.getElementById('b-mins')
     const bSecs  = document.getElementById('b-secs')
     function pad(n) { return String(n).padStart(2,'0') }
     function barTick() {
-      const diff = BAR_TARGET - Date.now()
-      if (diff <= 0) {
-        document.getElementById('bar-countdown').textContent = '⚾ Play Ball!'
-        return
-      }
+      const diff = barTarget - Date.now()
+      if (diff <= 0) { document.getElementById('bar-countdown').textContent = '⚾ Play Ball!'; return }
       bDays.textContent  = pad(Math.floor(diff / 86400000))
       bHours.textContent = pad(Math.floor((diff % 86400000) / 3600000))
       bMins.textContent  = pad(Math.floor((diff % 3600000) / 60000))
@@ -516,6 +656,68 @@
     }
     barTick()
     setInterval(barTick, 1000)
+
+    /* ── Team rendering ─────────────────────────────────── */
+    function renderTeam(key) {
+      const t = TEAMS[key]
+      document.body.dataset.team = key
+      localStorage.setItem('selectedTeam', key)
+
+      // Bar logo + countdown target
+      const logo = document.getElementById('bar-logo')
+      logo.src = t.logoSrc
+      logo.alt = t.logoAlt
+      barTarget = new Date(t.openingDay).getTime()
+
+      // Header
+      document.querySelector('.stats-season').textContent  = t.season
+      document.querySelector('.stats-division').textContent = t.division
+
+      // Team stats
+      document.querySelector('.team-stats').innerHTML = t.stats.map(s => `
+        <div class="stat-item">
+          <span class="stat-val">${s.val}</span>
+          <span class="stat-lbl">${s.lbl}</span>
+          ${s.rank ? `<span class="stat-rank">${s.rank}</span>` : ''}
+        </div>`).join('')
+
+      // Last game
+      document.querySelector('.performers-game').innerHTML = `Last Game &nbsp;·&nbsp; ${t.lastGame}`
+      document.querySelector('.performers-date').textContent = t.lastGameDate
+
+      // Performers
+      document.querySelector('.performers').innerHTML = t.performers.map(p => `
+        <div class="performer">
+          <span class="performer-role">${p.role}</span>
+          <span class="p-name">${p.name}</span>
+          <span class="p-line">${p.line}</span>
+        </div>`).join('')
+
+      // Settings panel active state
+      document.querySelectorAll('.team-option').forEach(el => {
+        el.classList.toggle('active', el.dataset.team === key)
+      })
+    }
+
+    /* ── Settings panel ─────────────────────────────────── */
+    function toggleSettings() {
+      document.getElementById('team-picker').classList.toggle('open')
+    }
+    function switchTeam(key) {
+      renderTeam(key)
+      document.getElementById('team-picker').classList.remove('open')
+    }
+
+    // Close picker when clicking outside
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.team-picker') && !e.target.closest('.settings-btn')) {
+        document.getElementById('team-picker').classList.remove('open')
+      }
+    })
+
+    // Restore saved team on load
+    const saved = localStorage.getItem('selectedTeam')
+    if (saved && TEAMS[saved] && saved !== 'dodgers') renderTeam(saved)
   </script>
   <script src="script.js"></script>
 </body>
