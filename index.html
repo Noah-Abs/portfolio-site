@@ -1567,8 +1567,14 @@
       position: relative;
     }
     .dc-player:last-child { border-bottom: none; }
+    .dc-player[onclick]:hover {
+      background: rgba(255,255,255,0.06);
+    }
     .dc-player.dc-starter {
       background: rgba(255,255,255,0.03);
+    }
+    .dc-player.dc-starter[onclick]:hover {
+      background: rgba(255,255,255,0.08);
     }
     .dc-photo-wrap {
       flex-shrink: 0;
@@ -3201,9 +3207,11 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
         const roster = data.roster ?? []
 
         // Group by position abbreviation, keeping depth order
+        // Normalize "P" → "RP" so generic pitchers show as relievers
         const byPos = {}
         for (const entry of roster) {
-          const abbr = entry.position?.abbreviation ?? entry.position?.code ?? '?'
+          let abbr = entry.position?.abbreviation ?? entry.position?.code ?? '?'
+          if (abbr === 'P') abbr = 'RP'
           if (!byPos[abbr]) byPos[abbr] = []
           byPos[abbr].push(entry)
         }
@@ -3217,13 +3225,19 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
           if (!players || players.length === 0) return ''
           const posName = DC_POS_NAMES[abbr] ?? abbr
           const playerRows = players.map((entry, i) => {
-            const id   = entry.person?.id
-            const name = entry.person?.fullName ?? '—'
+            const id      = entry.person?.id
+            const name    = entry.person?.fullName ?? '—'
+            const jersey  = entry.jerseyNumber ?? ''
+            const posType = (entry.position?.type ?? '').replace(/'/g, "\\'")
+            const safeName = name.replace(/'/g, "\\'")
+            const clickAttr = id
+              ? `onclick="openPlayerOverlay(${id},'${posType}','${jersey}','${safeName}','${abbr}')" style="cursor:pointer"`
+              : ''
             const photo = id
               ? `<img class="dc-photo" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_60,q_auto/v1/people/${id}/headshot/67/current" alt="${name}" onerror="this.parentNode.innerHTML='<span class=\\'dc-photo-fallback\\'>◉</span>'">`
               : '<span class="dc-photo-fallback">◉</span>'
             return `
-              <div class="dc-player ${i === 0 ? 'dc-starter' : ''}">
+              <div class="dc-player ${i === 0 ? 'dc-starter' : ''}" ${clickAttr}>
                 <div class="dc-photo-wrap">${photo}</div>
                 <div class="dc-player-info">
                   <div class="dc-player-name">${name}</div>
