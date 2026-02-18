@@ -453,9 +453,14 @@
     const fTopNum = fTop.querySelector('.num')
     const fBotNum = fBot.querySelector('.num')
 
-    // Flip overlays: old value flips away, new value flips in
+    // f-top: old top half folds away; f-bot: new bottom half unfolds in
     fTopNum.textContent = oldVal
     fBotNum.textContent = newVal
+
+    // c-top can show new immediately — f-top covers it during the fold
+    cTop.textContent = newVal
+    // c-bot stays on old — it's visible until f-bot folds over it
+    cBot.textContent = oldVal
 
     // Reset animations
     fTop.classList.remove('go')
@@ -465,9 +470,8 @@
     fTop.classList.add('go')
     fBot.classList.add('go')
 
-    // Update static display immediately to new value
-    cTop.textContent = newVal
-    cBot.textContent = newVal
+    // Sync c-bot to new value after f-bot finishes (delay 0.24s + duration 0.28s)
+    setTimeout(() => { cBot.textContent = newVal }, 540)
   }
 
   function tick() {
