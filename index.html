@@ -401,6 +401,41 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.15);
     }
+    .roster-group { margin-top: 0.75rem; }
+    .roster-group:first-child { margin-top: 0.25rem; }
+    .roster-group-title {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      padding: 0.5rem 0 0.3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .roster-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.38rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .roster-row:last-child { border-bottom: none; }
+    .roster-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.35);
+      min-width: 20px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .roster-name { font-size: 0.75rem; font-weight: 600; color: #fff; flex: 1; }
+    .roster-pos {
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.28);
+      flex-shrink: 0;
+    }
 
     /* ── Settings Button & Team Dropdown ────────────────── */
     .bar-actions {
@@ -775,9 +810,7 @@
               <span class="sr-name">${g.opponent}</span>
             </div>
           </div>
-          <span class="sr-venue">${g.venue}</span>
           <span class="sr-time">${g.time}</span>
-          ${g.tv ? `<span class="sr-tv">${g.tv}</span>` : '<span class="sr-tv"></span>'}
         </div>`).join('')
     }
 
@@ -790,6 +823,7 @@
       document.getElementById('side-panel').classList.remove('open')
       document.getElementById('panel-backdrop').classList.remove('open')
     }
+    let rosterLoaded = false
     function switchSideTab(id) {
       document.querySelectorAll('.sp-tab').forEach((btn, i) => {
         btn.classList.toggle('active', ['schedule','roster'][i] === id)
@@ -797,6 +831,50 @@
       document.querySelectorAll('.sp-panel').forEach(p => {
         p.classList.toggle('active', p.id === `sp-${id}`)
       })
+      if (id === 'roster' && !rosterLoaded) { rosterLoaded = true; loadRoster() }
+    }
+
+    /* ── 40-Man Roster ──────────────────────────────────── */
+    async function loadRoster() {
+      const el = document.getElementById('sp-roster')
+      el.innerHTML = '<div class="roster-placeholder">Loading…</div>'
+      try {
+        const res = await fetch('https://statsapi.mlb.com/api/v1/teams/119/roster?rosterType=40Man&season=2026')
+        const data = await res.json()
+        renderRoster(data.roster ?? [])
+      } catch (e) {
+        el.innerHTML = '<div class="roster-placeholder">Could not load roster</div>'
+      }
+    }
+
+    function renderRoster(roster) {
+      const ORDER = ['Two-Way Player','Pitcher','Catcher','Infielder','Outfielder','Hitter']
+      const LABELS = {
+        'Two-Way Player': 'Two-Way Players',
+        'Pitcher':        'Pitchers',
+        'Catcher':        'Catchers',
+        'Infielder':      'Infielders',
+        'Outfielder':     'Outfielders',
+        'Hitter':         'Designated Hitters',
+      }
+      const groups = {}
+      ORDER.forEach(k => groups[k] = [])
+      for (const p of roster) {
+        const t = p.position?.type ?? 'Hitter'
+        ;(groups[t] ?? groups['Hitter']).push(p)
+      }
+      document.getElementById('sp-roster').innerHTML = ORDER
+        .filter(k => groups[k].length > 0)
+        .map(k => `
+          <div class="roster-group">
+            <div class="roster-group-title">${LABELS[k]}</div>
+            ${groups[k].map(p => `
+              <div class="roster-row">
+                <span class="roster-num">${p.jerseyNumber || '–'}</span>
+                <span class="roster-name">${p.person.fullName}</span>
+                <span class="roster-pos">${p.position.abbreviation}</span>
+              </div>`).join('')}
+          </div>`).join('')
     }
 
     /* ── Settings dropdown ──────────────────────────────── */
