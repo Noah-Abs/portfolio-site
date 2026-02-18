@@ -183,6 +183,150 @@
       .bar-link  { display: none; }
       .na-logo   { left: 0.75rem; }
     }
+
+    /* ── Stats Panel ──────────────────────────────────── */
+    .stats-panel {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(0,30,98,0.72) 0%, rgba(0,13,58,0.55) 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 1.5rem 2rem 1.75rem;
+    }
+
+    .stats-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+    }
+
+    .stats-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+    }
+    .stats-header strong {
+      color: rgba(255,255,255,0.7);
+      font-weight: 700;
+    }
+    .stats-divider { opacity: 0.3; }
+
+    .team-stats {
+      display: flex;
+      gap: 0;
+      align-items: flex-start;
+    }
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0 0.5rem;
+      border-right: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat-item:first-child { padding-left: 0; }
+    .stat-item:last-child  { border-right: none; }
+    .stat-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.7rem;
+      letter-spacing: 0.04em;
+      color: #fff;
+      line-height: 1;
+    }
+    .stat-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+
+    .performers-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .performers-game {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+    .performers-date {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.25);
+    }
+
+    .performers {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .performer-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .performer-col:first-child { flex: 2; }
+    .performer-col:last-child  { flex: 1.2; }
+    .performer-section-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      margin-bottom: 0.1rem;
+    }
+    .performer {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+    }
+    .p-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      letter-spacing: 0.05em;
+      color: #fff;
+      white-space: nowrap;
+      min-width: 7rem;
+    }
+    .p-line {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.42);
+    }
+    .performers-vdivider {
+      width: 1px;
+      background: rgba(255,255,255,0.08);
+      align-self: stretch;
+    }
+
+    @media (max-width: 680px) {
+      .team-stats { flex-wrap: wrap; gap: 0.75rem 0; }
+      .stat-item  { min-width: 25%; border-right: none; }
+      .performers { flex-direction: column; gap: 0.75rem; }
+      .performers-vdivider { display: none; }
+      .performer-col:first-child,
+      .performer-col:last-child { flex: unset; }
+    }
+    @media (max-width: 420px) {
+      .stats-panel { padding: 1.25rem 1rem 1.5rem; }
+      .stat-item   { min-width: 33%; }
+    }
   </style>
 </head>
 <body>
@@ -207,6 +351,83 @@
     </div>
     <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
   </div>
+
+  <!-- Team Stats Panel -->
+  <section class="stats-panel">
+    <div class="stats-inner">
+
+      <div class="stats-header">
+        <span class="stats-season">2025 Season</span>
+        <span class="stats-divider">·</span>
+        <span>NL West &nbsp;<strong>2nd Place</strong></span>
+        <span class="stats-divider">·</span>
+        <span>NL <strong>4th</strong> in ERA &nbsp;·&nbsp; NL <strong>2nd</strong> in HR &nbsp;·&nbsp; NL <strong>3rd</strong> in AVG</span>
+      </div>
+
+      <div class="team-stats">
+        <div class="stat-item">
+          <span class="stat-val">100-62</span>
+          <span class="stat-lbl">Record</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">.617</span>
+          <span class="stat-lbl">Win %</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">.263</span>
+          <span class="stat-lbl">Team AVG</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">1,418</span>
+          <span class="stat-lbl">Hits</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">221</span>
+          <span class="stat-lbl">Home Runs</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">3.61</span>
+          <span class="stat-lbl">Team ERA</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-val">1,344</span>
+          <span class="stat-lbl">Strikeouts</span>
+        </div>
+      </div>
+
+      <div class="performers-header">
+        <span class="performers-game">Last Game &nbsp;·&nbsp; LAD 8, SD 3</span>
+        <span class="performers-date">Sep 28, 2025</span>
+      </div>
+
+      <div class="performers">
+        <div class="performer-col">
+          <div class="performer-section-lbl">Batters</div>
+          <div class="performer">
+            <span class="p-name">S. Ohtani</span>
+            <span class="p-line">3-4 &nbsp;·&nbsp; HR &nbsp;·&nbsp; 3 RBI</span>
+          </div>
+          <div class="performer">
+            <span class="p-name">F. Freeman</span>
+            <span class="p-line">2-3 &nbsp;·&nbsp; 2B &nbsp;·&nbsp; 2 RBI</span>
+          </div>
+          <div class="performer">
+            <span class="p-name">M. Betts</span>
+            <span class="p-line">2-4 &nbsp;·&nbsp; HR &nbsp;·&nbsp; BB</span>
+          </div>
+        </div>
+        <div class="performers-vdivider"></div>
+        <div class="performer-col">
+          <div class="performer-section-lbl">Pitcher</div>
+          <div class="performer">
+            <span class="p-name">Y. Yamamoto</span>
+            <span class="p-line">7.0 IP &nbsp;·&nbsp; 1 ER &nbsp;·&nbsp; 10 K &nbsp;·&nbsp; W</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
 
   <div class="site-content">
     <h1>Hi, I'm Noah.</h1>
