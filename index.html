@@ -813,6 +813,161 @@
       user-select: none;
     }
 
+    /* ── Live Game Card ─────────────────────────────── */
+    .live-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.48rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(255,80,80,0.9);
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff4444;
+      animation: livepulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes livepulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.7); }
+    }
+    .live-score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.75rem 0 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.75rem;
+    }
+    .live-team {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .live-logo {
+      height: 22px;
+      width: auto;
+    }
+    .live-abbr {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.5);
+    }
+    .live-runs {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      line-height: 1;
+      color: #fff;
+      min-width: 1.2ch;
+      text-align: center;
+    }
+    .live-runs.batting { color: rgba(230,170,40,0.9); }
+    .live-inning {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.35);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .live-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .live-bases-count {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+    .bases-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+    .base {
+      position: absolute;
+      width: 11px;
+      height: 11px;
+      border: 1.5px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.06);
+      transform: rotate(45deg);
+    }
+    .base.on {
+      background: rgba(230,170,40,0.85);
+      border-color: rgba(230,170,40,1);
+    }
+    .base-2b { top: 2px;  left: 50%; margin-left: -5.5px; }
+    .base-1b { right: 2px; top: 50%; margin-top:  -5.5px; }
+    .base-3b { left: 2px;  top: 50%; margin-top:  -5.5px; }
+    .base-home { bottom: 2px; left: 50%; margin-left: -5.5px; background: rgba(255,255,255,0.04); }
+    .count-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .count-row {
+      display: flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+    .count-lbl {
+      font-size: 0.48rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+      width: 10px;
+    }
+    .count-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent;
+    }
+    .count-dot.ball   { background: rgba(100,200,100,0.85); border-color: rgba(100,200,100,1); }
+    .count-dot.strike { background: rgba(230,170,40,0.85);  border-color: rgba(230,170,40,1); }
+    .count-dot.out    { background: rgba(220,60,40,0.85);   border-color: rgba(220,60,40,1); }
+    .live-matchup-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .live-role {
+      font-size: 0.44rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      padding: 0.12rem 0.3rem;
+      flex-shrink: 0;
+    }
+    .live-player {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .live-last-play {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.38);
+      line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 0.55rem;
+      margin-top: 0.1rem;
+    }
+
     /* ── WS Info Modal ───────────────────────────────── */
     .ws-backdrop {
       position: fixed;
@@ -1364,6 +1519,8 @@
         </div>
       </div>
     </div>
+    <!-- Live game card (shown automatically when game is in progress) -->
+    <div class="dash-card" id="live-game-card" style="display:none"></div>
     <!-- Next Game card pinned to sidebar bottom -->
     <div class="hero-next" id="hero-next"></div>
   </div>
@@ -1877,6 +2034,7 @@
     renderTeam(saved && TEAMS[saved] ? saved : 'dodgers')
     loadLiveData()
     loadNews()
+    startLiveTracker()
 
     /* ── Live data from MLB Stats API ───────────────────────── */
     async function loadLiveData() {
@@ -2028,6 +2186,119 @@
             </div>`).join('')
         }
       } catch (e) { console.warn('Last game fetch failed', e) }
+    }
+
+    /* ── Live Game Tracker ───────────────────────────────── */
+    let _liveGamePk  = null
+    let _liveTimer   = null
+    const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
+
+    async function startLiveTracker() {
+      const today = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD local
+      try {
+        const res  = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=119&date=${today}`)
+        const data = await res.json()
+        const game = data.dates?.[0]?.games?.[0]
+        if (!game) return
+        _liveGamePk = game.gamePk
+        const state = game.status.abstractGameState
+        if (state === 'Live' || state === 'Final') {
+          await updateLiveGame()
+          if (state === 'Live') _liveTimer = setInterval(updateLiveGame, 2000)
+        }
+      } catch(e) { console.warn('Live tracker:', e) }
+    }
+
+    async function updateLiveGame() {
+      if (!_liveGamePk) return
+      try {
+        const res  = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${_liveGamePk}/feed/live`)
+        const data = await res.json()
+        renderLiveGame(data)
+      } catch(e) {}
+    }
+
+    function renderLiveGame(data) {
+      const card = document.getElementById('live-game-card')
+      if (!card) return
+
+      const gs    = data.gameData.status
+      const ls    = data.liveData.linescore
+      const away  = data.gameData.teams.away.team
+      const home  = data.gameData.teams.home.team
+      const isLive  = gs.abstractGameState === 'Live'
+      const isFinal = gs.abstractGameState === 'Final'
+
+      const awayRuns = ls.teams?.away?.runs ?? 0
+      const homeRuns = ls.teams?.home?.runs ?? 0
+      const inning   = ls.currentInning ?? 1
+      const isTop    = ls.isTopInning ?? true
+
+      const balls   = ls.balls   ?? 0
+      const strikes = ls.strikes ?? 0
+      const outs    = ls.outs    ?? 0
+
+      const first  = !!ls.offense?.first
+      const second = !!ls.offense?.second
+      const third  = !!ls.offense?.third
+
+      const batter  = data.liveData.plays?.currentPlay?.matchup?.batter?.fullName  ?? ''
+      const pitcher = data.liveData.plays?.currentPlay?.matchup?.pitcher?.fullName ?? ''
+      const lastPlay = data.liveData.plays?.currentPlay?.result?.description ?? ''
+
+      const inningStr = isFinal
+        ? 'Final'
+        : `${isTop ? '▲' : '▼'}\u00a0${inning}`
+
+      const awayBatting = isLive && isTop
+      const homeBatting = isLive && !isTop
+
+      function dots(count, max, cls) {
+        return Array.from({length: max}, (_,i) =>
+          `<span class="count-dot ${i < count ? cls : ''}"></span>`).join('')
+      }
+
+      card.style.display = 'block'
+      card.innerHTML = `
+        <div class="dash-card-header">
+          <span class="dash-card-label">${isFinal ? 'Final Score' : 'Live Game'}</span>
+          ${isLive ? '<span class="live-pill"><span class="live-dot"></span>LIVE</span>' : ''}
+        </div>
+        <div class="live-score">
+          <div class="live-team">
+            <img class="live-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}">
+            <span class="live-abbr">${away.abbreviation}</span>
+            <span class="live-runs${awayBatting ? ' batting' : ''}">${awayRuns}</span>
+          </div>
+          <span class="live-inning">${inningStr}</span>
+          <div class="live-team">
+            <span class="live-runs${homeBatting ? ' batting' : ''}">${homeRuns}</span>
+            <span class="live-abbr">${home.abbreviation}</span>
+            <img class="live-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}">
+          </div>
+        </div>
+        ${isLive ? `
+        <div class="live-details">
+          <div class="live-bases-count">
+            <div class="bases-wrap">
+              <div class="base base-2b ${second ? 'on' : ''}"></div>
+              <div class="base base-3b ${third  ? 'on' : ''}"></div>
+              <div class="base base-1b ${first  ? 'on' : ''}"></div>
+              <div class="base base-home"></div>
+            </div>
+            <div class="count-wrap">
+              <div class="count-row"><span class="count-lbl">B</span>${dots(balls,   3, 'ball')}</div>
+              <div class="count-row"><span class="count-lbl">S</span>${dots(strikes, 2, 'strike')}</div>
+              <div class="count-row"><span class="count-lbl">O</span>${dots(outs,    2, 'out')}</div>
+            </div>
+          </div>
+          ${batter  ? `<div class="live-matchup-row"><span class="live-role">AB</span><span class="live-player">${batter}</span></div>`  : ''}
+          ${pitcher ? `<div class="live-matchup-row"><span class="live-role">P</span><span class="live-player">${pitcher}</span></div>` : ''}
+          ${lastPlay ? `<div class="live-last-play">${lastPlay}</div>` : ''}
+        </div>` : ''}
+      `
+
+      if (isFinal && _liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
     }
 
     /* ── World Series Modal ──────────────────────────────── */
