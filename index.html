@@ -20,21 +20,21 @@
     }
     /* ── Red Sox theme ───────────────────────────────────── */
     body[data-team="redsox"] {
-      background: radial-gradient(ellipse at 50% 30%, #6B0A0A 0%, #0C1525 55%, #040810 100%);
+      background: radial-gradient(ellipse at 50% 30%, #9B0D0D 0%, #3A0505 55%, #110101 100%);
     }
     body[data-team="redsox"] .opening-day-bar {
       background:
         repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.03) 28px, rgba(255,255,255,0.03) 29px),
-        linear-gradient(90deg, #0C2340 0%, #BD3039 50%, #0C2340 100%);
+        linear-gradient(90deg, #7A0F1A 0%, #C0182A 50%, #7A0F1A 100%);
     }
     body[data-team="redsox"] .bar-logo {
-      filter: drop-shadow(0 0 8px rgba(189,48,57,0.8));
+      filter: drop-shadow(0 0 8px rgba(192,24,42,0.9));
     }
     body[data-team="redsox"] .stats-panel {
-      background: linear-gradient(180deg, rgba(12,35,64,0.72) 0%, rgba(5,10,25,0.55) 100%);
+      background: linear-gradient(180deg, rgba(90,8,8,0.65) 0%, rgba(15,2,2,0.7) 100%);
     }
     body[data-team="redsox"] .hero-photo {
-      background: linear-gradient(145deg, #A01C29 0%, #0C2340 100%);
+      background: linear-gradient(145deg, #C0182A 0%, #5A0A0A 100%);
     }
 
     /* Pinstripe overlay */
@@ -347,7 +347,7 @@
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.38);
     }
-    /* ── Settings Button & Team Picker ──────────────────── */
+    /* ── Settings Button & Team Dropdown ────────────────── */
     .settings-btn {
       position: absolute;
       right: 1.5rem;
@@ -363,50 +363,45 @@
     }
     .settings-btn:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
-    .team-picker {
-      position: sticky;
-      top: 0;
-      z-index: 99;
-      width: 100%;
-      background: rgba(3,6,22,0.97);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      max-height: 0;
+    .team-dropdown {
+      position: absolute;
+      right: 1.5rem;
+      top: calc(100% + 6px);
+      background: rgba(5,7,20,0.97);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
       overflow: hidden;
-      transition: max-height 0.25s ease;
+      min-width: 210px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 200;
     }
-    .team-picker.open { max-height: 160px; }
-    .team-picker-inner {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    .team-picker-label {
-      font-size: 0.6rem;
+    .team-dropdown.open { display: block; }
+    .team-dropdown-label {
+      padding: 0.55rem 1rem 0.4rem;
+      font-size: 0.55rem;
       font-weight: 700;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      margin-right: 0.5rem;
+      color: rgba(255,255,255,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
     }
-    .team-option {
+    .team-dropdown-item {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      padding: 0.45rem 0.9rem;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.1);
+      gap: 0.65rem;
+      padding: 0.65rem 1rem;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s, color 0.2s;
-      font-size: 0.78rem;
+      transition: background 0.15s, color 0.15s;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.65);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .team-option img { height: 26px; width: auto; }
-    .team-option:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: #fff; }
-    .team-option.active { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.08); color: #fff; }
+    .team-dropdown-item:last-child { border-bottom: none; }
+    .team-dropdown-item img { height: 24px; width: auto; }
+    .team-dropdown-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .team-dropdown-item.active { background: rgba(255,255,255,0.05); color: #fff; }
 
     /* ── Tablet ─────────────────────────── */
     @media (max-width: 680px) {
@@ -477,17 +472,13 @@
     </div>
     <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
     <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
-  </div>
-
-  <!-- Team picker panel -->
-  <div class="team-picker" id="team-picker">
-    <div class="team-picker-inner">
-      <span class="team-picker-label">Team</span>
-      <div class="team-option active" data-team="dodgers" onclick="switchTeam('dodgers')">
+    <div class="team-dropdown" id="team-dropdown">
+      <div class="team-dropdown-label">Select Team</div>
+      <div class="team-dropdown-item active" data-team="dodgers" onclick="switchTeam('dodgers')">
         <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
         Los Angeles Dodgers
       </div>
-      <div class="team-option" data-team="redsox" onclick="switchTeam('redsox')">
+      <div class="team-dropdown-item" data-team="redsox" onclick="switchTeam('redsox')">
         <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/111.svg" alt="BOS">
         Boston Red Sox
       </div>
@@ -693,25 +684,25 @@
           <span class="p-line">${p.line}</span>
         </div>`).join('')
 
-      // Settings panel active state
-      document.querySelectorAll('.team-option').forEach(el => {
+      // Dropdown active state
+      document.querySelectorAll('.team-dropdown-item').forEach(el => {
         el.classList.toggle('active', el.dataset.team === key)
       })
     }
 
-    /* ── Settings panel ─────────────────────────────────── */
+    /* ── Settings dropdown ──────────────────────────────── */
     function toggleSettings() {
-      document.getElementById('team-picker').classList.toggle('open')
+      document.getElementById('team-dropdown').classList.toggle('open')
     }
     function switchTeam(key) {
       renderTeam(key)
-      document.getElementById('team-picker').classList.remove('open')
+      document.getElementById('team-dropdown').classList.remove('open')
     }
 
-    // Close picker when clicking outside
+    // Close dropdown when clicking outside
     document.addEventListener('click', e => {
-      if (!e.target.closest('.team-picker') && !e.target.closest('.settings-btn')) {
-        document.getElementById('team-picker').classList.remove('open')
+      if (!e.target.closest('.team-dropdown') && !e.target.closest('.settings-btn')) {
+        document.getElementById('team-dropdown').classList.remove('open')
       }
     })
 
