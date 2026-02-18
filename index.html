@@ -127,30 +127,6 @@
       transition: color 0.2s;
     }
     .bar-link:hover { color: rgba(255,255,255,0.85); }
-    .bar-next-game {
-      position: absolute;
-      left: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.08rem;
-      line-height: 1;
-    }
-    .bar-ng-matchup {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.25rem;
-      letter-spacing: 0.06em;
-      color: #fff;
-      opacity: 0.9;
-      white-space: nowrap;
-    }
-    .bar-ng-time {
-      font-size: 0.58rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.38);
-      white-space: nowrap;
-    }
     /* ── Stats Panel ──────────────────────────────────── */
     .stats-panel {
       position: relative;
@@ -276,149 +252,100 @@
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.38);
     }
-    /* ── Content Section (below stats) ──────────────────── */
-    .content-section {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      padding: 0 2rem 3rem;
+    /* ── Side Panel ─────────────────────────────────────── */
+    .panel-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 290;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
     }
-    .content-inner {
-      max-width: 900px;
-      margin: 0 auto;
+    .panel-backdrop.open { opacity: 1; pointer-events: all; }
+
+    .side-panel {
+      position: fixed;
+      right: 0;
+      top: 0;
+      height: 100dvh;
+      width: 340px;
+      background:
+        repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 29px),
+        linear-gradient(160deg, #001850 0%, #000C30 60%, #000510 100%);
+      border-left: 1px solid rgba(255,255,255,0.1);
+      z-index: 300;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
       display: flex;
       flex-direction: column;
-      gap: 0;
     }
+    .side-panel.open { transform: translateX(0); }
 
-    /* ── Next Game Card ──────────────────────────────────── */
-    .next-game-card {
-      padding: 1.5rem 0 1.25rem;
+    .sp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.9rem 1.25rem;
       border-bottom: 1px solid rgba(255,255,255,0.07);
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    .ng-eyebrow {
-      font-size: 0.58rem;
-      font-weight: 700;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .ng-eyebrow-tag {
-      color: rgba(255,255,255,0.18);
-    }
-    .ng-body {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .ng-team {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex: 1;
-    }
-    .ng-logo {
-      height: 52px;
-      width: auto;
       flex-shrink: 0;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
     }
-    .ng-team-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-    }
-    .ng-at-vs {
-      font-size: 0.6rem;
-      font-weight: 700;
+    .sp-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
       letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.4);
     }
-    .ng-team-name {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.6rem;
-      letter-spacing: 0.05em;
-      color: #fff;
+    .sp-close {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.35);
+      font-size: 1.1rem;
+      cursor: pointer;
       line-height: 1;
+      padding: 0.2rem;
+      transition: color 0.15s;
     }
-    .ng-venue {
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
-      color: rgba(255,255,255,0.3);
-    }
-    .ng-vdivider {
-      width: 1px;
-      height: 44px;
-      background: rgba(255,255,255,0.08);
-      flex-shrink: 0;
-    }
-    .ng-time-block {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-      flex-shrink: 0;
-    }
-    .ng-date {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.15rem;
-      letter-spacing: 0.06em;
-      color: #fff;
-      line-height: 1;
-    }
-    .ng-time {
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.45);
-    }
-    .ng-tv {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.22);
-    }
+    .sp-close:hover { color: #fff; }
 
-    /* ── Tab Bar ─────────────────────────────────────────── */
-    .tab-bar {
+    .sp-tabs {
       display: flex;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      margin-top: 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      padding: 0 1.25rem;
+      flex-shrink: 0;
     }
-    .tab {
+    .sp-tab {
       background: none;
       border: none;
       border-bottom: 2px solid transparent;
-      padding: 0.65rem 1.2rem;
+      padding: 0.6rem 0.8rem;
       margin-bottom: -1px;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
+      font-size: 0.9rem;
       letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255,255,255,0.3);
       cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
+      transition: color 0.15s, border-color 0.15s;
     }
-    .tab:first-child { padding-left: 0; }
-    .tab:hover { color: rgba(255,255,255,0.7); }
-    .tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.7); }
+    .sp-tab:first-child { padding-left: 0; }
+    .sp-tab:hover { color: rgba(255,255,255,0.7); }
+    .sp-tab.active { color: #fff; border-bottom-color: rgba(255,255,255,0.6); }
 
-    /* ── Tab Panels ──────────────────────────────────────── */
-    .tab-panel { display: none; padding-top: 1.25rem; }
-    .tab-panel.active { display: block; }
+    .sp-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 1.25rem 2rem;
+    }
+    .sp-panel { display: none; }
+    .sp-panel.active { display: block; }
 
-    /* ── Schedule List ───────────────────────────────────── */
+    /* Schedule rows inside side panel */
     .schedule-list { display: flex; flex-direction: column; }
     .schedule-row {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 0.65rem 0;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
       border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .schedule-row:last-child { border-bottom: none; }
@@ -426,11 +353,11 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      min-width: 52px;
+      min-width: 44px;
       flex-shrink: 0;
     }
     .sr-day {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       font-weight: 700;
       letter-spacing: 0.18em;
       text-transform: uppercase;
@@ -438,85 +365,52 @@
     }
     .sr-monthday {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
+      font-size: 0.95rem;
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.75);
       line-height: 1.1;
     }
-    .sr-logo {
-      height: 28px;
-      width: auto;
-      flex-shrink: 0;
-    }
+    .sr-logo { height: 24px; width: auto; flex-shrink: 0; }
     .sr-opponent {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
     }
-    .sr-opp-info {
-      display: flex;
-      align-items: baseline;
-      gap: 0.35rem;
-    }
+    .sr-opp-info { display: flex; align-items: baseline; gap: 0.3rem; }
     .sr-at-vs {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.3);
     }
-    .sr-name {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: #fff;
-    }
-    .sr-venue {
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.22);
-      min-width: 38px;
-      flex-shrink: 0;
-    }
+    .sr-name { font-size: 0.78rem; font-weight: 600; color: #fff; }
     .sr-time {
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.45);
-      min-width: 70px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.38);
       flex-shrink: 0;
-      text-align: right;
-    }
-    .sr-tv {
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.2);
-      min-width: 60px;
-      flex-shrink: 0;
-      text-align: right;
+      white-space: nowrap;
     }
     .roster-placeholder {
-      padding: 2.5rem 0;
+      padding: 3rem 0;
       text-align: center;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.25em;
       text-transform: uppercase;
       color: rgba(255,255,255,0.15);
     }
 
-    @media (max-width: 560px) {
-      .content-section { padding: 0 1rem 2rem; }
-      .ng-body { gap: 1rem; }
-      .sr-tv { display: none; }
-    }
-
     /* ── Settings Button & Team Dropdown ────────────────── */
-    .settings-btn {
+    .bar-actions {
       position: absolute;
       right: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .settings-btn {
       background: none;
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 5px;
@@ -581,8 +475,7 @@
     @media (max-width: 560px) {
       .bar-label { display: none; }
       .bar-link  { display: none; }
-      .bar-next-game { left: 0.75rem; }
-      .opening-day-bar { gap: 1rem; padding: 0.75rem 1rem 0.75rem 3rem; }
+      .opening-day-bar { gap: 1rem; padding: 0.75rem 1rem; }
       .bar-logo  { height: 38px; }
       .bar-val   { font-size: 1.75rem; }
       .bar-sep   { font-size: 1.5rem; }
@@ -598,7 +491,7 @@
 
     /* ── Small phone ─────────────────────── */
     @media (max-width: 390px) {
-      .opening-day-bar { gap: 0.6rem; padding: 0.6rem 0.75rem 0.6rem 2.75rem; }
+      .opening-day-bar { gap: 0.6rem; padding: 0.6rem 0.75rem; }
       .bar-logo  { height: 30px; }
       .bar-val   { font-size: 1.4rem; }
       .bar-lbl   { display: none; }
@@ -615,10 +508,6 @@
 
   <!-- Opening Day countdown bar -->
   <div class="opening-day-bar" style="position:relative;">
-    <div class="bar-next-game">
-      <span class="bar-ng-matchup" id="bar-ng-matchup">vs Cubs</span>
-      <span class="bar-ng-time" id="bar-ng-time">1:05 PM · Mar 26</span>
-    </div>
     <img class="bar-logo" id="bar-logo"
       src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
       alt="Dodgers" />
@@ -634,7 +523,10 @@
       <div class="bar-unit"><span class="bar-val" id="b-secs">--</span><span class="bar-lbl">Sec</span></div>
     </div>
     <a href="/countdown-timer" class="bar-link">Full Page ↗</a>
-    <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
+    <div class="bar-actions">
+      <button class="settings-btn" onclick="togglePanel()" title="Schedule & Roster">≡</button>
+      <button class="settings-btn" onclick="toggleSettings()" title="Change Team">⚙</button>
+    </div>
     <div class="team-dropdown" id="team-dropdown">
       <div class="team-dropdown-label">Select Team</div>
       <div class="team-dropdown-item active" data-team="dodgers" onclick="switchTeam('dodgers')">
@@ -722,49 +614,26 @@
   </section>
 
 
-  <!-- Content: Next Game + Tabs -->
-  <div class="content-section">
-    <div class="content-inner">
+  <!-- Side panel backdrop -->
+  <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
 
-      <!-- Next Game -->
-      <div class="next-game-card" id="next-game-card">
-        <div class="ng-eyebrow">
-          Next Game <span class="ng-eyebrow-tag">· Opening Day</span>
-        </div>
-        <div class="ng-body">
-          <div class="ng-team">
-            <img class="ng-logo" id="ng-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/112.svg" alt="Cubs">
-            <div class="ng-team-info">
-              <span class="ng-at-vs" id="ng-at-vs">vs</span>
-              <span class="ng-team-name" id="ng-team-name">Chicago Cubs</span>
-              <span class="ng-venue" id="ng-venue">Dodger Stadium</span>
-            </div>
-          </div>
-          <div class="ng-vdivider"></div>
-          <div class="ng-time-block">
-            <span class="ng-date" id="ng-date">Thu, Mar 26</span>
-            <span class="ng-time" id="ng-time">1:05 PM PT</span>
-            <span class="ng-tv" id="ng-tv">SportsNet LA</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab bar -->
-      <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('schedule')">Schedule</button>
-        <button class="tab" onclick="switchTab('roster')">40-Man Roster</button>
-      </div>
-
-      <!-- Schedule panel -->
-      <div class="tab-panel active" id="panel-schedule">
+  <!-- Side panel -->
+  <div class="side-panel" id="side-panel">
+    <div class="sp-header">
+      <span class="sp-title">Dodgers</span>
+      <button class="sp-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="sp-tabs">
+      <button class="sp-tab active" onclick="switchSideTab('schedule')">Schedule</button>
+      <button class="sp-tab" onclick="switchSideTab('roster')">40-Man Roster</button>
+    </div>
+    <div class="sp-body">
+      <div class="sp-panel active" id="sp-schedule">
         <div class="schedule-list" id="schedule-list"></div>
       </div>
-
-      <!-- Roster panel -->
-      <div class="tab-panel" id="panel-roster">
+      <div class="sp-panel" id="sp-roster">
         <div class="roster-placeholder">Roster Coming Soon</div>
       </div>
-
     </div>
   </div>
 
@@ -878,21 +747,8 @@
           <span class="p-line">${p.line}</span>
         </div>`).join('')
 
-      // Bar next-game
-      const ng = t.nextGame
-      document.getElementById('bar-ng-matchup').textContent = `${ng.atVs} ${ng.opponentShort}`
-      document.getElementById('bar-ng-time').textContent    = `${ng.time} · ${ng.dateShort}`
-
-      // Next-game card
-      document.getElementById('ng-logo').src               = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${ng.logoId}.svg`
-      document.getElementById('ng-logo').alt               = ng.opponentShort
-      document.getElementById('ng-at-vs').textContent      = ng.atVs
-      document.getElementById('ng-team-name').textContent  = ng.opponent
-      document.getElementById('ng-venue').textContent      = ng.venue
-      document.getElementById('ng-date').textContent       = ng.date
-      document.getElementById('ng-time').textContent       = ng.time
-      document.getElementById('ng-tv').textContent         = ng.tv
-      document.querySelector('.ng-eyebrow-tag').textContent = ng.tag ? `· ${ng.tag}` : ''
+      // Side panel title
+      document.querySelector('.sp-title').textContent = t.name
 
       // Schedule
       renderSchedule(t.schedule)
@@ -925,14 +781,21 @@
         </div>`).join('')
     }
 
-    /* ── Tab switcher ───────────────────────────────────── */
-    function switchTab(id) {
-      document.querySelectorAll('.tab').forEach((btn, i) => {
-        const ids = ['schedule', 'roster']
-        btn.classList.toggle('active', ids[i] === id)
+    /* ── Side panel ─────────────────────────────────────── */
+    function togglePanel() {
+      document.getElementById('side-panel').classList.toggle('open')
+      document.getElementById('panel-backdrop').classList.toggle('open')
+    }
+    function closePanel() {
+      document.getElementById('side-panel').classList.remove('open')
+      document.getElementById('panel-backdrop').classList.remove('open')
+    }
+    function switchSideTab(id) {
+      document.querySelectorAll('.sp-tab').forEach((btn, i) => {
+        btn.classList.toggle('active', ['schedule','roster'][i] === id)
       })
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.classList.toggle('active', p.id === `panel-${id}`)
+      document.querySelectorAll('.sp-panel').forEach(p => {
+        p.classList.toggle('active', p.id === `sp-${id}`)
       })
     }
 
