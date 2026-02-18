@@ -806,7 +806,70 @@
       object-position: bottom center;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
     }
-    .po-identity { flex: 1; }
+    .po-identity { flex: 1; min-width: 0; }
+    .po-bio {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem 1.2rem;
+      margin-top: 0.75rem;
+      padding-top: 0.7rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .po-bio-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.62);
+      white-space: nowrap;
+    }
+    .po-bio-label {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+    }
+    .po-summary {
+      display: flex;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+    }
+    .po-summary-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0.5rem 0.85rem;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.025);
+    }
+    .po-summary-stat:last-child { border-right: none; }
+    .po-summary-season {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      margin-bottom: 0.25rem;
+    }
+    .po-summary-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.6rem;
+      color: #fff;
+      line-height: 1;
+    }
+    .po-summary-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      margin-top: 0.2rem;
+    }
     .po-jersey-num {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1rem;
@@ -1052,8 +1115,10 @@
           <div class="po-jersey-num" id="po-jersey-num"></div>
           <div class="po-name" id="po-name"></div>
           <div class="po-pos" id="po-pos"></div>
+          <div class="po-bio" id="po-bio"></div>
         </div>
       </div>
+      <div class="po-summary" id="po-summary" style="display:none"></div>
       <div class="po-stats" id="po-stats">
         <div class="pd-loading">Loading…</div>
       </div>
@@ -1307,6 +1372,8 @@
       const img = document.getElementById('po-headshot')
       img.src = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_426,q_auto:best/v1/people/${id}/headshot/silo/current`
       img.alt = name
+      document.getElementById('po-bio').innerHTML = ''
+      document.getElementById('po-summary').style.display = 'none'
       document.getElementById('po-stats').innerHTML = '<div class="pd-loading">Loading…</div>'
       document.getElementById('po-scroll').scrollTop = 0
       document.getElementById('player-overlay').classList.add('open')
@@ -1325,14 +1392,57 @@
           `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season,career],season=2025)`
         )
         const { people } = await res.json()
-        const stats = people[0]?.stats ?? []
+        const person = people[0] ?? {}
+        const stats  = person.stats ?? []
         const get = (group, type) =>
           stats.find(s => s.group.displayName === group && s.type.displayName === type)?.splits?.[0]?.stat ?? null
 
+        /* ── Bio strip ── */
+        const bioEl = document.getElementById('po-bio')
+        if (bioEl) {
+          const items = [
+            person.currentAge  && { lbl: 'Age',    val: person.currentAge },
+            person.height      && { lbl: 'Height',  val: person.height },
+            person.weight      && { lbl: 'Weight',  val: `${person.weight} lbs` },
+            person.batSide?.description  && { lbl: 'Bats',   val: person.batSide.description },
+            person.pitchHand?.description && { lbl: 'Throws', val: person.pitchHand.description },
+            (person.birthCity || person.birthCountry) && {
+              lbl: 'Born',
+              val: [person.birthCity, person.birthCountry].filter(Boolean).join(', ')
+            },
+            person.mlbDebutDate && { lbl: 'Debut', val: new Date(person.mlbDebutDate).getFullYear() },
+          ].filter(Boolean)
+          bioEl.innerHTML = items.map(i =>
+            `<div class="po-bio-item"><span class="po-bio-label">${i.lbl}</span><span>${i.val}</span></div>`
+          ).join('')
+        }
+
         const isPit = posType === 'Pitcher'
         const isTW  = posType === 'Two-Way Player'
-        let html = ''
 
+        /* ── Summary card (2025 key stats) ── */
+        const summaryEl = document.getElementById('po-summary')
+        if (summaryEl) {
+          const sh = !isPit ? get('hitting',  'season') : null
+          const sp = (isPit || isTW) ? get('pitching', 'season') : null
+          const summaryStats = sh
+            ? [{ v: sh.avg, l: 'AVG' }, { v: sh.homeRuns, l: 'HR' }, { v: sh.rbi, l: 'RBI' }, { v: sh.ops, l: 'OPS' }]
+            : sp
+            ? [{ v: sp.era, l: 'ERA' }, { v: `${sp.wins??0}-${sp.losses??0}`, l: 'W-L' }, { v: sp.strikeOuts, l: 'K' }, { v: sp.whip, l: 'WHIP' }]
+            : []
+          if (summaryStats.length) {
+            summaryEl.innerHTML = summaryStats.map(s => `
+              <div class="po-summary-stat">
+                <span class="po-summary-season">2025</span>
+                <span class="po-summary-val">${s.v ?? '–'}</span>
+                <span class="po-summary-lbl">${s.l}</span>
+              </div>`).join('')
+            summaryEl.style.display = ''
+          }
+        }
+
+        /* ── Full stat sections ── */
+        let html = ''
         if (!isPit) {
           const sh = get('hitting','season'), ch = get('hitting','career')
           if (sh) { const g = hitGrid(sh); html += statSection('2025 Season · Batting', g.primary, g.secondary) }
