@@ -1,0 +1,1 @@
+var fs=require("fs");var c=fs.readFileSync("c:/Users/noaha/portfolio-site/index.html","utf8");var CRLF=String.fromCharCode(13,10);var marker="        ],"+CRLF+"      },"+CRLF+"    }"+CRLF;var cnt=(c.split(marker)).length-1;console.log("marker count:",cnt);if(cnt!==1){console.log("ERROR");process.exit(1);}console.log("OK");

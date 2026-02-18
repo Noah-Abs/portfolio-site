@@ -163,7 +163,7 @@
       color: rgba(255,255,255,0.35);
     }
     /* ── Fixed left sidebar ──────────────────────────────── */
-    :root { --rn-width: 170px; }
+    :root { --rn-width: 195px; }
     .fixed-sidebar {
       position: fixed;
       top: 72px;
@@ -1697,16 +1697,15 @@
       50%      { transform: translateX(-50%) translateY(8px); opacity: 0.45; }
     }
 
-    /* ── Next Game card (lives at bottom of sidebar) ────── */
+    /* ── Next Game card (lives at bottom of right nav) ──── */
     .hero-next {
-      margin-top: auto;
       display: flex;
       flex-direction: column;
-      gap: 0.45rem;
-      background: rgba(0,30,100,0.35);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 0.9rem 1.1rem;
+      gap: 0.4rem;
+      background: rgba(0,30,100,0.3);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px;
+      padding: 0.75rem 0.85rem;
     }
     .hero-next-label {
       font-size: 0.55rem;
@@ -3028,8 +3027,6 @@
     </div>
     <!-- Live game card (shown automatically when game is in progress) -->
     <div class="dash-card" id="live-game-card" style="display:none"></div>
-    <!-- Next Game card pinned to sidebar bottom -->
-    <div class="hero-next" id="hero-next"></div>
   </div>
 
   <!-- Main scrollable content -->
@@ -3079,7 +3076,6 @@
     </div>
   </div><!-- /view-contracts -->
 
-  <!-- Injured List view -->
   </div><!-- /main-content -->
 
   <!-- Right navigation panel (desktop only) -->
@@ -3108,8 +3104,10 @@
     </button>
     <button class="rn-item" data-view="roster" onclick="openSidePanel('roster')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
-      40-Man Roster
+      Roster
     </button>
+    <!-- Next game card pinned to bottom of right nav -->
+    <div class="hero-next" id="hero-next" style="margin-top:auto; padding: 0 0.6rem 0.75rem;"></div>
   </nav>
 
   <!-- Side panel backdrop -->
@@ -3417,18 +3415,18 @@
       if (!el || !g) return
       const myLogo  = TEAMS[_currentTeamKey]?.logoSrc ?? 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg'
       const oppLogo = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg`
-      const isHome  = g.atVs === 'vs'
+      const isHome  = g.atVs === 'vs' || g.isHome === true
+      const atVs    = g.atVs || (isHome ? 'vs' : '@')
       const venue   = g.venueName || g.venue || ''
       const dateStr = g.monthDay || g.dateShort || g.date || ''
-      // home: LAD vs OPP  |  away: OPP @ LAD
-      const leftLogo  = isHome ? myLogo   : oppLogo
-      const rightLogo = isHome ? oppLogo  : myLogo
+      const leftLogo  = isHome ? myLogo  : oppLogo
+      const rightLogo = isHome ? oppLogo : myLogo
       el.innerHTML = `
         <div class="hero-next-label">Next Game</div>
         ${venue ? `<div class="hero-next-venue">${venue}</div>` : ''}
         <div class="hero-next-matchup">
           <img class="hero-next-logo" src="${leftLogo}" alt="">
-          <span class="hero-next-sep">${g.atVs}</span>
+          <span class="hero-next-sep">${atVs}</span>
           <img class="hero-next-logo" src="${rightLogo}" alt="${g.opponent}">
           <span class="hero-next-team">${g.opponent}</span>
         </div>

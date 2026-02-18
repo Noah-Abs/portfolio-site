@@ -11,7 +11,9 @@
       "Bash(powershell -command \"\\(Get-Content ''c:\\\\Users\\\\noaha\\\\portfolio-site\\\\index.html''\\).Count\")",
       "Bash(powershell -command \"Select-String -Path ''c:\\\\Users\\\\noaha\\\\portfolio-site\\\\index.html'' -Pattern ''mob-more-backdrop'' | Select-Object -First 5\")",
       "Bash(powershell -command \"Select-String -Path ''c:\\\\Users\\\\noaha\\\\portfolio-site\\\\index.html'' -Pattern ''sb-nav-item|view-contracts|view-il|loadContracts|loadIL|openMoreSheet|mob-tab-center'' | Select-Object LineNumber, Line | Format-Table -AutoSize\")",
-      "Bash(powershell -command:*)"
+      "Bash(powershell -command:*)",
+      "Bash(where:*)",
+      "Bash(/c/Windows/py.exe:*)"
     ]
   }
 }
