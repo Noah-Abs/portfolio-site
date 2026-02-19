@@ -1282,7 +1282,7 @@ function loadContracts(key) {
   if (!data) { wrap.innerHTML = '<div class="dc-loading">No contract data available.</div>'; return }
 
   const t = APP_TEAMS[key]
-  const accentColor = key === 'mets' ? '#002D72' : '#003DA5'
+  const accentColor = t?.h2 ?? '#003DA5'
   const maxAav = Math.max(...data.players.map(p => p.aav))
 
   const minYear = Math.min(...data.players.map(p => p.start))
