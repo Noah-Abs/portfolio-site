@@ -959,17 +959,24 @@
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       z-index: 999;
-      background: var(--bg);
+      background: #0d0d14;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
     #settings.open { display: block; }
+
     .settings-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 1rem 1.25rem;
       padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+      background: rgba(13,13,20,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
     .settings-header h2 {
@@ -986,84 +993,200 @@
       padding: 10px 14px;
       -webkit-tap-highlight-color: transparent;
     }
+
     .settings-body {
-      padding: 1.5rem 1.25rem;
-      padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+      padding: 0.5rem 1rem 6rem;
+      padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
     }
-    .settings-section-label {
-      font-size: 0.7rem;
+
+    /* -- Profile card at top -- */
+    .settings-profile {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      margin: 0.75rem 0;
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .settings-profile-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .settings-profile-info { flex: 1; }
+    .settings-profile-name {
+      font-size: 1rem;
       font-weight: 700;
-      letter-spacing: 0.18em;
+    }
+    .settings-profile-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* -- Section groups -- */
+    .settings-group {
+      margin-top: 1.5rem;
+    }
+    .settings-group-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 0.75rem;
+      padding: 0 0.5rem;
+      margin-bottom: 0.5rem;
     }
-    .settings-team-list {
+    .settings-group-card {
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .settings-group-footer {
+      font-size: 0.7rem;
+      color: var(--muted);
+      padding: 0.4rem 0.5rem 0;
+      line-height: 1.4;
+    }
+
+    /* -- Individual rows -- */
+    .settings-row {
       display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
     }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row:active { background: rgba(255,255,255,0.03); }
+
+    .settings-row-icon {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .settings-row-content { flex: 1; min-width: 0; }
+    .settings-row-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .settings-row-subtitle {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .settings-row-value {
+      font-size: 0.82rem;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .settings-row-chevron {
+      color: rgba(255,255,255,0.15);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      margin-left: -0.25rem;
+    }
+
+    /* -- Toggle switch -- */
+    .settings-toggle {
+      position: relative;
+      width: 46px; height: 28px;
+      flex-shrink: 0;
+    }
+    .settings-toggle input {
+      opacity: 0;
+      width: 0; height: 0;
+      position: absolute;
+    }
+    .settings-toggle-track {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      transition: background 0.25s;
+      cursor: pointer;
+    }
+    .settings-toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 22px; height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .settings-toggle input:checked + .settings-toggle-track {
+      background: var(--accent);
+    }
+    .settings-toggle input:checked + .settings-toggle-track::after {
+      transform: translateX(18px);
+    }
+
+    /* -- Team picker rows -- */
     .settings-team-row {
       display: flex;
       align-items: center;
       gap: 0.85rem;
-      padding: 1rem;
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
     }
-    .settings-team-row.active {
-      border-color: var(--accent2);
-    }
+    .settings-team-row:last-child { border-bottom: none; }
+    .settings-team-row:active { background: rgba(255,255,255,0.03); }
     .settings-team-row img {
-      width: 40px;
-      height: 40px;
+      width: 36px; height: 36px;
       object-fit: contain;
     }
     .settings-team-row-info { flex: 1; }
     .settings-team-row-name {
-      font-size: 0.95rem;
-      font-weight: 700;
+      font-size: 0.9rem;
+      font-weight: 600;
     }
     .settings-team-row-div {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--muted);
     }
     .settings-team-check {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: var(--accent2);
-      display: none;
+      opacity: 0;
+      transition: opacity 0.2s;
     }
     .settings-team-row.active .settings-team-check {
-      display: inline;
+      opacity: 1;
     }
-    .settings-save-btn {
-      display: block;
-      width: 100%;
-      margin-top: 1.5rem;
-      padding: 1rem;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 0.95rem;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+
+    /* -- Danger / destructive -- */
+    .settings-row-danger .settings-row-title {
+      color: #ef4444;
     }
-    .settings-save-btn:active { background: #6d28d9; }
-    .settings-saved-msg {
+
+    /* -- Version footer -- */
+    .settings-version {
       text-align: center;
-      font-size: 0.8rem;
+      padding: 1.5rem 0 0.5rem;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
       font-family: var(--mono);
-      color: var(--accent2);
-      margin-top: 0.75rem;
-      opacity: 0;
-      transition: opacity 0.3s;
     }
-    .settings-saved-msg.show { opacity: 1; }
 
     /* ── Home Dashboard Cards ────────────────────────── */
     .home-dashboard {
@@ -1260,10 +1383,103 @@
       <button class="settings-close-btn" onclick="closeSettings()">Done</button>
     </div>
     <div class="settings-body">
-      <div class="settings-section-label">Your Team</div>
-      <div class="settings-team-list" id="settings-team-list"></div>
-      <button class="settings-save-btn" onclick="settingsSave()">Save as Default</button>
-      <div class="settings-saved-msg" id="settings-saved-msg">Saved!</div>
+
+      <!-- Profile -->
+      <div class="settings-profile">
+        <div class="settings-profile-avatar">N</div>
+        <div class="settings-profile-info">
+          <div class="settings-profile-name">Noah</div>
+          <div class="settings-profile-sub">Portfolio &amp; MLB Tracker</div>
+        </div>
+      </div>
+
+      <!-- Default Team -->
+      <div class="settings-group">
+        <div class="settings-group-label">Default Team</div>
+        <div class="settings-group-card" id="settings-team-list"></div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="settings-group">
+        <div class="settings-group-label">Preferences</div>
+        <div class="settings-group-card">
+          <div class="settings-row" onclick="toggleSettingsSwitch('pref-live')">
+            <div class="settings-row-icon" style="background:#1d4ed8">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="#fff" stroke="none"/><path d="M6.3 6.3a8 8 0 000 11.4" opacity=".5"/><path d="M17.7 17.7a8 8 0 000-11.4" opacity=".5"/></svg>
+            </div>
+            <div class="settings-row-content">
+              <div class="settings-row-title">Live Scores</div>
+              <div class="settings-row-subtitle">Auto-refresh game data</div>
+            </div>
+            <label class="settings-toggle" onclick="event.stopPropagation()">
+              <input type="checkbox" id="pref-live" checked onchange="saveSetting('pref-live', this.checked)">
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
+          <div class="settings-row" onclick="toggleSettingsSwitch('pref-animations')">
+            <div class="settings-row-icon" style="background:#7c3aed">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </div>
+            <div class="settings-row-content">
+              <div class="settings-row-title">Animations</div>
+              <div class="settings-row-subtitle">Background orbs &amp; transitions</div>
+            </div>
+            <label class="settings-toggle" onclick="event.stopPropagation()">
+              <input type="checkbox" id="pref-animations" checked onchange="saveSetting('pref-animations', this.checked)">
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
+          <div class="settings-row" onclick="toggleSettingsSwitch('pref-scroll-effects')">
+            <div class="settings-row-icon" style="background:#0891b2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </div>
+            <div class="settings-row-content">
+              <div class="settings-row-title">Scroll Effects</div>
+              <div class="settings-row-subtitle">Fade-in animations on scroll</div>
+            </div>
+            <label class="settings-toggle" onclick="event.stopPropagation()">
+              <input type="checkbox" id="pref-scroll-effects" checked onchange="saveSetting('pref-scroll-effects', this.checked)">
+              <span class="settings-toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appearance -->
+      <div class="settings-group">
+        <div class="settings-group-label">Appearance</div>
+        <div class="settings-group-card">
+          <div class="settings-row" onclick="cycleAccent()">
+            <div class="settings-row-icon" id="accent-preview-icon" style="background:var(--accent)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" stroke="none"><circle cx="12" cy="12" r="6"/></svg>
+            </div>
+            <div class="settings-row-content">
+              <div class="settings-row-title">Accent Color</div>
+            </div>
+            <span class="settings-row-value" id="accent-label">Purple</span>
+            <span class="settings-row-chevron">&#x203A;</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data -->
+      <div class="settings-group">
+        <div class="settings-group-label">Data</div>
+        <div class="settings-group-card">
+          <div class="settings-row settings-row-danger" onclick="clearAllData()">
+            <div class="settings-row-icon" style="background:#dc2626">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </div>
+            <div class="settings-row-content">
+              <div class="settings-row-title">Reset All Settings</div>
+              <div class="settings-row-subtitle">Clear saved preferences &amp; team</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-version">v2.0 &middot; Built with &#x2764; by Noah</div>
+
     </div>
   </div>
 
@@ -1868,13 +2084,92 @@
     }
 
     /* ── Settings ─────────────────────────────────────── */
+    const ACCENT_COLORS = [
+      { name: 'Purple', value: '#7c3aed' },
+      { name: 'Blue',   value: '#3b82f6' },
+      { name: 'Cyan',   value: '#06b6d4' },
+      { name: 'Green',  value: '#10b981' },
+      { name: 'Rose',   value: '#f43f5e' },
+      { name: 'Orange', value: '#f97316' },
+    ]
+    let _accentIdx = parseInt(localStorage.getItem('accentIdx')) || 0
+
     function openSettings() {
+      loadSettingsState()
       renderSettingsTeams()
       document.getElementById('settings').classList.add('open')
     }
     function closeSettings() {
       document.getElementById('settings').classList.remove('open')
     }
+
+    function loadSettingsState() {
+      // Restore toggle states from localStorage
+      ;['pref-live', 'pref-animations', 'pref-scroll-effects'].forEach(id => {
+        const el = document.getElementById(id)
+        if (!el) return
+        const saved = localStorage.getItem(id)
+        el.checked = saved === null ? true : saved === 'true'
+      })
+      // Restore accent
+      updateAccentUI()
+    }
+
+    function saveSetting(id, value) {
+      localStorage.setItem(id, value)
+      applySetting(id, value)
+    }
+
+    function toggleSettingsSwitch(id) {
+      const el = document.getElementById(id)
+      if (!el) return
+      el.checked = !el.checked
+      saveSetting(id, el.checked)
+    }
+
+    function applySetting(id, value) {
+      if (id === 'pref-animations') {
+        document.querySelectorAll('.orb').forEach(o => {
+          o.style.display = value ? '' : 'none'
+        })
+      }
+      if (id === 'pref-scroll-effects') {
+        if (!value) {
+          document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'))
+        }
+      }
+    }
+
+    function applyAllSettings() {
+      ;['pref-animations', 'pref-scroll-effects'].forEach(id => {
+        const saved = localStorage.getItem(id)
+        const value = saved === null ? true : saved === 'true'
+        applySetting(id, value)
+      })
+      // Apply accent color
+      const savedIdx = parseInt(localStorage.getItem('accentIdx'))
+      if (!isNaN(savedIdx) && ACCENT_COLORS[savedIdx]) {
+        _accentIdx = savedIdx
+        document.documentElement.style.setProperty('--accent', ACCENT_COLORS[_accentIdx].value)
+      }
+    }
+
+    function cycleAccent() {
+      _accentIdx = (_accentIdx + 1) % ACCENT_COLORS.length
+      const c = ACCENT_COLORS[_accentIdx]
+      document.documentElement.style.setProperty('--accent', c.value)
+      localStorage.setItem('accentIdx', _accentIdx)
+      updateAccentUI()
+    }
+
+    function updateAccentUI() {
+      const c = ACCENT_COLORS[_accentIdx]
+      const icon = document.getElementById('accent-preview-icon')
+      const label = document.getElementById('accent-label')
+      if (icon) icon.style.background = c.value
+      if (label) label.textContent = c.name
+    }
+
     function renderSettingsTeams() {
       const list = document.getElementById('settings-team-list')
       list.innerHTML = Object.entries(APP_TEAMS).map(([key, t]) => `
@@ -1884,22 +2179,40 @@
             <div class="settings-team-row-name">${t.name}</div>
             <div class="settings-team-row-div">${t.nameShort}</div>
           </div>
-          <span class="settings-team-check">✓</span>
+          <span class="settings-team-check">&#x2713;</span>
         </div>`).join('')
     }
+
     function settingsPick(key) {
       _appTeam = key
+      localStorage.setItem('defaultTeam', _appTeam)
+      localStorage.setItem('selectedTeam', _appTeam)
       renderAppTeam(key)
       loadAppLiveData(key)
       renderSettingsTeams()
       renderHomeDashboard(key)
     }
-    function settingsSave() {
-      localStorage.setItem('defaultTeam', _appTeam)
-      localStorage.setItem('selectedTeam', _appTeam)
-      const msg = document.getElementById('settings-saved-msg')
-      msg.classList.add('show')
-      setTimeout(() => msg.classList.remove('show'), 2200)
+
+    function clearAllData() {
+      if (!confirm('Reset all settings to defaults?')) return
+      localStorage.removeItem('defaultTeam')
+      localStorage.removeItem('selectedTeam')
+      localStorage.removeItem('accentIdx')
+      localStorage.removeItem('pref-live')
+      localStorage.removeItem('pref-animations')
+      localStorage.removeItem('pref-scroll-effects')
+      // Reset accent
+      _accentIdx = 0
+      document.documentElement.style.setProperty('--accent', ACCENT_COLORS[0].value)
+      // Reset team
+      _appTeam = 'dodgers'
+      renderAppTeam(_appTeam)
+      renderHomeDashboard(_appTeam)
+      loadAppLiveData(_appTeam)
+      // Reset toggles and re-render
+      loadSettingsState()
+      renderSettingsTeams()
+      applyAllSettings()
     }
 
     /* ── Home Dashboard Cards ────────────────────────── */
@@ -2045,6 +2358,7 @@
     }, { passive: true })
 
     // Initialize
+    applyAllSettings()
     renderAppTeam(_appTeam)
     renderHomeDashboard(_appTeam)
     loadAppLiveData(_appTeam)
