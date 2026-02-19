@@ -1502,131 +1502,7 @@
       align-items: center;
       gap: 0.4rem;
     }
-    /* ── Settings gear button ─────────────────────────────── */
-    .settings-icon-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.55);
-      cursor: pointer;
-      padding: 0.35rem;
-      border-radius: 7px;
-      transition: color 0.15s, background 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .settings-icon-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
-    .settings-icon-btn.open   { color: #fff; background: rgba(255,255,255,0.12); }
-
-    /* ── Settings dropdown ────────────────────────────────── */
-    .settings-dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
-      right: 0.75rem;
-      width: 230px;
-      background: rgba(4,10,38,0.97);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 13px;
-      padding: 0.45rem;
-      z-index: 300;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-6px) scale(0.97);
-      transform-origin: top right;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
-    .settings-dropdown.open {
-      opacity: 1;
-      pointer-events: all;
-      transform: translateY(0) scale(1);
-    }
-    .sdrop-section-label {
-      font-size: 0.56rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.28);
-      padding: 0.35rem 0.7rem 0.25rem;
-    }
-    .sdrop-team-row {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      width: 100%;
-      padding: 0.55rem 0.7rem;
-      background: none;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: rgba(255,255,255,0.65);
-      font-size: 0.83rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      text-align: left;
-      transition: background 0.13s, color 0.13s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .sdrop-team-row:hover { background: rgba(255,255,255,0.07); color: #fff; }
-    .sdrop-team-row.active { color: #fff; }
-    .sdrop-team-row img { width: 26px; height: 26px; object-fit: contain; border-radius: 4px; }
-    .sdrop-check {
-      margin-left: auto;
-      color: var(--team-header2, #003DA5);
-      font-size: 1rem;
-      font-weight: 700;
-    }
-    .sdrop-divider {
-      height: 1px;
-      background: rgba(255,255,255,0.08);
-      margin: 0.35rem 0;
-    }
-    .sdrop-save-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.55rem;
-      width: 100%;
-      padding: 0.55rem 0.7rem;
-      background: none;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: rgba(255,255,255,0.45);
-      font-size: 0.78rem;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      transition: background 0.13s, color 0.13s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .sdrop-save-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
-    .sdrop-saved-msg {
-      text-align: center;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: rgba(80,210,120,0.9);
-      padding: 0.25rem 0.7rem 0.3rem;
-      letter-spacing: 0.04em;
-    }
-    /* Keep old CSS names for any residual references */
-    .team-dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      padding: 0.65rem 1rem;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.65);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .team-dropdown-item:last-child { border-bottom: none; }
-    .team-dropdown-item img { height: 24px; width: auto; }
-    .team-dropdown-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
-    .team-dropdown-item.active { background: rgba(255,255,255,0.05); color: #fff; }
+    /* (Old settings dropdown removed — now a full settings page) */
 
     /* ── Hero Section ─────────────────────────────────── */
     #view-home {
@@ -3350,6 +3226,134 @@
       text-overflow: ellipsis;
     }
 
+    /* ── Settings Page ─────────────────────────────────── */
+    .settings-wrap {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    .settings-header {
+      margin-bottom: 2rem;
+    }
+    .settings-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .settings-section {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    .settings-section-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 0.25rem;
+    }
+    .settings-section-desc {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .settings-team-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .settings-team-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 0.85rem;
+      background: rgba(255,255,255,0.02);
+      border: 1.5px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-team-row:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .settings-team-row.active {
+      border-color: var(--team-header2, #003DA5);
+      background: rgba(0,61,165,0.08);
+    }
+    .settings-team-row img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+    .settings-team-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .settings-team-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .settings-team-div {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+    .settings-team-check {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--team-header2, #003DA5);
+      display: none;
+    }
+    .settings-team-row.active .settings-team-check {
+      display: block;
+    }
+    .settings-save-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .settings-save-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      background: var(--team-header2, #003DA5);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-save-btn:hover { opacity: 0.85; }
+    .settings-save-btn:active { opacity: 0.7; }
+    .settings-saved-msg {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(80,210,120,0.9);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .settings-saved-msg.show { opacity: 1; }
+    @media (max-width: 700px) {
+      .settings-wrap { padding: 1rem 0.75rem 3rem; }
+      .settings-title { font-size: 1.8rem; }
+    }
+
   </style>
 </head>
 <body data-team="dodgers">
@@ -3401,36 +3405,15 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
           Roster
         </button>
+        <div class="td-divider"></div>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
       </div>
     </div>
-    <div class="bar-actions">
-      <button class="settings-icon-btn" id="settings-icon-btn" onclick="toggleSettingsDropdown()" aria-label="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-      </button>
-      <!-- Settings dropdown -->
-      <div class="settings-dropdown" id="settings-dropdown">
-        <div class="sdrop-section-label">Teams</div>
-        <button class="sdrop-team-row active" id="sdrop-dodgers" onclick="settingsPickTeam('dodgers')">
-          <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
-          <span>Los Angeles Dodgers</span>
-          <span class="sdrop-check" id="sdrop-check-dodgers">✓</span>
-        </button>
-        <button class="sdrop-team-row" id="sdrop-mets" onclick="settingsPickTeam('mets')">
-          <img src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg" alt="NYM">
-          <span>New York Mets</span>
-          <span class="sdrop-check" id="sdrop-check-mets" style="display:none">✓</span>
-        </button>
-        <div class="sdrop-divider"></div>
-        <button class="sdrop-save-btn" onclick="saveDefaultTeam()">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Save as Default Team
-        </button>
-        <div class="sdrop-saved-msg" id="sdrop-saved-msg" style="display:none">✓ Saved as default</div>
-      </div>
-    </div>
+    <!-- bar-actions kept for spacing -->
+    <div class="bar-actions"></div>
   </div>
 
   <!-- Fixed left sidebar -->
@@ -3568,6 +3551,29 @@
       <div class="news-page-loading" id="news-page-loading">Loading news…</div>
     </div>
   </div><!-- /view-news -->
+
+  <!-- Settings view -->
+  <div class="view-section" id="view-settings">
+    <div class="settings-wrap">
+      <div class="settings-header">
+        <div class="settings-title">Settings</div>
+      </div>
+
+      <!-- Teams section -->
+      <div class="settings-section">
+        <div class="settings-section-label">Teams</div>
+        <div class="settings-section-desc">Choose your team. Data, stats, and news will update to match.</div>
+        <div class="settings-team-list" id="settings-team-list"></div>
+        <div class="settings-save-row">
+          <button class="settings-save-btn" id="settings-save-btn" onclick="settingsSaveTeam()">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Save as Default
+          </button>
+          <div class="settings-saved-msg" id="settings-saved-msg">Saved!</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /view-settings -->
 
   </div><!-- /main-content -->
 
@@ -3881,10 +3887,8 @@
       renderNextGame(t.nextGame)
 
       // Sync settings dropdown team selection
-      document.querySelectorAll('.sdrop-team-row').forEach(el => el.classList.toggle('active', el.id === `sdrop-${key}`))
-      document.querySelectorAll('.sdrop-check').forEach(el => el.style.display = 'none')
-      const sdropCheck = document.getElementById(`sdrop-check-${key}`)
-      if (sdropCheck) sdropCheck.style.display = ''
+      // Update settings team list if it's visible
+      if (_currentView === 'settings') renderSettingsTeams()
 
       // Reset lazy-load guards so depth chart + roster reload for new team
       _depthLoaded = false
@@ -4477,34 +4481,41 @@
       return { primary, secondary }
     }
 
-    /* ── Settings dropdown ───────────────────────────────── */
-    function toggleSettingsDropdown() {
-      const dd  = document.getElementById('settings-dropdown')
-      const btn = document.getElementById('settings-icon-btn')
-      const isOpen = dd.classList.toggle('open')
-      btn.classList.toggle('open', isOpen)
+    /* ── Settings page ──────────────────────────────────── */
+    function renderSettingsTeams() {
+      const list = document.getElementById('settings-team-list')
+      if (!list) return
+      list.innerHTML = Object.entries(TEAMS).map(([key, t]) => `
+        <div class="settings-team-row ${key === _currentTeamKey ? 'active' : ''}" data-team="${key}" onclick="settingsPickTeam('${key}')">
+          <img src="${t.logoSrc}" alt="${t.nameShort}">
+          <div class="settings-team-info">
+            <div class="settings-team-name">${t.name}</div>
+            <div class="settings-team-div">${t.division}</div>
+          </div>
+          <span class="settings-team-check">✓</span>
+        </div>
+      `).join('')
+      // Hide saved message on re-render
+      const msg = document.getElementById('settings-saved-msg')
+      if (msg) msg.classList.remove('show')
     }
 
     function settingsPickTeam(key) {
       switchTeam(key)
-      // Leave dropdown open so user can hit "Save as Default"
+      renderSettingsTeams()
     }
 
-    function saveDefaultTeam() {
+    function settingsSaveTeam() {
       localStorage.setItem('defaultTeam', _currentTeamKey)
       localStorage.setItem('selectedTeam', _currentTeamKey)
-      const msg = document.getElementById('sdrop-saved-msg')
+      const msg = document.getElementById('settings-saved-msg')
       if (!msg) return
-      msg.style.display = 'block'
-      setTimeout(() => { msg.style.display = 'none' }, 2200)
+      msg.classList.add('show')
+      setTimeout(() => msg.classList.remove('show'), 2200)
     }
 
-    // Close settings dropdown when clicking outside
+    // Close team dropdown when clicking outside
     document.addEventListener('click', e => {
-      if (!e.target.closest('#settings-icon-btn') && !e.target.closest('#settings-dropdown')) {
-        document.getElementById('settings-dropdown')?.classList.remove('open')
-        document.getElementById('settings-icon-btn')?.classList.remove('open')
-      }
       if (!e.target.closest('#bar-team-info')) {
         closeTeamDropdown()
       }
@@ -4712,11 +4723,11 @@
 
     function switchView(view) {
       _currentView = view
-      localStorage.setItem('activeView', view)
+      if (view !== 'settings') localStorage.setItem('activeView', view)
       closePanel()
       // Toggle left sidebar — only visible on home view
       document.body.classList.toggle('no-left-sidebar', view !== 'home')
-      const allViews = ['home','live','depth','contracts','news']
+      const allViews = ['home','live','depth','contracts','news','settings']
       allViews.forEach(v => {
         const el = document.getElementById(`view-${v}`)
         if (el) el.classList.toggle('active', v === view)
@@ -4725,6 +4736,7 @@
       if (view === 'depth') loadDepthChart()
       if (view === 'contracts') loadContracts(_currentTeamKey)
       if (view === 'news') renderNewsPage()
+      if (view === 'settings') renderSettingsTeams()
       // Update right-nav active state
       document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view)
@@ -5566,7 +5578,7 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     // Restore last active view — must run after all let declarations above
     // Check URL hash first (e.g. index.html#depth), then localStorage
     const hashView = location.hash.replace('#', '')
-    const validViews = ['home','live','depth','contracts','news']
+    const validViews = ['home','live','depth','contracts','news','settings']
     const hashPanel = { schedule: 'schedule', roster: 'roster' }
     if (hashView && validViews.includes(hashView)) {
       switchView(hashView)
@@ -5644,6 +5656,13 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
             <path d="M10 6h8M10 10h8M10 14h4"/>
           </svg>
           <span>News</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Settings</span>
         </button>
       </div>
     </div>
