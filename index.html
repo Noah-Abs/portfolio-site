@@ -162,6 +162,24 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
+    .bar-headline {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .bar-headline a {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .bar-headline a:hover {
+      color: rgba(255,255,255,0.85);
+    }
     /* ── Fixed left sidebar ──────────────────────────────── */
     :root { --rn-width: 195px; }
     .fixed-sidebar {
@@ -468,11 +486,18 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.18);
     }
-    .sidebar-news {
-      grid-template-columns: 1fr;
+    /* News panel (inside side-panel) */
+    .news-panel-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0 1rem 1rem;
     }
-    .sidebar-news .news-card-img {
-      height: 110px;
+    .news-panel-grid .news-card {
+      border-radius: 12px;
+    }
+    .news-panel-grid .news-card-img {
+      height: 140px;
     }
     /* ── Mobile App Layout ─────────────────────────────── */
     .mob-tabs { display: none; }
@@ -2966,6 +2991,7 @@
       <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
     </div>
+    <div class="bar-headline" id="bar-headline"></div>
     <div class="bar-actions">
       <button class="settings-icon-btn" id="settings-icon-btn" onclick="toggleSettingsDropdown()" aria-label="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
@@ -3050,15 +3076,6 @@
     </div>
     <!-- Live game card (shown automatically when game is in progress) -->
     <div class="dash-card" id="live-game-card" style="display:none"></div>
-    <!-- News feed -->
-    <div class="dash-card">
-      <div class="dash-card-header">
-        <span class="dash-card-label">News</span>
-      </div>
-      <div class="news-grid sidebar-news" id="news-grid">
-        <div class="news-loading">Loading news...</div>
-      </div>
-    </div>
   </div>
 
   <!-- Main scrollable content -->
@@ -3138,6 +3155,10 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
       Roster
     </button>
+    <button class="rn-item" data-view="news" onclick="openSidePanel('news')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
+      News
+    </button>
     <!-- Next game card pinned to bottom of right nav -->
     <div class="hero-next" id="hero-next" style="margin-top:auto; padding: 0 0.6rem 0.75rem;"></div>
   </nav>
@@ -3204,6 +3225,7 @@
       <div class="sp-panel" id="sp-roster">
         <div class="roster-placeholder">Roster Coming Soon</div>
       </div>
+      <div class="sp-panel" id="sp-news"></div>
     </div>
   </div>
 
@@ -3481,31 +3503,45 @@
     }
 
     /* ── News loader ─────────────────────────────────────── */
+    let _newsArticles = []
     async function loadNews() {
-      const grid = document.getElementById('news-grid')
-      if (!grid) return
       try {
         const espnId = TEAMS[_currentTeamKey]?.espnId ?? 19
-        const res  = await fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId}&limit=6`)
+        const res  = await fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId}&limit=8`)
         const data = await res.json()
-        const articles = data.articles ?? []
-        if (!articles.length) { grid.innerHTML = '<div class="news-loading">No articles found</div>'; return }
-        grid.innerHTML = articles.map(a => {
-          const img     = a.images?.[0]?.url ?? ''
-          const href    = a.links?.web?.href ?? '#'
-          const ago     = timeAgo(a.published)
-          const source  = a.categories?.find(c => c.type === 'league')?.description ?? 'ESPN'
-          return `<a class="news-card" href="${href}" target="_blank" rel="noopener">
-            ${img ? `<img class="news-card-img" src="${img}" alt="" loading="lazy">` : ''}
-            <div class="news-card-body">
-              <div class="news-card-headline">${a.headline}</div>
-              <div class="news-card-meta">${ago}</div>
-            </div>
-          </a>`
-        }).join('')
+        _newsArticles = data.articles ?? []
+        // Show top headline in bar
+        const bar = document.getElementById('bar-headline')
+        if (bar && _newsArticles.length) {
+          const a = _newsArticles[0]
+          const href = a.links?.web?.href ?? '#'
+          bar.innerHTML = `<a href="${href}" target="_blank" rel="noopener">${a.headline}</a>`
+        } else if (bar) {
+          bar.innerHTML = ''
+        }
       } catch (e) {
-        grid.innerHTML = '<div class="news-loading">Could not load news</div>'
+        _newsArticles = []
       }
+    }
+    function renderNewsPanel() {
+      const panel = document.getElementById('sp-news')
+      if (!panel) return
+      if (!_newsArticles.length) {
+        panel.innerHTML = '<div class="news-loading" style="padding:3rem 1rem">No news available</div>'
+        return
+      }
+      panel.innerHTML = `<div class="news-panel-grid">${_newsArticles.map(a => {
+        const img  = a.images?.[0]?.url ?? ''
+        const href = a.links?.web?.href ?? '#'
+        const ago  = timeAgo(a.published)
+        return `<a class="news-card" href="${href}" target="_blank" rel="noopener">
+          ${img ? `<img class="news-card-img" src="${img}" alt="" loading="lazy">` : ''}
+          <div class="news-card-body">
+            <div class="news-card-headline">${a.headline}</div>
+            <div class="news-card-meta">${ago}</div>
+          </div>
+        </a>`
+      }).join('')}</div>`
     }
     function timeAgo(iso) {
       if (!iso) return ''
@@ -3665,12 +3701,13 @@
       document.getElementById('side-panel').classList.add('open')
       document.getElementById('panel-backdrop').classList.add('open')
       switchSideTab(tab)
-      // Update right-nav active state for schedule/roster
+      if (tab === 'news') renderNewsPanel()
+      // Update right-nav active state
       document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === tab)
       })
       _setMobTab(tab)
-      const titles = { schedule: 'Schedule', roster: '40-Man Roster' }
+      const titles = { schedule: 'Schedule', roster: '40-Man Roster', news: 'News' }
       const titleEl = document.getElementById('sp-title')
       if (titleEl && titles[tab]) titleEl.textContent = titles[tab]
       // Show filter button only on schedule tab
@@ -3678,6 +3715,8 @@
     }
     let rosterLoaded = false
     function switchSideTab(id) {
+      const tabs = document.getElementById('sp-tabs')
+      if (tabs) tabs.style.display = (id === 'news') ? 'none' : ''
       document.querySelectorAll('.sp-tab').forEach((btn, i) => {
         btn.classList.toggle('active', ['schedule','roster'][i] === id)
       })
@@ -5007,6 +5046,13 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
             <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
           </svg>
           <span>Roster</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('news')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/>
+            <path d="M10 6h8M10 10h8M10 14h4"/>
+          </svg>
+          <span>News</span>
         </button>
       </div>
     </div>
