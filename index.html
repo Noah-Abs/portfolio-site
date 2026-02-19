@@ -142,12 +142,6 @@
       transition: color 0.2s;
     }
     .bar-link:hover { color: rgba(255,255,255,0.85); }
-    .bar-team-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.05rem;
-    }
     .bar-team-name {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.7rem;
@@ -162,23 +156,112 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.35);
     }
-    .bar-headline {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    /* ── Team name dropdown ─────────────────────────────── */
+    .bar-team-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.05rem;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
     }
-    .bar-headline a {
+    .bar-team-name::after {
+      content: '';
+      display: inline-block;
+      width: 5px; height: 5px;
+      border-right: 1.5px solid rgba(255,255,255,0.4);
+      border-bottom: 1.5px solid rgba(255,255,255,0.4);
+      transform: rotate(45deg);
+      margin-left: 6px;
+      margin-bottom: 3px;
+      vertical-align: middle;
+      transition: transform 0.2s;
+    }
+    .bar-team-info.open .bar-team-name::after {
+      transform: rotate(-135deg);
+      margin-bottom: 0;
+    }
+    .team-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 280px;
+      background: rgba(0,7,32,0.97);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 0.75rem 0;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-6px);
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .team-dropdown.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(4px);
+    }
+    .td-team-header {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.4rem 1rem 0.65rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.35rem;
+    }
+    .td-team-header img {
+      height: 36px; width: auto;
+    }
+    .td-team-header-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .td-team-header-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .td-team-header-div {
+      font-size: 0.52rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+    .td-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.5rem 1rem;
       font-family: 'Inter', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.5);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
       text-decoration: none;
-      transition: color 0.2s;
+      width: 100%;
+      background: none;
+      border: none;
     }
-    .bar-headline a:hover {
-      color: rgba(255,255,255,0.85);
+    .td-nav-item:hover {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+    }
+    .td-nav-item svg {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      opacity: 0.5;
+    }
+    .td-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 0.35rem 0;
     }
     /* ── Fixed left sidebar ──────────────────────────────── */
     :root { --rn-width: 195px; }
@@ -645,7 +728,7 @@
       .bar-team-name { font-size: 1.4rem; }
       .bar-team-sub  { font-size: 0.52rem; }
       .bar-actions   { right: 0.75rem; gap: 0.25rem; }
-      .bar-headline  { display: none; }
+      .team-dropdown { min-width: 240px; left: -0.5rem; }
       .settings-btn  { padding: 0.3rem 0.5rem; font-size: 1.1rem; }
       .team-switcher-btn img { height: 22px; }
 
@@ -3278,11 +3361,48 @@
       alt="Dodgers"
       onclick="switchView('home')"
       style="cursor:pointer" />
-    <div class="bar-team-info">
+    <div class="bar-team-info" id="bar-team-info" onclick="toggleTeamDropdown()">
       <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
+      <div class="team-dropdown" id="team-dropdown">
+        <div class="td-team-header" id="td-team-header">
+          <img id="td-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
+          <div class="td-team-header-info">
+            <div class="td-team-header-name" id="td-name">Los Angeles Dodgers</div>
+            <div class="td-team-header-div" id="td-division">NL West</div>
+          </div>
+        </div>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
+          Home
+        </button>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('live')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".5"/><path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".5"/></svg>
+          Live Game
+        </button>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('news')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
+          News
+        </button>
+        <div class="td-divider"></div>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('depth')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="14" width="3.5" height="7" rx="1"/><rect x="10.25" y="9" width="3.5" height="12" rx="1"/><rect x="16.5" y="5" width="3.5" height="16" rx="1"/></svg>
+          Depth Chart
+        </button>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); openSidePanel('schedule')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          Schedule
+        </button>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('contracts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          Contracts
+        </button>
+        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); openSidePanel('roster')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          Roster
+        </button>
+      </div>
     </div>
-    <div class="bar-headline" id="bar-headline"></div>
     <div class="bar-actions">
       <button class="settings-icon-btn" id="settings-icon-btn" onclick="toggleSettingsDropdown()" aria-label="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
@@ -3893,15 +4013,7 @@
         // Filter MLB-wide articles to exclude any that duplicate team articles
         const teamIds = new Set(_newsArticles.map(a => a.headline))
         _mlbNewsArticles = (mlbData.articles ?? []).filter(a => !teamIds.has(a.headline))
-        // Show top headline in bar
-        const bar = document.getElementById('bar-headline')
-        if (bar && _newsArticles.length) {
-          const a = _newsArticles[0]
-          const href = a.links?.web?.href ?? '#'
-          bar.innerHTML = `<a href="${href}" target="_blank" rel="noopener">${a.headline}</a>`
-        } else if (bar) {
-          bar.innerHTML = ''
-        }
+        // (headline bar removed — news is now full page)
         // Populate mobile headline card
         const mhcHL = document.getElementById('mhc-hl-text')
         if (mhcHL && _newsArticles.length) {
@@ -4125,7 +4237,7 @@
     function toggleNavMenu() {}
     function openNavMenu() {}
     function closeNavMenu() {}
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMoreSheet(); closeWsModal() } })
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMoreSheet(); closeWsModal(); closeTeamDropdown() } })
 
     /* ── Side panel ─────────────────────────────────────── */
     function togglePanel() {
@@ -4393,7 +4505,33 @@
         document.getElementById('settings-dropdown')?.classList.remove('open')
         document.getElementById('settings-icon-btn')?.classList.remove('open')
       }
+      if (!e.target.closest('#bar-team-info')) {
+        closeTeamDropdown()
+      }
     })
+
+    /* ── Team name dropdown ─────────────────────────────── */
+    function toggleTeamDropdown() {
+      const info = document.getElementById('bar-team-info')
+      const dd   = document.getElementById('team-dropdown')
+      if (!info || !dd) return
+      const opening = !dd.classList.contains('open')
+      dd.classList.toggle('open')
+      info.classList.toggle('open')
+      if (opening) {
+        // Sync dropdown header with current team
+        const t = TEAMS[_currentTeamKey]
+        if (t) {
+          document.getElementById('td-logo').src = t.logoSrc
+          document.getElementById('td-name').textContent = t.name
+          document.getElementById('td-division').textContent = t.division
+        }
+      }
+    }
+    function closeTeamDropdown() {
+      document.getElementById('team-dropdown')?.classList.remove('open')
+      document.getElementById('bar-team-info')?.classList.remove('open')
+    }
 
     /* ── Team switcher ───────────────────────────────────── */
     function switchTeam(key) {
