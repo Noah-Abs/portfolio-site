@@ -562,6 +562,315 @@
     }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
 
+    /* ── Team Showcase ──────────────────────────────────── */
+    #team { background: var(--bg2); }
+
+    .team-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 1rem;
+      margin-top: 3rem;
+    }
+
+    .team-logo {
+      height: clamp(100px, 16vw, 160px);
+      width: auto;
+      filter: drop-shadow(0 0 40px var(--glow)) drop-shadow(0 0 16px rgba(124,58,237,0.3));
+    }
+
+    .team-wordmark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+    }
+
+    .team-city {
+      font-size: clamp(0.9rem, 2.5vw, 1.4rem);
+      font-weight: 700;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .team-name {
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 60%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .team-champs-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(220,170,30,0.85);
+      border: 1px solid rgba(220,170,30,0.25);
+      border-radius: 6px;
+      padding: 0.3rem 1.1rem;
+    }
+
+    .team-banners {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
+    .team-banner {
+      width: 30px;
+      height: 52px;
+      background: linear-gradient(175deg, var(--accent) 0%, #4c1d95 100%);
+      clip-path: polygon(3% 0, 97% 0, 100% 4%, 100% 78%, 50% 100%, 0 78%, 0 4%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 8px;
+      filter: drop-shadow(0 0 3px var(--glow));
+      transition: filter 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .team-banner:hover {
+      filter: drop-shadow(0 0 8px rgba(220,170,30,0.9));
+      transform: translateY(-3px);
+    }
+
+    .team-banner-year {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-family: var(--font);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      user-select: none;
+    }
+
+    /* Team info cards row */
+    .team-info-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .team-info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .team-info-card:hover {
+      border-color: rgba(124,58,237,0.3);
+      transform: translateY(-3px);
+    }
+
+    .team-info-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .team-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .team-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .team-stat-val {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .team-stat-lbl {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .team-stat-rank {
+      font-size: 0.62rem;
+      font-family: var(--mono);
+      color: var(--accent2);
+      margin-top: 0.1rem;
+    }
+
+    /* Next game card */
+    .next-game {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .next-game-matchup {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .next-game-logo {
+      height: 32px;
+      width: auto;
+    }
+
+    .next-game-sep {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    .next-game-opp {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .next-game-details {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .next-game-tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(6,182,212,0.12);
+      border: 1px solid rgba(6,182,212,0.2);
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+    }
+
+    /* Last game performers */
+    .last-game-score {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .performer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .performer-row:last-child { border-bottom: none; }
+
+    .performer-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .performer-line {
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    /* ── News Section ──────────────────────────────────── */
+    #news { background: var(--bg); }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .news-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .news-item:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124,58,237,0.35);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+    }
+
+    .news-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      background: var(--bg2);
+    }
+
+    .news-body {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .news-headline {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .news-meta {
+      font-size: 0.7rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: auto;
+    }
+
+    .news-empty {
+      grid-column: 1/-1;
+      padding: 3rem 0;
+      text-align: center;
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
     /* ── Responsive ─────────────────────────────────────── */
     @media (max-width: 768px) {
       nav { padding: 1rem 1.25rem; }
@@ -569,6 +878,8 @@
       .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
       .contact-card { padding: 2.5rem 1.5rem; }
       .projects-grid { grid-template-columns: 1fr; }
+      .team-info-row { grid-template-columns: 1fr; }
+      .news-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -578,8 +889,9 @@
   <nav>
     <span class="nav-logo">noah.dev</span>
     <ul class="nav-links">
+      <li><a href="#team">Team</a></li>
+      <li><a href="#news">News</a></li>
       <li><a href="#about">About</a></li>
-      <li><a href="#skills">Skills</a></li>
       <li><a href="#projects">Projects</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -600,6 +912,54 @@
       <div class="hero-actions">
         <a href="#projects" class="btn btn-primary">View my work ↓</a>
         <a href="#contact" class="btn btn-ghost">Get in touch</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Showcase -->
+  <section id="team">
+    <div class="container">
+      <div class="fade-in">
+        <span class="section-label">// my team</span>
+        <h2 class="section-title">Fan HQ</h2>
+        <p class="section-subtitle">Live stats, schedule, and everything for your squad.</p>
+      </div>
+      <div class="team-hero fade-in">
+        <img class="team-logo" id="app-team-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Dodgers">
+        <div class="team-wordmark">
+          <span class="team-city" id="app-team-city">Los Angeles</span>
+          <span class="team-name" id="app-team-name">Dodgers</span>
+        </div>
+        <span class="team-champs-badge" id="app-team-champs">Back-to-Back World Series Champions</span>
+        <div class="team-banners" id="app-ws-banners"></div>
+      </div>
+      <div class="team-info-row fade-in">
+        <div class="team-info-card">
+          <div class="team-info-label">Team Stats</div>
+          <div class="team-stats-grid" id="app-team-stats"></div>
+        </div>
+        <div class="team-info-card">
+          <div class="team-info-label">Next Game</div>
+          <div class="next-game" id="app-next-game"></div>
+        </div>
+        <div class="team-info-card">
+          <div class="team-info-label">Last Game</div>
+          <div id="app-last-game"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section id="news">
+    <div class="container">
+      <div class="fade-in">
+        <span class="section-label">// news</span>
+        <h2 class="section-title">Latest Headlines</h2>
+        <p class="section-subtitle">Fresh from around the league.</p>
+      </div>
+      <div class="news-grid fade-in" id="app-news-grid">
+        <div class="news-empty">Loading news...</div>
       </div>
     </div>
   </section>
@@ -784,6 +1144,162 @@
       { threshold: 0.12 }
     );
     document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    /* ── Team Data ─────────────────────────────────────── */
+    const APP_TEAMS = {
+      dodgers: {
+        id: 119, espnId: 19,
+        name: 'Los Angeles Dodgers',
+        cityShort: 'Los Angeles', nameShort: 'Dodgers',
+        logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg',
+        wsLabel: 'Back-to-Back World Series Champions',
+        wsTitles: [1955, 1959, 1963, 1965, 1981, 1988, 2020, 2024, 2025],
+        stats: [
+          { val: '100-62', lbl: 'Record', rank: '#2 NL West' },
+          { val: '.617',   lbl: 'Win %',  rank: '#2 NL West' },
+          { val: '.263',   lbl: 'Team AVG', rank: '#3 NL' },
+          { val: '221',    lbl: 'Home Runs', rank: '#2 NL' },
+          { val: '3.61',   lbl: 'Team ERA', rank: '#4 NL' },
+          { val: '1,344',  lbl: 'Strikeouts' },
+        ],
+        lastGame: 'LAD 8, SD 3', lastGameDate: 'Sep 28, 2025',
+        performers: [
+          { name: 'Shohei Ohtani',  line: '3-4 · HR · 3 RBI' },
+          { name: 'Freddie Freeman', line: '2-3 · 2B · 2 RBI' },
+          { name: 'Mookie Betts',    line: '2-4 · HR · BB' },
+          { name: 'Y. Yamamoto',     line: '7.0 IP · 1 ER · 10 K · W' },
+        ],
+        nextGame: {
+          atVs: 'vs', opponent: 'Chicago Cubs', logoId: 112,
+          date: 'Thu, Mar 26', time: '1:05 PM PT',
+          venue: 'Dodger Stadium', tag: 'Opening Day',
+        },
+      },
+      mets: {
+        id: 121, espnId: 21,
+        name: 'New York Mets',
+        cityShort: 'New York', nameShort: 'Mets',
+        logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/121.svg',
+        wsLabel: '2x World Series Champions',
+        wsTitles: [1969, 1986],
+        stats: [
+          { val: '89-73', lbl: 'Record', rank: '#3 NL East' },
+          { val: '.549',  lbl: 'Win %',  rank: '#3 NL East' },
+          { val: '.243',  lbl: 'Team AVG', rank: '#8 NL' },
+          { val: '197',   lbl: 'Home Runs', rank: '#4 NL' },
+          { val: '3.91',  lbl: 'Team ERA', rank: '#6 NL' },
+          { val: '1,289', lbl: 'Strikeouts' },
+        ],
+        lastGame: 'NYM 4, PHI 2', lastGameDate: 'Sep 28, 2025',
+        performers: [
+          { name: 'Juan Soto',        line: '2-4 · HR · 2 RBI' },
+          { name: 'Francisco Lindor', line: '2-3 · 2B · RBI' },
+          { name: 'Sean Manaea',      line: '6.0 IP · 1 ER · 8 K · W' },
+        ],
+        nextGame: {
+          atVs: 'vs', opponent: 'Milwaukee Brewers', logoId: 158,
+          date: 'Thu, Mar 26', time: '1:10 PM ET',
+          venue: 'Citi Field', tag: 'Opening Day',
+        },
+      },
+    }
+
+    let _appTeam = localStorage.getItem('defaultTeam') || localStorage.getItem('selectedTeam') || 'dodgers'
+
+    function renderAppTeam(key) {
+      const t = APP_TEAMS[key]
+      if (!t) return
+      _appTeam = key
+
+      document.getElementById('app-team-logo').src = t.logoSrc
+      document.getElementById('app-team-city').textContent = t.cityShort
+      document.getElementById('app-team-name').textContent = t.nameShort
+      document.getElementById('app-team-champs').textContent = t.wsLabel || ''
+
+      // WS banners
+      document.getElementById('app-ws-banners').innerHTML = (t.wsTitles || []).map(yr =>
+        `<div class="team-banner"><span class="team-banner-year">${yr}</span></div>`
+      ).join('')
+
+      // Stats
+      document.getElementById('app-team-stats').innerHTML = t.stats.map(s => `
+        <div class="team-stat">
+          <span class="team-stat-val">${s.val}</span>
+          <span class="team-stat-lbl">${s.lbl}</span>
+          ${s.rank ? `<span class="team-stat-rank">${s.rank}</span>` : ''}
+        </div>`).join('')
+
+      // Next game
+      const g = t.nextGame
+      if (g) {
+        const myLogo  = t.logoSrc
+        const oppLogo = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg`
+        const isHome  = g.atVs === 'vs'
+        document.getElementById('app-next-game').innerHTML = `
+          ${g.tag ? `<span class="next-game-tag">${g.tag}</span>` : ''}
+          <div class="next-game-matchup">
+            <img class="next-game-logo" src="${isHome ? myLogo : oppLogo}" alt="">
+            <span class="next-game-sep">${g.atVs}</span>
+            <img class="next-game-logo" src="${isHome ? oppLogo : myLogo}" alt="">
+            <span class="next-game-opp">${g.opponent}</span>
+          </div>
+          <div class="next-game-details">${g.date} · ${g.time}</div>
+          <div class="next-game-details">${g.venue || ''}</div>`
+      }
+
+      // Last game
+      const lg = document.getElementById('app-last-game')
+      if (lg) {
+        lg.innerHTML = `
+          <div class="last-game-score">${t.lastGame}</div>
+          ${(t.performers || []).map(p => `
+            <div class="performer-row">
+              <span class="performer-name">${p.name}</span>
+              <span class="performer-line">${p.line}</span>
+            </div>`).join('')}`
+      }
+
+      // Load news for this team
+      loadAppNews(t.espnId)
+    }
+
+    /* ── News Loader ───────────────────────────────────── */
+    async function loadAppNews(espnId) {
+      const grid = document.getElementById('app-news-grid')
+      if (!grid) return
+      grid.innerHTML = '<div class="news-empty">Loading news...</div>'
+      try {
+        const res  = await fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId || 19}&limit=6`)
+        const data = await res.json()
+        const articles = data.articles || []
+        if (!articles.length) { grid.innerHTML = '<div class="news-empty">No articles found</div>'; return }
+        grid.innerHTML = articles.map(a => {
+          const img  = a.images?.[0]?.url || ''
+          const href = a.links?.web?.href || '#'
+          const ago  = appTimeAgo(a.published)
+          return `<a class="news-item fade-in visible" href="${href}" target="_blank" rel="noopener">
+            ${img ? `<img class="news-img" src="${img}" alt="" loading="lazy">` : ''}
+            <div class="news-body">
+              <div class="news-headline">${a.headline}</div>
+              <div class="news-meta">${ago}</div>
+            </div>
+          </a>`
+        }).join('')
+      } catch (e) {
+        grid.innerHTML = '<div class="news-empty">Could not load news</div>'
+      }
+    }
+
+    function appTimeAgo(iso) {
+      if (!iso) return ''
+      const mins = Math.floor((Date.now() - new Date(iso)) / 60000)
+      if (mins < 60)   return `${mins}m ago`
+      if (mins < 1440)  return `${Math.floor(mins / 60)}h ago`
+      return `${Math.floor(mins / 1440)}d ago`
+    }
+
+    // Initialize
+    renderAppTeam(_appTeam)
   </script>
 </body>
 </html>

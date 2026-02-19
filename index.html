@@ -468,6 +468,12 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.18);
     }
+    .sidebar-news {
+      grid-template-columns: 1fr;
+    }
+    .sidebar-news .news-card-img {
+      height: 110px;
+    }
     /* ── Mobile App Layout ─────────────────────────────── */
     .mob-tabs { display: none; }
 
@@ -3044,6 +3050,15 @@
     </div>
     <!-- Live game card (shown automatically when game is in progress) -->
     <div class="dash-card" id="live-game-card" style="display:none"></div>
+    <!-- News feed -->
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-card-label">News</span>
+      </div>
+      <div class="news-grid sidebar-news" id="news-grid">
+        <div class="news-loading">Loading news...</div>
+      </div>
+    </div>
   </div>
 
   <!-- Main scrollable content -->
