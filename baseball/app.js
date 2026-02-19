@@ -771,8 +771,10 @@ function _setMobTab(view) {
   }
 }
 
-/* ── Demo Live Data (2025 WS Game 7 — Last Out) ── */
+/* ── Demo Live Data (2025 WS Game 7 — Full Game) ── */
 function getDemoLiveData() {
+  const T = true, B = false
+  const p = (inn, top, evt, desc) => ({ about: { inning: inn, isTopInning: top }, result: { event: evt, description: desc } })
   return {
     gameData: {
       status: { abstractGameState: 'Final' },
@@ -783,10 +785,8 @@ function getDemoLiveData() {
     },
     liveData: {
       linescore: {
-        currentInning: 11,
-        isTopInning: true,
-        balls: 2, strikes: 3, outs: 3,
-        offense: {},
+        currentInning: 11, isTopInning: true,
+        balls: 2, strikes: 3, outs: 3, offense: {},
         innings: [
           { num: 1,  away: { runs: 0 }, home: { runs: 0 } },
           { num: 2,  away: { runs: 0 }, home: { runs: 0 } },
@@ -800,10 +800,7 @@ function getDemoLiveData() {
           { num: 10, away: { runs: 0 }, home: { runs: 1 } },
           { num: 11, away: { runs: 0 }, home: {} },
         ],
-        teams: {
-          away: { runs: 3, hits: 7, errors: 0 },
-          home: { runs: 4, hits: 9, errors: 1 },
-        }
+        teams: { away: { runs: 3, hits: 7, errors: 0 }, home: { runs: 4, hits: 9, errors: 1 } }
       },
       plays: {
         currentPlay: {
@@ -828,26 +825,106 @@ function getDemoLiveData() {
           ]
         },
         allPlays: [
-          { about: { inning: 3, isTopInning: true },
-            result: { event: 'Single', description: 'Bo Bichette singles on a line drive to left. Daulton Varsho scores.' } },
-          { about: { inning: 4, isTopInning: false },
-            result: { event: 'Home Run', description: 'Mookie Betts homers (1) on a fly ball to left center. Tie game, 1-1.' } },
-          { about: { inning: 6, isTopInning: true },
-            result: { event: 'Home Run', description: 'Vladimir Guerrero Jr. homers (2) on a fly ball to left field. 2 runs score. Blue Jays lead 3-1.' } },
-          { about: { inning: 7, isTopInning: false },
-            result: { event: 'Double', description: 'Freddie Freeman doubles (3) on a sharp line drive to right. Shohei Ohtani scores. 3-2 Blue Jays.' } },
-          { about: { inning: 9, isTopInning: false },
-            result: { event: 'Single', description: 'Miguel Rojas singles on a ground ball to center. Tommy Edman scores. Tie game, 3-3!' } },
-          { about: { inning: 10, isTopInning: true },
-            result: { event: 'Flyout', description: 'George Springer flies out to center fielder. Yamamoto pitches a scoreless top of the 10th.' } },
-          { about: { inning: 10, isTopInning: false },
-            result: { event: 'Home Run', description: 'Will Smith homers (2) on a fly ball to left center field. Dodgers take the lead, 4-3!' } },
-          { about: { inning: 11, isTopInning: true },
-            result: { event: 'Groundout', description: 'Daulton Varsho grounds out, shortstop to first base.' } },
-          { about: { inning: 11, isTopInning: true },
-            result: { event: 'Flyout', description: 'George Springer flies out to right fielder Mookie Betts.' } },
-          { about: { inning: 11, isTopInning: true },
-            result: { event: 'Strikeout', description: 'Vladimir Guerrero Jr. strikes out swinging. Dodgers win the 2025 World Series!' } },
+          /* ── Top 1 ── */
+          p(1,T,'Flyout','George Springer flies out to center fielder Andy Pages.'),
+          p(1,T,'Groundout','Bo Bichette grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
+          p(1,T,'Lineout','Vladimir Guerrero Jr. lines out to right fielder Mookie Betts.'),
+          /* ── Bottom 1 ── */
+          p(1,B,'Strikeout','Shohei Ohtani called out on strikes.'),
+          p(1,B,'Single','Mookie Betts singles on a ground ball to right field.'),
+          p(1,B,'Grounded Into DP','Freddie Freeman grounds into a double play, shortstop Bo Bichette to second baseman Davis Schneider to first baseman Vladimir Guerrero Jr. Mookie Betts out at 2nd.'),
+          /* ── Top 2 ── */
+          p(2,T,'Walk','Alejandro Kirk walks on 5 pitches.'),
+          p(2,T,'Sac Bunt','Daulton Varsho out on a sacrifice bunt, pitcher Walker Buehler to first baseman Freddie Freeman. Alejandro Kirk to 2nd.'),
+          p(2,T,'Flyout','Addison Barger flies out to left fielder Teoscar Hernandez.'),
+          p(2,T,'Groundout','Davis Schneider grounds out, second baseman Tommy Edman to first baseman Freddie Freeman.'),
+          /* ── Bottom 2 ── */
+          p(2,B,'Flyout','Teoscar Hernandez flies out to center fielder George Springer.'),
+          p(2,B,'Single','Will Smith singles on a line drive to center field.'),
+          p(2,B,'Strikeout','Tommy Edman strikes out swinging.'),
+          p(2,B,'Groundout','Miguel Rojas grounds out, shortstop Bo Bichette to first baseman Vladimir Guerrero Jr.'),
+          /* ── Top 3 ── */
+          p(3,T,'Single','Kevin Kiermaier singles on a ground ball to left field.'),
+          p(3,T,'Groundout','Spencer Horwitz grounds out, second baseman Tommy Edman to first baseman Freddie Freeman. Kevin Kiermaier to 2nd.'),
+          p(3,T,'Flyout','George Springer flies out to right fielder Mookie Betts.'),
+          p(3,T,'Single','Bo Bichette singles on a line drive to left field. Kevin Kiermaier scores.'),
+          p(3,T,'Flyout','Vladimir Guerrero Jr. flies out to center fielder Andy Pages.'),
+          /* ── Bottom 3 ── */
+          p(3,B,'Groundout','Gavin Lux grounds out, third baseman Addison Barger to first baseman Vladimir Guerrero Jr.'),
+          p(3,B,'Strikeout','Andy Pages strikes out swinging.'),
+          p(3,B,'Groundout','Shohei Ohtani grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
+          /* ── Top 4 ── */
+          p(4,T,'Flyout','Alejandro Kirk flies out to left fielder Teoscar Hernandez.'),
+          p(4,T,'Strikeout','Daulton Varsho called out on strikes.'),
+          p(4,T,'Groundout','Addison Barger grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
+          /* ── Bottom 4 ── */
+          p(4,B,'Home Run','Mookie Betts homers (1) on a fly ball to left center field.'),
+          p(4,B,'Single','Freddie Freeman singles on a ground ball to right field.'),
+          p(4,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
+          p(4,B,'Flyout','Will Smith flies out to center fielder George Springer.'),
+          p(4,B,'Groundout','Tommy Edman grounds out, pitcher Jose Berrios to first baseman Vladimir Guerrero Jr.'),
+          /* ── Top 5 ── */
+          p(5,T,'Flyout','Davis Schneider flies out to center fielder Andy Pages.'),
+          p(5,T,'Groundout','Kevin Kiermaier grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
+          p(5,T,'Strikeout','Spencer Horwitz called out on strikes.'),
+          /* ── Bottom 5 ── */
+          p(5,B,'Lineout','Miguel Rojas lines out to second baseman Davis Schneider.'),
+          p(5,B,'Single','Gavin Lux singles on a ground ball to center field.'),
+          p(5,B,'Flyout','Andy Pages flies out to right fielder Kevin Kiermaier.'),
+          p(5,B,'Groundout','Shohei Ohtani grounds out, first baseman Vladimir Guerrero Jr. to pitcher Jose Berrios covering.'),
+          /* ── Top 6 ── */
+          p(6,T,'Single','George Springer singles on a line drive to right field.'),
+          p(6,T,'Strikeout','Bo Bichette strikes out swinging.'),
+          p(6,T,'Home Run','Vladimir Guerrero Jr. homers (2) on a fly ball to left field. George Springer scores.'),
+          p(6,T,'Groundout','Alejandro Kirk grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
+          p(6,T,'Flyout','Daulton Varsho flies out to center fielder Andy Pages.'),
+          /* ── Bottom 6 ── */
+          p(6,B,'Walk','Mookie Betts walks on 4 pitches.'),
+          p(6,B,'Flyout','Freddie Freeman flies out to right fielder Kevin Kiermaier.'),
+          p(6,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
+          p(6,B,'Flyout','Will Smith flies out to left fielder Daulton Varsho.'),
+          /* ── Top 7 ── */
+          p(7,T,'Strikeout','Addison Barger called out on strikes.'),
+          p(7,T,'Groundout','Davis Schneider grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
+          p(7,T,'Flyout','Kevin Kiermaier flies out to center fielder Andy Pages.'),
+          /* ── Bottom 7 ── */
+          p(7,B,'Flyout','Tommy Edman flies out to left fielder Daulton Varsho.'),
+          p(7,B,'Strikeout','Miguel Rojas strikes out looking.'),
+          p(7,B,'Walk','Shohei Ohtani walks on 6 pitches.'),
+          p(7,B,'Double','Freddie Freeman doubles (3) on a sharp line drive to right field. Shohei Ohtani scores.'),
+          p(7,B,'Groundout','Teoscar Hernandez grounds out, shortstop Bo Bichette to first baseman Vladimir Guerrero Jr.'),
+          /* ── Top 8 ── */
+          p(8,T,'Groundout','Spencer Horwitz grounds out, second baseman Tommy Edman to first baseman Freddie Freeman.'),
+          p(8,T,'Single','George Springer singles on a ground ball to center field.'),
+          p(8,T,'Grounded Into DP','Bo Bichette grounds into a double play, shortstop Miguel Rojas to second baseman Tommy Edman to first baseman Freddie Freeman. George Springer out at 2nd.'),
+          /* ── Bottom 8 ── */
+          p(8,B,'Walk','Will Smith walks on 5 pitches.'),
+          p(8,B,'Sac Bunt','Tommy Edman out on a sacrifice bunt, catcher Alejandro Kirk to first baseman Vladimir Guerrero Jr. Will Smith to 2nd.'),
+          p(8,B,'Flyout','Miguel Rojas flies out to center fielder George Springer.'),
+          p(8,B,'Strikeout','Gavin Lux strikes out swinging.'),
+          /* ── Top 9 ── */
+          p(9,T,'Flyout','Vladimir Guerrero Jr. flies out to deep center fielder Andy Pages.'),
+          p(9,T,'Strikeout','Alejandro Kirk strikes out swinging.'),
+          p(9,T,'Groundout','Daulton Varsho grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
+          /* ── Bottom 9 ── */
+          p(9,B,'Strikeout','Andy Pages strikes out looking.'),
+          p(9,B,'Flyout','Teoscar Hernandez flies out to right fielder Kevin Kiermaier.'),
+          p(9,B,'Double','Tommy Edman doubles on a fly ball to left-center field.'),
+          p(9,B,'Single','Miguel Rojas singles on a ground ball to center field. Tommy Edman scores. Tie game, 3\u20133!'),
+          p(9,B,'Groundout','Gavin Lux grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
+          /* ── Top 10 ── */
+          p(10,T,'Strikeout','Addison Barger strikes out swinging.'),
+          p(10,T,'Groundout','Davis Schneider grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
+          p(10,T,'Flyout','George Springer flies out to center fielder Andy Pages.'),
+          /* ── Bottom 10 ── */
+          p(10,B,'Groundout','Mookie Betts grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
+          p(10,B,'Flyout','Freddie Freeman flies out to deep center fielder George Springer.'),
+          p(10,B,'Home Run','Will Smith homers (2) on a fly ball to left-center field. Dodgers take the lead, 4\u20133!'),
+          p(10,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
+          /* ── Top 11 ── */
+          p(11,T,'Groundout','Daulton Varsho grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
+          p(11,T,'Flyout','George Springer flies out to right fielder Mookie Betts.'),
+          p(11,T,'Strikeout','Vladimir Guerrero Jr. strikes out swinging. Dodgers win the 2025 World Series!'),
         ]
       }
     }
@@ -985,6 +1062,7 @@ function renderFullLiveGame(data) {
     return
   }
 
+  const isDemo = !_liveGamePk && isFinal
   const innings = ls.innings ?? []
   const curInning = ls.currentInning ?? 0
   const isTop = ls.isTopInning ?? true
@@ -993,13 +1071,44 @@ function renderFullLiveGame(data) {
   const balls = ls.balls ?? 0
   const strikes = ls.strikes ?? 0
   const outs = ls.outs ?? 0
+  const first = !!ls.offense?.first, second = !!ls.offense?.second, third = !!ls.offense?.third
 
   const cp = data.liveData.plays?.currentPlay
   const batter = cp?.matchup?.batter?.fullName ?? '\u2014'
   const pitcher = cp?.matchup?.pitcher?.fullName ?? '\u2014'
   const pitchEvts = (cp?.playEvents ?? []).filter(e => e.isPitch)
-  const allPlays = (data.liveData.plays?.allPlays ?? []).slice().reverse()
 
+  const inningStr = isFinal ? 'FINAL' : `${isTop ? '\u25b2' : '\u25bc'} ${curInning}`
+
+  /* ── Score Banner ── */
+  const awayRuns = awayTotals.runs ?? 0, homeRuns = homeTotals.runs ?? 0
+  const statusDetail = isFinal ? (innings.length > 9 ? `Final/${innings.length}` : 'Final') : inningStr
+  const bannerHtml = `
+    <div class="lf-banner">
+      ${isDemo ? '<div class="lf-banner-tag">2025 World Series \u00b7 Game 7 \u00b7 Dodger Stadium</div>' : ''}
+      <div class="lf-banner-score">
+        <div class="lf-banner-team">
+          <img class="lf-banner-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}">
+          <div class="lf-banner-info">
+            <span class="lf-banner-name">${away.abbreviation}</span>
+          </div>
+          <span class="lf-banner-runs">${awayRuns}</span>
+        </div>
+        <div class="lf-banner-status">
+          ${isLive ? '<span class="live-dot"></span>' : ''}
+          <span class="lf-banner-status-text">${statusDetail}</span>
+        </div>
+        <div class="lf-banner-team">
+          <span class="lf-banner-runs">${homeRuns}</span>
+          <div class="lf-banner-info" style="text-align:right">
+            <span class="lf-banner-name">${home.abbreviation}</span>
+          </div>
+          <img class="lf-banner-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}">
+        </div>
+      </div>
+    </div>`
+
+  /* ── Line Score Table ── */
   const maxInn = Math.max(9, innings.length)
   const innHeaders = Array.from({ length: maxInn }, (_, i) => {
     const n = i + 1
@@ -1013,32 +1122,32 @@ function renderFullLiveGame(data) {
       const inn = innings.find(x => x.num === n)
       const val = inn ? (inn[side]?.runs ?? '') : ''
       const isCur = isLive && n === curInning
-      return `<td${isCur ? ' class="lf-cur-inn"' : ''}>${val !== '' ? val : (n <= (innings.length || 0) ? '0' : '')}</td>`
+      const display = val !== '' ? val : (n <= (innings.length || 0) ? '0' : '')
+      return `<td${isCur ? ' class="lf-cur-inn"' : ''}>${display !== '' ? display : '\u00b7'}</td>`
     }).join('')
   }
 
-  const inningStr = isFinal ? 'FINAL' : `${isTop ? '\u25b2' : '\u25bc'} ${curInning}`
-
-  const scoreboardHtml = `
+  const lineScoreHtml = `
     <div class="lf-scoreboard">
       <table class="lf-sb-table">
-        <thead><tr><th>Team</th>${innHeaders}<th>R</th><th>H</th><th>E</th></tr></thead>
+        <thead><tr><th></th>${innHeaders}<th class="lf-rhe">R</th><th class="lf-rhe">H</th><th class="lf-rhe">E</th></tr></thead>
         <tbody>
           <tr>
             <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}"><span>${away.abbreviation}</span></div></td>
             ${innRow('away')}
-            <td><strong>${awayTotals.runs ?? 0}</strong></td><td>${awayTotals.hits ?? 0}</td><td>${awayTotals.errors ?? 0}</td>
+            <td class="lf-rhe"><strong>${awayTotals.runs ?? 0}</strong></td><td class="lf-rhe">${awayTotals.hits ?? 0}</td><td class="lf-rhe">${awayTotals.errors ?? 0}</td>
           </tr>
           <tr>
             <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}"><span>${home.abbreviation}</span></div></td>
             ${innRow('home')}
-            <td><strong>${homeTotals.runs ?? 0}</strong></td><td>${homeTotals.hits ?? 0}</td><td>${homeTotals.errors ?? 0}</td>
+            <td class="lf-rhe"><strong>${homeTotals.runs ?? 0}</strong></td><td class="lf-rhe">${homeTotals.hits ?? 0}</td><td class="lf-rhe">${homeTotals.errors ?? 0}</td>
           </tr>
         </tbody>
       </table>
     </div>`
 
-  const SVG_W = 180, SVG_H = 220
+  /* ── Strike Zone SVG ── */
+  const SVG_W = 200, SVG_H = 240
   const mapX = px => ((px + 1.5) / 3.0) * SVG_W
   const mapY = pz => SVG_H - ((pz - 0.5) / 4.5) * SVG_H
   let szTop = 3.5, szBot = 1.5
@@ -1075,6 +1184,7 @@ function renderFullLiveGame(data) {
     return ''
   }
 
+  /* All pitches get numbers */
   const pitchDots = pitchEvts.map((e, i) => {
     const px = e.pitchData?.coordinates?.pX
     const pz = e.pitchData?.coordinates?.pZ
@@ -1083,34 +1193,56 @@ function renderFullLiveGame(data) {
     const code = e.details?.code ?? ''
     const color = pitchColor(code)
     const isLast = i === pitchEvts.length - 1
-    const radius = isLast ? 8 : 5
+    const r = isLast ? 10 : 8
     const num = i + 1
-    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${radius}" fill="${color}" fill-opacity="0.82" stroke="#fff" stroke-width="${isLast ? 1.5 : 0.8}" stroke-opacity="0.6"/>${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="middle" font-size="8" font-family="Inter,sans-serif" font-weight="700" fill="#fff" stroke="none">${num}</text>` : ''}`
+    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${color}" fill-opacity="0.85" stroke="#fff" stroke-width="${isLast ? 2 : 1}" stroke-opacity="0.7"/>
+      <text x="${cx.toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" text-anchor="middle" font-size="${isLast ? 9 : 7.5}" font-family="Inter,sans-serif" font-weight="700" fill="#fff" stroke="none">${num}</text>`
   }).join('\n')
 
-  const zoneSvg = `<svg class="lf-zone-svg" width="${SVG_W}" height="${SVG_H}" xmlns="http://www.w3.org/2000/svg">
+  const zoneSvg = `<svg class="lf-zone-svg" viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${SVG_W}" height="${SVG_H}" fill="none"/>
-  <rect x="${zx1.toFixed(1)}" y="${zy1.toFixed(1)}" width="${zw.toFixed(1)}" height="${zh.toFixed(1)}" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
-  <line x1="${(zx1 + thirdW).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
-  <line x1="${(zx1 + thirdW * 2).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW * 2).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
-  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
-  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH * 2).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH * 2).toFixed(1)}" stroke="rgba(255,255,255,0.15)" stroke-width="0.8"/>
+  <rect x="${zx1.toFixed(1)}" y="${zy1.toFixed(1)}" width="${zw.toFixed(1)}" height="${zh.toFixed(1)}" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" rx="2"/>
+  <line x1="${(zx1 + thirdW).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <line x1="${(zx1 + thirdW * 2).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW * 2).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH).toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH * 2).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH * 2).toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
   <polygon points="${platePts}" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
   ${pitchDots}
 </svg>`
 
-  function liveCountDots(count, max, cls) {
+  /* ── Count / Outs / Bases ── */
+  function lfDots(count, max, cls) {
     return Array.from({ length: max }, (_, i) =>
       `<span class="lf-count-dot ${i < count ? cls : ''}"></span>`).join('')
   }
-
+  const countText = `${balls}\u2013${strikes}`
   const countHtml = `
-    <div class="lf-count-col">
-      <div class="lf-count-row"><span class="lf-count-lbl">B</span>${liveCountDots(balls, 3, 'ball')}</div>
-      <div class="lf-count-row"><span class="lf-count-lbl">S</span>${liveCountDots(strikes, 2, 'strike')}</div>
-      <div class="lf-count-row"><span class="lf-count-lbl">O</span>${liveCountDots(outs, 2, 'out')}</div>
+    <div class="lf-situation">
+      <div class="lf-count-text">${countText}</div>
+      <div class="lf-count-col">
+        <div class="lf-count-row"><span class="lf-count-lbl">B</span>${lfDots(balls, 4, 'ball')}</div>
+        <div class="lf-count-row"><span class="lf-count-lbl">S</span>${lfDots(strikes, 3, 'strike')}</div>
+        <div class="lf-count-row"><span class="lf-count-lbl">O</span>${lfDots(outs, 3, 'out')}</div>
+      </div>
+      ${isLive ? `<div class="lf-bases-mini">
+        <div class="base base-2b ${second ? 'on' : ''}"></div>
+        <div class="base base-3b ${third ? 'on' : ''}"></div>
+        <div class="base base-1b ${first ? 'on' : ''}"></div>
+        <div class="base base-home"></div>
+      </div>` : ''}
     </div>`
 
+  /* ── Pitch Legend ── */
+  const legendHtml = `
+    <div class="lf-pitch-legend">
+      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#4caf50"></span>Ball</span>
+      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#f44336"></span>Called Strike</span>
+      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#ff9800"></span>Swinging Strike</span>
+      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#ffeb3b"></span>Foul</span>
+      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#2196f3"></span>In Play</span>
+    </div>`
+
+  /* ── Pitch Log ── */
   const pitchLogRows = pitchEvts.length === 0
     ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.2);padding:0.5rem 0;">No pitches yet</div>'
     : [...pitchEvts].reverse().map((e, ri) => {
@@ -1120,41 +1252,62 @@ function renderFullLiveGame(data) {
       const code = e.details?.code ?? ''
       return `<div class="lf-pitch-row">
         <span class="lf-pitch-num">${idx}</span>
-        <span class="lf-pitch-speed">${speed}<small style="font-size:0.55rem;font-family:Inter,sans-serif;color:rgba(255,255,255,0.4)"> mph</small></span>
+        <span class="lf-pitch-speed">${speed}<small> mph</small></span>
         <span class="lf-pitch-type">${type}</span>
         <span class="lf-pitch-result ${pitchResultClass(code)}">${pitchResultLabel(code)}</span>
       </div>`
     }).join('')
 
-  const ppRows = allPlays.length === 0
+  /* ── Inning-Grouped Play-by-Play ── */
+  const ordinal = n => {
+    if (n >= 11 && n <= 13) return n + 'th'
+    const s = ['th','st','nd','rd']
+    return n + (s[n % 10] || s[0])
+  }
+
+  const rawPlays = data.liveData.plays?.allPlays ?? []
+  const groups = []
+  let curKey = null, curGroup = null
+  for (const play of rawPlays) {
+    const inn = play.about?.inning ?? 0
+    const top = play.about?.isTopInning ?? true
+    const key = `${top ? 'T' : 'B'}${inn}`
+    if (key !== curKey) {
+      curGroup = { inning: inn, isTop: top, plays: [] }
+      groups.push(curGroup)
+      curKey = key
+    }
+    curGroup.plays.push(play)
+  }
+  groups.reverse()
+
+  const ppHtml = groups.length === 0
     ? '<div class="lf-empty">No plays yet</div>'
-    : allPlays.map(play => {
-      const inn = play.about?.inning ?? ''
-      const top = play.about?.isTopInning ?? true
-      const innInd = inn ? `${top ? '\u25b2' : '\u25bc'}${inn}` : '\u2014'
-      const event = play.result?.event ?? ''
-      const desc = play.result?.description ?? ''
-      return `<div class="lf-pp-row">
-        <div class="lf-pp-inn">${innInd}</div>
-        <div>
+    : groups.map(g => {
+      const arrow = g.isTop ? '\u25b2' : '\u25bc'
+      const label = `${arrow} ${g.isTop ? 'Top' : 'Bottom'} ${ordinal(g.inning)}`
+      const playRows = [...g.plays].reverse().map(play => {
+        const event = play.result?.event ?? ''
+        const desc = play.result?.description ?? ''
+        const isScoring = /scores|homers|home run/i.test(desc)
+        return `<div class="lf-pp-play${isScoring ? ' lf-pp-scoring' : ''}">
           <div class="lf-pp-event">${event}</div>
           <div class="lf-pp-desc">${desc}</div>
-        </div>
+        </div>`
+      }).join('')
+      return `<div class="lf-pp-group">
+        <div class="lf-pp-inning-hdr">${label}</div>
+        ${playRows}
       </div>`
     }).join('')
 
-  const isDemo = !_liveGamePk && isFinal
-  const headerTitle = isDemo ? '2025 World Series \u00b7 Game 7' : 'Live Game'
+  /* ── At-Bat Labels ── */
   const atBatLabel = isFinal ? 'Final At-Bat' : 'Current At-Bat'
 
+  /* ── Assemble ── */
   el.innerHTML = `
-    <div class="lf-header">
-      <span class="lf-title">${headerTitle}</span>
-      ${isLive ? '<span class="lf-status"><span class="live-dot"></span>LIVE</span>' : ''}
-      ${isFinal ? '<span style="font-size:0.65rem;font-weight:700;letter-spacing:0.15em;color:rgba(255,255,255,0.4)">FINAL</span>' : ''}
-      <span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:0.06em;color:rgba(255,255,255,0.5);margin-left:auto">${inningStr}</span>
-    </div>
-    ${scoreboardHtml}
+    ${bannerHtml}
+    ${lineScoreHtml}
     <div class="lf-body">
       <div class="lf-at-bat">
         <div class="lf-at-bat-header">${atBatLabel}</div>
@@ -1162,10 +1315,11 @@ function renderFullLiveGame(data) {
           <div class="lf-matchup-row"><span class="lf-role">AB</span><span class="lf-player-name">${batter}</span></div>
           <div class="lf-matchup-row"><span class="lf-role">P</span><span class="lf-player-name">${pitcher}</span></div>
         </div>
-        <div class="lf-zone-count">
+        <div class="lf-zone-area">
           <div class="lf-zone-wrap">${zoneSvg}</div>
           ${countHtml}
         </div>
+        ${legendHtml}
         <div class="lf-pitch-log">
           <div class="lf-pitch-log-label">Pitch Log</div>
           ${pitchLogRows}
@@ -1173,7 +1327,7 @@ function renderFullLiveGame(data) {
       </div>
       <div class="lf-play-log">
         <div class="lf-play-log-header">Play-by-Play</div>
-        <div class="lf-play-log-scroll">${ppRows}</div>
+        <div class="lf-play-log-scroll">${ppHtml}</div>
       </div>
     </div>`
 }
