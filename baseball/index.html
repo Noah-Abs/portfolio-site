@@ -21,54 +21,21 @@
       alt="Dodgers"
       onclick="switchView('home')"
       style="cursor:pointer" />
-    <div class="bar-team-info" id="bar-team-info" onclick="toggleTeamDropdown()">
+    <div class="bar-team-info" id="bar-team-info">
       <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
       <span class="bar-team-sub" id="bar-team-sub">NL West</span>
-      <div class="team-dropdown" id="team-dropdown">
-        <div class="td-team-header" id="td-team-header">
-          <img id="td-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="LAD">
-          <div class="td-team-header-info">
-            <div class="td-team-header-name" id="td-name">Los Angeles Dodgers</div>
-            <div class="td-team-header-div" id="td-division">NL West</div>
-          </div>
-        </div>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('home')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
-          Home
-        </button>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('live')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".5"/><path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".5"/></svg>
-          Live Game
-        </button>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('news')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
-          News
-        </button>
-        <div class="td-divider"></div>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('depth')">
-          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="14" width="3.5" height="7" rx="1"/><rect x="10.25" y="9" width="3.5" height="12" rx="1"/><rect x="16.5" y="5" width="3.5" height="16" rx="1"/></svg>
-          Depth Chart
-        </button>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); openSidePanel('schedule')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          Schedule
-        </button>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('contracts')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-          Contracts
-        </button>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); openSidePanel('roster')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
-          Roster
-        </button>
-        <div class="td-divider"></div>
-        <button class="td-nav-item" onclick="event.stopPropagation(); closeTeamDropdown(); switchView('settings')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
+    </div>
+    <div class="bar-actions">
+      <button class="bar-settings-btn" id="bar-settings-btn" onclick="toggleSettingsDropdown()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="settings-dropdown" id="settings-dropdown">
+        <button class="sd-item" onclick="closeSettingsDropdown(); switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/><circle cx="18" cy="8" r="3"/><path d="M18 6v4M16 8h4"/></svg>
+          Teams
         </button>
       </div>
     </div>
-    <div class="bar-actions"></div>
   </div>
 
   <!-- Fixed left sidebar -->
@@ -228,6 +195,10 @@
     <button class="rn-item" data-view="news" onclick="switchView('news')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
       News
+    </button>
+    <button class="rn-item" data-view="settings" onclick="switchView('settings')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
     </button>
     <div class="hero-next" id="hero-next" style="margin-top:auto; padding: 0 0.6rem 0.75rem;"></div>
   </nav>

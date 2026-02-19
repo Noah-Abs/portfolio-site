@@ -464,35 +464,26 @@ function closeGameDetail() {
   document.getElementById('schedule-list').style.display = ''
 }
 
-/* ── Team Dropdown ── */
-function toggleTeamDropdown() {
-  const info = document.getElementById('bar-team-info')
-  const dd = document.getElementById('team-dropdown')
-  if (!info || !dd) return
-  const opening = !dd.classList.contains('open')
+/* ── Settings Dropdown ── */
+function toggleSettingsDropdown() {
+  const btn = document.getElementById('bar-settings-btn')
+  const dd = document.getElementById('settings-dropdown')
+  if (!btn || !dd) return
   dd.classList.toggle('open')
-  info.classList.toggle('open')
-  if (opening) {
-    const t = APP_TEAMS[_currentTeamKey]
-    if (t) {
-      document.getElementById('td-logo').src = t.logoSrc
-      document.getElementById('td-name').textContent = t.name
-      document.getElementById('td-division').textContent = t.division
-    }
-  }
+  btn.classList.toggle('open')
 }
 
-function closeTeamDropdown() {
-  document.getElementById('team-dropdown')?.classList.remove('open')
-  document.getElementById('bar-team-info')?.classList.remove('open')
+function closeSettingsDropdown() {
+  document.getElementById('settings-dropdown')?.classList.remove('open')
+  document.getElementById('bar-settings-btn')?.classList.remove('open')
 }
 
 /* ── Event Listeners ── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeMoreSheet(); closeWsModal(); closeTeamDropdown() }
+  if (e.key === 'Escape') { closeMoreSheet(); closeWsModal(); closeSettingsDropdown() }
 })
 document.addEventListener('click', e => {
-  if (!e.target.closest('#bar-team-info')) closeTeamDropdown()
+  if (!e.target.closest('#bar-settings-btn') && !e.target.closest('#settings-dropdown')) closeSettingsDropdown()
 })
 
 /* ── Side Panel ── */
