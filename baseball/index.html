@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Baseball Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-team="dodgers">
+
+  <!-- Team header bar -->
+  <div class="opening-day-bar" style="position:relative;">
+    <img class="bar-logo" id="bar-logo"
+      src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
+      alt="Dodgers"
+      onclick="switchView('home')"
+      style="cursor:pointer" />
+    <div class="bar-team-info" id="bar-team-info">
+      <span class="bar-team-name" id="bar-team-name">Los Angeles Dodgers</span>
+      <span class="bar-team-sub" id="bar-team-sub">NL West</span>
+    </div>
+    <div class="bar-actions">
+      <button class="bar-settings-btn" id="bar-settings-btn" onclick="toggleSettingsDropdown()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="settings-dropdown" id="settings-dropdown">
+        <button class="sd-item" onclick="closeSettingsDropdown(); switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/><circle cx="18" cy="8" r="3"/><path d="M18 6v4M16 8h4"/></svg>
+          Teams
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed left sidebar -->
+  <div class="fixed-sidebar" id="fixed-sidebar">
+    <div class="dash-label">
+      <span class="stats-season">2025 Season</span>
+      <span class="stats-divider">·</span>
+      <span class="stats-division">NL West</span>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-card-label">Team Stats</span>
+      </div>
+      <div class="team-stats"></div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-card-label">Last Game</span>
+        <span class="performers-date dash-card-sub">Loading…</span>
+      </div>
+      <div class="lg-score" id="lg-score"></div>
+      <div class="performers-label">Top Performers</div>
+      <div class="performers"></div>
+    </div>
+    <div class="dash-card" id="live-game-card" style="display:none"></div>
+  </div>
+
+  <!-- Main scrollable content -->
+  <div class="main-content">
+
+  <!-- Home view -->
+  <div class="view-section active" id="view-home">
+  <section class="hero-section">
+    <img class="hero-logo" id="hero-logo"
+      src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg"
+      alt="Dodgers" />
+    <div class="hero-wordmark">
+      <span class="hero-city" id="hero-city">Los Angeles</span>
+      <span class="hero-team-name" id="hero-team-name-display">Dodgers</span>
+    </div>
+    <span class="hero-champs" id="hero-champs">Back-to-Back World Series Champions</span>
+    <div class="ws-banners" id="ws-banners"></div>
+  </section>
+  <div class="mob-home-cards" id="mob-home-cards">
+    <div class="mhc-live" id="mhc-live" style="display:none"></div>
+    <div class="mhc-row">
+      <div class="mhc-card" id="mhc-next"></div>
+      <div class="mhc-card" id="mhc-headline"></div>
+    </div>
+    <div class="mhc-card mhc-stats-card">
+      <div class="mhc-label">Team Stats</div>
+      <div class="mhc-stats" id="mhc-stats"></div>
+    </div>
+    <div class="mhc-card">
+      <div class="mhc-label">Last Game</div>
+      <div id="mhc-last-game"></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Live game full view -->
+  <div class="view-section" id="view-live">
+    <div class="live-full" id="live-full-view">
+      <div class="lf-empty">No live game data available.</div>
+    </div>
+  </div>
+
+  <!-- Depth Chart view -->
+  <div class="view-section" id="view-depth">
+    <div class="dc-wrap">
+      <div class="dc-page-header">
+        <div class="dc-page-title">Depth Chart</div>
+        <div class="dc-page-sub" id="dc-page-sub">Los Angeles Dodgers</div>
+      </div>
+      <div class="dc-section-label">POSITION PLAYERS</div>
+      <div class="dc-grid" id="dc-grid-pos"></div>
+      <div class="dc-section-label">PITCHERS</div>
+      <div class="dc-grid" id="dc-grid-pit"></div>
+    </div>
+  </div>
+
+  <!-- Contracts & Payroll view -->
+  <div class="view-section" id="view-contracts">
+    <div class="contracts-wrap" id="contracts-wrap">
+      <div class="dc-loading">Loading contracts…</div>
+    </div>
+  </div>
+
+  <!-- News full page view -->
+  <div class="view-section" id="view-news">
+    <div class="news-page-wrap" id="news-page-wrap">
+      <div class="news-page-header">
+        <div class="news-page-title">News</div>
+        <div class="news-page-sub" id="news-page-sub">Latest headlines</div>
+      </div>
+      <div class="news-page-featured" id="news-featured"></div>
+      <div class="news-page-grid" id="news-page-grid"></div>
+      <div class="news-page-section" id="news-mlb-section" style="display:none">
+        <div class="news-section-label">Around MLB</div>
+        <div class="news-page-grid" id="news-mlb-grid"></div>
+      </div>
+      <div class="news-page-loading" id="news-page-loading">Loading news…</div>
+    </div>
+  </div>
+
+  <!-- Settings view -->
+  <div class="view-section" id="view-settings">
+    <div class="settings-wrap">
+      <div class="settings-header">
+        <div class="settings-title">Settings</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-section-label">Teams</div>
+        <div class="settings-section-desc">Choose your team. Data, stats, and news will update to match.</div>
+        <div class="settings-team-list" id="settings-team-list"></div>
+        <div class="settings-save-row">
+          <button class="settings-save-btn" id="settings-save-btn" onclick="settingsSaveTeam()">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Save as Default
+          </button>
+          <div class="settings-saved-msg" id="settings-saved-msg">Saved!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /main-content -->
+
+  <!-- Right navigation panel (desktop only) -->
+  <nav class="right-nav" id="right-nav">
+    <div class="rn-label">Navigate</div>
+    <button class="rn-item active" data-view="home" onclick="switchView('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
+      Home
+    </button>
+    <button class="rn-item" data-view="live" onclick="switchView('live')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".5"/><path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".5"/></svg>
+      Live Game
+      <span class="rn-badge" id="sb-live-badge" style="display:none">LIVE</span>
+    </button>
+    <button class="rn-item" data-view="depth" onclick="switchView('depth')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="14" width="3.5" height="7" rx="1"/><rect x="10.25" y="9" width="3.5" height="12" rx="1"/><rect x="16.5" y="5" width="3.5" height="16" rx="1"/></svg>
+      Depth Chart
+    </button>
+    <button class="rn-item" data-view="schedule" onclick="openSidePanel('schedule')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Schedule
+    </button>
+    <button class="rn-item" data-view="contracts" onclick="switchView('contracts')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Contracts
+    </button>
+    <button class="rn-item" data-view="roster" onclick="openSidePanel('roster')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      Roster
+    </button>
+    <button class="rn-item" data-view="news" onclick="switchView('news')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
+      News
+    </button>
+    <button class="rn-item" data-view="settings" onclick="switchView('settings')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+    <div class="hero-next" id="hero-next"></div>
+  </nav>
+
+  <!-- Side panel backdrop -->
+  <div class="panel-backdrop" id="panel-backdrop" onclick="closePanel()"></div>
+
+  <!-- Side panel -->
+  <div class="side-panel" id="side-panel">
+    <div class="sp-header" id="sp-header">
+      <span class="sp-title" id="sp-title">Schedule</span>
+      <button class="filter-trigger-btn" id="filter-trigger-btn" onclick="toggleFilterSheet()" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 3h14v1.5l-5 5V15l-4-2V9.5L1 4.5V3z"/>
+        </svg>
+        Filter
+        <span class="filter-badge" id="filter-badge" style="display:none">0</span>
+      </button>
+      <button class="sp-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="sp-tabs" id="sp-tabs">
+      <button class="sp-tab active" onclick="switchSideTab('schedule')">Schedule</button>
+      <button class="sp-tab" onclick="switchSideTab('roster')">40-Man Roster</button>
+    </div>
+    <div class="sp-body" id="sp-body">
+      <div class="sp-panel active" id="sp-schedule">
+        <div class="sched-filter-sheet" id="sched-filter-sheet" style="display:none">
+          <div class="sched-check-group-label">Location</div>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-home" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Home Games</span>
+          </label>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-away" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Away Games</span>
+          </label>
+          <div class="sched-check-group-label sched-check-gap">Day of Week</div>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-weekday" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Weekdays</span>
+          </label>
+          <label class="sched-check-row">
+            <input type="checkbox" id="filter-weekend" onchange="applyScheduleFilters()">
+            <span class="sched-check-box"></span>
+            <span class="sched-check-label">Weekends</span>
+          </label>
+          <div class="filter-sheet-actions">
+            <button class="filter-clear-btn" onclick="clearScheduleFilters()">Clear All</button>
+            <button class="filter-done-btn" onclick="toggleFilterSheet()">Done</button>
+          </div>
+        </div>
+        <div class="schedule-list" id="schedule-list"></div>
+        <div class="game-detail" id="game-detail" style="display:none">
+          <button class="gd-back" onclick="closeGameDetail()">‹ Schedule</button>
+          <div class="gd-scroll" id="gd-scroll"></div>
+        </div>
+      </div>
+      <div class="sp-panel" id="sp-roster">
+        <div class="roster-placeholder">Roster Coming Soon</div>
+      </div>
+      <div class="sp-panel" id="sp-news"></div>
+    </div>
+  </div>
+
+  <!-- Full-page player overlay -->
+  <div class="player-overlay" id="player-overlay">
+    <div class="po-topbar">
+      <button class="po-back" onclick="closePlayerOverlay()">← Back to Roster</button>
+      <span class="po-team-label" id="po-team-label">Los Angeles Dodgers</span>
+    </div>
+    <div class="po-scroll" id="po-scroll">
+      <div class="po-hero">
+        <div class="po-headshot-wrap">
+          <img class="po-headshot" id="po-headshot" src="" alt="" />
+        </div>
+        <div class="po-identity">
+          <div class="po-jersey-num" id="po-jersey-num"></div>
+          <div class="po-name" id="po-name"></div>
+          <div class="po-pos" id="po-pos"></div>
+          <div class="po-bio" id="po-bio"></div>
+        </div>
+      </div>
+      <div class="po-summary" id="po-summary" style="display:none"></div>
+      <div class="po-stats" id="po-stats">
+        <div class="pd-loading">Loading…</div>
+      </div>
+    </div>
+    <div class="po-bottom-bar">
+      <button class="po-bottom-back" onclick="closePlayerOverlay()" aria-label="Back to Roster">
+        <img id="po-back-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Back">
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts: data first, then API layer, then app logic -->
+  <script src="teams.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Mobile bottom tab bar (3-tab) -->
+  <nav class="mob-tabs" id="mob-tabs">
+    <button class="mob-tab" id="mobtab-live" onclick="switchView('live')">
+      <span class="mob-live-dot" id="mob-live-dot" style="display:none"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>
+        <path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".45"/>
+        <path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".45"/>
+      </svg>
+      <span class="mob-tab-label">Live</span>
+    </button>
+    <button class="mob-tab-center" id="mobtab-home" onclick="switchView('home')">
+      <img id="mob-center-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Home">
+    </button>
+    <button class="mob-tab" id="mobtab-more" onclick="openMoreSheet()">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+        <circle cx="5" cy="12" r="2"/>
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="19" cy="12" r="2"/>
+      </svg>
+      <span class="mob-tab-label">More</span>
+    </button>
+  </nav>
+
+  <!-- More sheet backdrop + slide-up sheet -->
+  <div class="mob-more-backdrop" id="mob-more-backdrop" onclick="closeMoreSheet()"></div>
+  <div class="mob-more-sheet" id="mob-more-sheet">
+    <div class="mob-more-handle" id="mob-more-handle"></div>
+    <div class="mob-more-content">
+      <div class="mob-more-grid">
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('depth')">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+            <rect x="4" y="14" width="3.5" height="7" rx="1"/>
+            <rect x="10.25" y="9" width="3.5" height="12" rx="1"/>
+            <rect x="16.5" y="5" width="3.5" height="16" rx="1"/>
+          </svg>
+          <span>Depth Chart</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('schedule')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          <span>Schedule</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('contracts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M2 10h20"/>
+          </svg>
+          <span>Contracts</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('roster')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <circle cx="12" cy="7" r="4"/>
+            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+          </svg>
+          <span>Roster</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('news')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/>
+            <path d="M10 6h8M10 10h8M10 14h4"/>
+          </svg>
+          <span>News</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WS Championship Modal -->
+  <div class="ws-backdrop" id="ws-backdrop" onclick="closeWsModal()"></div>
+  <div class="ws-modal" id="ws-modal">
+    <div class="ws-modal-card" onclick="event.stopPropagation()">
+      <div class="ws-modal-header">
+        <div>
+          <div class="ws-modal-year-num" id="ws-modal-year"></div>
+          <div class="ws-modal-subtitle" id="ws-modal-subtitle"></div>
+        </div>
+        <button class="ws-modal-close" onclick="closeWsModal()">✕</button>
+      </div>
+      <div class="ws-modal-body">
+        <div class="ws-modal-img-wrap">
+          <img class="ws-modal-img" id="ws-modal-img" src="" alt="" />
+          <span class="ws-modal-img-placeholder" id="ws-modal-img-placeholder">🏆</span>
+        </div>
+        <div class="ws-modal-details">
+          <div class="ws-modal-result" id="ws-modal-result"></div>
+          <div class="ws-modal-meta" id="ws-modal-meta"></div>
+          <p class="ws-modal-desc" id="ws-modal-desc"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
