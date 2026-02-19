@@ -699,7 +699,11 @@ function pitGrid(s) {
 function renderSettingsTeams() {
   const list = document.getElementById('settings-team-list')
   if (!list) return
-  list.innerHTML = Object.entries(APP_TEAMS).map(([key, t]) => `
+  /* Only show the current team (each subdirectory is its own team page) */
+  const teams = _urlTeam
+    ? Object.entries(APP_TEAMS)
+    : Object.entries(APP_TEAMS).filter(([key]) => key === 'dodgers')
+  list.innerHTML = teams.map(([key, t]) => `
     <div class="settings-team-row ${key === _currentTeamKey ? 'active' : ''}" data-team="${key}" onclick="settingsPickTeam('${key}')">
       <img src="${t.logoSrc}" alt="${t.nameShort}">
       <div class="settings-team-info">
@@ -1355,7 +1359,8 @@ function loadContracts(key) {
 }
 
 /* ── Initialize ── */
-const saved = localStorage.getItem('defaultTeam') || localStorage.getItem('selectedTeam')
-renderTeam(saved && APP_TEAMS[saved] ? saved : 'dodgers')
+const _urlTeam = window.__TEAM_KEY__ || null
+const _initTeam = _urlTeam && APP_TEAMS[_urlTeam] ? _urlTeam : 'dodgers'
+renderTeam(_initTeam)
 
 /* Always start on home */
