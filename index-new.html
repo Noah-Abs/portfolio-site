@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0f" />
   <title>Noah — Portfolio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -668,53 +671,58 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.5rem;
-      transition: border-color 0.3s, transform 0.3s;
-    }
-
-    .team-info-card:hover {
-      border-color: rgba(124,58,237,0.3);
-      transform: translateY(-3px);
+      padding: 1.25rem;
+      transition: border-color 0.3s;
     }
 
     .team-info-label {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      color: var(--accent2);
-      letter-spacing: 0.12em;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      margin-bottom: 1rem;
+      color: var(--muted);
+      margin-bottom: 0.85rem;
+      opacity: 0.7;
     }
 
     .team-stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
+      gap: 0;
     }
 
     .team-stat {
       display: flex;
       flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.85rem 0.4rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
     }
+    .team-stat:nth-child(2n) { border-right: none; }
+    .team-stat:nth-last-child(-n+2) { border-bottom: none; }
 
     .team-stat-val {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: var(--text);
-      line-height: 1.2;
+      line-height: 1;
     }
 
     .team-stat-lbl {
-      font-size: 0.72rem;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
       color: var(--muted);
-      font-weight: 500;
     }
 
     .team-stat-rank {
-      font-size: 0.62rem;
+      font-size: 0.55rem;
       font-family: var(--mono);
       color: var(--accent2);
-      margin-top: 0.1rem;
     }
 
     /* Next game card */
@@ -786,7 +794,17 @@
       font-size: 0.7rem;
       font-family: var(--mono);
       color: var(--muted);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .performers-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      opacity: 0.6;
     }
 
     .performer-row:last-child { border-bottom: none; }
@@ -935,15 +953,89 @@
       text-transform: uppercase;
     }
 
+    /* ── Mobile App Bottom Tab Bar ────────────────────── */
+    .app-tabs {
+      display: none;
+    }
+
     /* ── Responsive ─────────────────────────────────────── */
     @media (max-width: 768px) {
-      nav { padding: 1rem 1.25rem; }
-      .nav-links { gap: 1.25rem; }
+      /* Nav: compact app-style header */
+      nav {
+        padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 1rem 0.6rem;
+      }
+      .nav-links { display: none; }
+
+      /* Bottom tab bar */
+      .app-tabs {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(10,10,15,0.95);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-top: 1px solid var(--border);
+        z-index: 100;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .app-tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        background: none;
+        border: none;
+        color: rgba(148,163,184,0.6);
+        font-family: var(--font);
+        font-size: 0.6rem;
+        font-weight: 600;
+        padding: 8px 14px;
+        min-width: 56px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 0.2s;
+        text-decoration: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .app-tab svg { width: 22px; height: 22px; stroke-width: 1.8; }
+      .app-tab.active { color: var(--accent2); }
+      .app-tab:active { opacity: 0.7; }
+
+      /* Body padding for bottom tabs */
+      body {
+        padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* Hero: shorter on mobile */
+      .hero {
+        min-height: auto;
+        padding: 5rem 1.5rem 3rem;
+      }
+      .hero h1 { font-size: clamp(2rem, 10vw, 3.5rem); }
+
+      /* Sections: less padding */
+      section { padding: 3rem 1.25rem; }
+      .container { padding: 0; }
+
+      /* Team section tighter */
+      .team-hero { margin-top: 2rem; gap: 0.75rem; }
+      .team-logo { height: clamp(70px, 20vw, 100px); }
+      .team-info-row { grid-template-columns: 1fr; gap: 1rem; margin-top: 2rem; }
+      .team-nav-row { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1.5rem; }
+
+      /* General layout */
       .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
       .contact-card { padding: 2.5rem 1.5rem; }
       .projects-grid { grid-template-columns: 1fr; }
-      .team-info-row { grid-template-columns: 1fr; }
       .news-grid { grid-template-columns: 1fr; }
+
+      /* Bigger tap targets for links */
+      .team-nav-card { padding: 1rem 0.5rem; }
+      .tnc-label { font-size: 0.68rem; }
     }
   </style>
 </head>
@@ -1239,6 +1331,30 @@
     <span>// designed & built by noah · 2026</span>
   </footer>
 
+  <!-- Mobile bottom tab bar -->
+  <div class="app-tabs" id="app-tabs">
+    <a class="app-tab active" data-section="hero" onclick="scrollToTop(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
+      Home
+    </a>
+    <a class="app-tab" href="#team" onclick="setAppTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4" stroke-opacity=".5"/><path d="M17.7 17.7a8 8 0 0 0 0-11.4" stroke-opacity=".5"/></svg>
+      Team
+    </a>
+    <a class="app-tab" href="#news" onclick="setAppTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
+      News
+    </a>
+    <a class="app-tab" href="#projects" onclick="setAppTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Projects
+    </a>
+    <a class="app-tab" href="#contact" onclick="setAppTab(this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Contact
+    </a>
+  </div>
+
   <script>
     // Scroll fade-in observer
     const observer = new IntersectionObserver(
@@ -1354,6 +1470,8 @@
       if (lg) {
         lg.innerHTML = `
           <div class="last-game-score">${t.lastGame}</div>
+          <div class="last-game-date">${t.lastGameDate || ''}</div>
+          <div class="performers-label">Top Performers</div>
           ${(t.performers || []).map(p => `
             <div class="performer-row">
               <span class="performer-name">${p.name}</span>
@@ -1515,6 +1633,7 @@
             lg.innerHTML = `
               <div class="last-game-score">${scoreText}</div>
               <div class="last-game-date">${dateText}</div>
+              <div class="performers-label">Top Performers</div>
               ${performers.map(p => `
                 <div class="performer-row">
                   <span class="performer-name">${p.name}</span>
@@ -1524,6 +1643,41 @@
         }
       } catch (e) { console.warn('App last game fetch failed', e) }
     }
+
+    /* ── Mobile tab bar ─────────────────────────────────── */
+    function setAppTab(el) {
+      document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'))
+      el.classList.add('active')
+    }
+
+    function scrollToTop(el) {
+      document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'))
+      el.classList.add('active')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    // Scroll spy: highlight the correct tab based on scroll position
+    const _tabSections = ['team', 'news', 'about', 'projects', 'contact']
+    window.addEventListener('scroll', () => {
+      const tabs = document.querySelectorAll('.app-tab')
+      if (!tabs.length || window.innerWidth > 768) return
+      const scrollY = window.scrollY + 120
+      let activeIdx = 0 // default to Home
+      for (let i = 0; i < _tabSections.length; i++) {
+        const sec = document.getElementById(_tabSections[i])
+        if (sec && sec.offsetTop <= scrollY) {
+          activeIdx = i + 1 // +1 because Home is index 0
+        }
+      }
+      // Map section index to tab index (Home=0, Team=1, News=2, Projects=3, Contact=4)
+      // Sections: team->1, news->2, about->skip(projects tab), projects->3, contact->4
+      let tabIdx = 0
+      if (activeIdx === 1) tabIdx = 1      // team
+      else if (activeIdx === 2) tabIdx = 2  // news
+      else if (activeIdx >= 3 && activeIdx <= 4) tabIdx = 3 // about/projects
+      else if (activeIdx === 5) tabIdx = 4  // contact
+      tabs.forEach((t, i) => t.classList.toggle('active', i === tabIdx))
+    }, { passive: true })
 
     // Initialize
     renderAppTeam(_appTeam)
