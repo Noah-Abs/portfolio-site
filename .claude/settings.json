@@ -3,7 +3,8 @@
     "allow": [
       "Read(//tmp//**)",
       "Read(//c/Users/noaha//**)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git -C \"c:/Users/noaha/portfolio-site\" diff --stat)"
     ]
   }
 }

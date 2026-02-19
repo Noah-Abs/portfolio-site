@@ -51,7 +51,7 @@
       inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
       pointer-events: none;
-      z-index: 9999;
+      z-index: 1;
       opacity: 0.4;
     }
 
@@ -151,7 +151,7 @@
       to   { transform: translate(40px, 30px) scale(1.05); }
     }
 
-    .hero-content { position: relative; z-index: 1; max-width: 800px; }
+    .hero-content { position: relative; z-index: 1; max-width: 800px; width: 100%; }
 
     .badge {
       display: inline-flex;
@@ -956,8 +956,8 @@
     /* ── Settings Overlay ─────────────────────────────── */
     .settings-overlay {
       position: fixed;
-      inset: 0;
-      z-index: 200;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 999;
       background: var(--bg);
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -1233,6 +1233,18 @@
         padding: 5rem 1.5rem 3rem;
       }
       .hero h1 { font-size: clamp(2rem, 10vw, 3.5rem); }
+
+      /* Home dashboard cards on mobile */
+      .home-dashboard {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin-top: 1.5rem;
+        max-width: 100%;
+      }
+      .home-dash-card { padding: 0.85rem; }
+      .home-dash-big { font-size: 1.3rem; }
+      .home-dash-perf { font-size: 0.7rem; }
+      .home-dash-perf-line { font-size: 0.6rem; }
 
       /* Sections: less padding */
       section { padding: 3rem 1.25rem; }
@@ -1659,6 +1671,7 @@
     }
 
     let _appTeam = localStorage.getItem('defaultTeam') || localStorage.getItem('selectedTeam') || 'dodgers'
+    if (!APP_TEAMS[_appTeam]) _appTeam = 'dodgers'
     let _liveStatsCache = null
 
     function renderAppTeam(key) {
