@@ -2672,12 +2672,20 @@
       .mob-more-sheet.open {
         transform: translateY(0);
       }
+      .mob-more-sheet.dragging {
+        transition: none !important;
+      }
       .mob-more-handle {
         width: 40px;
         height: 5px;
         background: rgba(255,255,255,0.25);
         border-radius: 3px;
-        margin: 12px auto 20px;
+        margin: 0 auto 0;
+        padding: 16px 0;
+        background-clip: content-box;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
       }
 
       /* More grid */
@@ -4705,6 +4713,49 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
       document.getElementById('mob-more-sheet').classList.remove('open')
       document.body.style.overflow = ''
     }
+
+    /* ── More Sheet Touch Drag ─────────────────────────── */
+    ;(function initMoreSheetDrag() {
+      const sheet = document.getElementById('mob-more-sheet')
+      const backdrop = document.getElementById('mob-more-backdrop')
+      if (!sheet) return
+
+      let startY = 0
+      let currentY = 0
+      let isDragging = false
+      let sheetHeight = 0
+
+      sheet.addEventListener('touchstart', function(e) {
+        if (!sheet.classList.contains('open')) return
+        startY = e.touches[0].clientY
+        currentY = startY
+        sheetHeight = sheet.offsetHeight
+        isDragging = true
+        sheet.classList.add('dragging')
+      }, { passive: true })
+
+      sheet.addEventListener('touchmove', function(e) {
+        if (!isDragging) return
+        currentY = e.touches[0].clientY
+        let dy = currentY - startY
+        if (dy < 0) dy = dy * 0.15
+        sheet.style.transform = 'translateY(' + Math.max(dy, -30) + 'px)'
+        backdrop.style.opacity = Math.max(0, 1 - (dy / sheetHeight) * 1.5)
+        if (dy > 0) e.preventDefault()
+      }, { passive: false })
+
+      sheet.addEventListener('touchend', function() {
+        if (!isDragging) return
+        isDragging = false
+        sheet.classList.remove('dragging')
+        sheet.style.transform = ''
+        backdrop.style.opacity = ''
+        const dy = currentY - startY
+        if (dy > sheetHeight * 0.25) {
+          closeMoreSheet()
+        }
+      }, { passive: true })
+    })()
 
     /* ── Contracts & Payroll Data ───────────────────────── */
     const CONTRACTS = {
