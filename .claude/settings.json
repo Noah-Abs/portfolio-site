@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//tmp//**)",
-      "Read(//c/Users/noaha//**)"
+      "Read(//c/Users/noaha//**)",
+      "Bash(dir:*)"
     ]
   }
 }

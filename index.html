@@ -486,6 +486,130 @@
       text-transform: uppercase;
       color: rgba(255,255,255,0.18);
     }
+    /* ── News Full Page ────────────────────────────────── */
+    .news-page-wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+    .news-page-header {
+      margin-bottom: 1.5rem;
+    }
+    .news-page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .news-page-sub {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-top: 0.25rem;
+    }
+    .news-page-featured {
+      margin-bottom: 1.5rem;
+    }
+    .news-featured-card {
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      overflow: hidden;
+      text-decoration: none;
+      color: #fff;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .news-featured-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .news-featured-img {
+      width: 45%;
+      min-height: 200px;
+      object-fit: cover;
+      display: block;
+      flex-shrink: 0;
+      background: rgba(0,30,80,0.5);
+    }
+    .news-featured-body {
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+    .news-featured-tag {
+      font-size: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(220,170,30,0.85);
+      background: rgba(220,170,30,0.1);
+      border: 1px solid rgba(220,170,30,0.2);
+      border-radius: 999px;
+      padding: 0.15rem 0.6rem;
+      width: fit-content;
+    }
+    .news-featured-headline {
+      font-size: 1.3rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .news-featured-desc {
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.5);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-featured-meta {
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+    }
+    .news-page-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .news-section-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .news-page-section {
+      margin-top: 1.5rem;
+    }
+    .news-page-loading {
+      text-align: center;
+      padding: 3rem 0;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.18);
+    }
+    @media (max-width: 700px) {
+      .news-page-wrap { padding: 1rem 0.75rem 3rem; }
+      .news-page-title { font-size: 1.8rem; }
+      .news-page-grid { grid-template-columns: 1fr; }
+      .news-featured-card { flex-direction: column; }
+      .news-featured-img { width: 100%; min-height: 160px; max-height: 200px; }
+      .news-featured-body { padding: 1rem 1.1rem 1.15rem; }
+      .news-featured-headline { font-size: 1.05rem; }
+      .news-featured-desc { font-size: 0.75rem; -webkit-line-clamp: 2; }
+    }
+
     /* News panel (inside side-panel) */
     .news-panel-grid {
       display: flex;
@@ -2917,7 +3041,25 @@
       padding: 2rem 2rem 4rem;
     }
     @media (max-width: 700px) {
-      .contracts-wrap { padding: 1rem 0.75rem 3rem; }
+      .contracts-wrap { padding: 1rem 0.5rem 3rem; }
+      .payroll-bar-wrap { padding: 0.75rem 0.75rem 0.85rem; }
+      .payroll-bar-label { font-size: 0.5rem; }
+      .payroll-total-val { font-size: 1.1rem; }
+      .payroll-total-lbl { font-size: 0.46rem; letter-spacing: 0.12em; }
+      .payroll-marker-label {
+        font-size: 0.42rem;
+        top: -16px;
+      }
+      .salary-chart { padding: 0.75rem; }
+      .salary-name { width: 70px; font-size: 0.65rem; }
+      .salary-val  { font-size: 0.75rem; min-width: 38px; }
+      .salary-pos  { font-size: 0.46rem; width: 20px; }
+      .salary-row  { gap: 0.35rem; }
+      .contract-timeline { padding: 0.75rem 0.5rem; }
+      .ct-year-labels { margin-left: 70px; }
+      .ct-year-label { font-size: 0.42rem; }
+      .ct-name { width: 70px; font-size: 0.62rem; }
+      .ct-bar-aav { font-size: 0.4rem; }
     }
     .payroll-bar-wrap {
       background: rgba(255,255,255,0.04);
@@ -3290,6 +3432,23 @@
     </div>
   </div><!-- /view-contracts -->
 
+  <!-- News full page view -->
+  <div class="view-section" id="view-news">
+    <div class="news-page-wrap" id="news-page-wrap">
+      <div class="news-page-header">
+        <div class="news-page-title">News</div>
+        <div class="news-page-sub" id="news-page-sub">Latest headlines</div>
+      </div>
+      <div class="news-page-featured" id="news-featured"></div>
+      <div class="news-page-grid" id="news-page-grid"></div>
+      <div class="news-page-section" id="news-mlb-section" style="display:none">
+        <div class="news-section-label">Around MLB</div>
+        <div class="news-page-grid" id="news-mlb-grid"></div>
+      </div>
+      <div class="news-page-loading" id="news-page-loading">Loading news…</div>
+    </div>
+  </div><!-- /view-news -->
+
   </div><!-- /main-content -->
 
   <!-- Right navigation panel (desktop only) -->
@@ -3320,7 +3479,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
       Roster
     </button>
-    <button class="rn-item" data-view="news" onclick="openSidePanel('news')">
+    <button class="rn-item" data-view="news" onclick="switchView('news')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
       News
     </button>
@@ -3720,12 +3879,20 @@
 
     /* ── News loader ─────────────────────────────────────── */
     let _newsArticles = []
+    let _mlbNewsArticles = []
     async function loadNews() {
       try {
         const espnId = TEAMS[_currentTeamKey]?.espnId ?? 19
-        const res  = await fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId}&limit=8`)
-        const data = await res.json()
-        _newsArticles = data.articles ?? []
+        const [teamRes, mlbRes] = await Promise.all([
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId}&limit=25`),
+          fetch(`https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?limit=25`)
+        ])
+        const teamData = await teamRes.json()
+        const mlbData  = await mlbRes.json()
+        _newsArticles    = teamData.articles ?? []
+        // Filter MLB-wide articles to exclude any that duplicate team articles
+        const teamIds = new Set(_newsArticles.map(a => a.headline))
+        _mlbNewsArticles = (mlbData.articles ?? []).filter(a => !teamIds.has(a.headline))
         // Show top headline in bar
         const bar = document.getElementById('bar-headline')
         if (bar && _newsArticles.length) {
@@ -3744,8 +3911,69 @@
           mhcHL.style.fontSize = ''
           mhcHL.innerHTML = `<a href="${href}" target="_blank" rel="noopener">${a.headline}</a>`
         }
+        // If news view is currently active, render it
+        if (_currentView === 'news') renderNewsPage()
       } catch (e) {
         _newsArticles = []
+        _mlbNewsArticles = []
+      }
+    }
+    function _newsCardHTML(a) {
+      const img  = a.images?.[0]?.url ?? ''
+      const href = a.links?.web?.href ?? '#'
+      const ago  = timeAgo(a.published)
+      return `<a class="news-card" href="${href}" target="_blank" rel="noopener">
+        ${img ? `<img class="news-card-img" src="${img}" alt="" loading="lazy">` : ''}
+        <div class="news-card-body">
+          <div class="news-card-headline">${a.headline}</div>
+          <div class="news-card-meta">${ago}</div>
+        </div>
+      </a>`
+    }
+    function renderNewsPage() {
+      const loading   = document.getElementById('news-page-loading')
+      const featured  = document.getElementById('news-featured')
+      const grid      = document.getElementById('news-page-grid')
+      const mlbSec    = document.getElementById('news-mlb-section')
+      const mlbGrid   = document.getElementById('news-mlb-grid')
+      const sub       = document.getElementById('news-page-sub')
+      if (!grid) return
+      if (!_newsArticles.length && !_mlbNewsArticles.length) {
+        if (loading) loading.style.display = ''
+        if (featured) featured.innerHTML = ''
+        grid.innerHTML = ''
+        if (mlbSec) mlbSec.style.display = 'none'
+        return
+      }
+      if (loading) loading.style.display = 'none'
+      const teamName = TEAMS[_currentTeamKey]?.name ?? 'MLB'
+      if (sub) sub.textContent = `${teamName} · Latest headlines`
+      // Featured (top article)
+      if (featured && _newsArticles.length) {
+        const a = _newsArticles[0]
+        const img  = a.images?.[0]?.url ?? ''
+        const href = a.links?.web?.href ?? '#'
+        const ago  = timeAgo(a.published)
+        const desc = a.description ?? ''
+        featured.innerHTML = `<a class="news-featured-card" href="${href}" target="_blank" rel="noopener">
+          ${img ? `<img class="news-featured-img" src="${img}" alt="" loading="lazy">` : ''}
+          <div class="news-featured-body">
+            <div class="news-featured-tag">Top Story</div>
+            <div class="news-featured-headline">${a.headline}</div>
+            ${desc ? `<div class="news-featured-desc">${desc}</div>` : ''}
+            <div class="news-featured-meta">${ago}</div>
+          </div>
+        </a>`
+      }
+      // Team articles (skip the first since it's featured)
+      const rest = _newsArticles.slice(1)
+      grid.innerHTML = rest.map(a => _newsCardHTML(a)).join('')
+      // MLB-wide section
+      if (mlbSec && mlbGrid && _mlbNewsArticles.length) {
+        mlbSec.style.display = ''
+        mlbGrid.innerHTML = _mlbNewsArticles.map(a => _newsCardHTML(a)).join('')
+      } else if (mlbSec) {
+        mlbSec.style.display = 'none'
       }
     }
     function renderNewsPanel() {
@@ -3755,18 +3983,7 @@
         panel.innerHTML = '<div class="news-loading" style="padding:3rem 1rem">No news available</div>'
         return
       }
-      panel.innerHTML = `<div class="news-panel-grid">${_newsArticles.map(a => {
-        const img  = a.images?.[0]?.url ?? ''
-        const href = a.links?.web?.href ?? '#'
-        const ago  = timeAgo(a.published)
-        return `<a class="news-card" href="${href}" target="_blank" rel="noopener">
-          ${img ? `<img class="news-card-img" src="${img}" alt="" loading="lazy">` : ''}
-          <div class="news-card-body">
-            <div class="news-card-headline">${a.headline}</div>
-            <div class="news-card-meta">${ago}</div>
-          </div>
-        </a>`
-      }).join('')}</div>`
+      panel.innerHTML = `<div class="news-panel-grid">${_newsArticles.slice(0, 8).map(a => _newsCardHTML(a)).join('')}</div>`
     }
     function timeAgo(iso) {
       if (!iso) return ''
@@ -4361,7 +4578,7 @@
       closePanel()
       // Toggle left sidebar — only visible on home view
       document.body.classList.toggle('no-left-sidebar', view !== 'home')
-      const allViews = ['home','live','depth','contracts']
+      const allViews = ['home','live','depth','contracts','news']
       allViews.forEach(v => {
         const el = document.getElementById(`view-${v}`)
         if (el) el.classList.toggle('active', v === view)
@@ -4369,6 +4586,7 @@
       if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
       if (view === 'depth') loadDepthChart()
       if (view === 'contracts') loadContracts(_currentTeamKey)
+      if (view === 'news') renderNewsPage()
       // Update right-nav active state
       document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view)
@@ -5211,8 +5429,6 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     const savedView = localStorage.getItem('activeView')
     if (savedView && savedView !== 'home') switchView(savedView)
   </script>
-  <script src="script.js"></script>
-
   <!-- Mobile bottom tab bar (3-tab) -->
   <nav class="mob-tabs" id="mob-tabs">
     <button class="mob-tab" id="mobtab-live" onclick="switchView('live')">
@@ -5272,7 +5488,7 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
           </svg>
           <span>Roster</span>
         </button>
-        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('news')">
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('news')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
             <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/>
             <path d="M10 6h8M10 10h8M10 14h4"/>
