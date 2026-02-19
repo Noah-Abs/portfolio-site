@@ -771,12 +771,102 @@ function _setMobTab(view) {
   }
 }
 
+/* ── Demo Live Data (2025 WS Game 7 — Last Out) ── */
+function getDemoLiveData() {
+  return {
+    gameData: {
+      status: { abstractGameState: 'Final' },
+      teams: {
+        away: { team: { id: 141, abbreviation: 'TOR', name: 'Toronto Blue Jays' } },
+        home: { team: { id: 119, abbreviation: 'LAD', name: 'Los Angeles Dodgers' } },
+      }
+    },
+    liveData: {
+      linescore: {
+        currentInning: 11,
+        isTopInning: true,
+        balls: 2, strikes: 3, outs: 3,
+        offense: {},
+        innings: [
+          { num: 1,  away: { runs: 0 }, home: { runs: 0 } },
+          { num: 2,  away: { runs: 0 }, home: { runs: 0 } },
+          { num: 3,  away: { runs: 1 }, home: { runs: 0 } },
+          { num: 4,  away: { runs: 0 }, home: { runs: 1 } },
+          { num: 5,  away: { runs: 0 }, home: { runs: 0 } },
+          { num: 6,  away: { runs: 2 }, home: { runs: 0 } },
+          { num: 7,  away: { runs: 0 }, home: { runs: 1 } },
+          { num: 8,  away: { runs: 0 }, home: { runs: 0 } },
+          { num: 9,  away: { runs: 0 }, home: { runs: 1 } },
+          { num: 10, away: { runs: 0 }, home: { runs: 1 } },
+          { num: 11, away: { runs: 0 }, home: {} },
+        ],
+        teams: {
+          away: { runs: 3, hits: 7, errors: 0 },
+          home: { runs: 4, hits: 9, errors: 1 },
+        }
+      },
+      plays: {
+        currentPlay: {
+          matchup: {
+            batter:  { fullName: 'Vladimir Guerrero Jr.' },
+            pitcher: { fullName: 'Yoshinobu Yamamoto' },
+          },
+          result: { description: 'Vladimir Guerrero Jr. strikes out swinging. Yoshinobu Yamamoto closes it from the bullpen \u2014 Dodgers win the 2025 World Series!' },
+          playEvents: [
+            { isPitch: true, pitchData: { coordinates: { pX: 0.2, pZ: 1.1 }, startSpeed: 90, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'B', type: { description: 'Splitter' }, description: 'Ball' } },
+            { isPitch: true, pitchData: { coordinates: { pX: -0.6, pZ: 2.8 }, startSpeed: 98, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'C', type: { description: 'Four-Seam Fastball' }, description: 'Called Strike' } },
+            { isPitch: true, pitchData: { coordinates: { pX: 1.1, pZ: 1.3 }, startSpeed: 86, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'B', type: { description: 'Slider' }, description: 'Ball' } },
+            { isPitch: true, pitchData: { coordinates: { pX: 0.1, pZ: 2.5 }, startSpeed: 99, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'F', type: { description: 'Four-Seam Fastball' }, description: 'Foul' } },
+            { isPitch: true, pitchData: { coordinates: { pX: 0.6, pZ: 1.8 }, startSpeed: 91, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'F', type: { description: 'Splitter' }, description: 'Foul' } },
+            { isPitch: true, pitchData: { coordinates: { pX: 0.3, pZ: 1.2 }, startSpeed: 90, sz_top: 3.5, sz_bot: 1.5 },
+              details: { code: 'S', type: { description: 'Splitter' }, description: 'Swinging Strike' } },
+          ]
+        },
+        allPlays: [
+          { about: { inning: 3, isTopInning: true },
+            result: { event: 'Single', description: 'Bo Bichette singles on a line drive to left. Daulton Varsho scores.' } },
+          { about: { inning: 4, isTopInning: false },
+            result: { event: 'Home Run', description: 'Mookie Betts homers (1) on a fly ball to left center. Tie game, 1-1.' } },
+          { about: { inning: 6, isTopInning: true },
+            result: { event: 'Home Run', description: 'Vladimir Guerrero Jr. homers (2) on a fly ball to left field. 2 runs score. Blue Jays lead 3-1.' } },
+          { about: { inning: 7, isTopInning: false },
+            result: { event: 'Double', description: 'Freddie Freeman doubles (3) on a sharp line drive to right. Shohei Ohtani scores. 3-2 Blue Jays.' } },
+          { about: { inning: 9, isTopInning: false },
+            result: { event: 'Single', description: 'Miguel Rojas singles on a ground ball to center. Tommy Edman scores. Tie game, 3-3!' } },
+          { about: { inning: 10, isTopInning: true },
+            result: { event: 'Flyout', description: 'George Springer flies out to center fielder. Yamamoto pitches a scoreless top of the 10th.' } },
+          { about: { inning: 10, isTopInning: false },
+            result: { event: 'Home Run', description: 'Will Smith homers (2) on a fly ball to left center field. Dodgers take the lead, 4-3!' } },
+          { about: { inning: 11, isTopInning: true },
+            result: { event: 'Groundout', description: 'Daulton Varsho grounds out, shortstop to first base.' } },
+          { about: { inning: 11, isTopInning: true },
+            result: { event: 'Flyout', description: 'George Springer flies out to right fielder Mookie Betts.' } },
+          { about: { inning: 11, isTopInning: true },
+            result: { event: 'Strikeout', description: 'Vladimir Guerrero Jr. strikes out swinging. Dodgers win the 2025 World Series!' } },
+        ]
+      }
+    }
+  }
+}
+
 /* ── Live Game Tracker ── */
 async function startLiveTracker() {
   try {
     const liveTeamId = APP_TEAMS[_currentTeamKey]?.id ?? 119
     const game = await fetchTodayGame(liveTeamId)
-    if (!game) return
+    if (!game) {
+      /* No live game — show demo data (2025 WS Game 7 final out) */
+      if (_currentTeamKey === 'dodgers') {
+        const demo = getDemoLiveData()
+        renderLiveGame(demo)
+      }
+      return
+    }
     _liveGamePk = game.gamePk
     const state = game.status.abstractGameState
     if (state === 'Live' || state === 'Final') {
@@ -833,12 +923,14 @@ function renderLiveGame(data) {
       `<span class="count-dot ${i < count ? cls : ''}"></span>`).join('')
   }
 
+  const isDemo = !_liveGamePk && isFinal
   card.style.display = 'block'
   card.innerHTML = `
     <div class="dash-card-header">
       <span class="dash-card-label">${isFinal ? 'Final Score' : 'Live Game'}</span>
       ${isLive ? '<span class="live-pill"><span class="live-dot"></span>LIVE</span>' : ''}
     </div>
+    ${isDemo ? '<div style="font-size:0.55rem;color:rgba(255,255,255,0.35);text-align:center;margin:-0.2rem 0 0.3rem;letter-spacing:0.04em">2025 World Series \u00b7 Game 7</div>' : ''}
     <div class="live-score">
       <div class="live-team">
         <img class="live-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}">
@@ -1051,9 +1143,13 @@ function renderFullLiveGame(data) {
       </div>`
     }).join('')
 
+  const isDemo = !_liveGamePk && isFinal
+  const headerTitle = isDemo ? '2025 World Series \u00b7 Game 7' : 'Live Game'
+  const atBatLabel = isFinal ? 'Final At-Bat' : 'Current At-Bat'
+
   el.innerHTML = `
     <div class="lf-header">
-      <span class="lf-title">Live Game</span>
+      <span class="lf-title">${headerTitle}</span>
       ${isLive ? '<span class="lf-status"><span class="live-dot"></span>LIVE</span>' : ''}
       ${isFinal ? '<span style="font-size:0.65rem;font-weight:700;letter-spacing:0.15em;color:rgba(255,255,255,0.4)">FINAL</span>' : ''}
       <span style="font-family:\'Bebas Neue\',sans-serif;font-size:1.1rem;letter-spacing:0.06em;color:rgba(255,255,255,0.5);margin-left:auto">${inningStr}</span>
@@ -1061,7 +1157,7 @@ function renderFullLiveGame(data) {
     ${scoreboardHtml}
     <div class="lf-body">
       <div class="lf-at-bat">
-        <div class="lf-at-bat-header">Current At-Bat</div>
+        <div class="lf-at-bat-header">${atBatLabel}</div>
         <div class="lf-matchup">
           <div class="lf-matchup-row"><span class="lf-role">AB</span><span class="lf-player-name">${batter}</span></div>
           <div class="lf-matchup-row"><span class="lf-role">P</span><span class="lf-player-name">${pitcher}</span></div>
