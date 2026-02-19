@@ -2658,16 +2658,25 @@
         bottom: 0;
         left: 0;
         right: 0;
-        min-height: 52vh;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
         background: rgba(0,7,32,0.98);
         backdrop-filter: blur(28px);
         -webkit-backdrop-filter: blur(28px);
         border-top: 1px solid rgba(255,255,255,0.1);
         border-radius: 22px 22px 0 0;
         z-index: 360;
-        padding: 0 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+        padding: 0 0 0;
         transform: translateY(100%);
         transition: transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      .mob-more-content {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
       }
       .mob-more-sheet.open {
         transform: translateY(0);
@@ -4717,25 +4726,61 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     /* ── More Sheet Touch Drag ─────────────────────────── */
     ;(function initMoreSheetDrag() {
       const sheet = document.getElementById('mob-more-sheet')
+      const handle = document.getElementById('mob-more-handle')
       const backdrop = document.getElementById('mob-more-backdrop')
-      if (!sheet) return
+      const content = sheet ? sheet.querySelector('.mob-more-content') : null
+      if (!sheet || !handle) return
 
       let startY = 0
       let currentY = 0
       let isDragging = false
       let sheetHeight = 0
+      let dragSource = ''
 
-      sheet.addEventListener('touchstart', function(e) {
+      // Handle bar — always initiates drag
+      handle.addEventListener('touchstart', function(e) {
         if (!sheet.classList.contains('open')) return
         startY = e.touches[0].clientY
         currentY = startY
         sheetHeight = sheet.offsetHeight
         isDragging = true
+        dragSource = 'handle'
         sheet.classList.add('dragging')
       }, { passive: true })
 
+      // Content area — only drag when scrolled to top and pulling down
+      if (content) {
+        content.addEventListener('touchstart', function(e) {
+          if (!sheet.classList.contains('open')) return
+          startY = e.touches[0].clientY
+          currentY = startY
+          sheetHeight = sheet.offsetHeight
+          dragSource = 'content'
+        }, { passive: true })
+
+        content.addEventListener('touchmove', function(e) {
+          if (dragSource !== 'content') return
+          currentY = e.touches[0].clientY
+          const dy = currentY - startY
+          // Only start dragging if at top of scroll and pulling down
+          if (!isDragging && dy > 8 && content.scrollTop <= 0) {
+            isDragging = true
+            sheet.classList.add('dragging')
+            startY = currentY
+          }
+          if (isDragging) {
+            let offset = currentY - startY
+            if (offset < 0) offset = offset * 0.15
+            sheet.style.transform = 'translateY(' + Math.max(offset, -30) + 'px)'
+            backdrop.style.opacity = Math.max(0, 1 - (offset / sheetHeight) * 1.5)
+            e.preventDefault()
+          }
+        }, { passive: false })
+      }
+
+      // Handle drag move
       sheet.addEventListener('touchmove', function(e) {
-        if (!isDragging) return
+        if (!isDragging || dragSource !== 'handle') return
         currentY = e.touches[0].clientY
         let dy = currentY - startY
         if (dy < 0) dy = dy * 0.15
@@ -4744,9 +4789,11 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
         if (dy > 0) e.preventDefault()
       }, { passive: false })
 
+      // End drag — snap or dismiss
       sheet.addEventListener('touchend', function() {
-        if (!isDragging) return
+        if (!isDragging) { dragSource = ''; return }
         isDragging = false
+        dragSource = ''
         sheet.classList.remove('dragging')
         sheet.style.transform = ''
         backdrop.style.opacity = ''
@@ -4914,38 +4961,39 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
   <!-- More sheet backdrop + slide-up sheet -->
   <div class="mob-more-backdrop" id="mob-more-backdrop" onclick="closeMoreSheet()"></div>
   <div class="mob-more-sheet" id="mob-more-sheet">
-    <div class="mob-more-handle"></div>
-    <div class="mob-more-grid">
-      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('depth')">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
-          <rect x="4"    y="14" width="3.5" height="7"  rx="1"/>
-          <rect x="10.25" y="9"  width="3.5" height="12" rx="1"/>
-          <rect x="16.5" y="5"  width="3.5" height="16" rx="1"/>
-        </svg>
-        <span>Depth Chart</span>
-      </button>
-      <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('schedule')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <path d="M16 2v4M8 2v4M3 10h18"/>
-        </svg>
-        <span>Schedule</span>
-      </button>
-      <button class="mob-more-item" onclick="closeMoreSheet(); switchView('contracts')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-          <rect x="2" y="5" width="20" height="14" rx="2"/>
-          <path d="M2 10h20"/>
-        </svg>
-        <span>Contracts</span>
-      </button>
-
-      <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('roster')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-          <circle cx="12" cy="7" r="4"/>
-          <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
-        </svg>
-        <span>Roster</span>
-      </button>
+    <div class="mob-more-handle" id="mob-more-handle"></div>
+    <div class="mob-more-content">
+      <div class="mob-more-grid">
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('depth')">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="26" height="26">
+            <rect x="4"    y="14" width="3.5" height="7"  rx="1"/>
+            <rect x="10.25" y="9"  width="3.5" height="12" rx="1"/>
+            <rect x="16.5" y="5"  width="3.5" height="16" rx="1"/>
+          </svg>
+          <span>Depth Chart</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('schedule')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          <span>Schedule</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('contracts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <path d="M2 10h20"/>
+          </svg>
+          <span>Contracts</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); openSidePanel('roster')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <circle cx="12" cy="7" r="4"/>
+            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+          </svg>
+          <span>Roster</span>
+        </button>
+      </div>
     </div>
   </div>
 
