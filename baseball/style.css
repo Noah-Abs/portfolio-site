@@ -147,13 +147,13 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .ws-banner-year { writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.1em; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); user-select: none; }
 
 /* ── Next Game Card ── */
-.hero-next { display: flex; flex-direction: column; gap: 0.4rem; background: rgba(0,30,100,0.3); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 0.75rem 0.85rem; flex-shrink: 0; }
+.hero-next { display: flex; flex-direction: column; gap: 0.4rem; background: rgba(0,30,100,0.3); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 0.75rem 0.85rem; flex-shrink: 0; margin: auto 0.6rem 0.75rem; overflow: hidden; }
 .hero-next-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.28); }
-.hero-next-venue { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.55); letter-spacing: 0.03em; }
-.hero-next-matchup { display: flex; align-items: center; gap: 0.55rem; }
-.hero-next-logo { height: 30px; width: auto; }
+.hero-next-venue { font-size: 0.68rem; font-weight: 600; color: rgba(255,255,255,0.55); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-next-matchup { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.hero-next-logo { height: 24px; width: auto; flex-shrink: 0; }
 .hero-next-sep { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.28); }
-.hero-next-team { font-size: 0.9rem; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
+.hero-next-team { font-size: 0.78rem; font-weight: 600; color: #fff; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero-next-time { font-size: 0.7rem; color: rgba(255,255,255,0.38); letter-spacing: 0.05em; }
 
 /* ── Live Game Card ── */
@@ -318,7 +318,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .panel-backdrop.open { opacity: 1; pointer-events: all; }
 .side-panel { position: fixed; right: 0; top: 0; height: 100dvh; width: 340px; background: repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 29px), linear-gradient(160deg, #001850 0%, #000C30 60%, #000510 100%); border-left: 1px solid rgba(255,255,255,0.1); z-index: 300; transform: translateX(100%); transition: transform 0.28s ease; display: flex; flex-direction: column; }
 .side-panel.open { transform: translateX(0); }
-.sp-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
+.sp-header { display: flex; align-items: center; gap: 0.6rem; padding: calc(0.9rem + env(safe-area-inset-top, 0px)) 1.25rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
 .sp-title { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); flex: 1; }
 .sp-close { background: none; border: none; color: rgba(255,255,255,0.35); font-size: 1.1rem; cursor: pointer; line-height: 1; padding: 0.2rem; transition: color 0.15s; }
 .sp-close:hover { color: #fff; }
@@ -400,7 +400,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 /* ── Player Overlay ── */
 .player-overlay { position: fixed; inset: 0; z-index: 400; background: repeating-linear-gradient(90deg, transparent, transparent 28px, rgba(255,255,255,0.018) 28px, rgba(255,255,255,0.018) 29px), linear-gradient(160deg, #001850 0%, #000C30 60%, #000510 100%); transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; flex-direction: column; overflow: hidden; }
 .player-overlay.open { transform: translateY(0); }
-.po-topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
+.po-topbar { display: flex; align-items: center; justify-content: space-between; padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
 .po-back { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; cursor: pointer; padding: 0; transition: color 0.15s; }
 .po-back:hover { color: #fff; }
 .po-team-label { font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem; letter-spacing: 0.25em; color: rgba(255,255,255,0.2); }

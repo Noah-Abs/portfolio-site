@@ -49,7 +49,7 @@ async function fetchTeamStats(teamId) {
 
 async function fetchLastGame(teamId, teamAbbr) {
   const res = await fetch(
-    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=R,F,D,L,W&startDate=${SEASON}-03-01&endDate=${SEASON}-11-10`
+    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=R,F,D,L,W&hydrate=team&startDate=${SEASON}-03-01&endDate=${SEASON}-11-10`
   )
   const data = await res.json()
 
@@ -66,8 +66,8 @@ async function fetchLastGame(teamId, teamAbbr) {
   const isHome  = lastGame.teams.home.team.id === teamId
   const mySide  = isHome ? 'home' : 'away'
   const oppSide = isHome ? 'away' : 'home'
-  const myAbbr  = lastGame.teams[mySide].team.abbreviation ?? teamAbbr
-  const oppAbbr = lastGame.teams[oppSide].team.abbreviation ?? '???'
+  const myAbbr  = lastGame.teams[mySide].team.abbreviation ?? bs.teams?.[mySide]?.team?.abbreviation ?? teamAbbr
+  const oppAbbr = lastGame.teams[oppSide].team.abbreviation ?? bs.teams?.[oppSide]?.team?.abbreviation ?? lastGame.teams[oppSide].team.name?.split(' ').pop()?.substring(0, 3).toUpperCase() ?? '???'
   const myScore = lastGame.teams[mySide].score
   const oppScore = lastGame.teams[oppSide].score
   const players = bs.teams[mySide].players

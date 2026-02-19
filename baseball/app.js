@@ -106,7 +106,9 @@ function renderMobHomeCards(t, stats, lastGameData, nextGame) {
   }
 
   const mhcHL = document.getElementById('mhc-headline')
-  if (mhcHL) mhcHL.innerHTML = '<div class="mhc-hl-label">Top Story</div><div class="mhc-hl-text" id="mhc-hl-text" style="color:rgba(255,255,255,0.35);font-size:0.65rem">Loading\u2026</div>'
+  if (mhcHL && !document.getElementById('mhc-hl-text')?.querySelector('a')) {
+    mhcHL.innerHTML = '<div class="mhc-hl-label">Top Story</div><div class="mhc-hl-text" id="mhc-hl-text" style="color:rgba(255,255,255,0.35);font-size:0.65rem">Loading\u2026</div>'
+  }
 
   const mhcStats = document.getElementById('mhc-stats')
   if (mhcStats) {
@@ -732,7 +734,7 @@ function switchTeam(key) {
 /* ── View Switching ── */
 function switchView(view) {
   _currentView = view
-  if (view !== 'settings') localStorage.setItem('activeView', view)
+  /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
   const allViews = ['home', 'live', 'depth', 'contracts', 'news', 'settings']
@@ -1356,16 +1358,4 @@ function loadContracts(key) {
 const saved = localStorage.getItem('defaultTeam') || localStorage.getItem('selectedTeam')
 renderTeam(saved && APP_TEAMS[saved] ? saved : 'dodgers')
 
-const hashView = location.hash.replace('#', '')
-const validViews = ['home', 'live', 'depth', 'contracts', 'news', 'settings']
-const hashPanel = { schedule: 'schedule', roster: 'roster' }
-if (hashView && validViews.includes(hashView)) {
-  switchView(hashView)
-  history.replaceState(null, '', location.pathname)
-} else if (hashView && hashPanel[hashView]) {
-  openSidePanel(hashPanel[hashView])
-  history.replaceState(null, '', location.pathname)
-} else {
-  const savedView = localStorage.getItem('activeView')
-  if (savedView && savedView !== 'home') switchView(savedView)
-}
+/* Always start on home */
