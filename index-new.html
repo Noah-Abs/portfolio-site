@@ -782,6 +782,13 @@
       border-bottom: 1px solid var(--border);
     }
 
+    .last-game-date {
+      font-size: 0.7rem;
+      font-family: var(--mono);
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+
     .performer-row:last-child { border-bottom: none; }
 
     .performer-name {
@@ -1393,8 +1400,134 @@
       return `${Math.floor(mins / 1440)}d ago`
     }
 
+    /* ── Live Data Fetching (same as main site) ──────── */
+    async function loadAppLiveData(key) {
+      const t = APP_TEAMS[key]
+      if (!t) return
+      const TEAM = t.id
+      const NL = new Set([109,144,112,113,115,119,146,121,143,134,135,137,138,120,158])
+
+      function nlRank(splits, statKey, asc = false) {
+        const nl = splits.filter(s => NL.has(s.team.id))
+        const sorted = [...nl].sort((a, b) =>
+          asc ? parseFloat(a.stat[statKey]) - parseFloat(b.stat[statKey])
+              : parseFloat(b.stat[statKey]) - parseFloat(a.stat[statKey])
+        )
+        const i = sorted.findIndex(s => s.team.id === TEAM)
+        return i >= 0 ? `#${i + 1} NL` : ''
+      }
+
+      // Fetch 2025 season stats
+      try {
+        const [standRes, batRes, pitRes] = await Promise.all([
+          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=104&season=2025&standingsTypes=regularSeason'),
+          fetch('https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=2025&sportId=1'),
+          fetch('https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=2025&sportId=1'),
+        ])
+        const [stand, bat, pit] = await Promise.all([standRes.json(), batRes.json(), pitRes.json()])
+
+        let rec = null
+        for (const div of stand.records) {
+          rec = div.teamRecords.find(r => r.team.id === TEAM)
+          if (rec) break
+        }
+
+        const batSplits = bat.stats[0].splits
+        const pitSplits = pit.stats[0].splits
+        const db = batSplits.find(s => s.team.id === TEAM)?.stat
+        const dp = pitSplits.find(s => s.team.id === TEAM)?.stat
+
+        if (rec && db && dp && _appTeam === key) {
+          const divRank = `#${rec.divisionRank} ${rec.division?.nameShort || ''}`
+          const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
+          const liveStats = [
+            { val: `${rec.wins}-${rec.losses}`, lbl: 'Record',    rank: divRank },
+            { val: pct,                          lbl: 'Win %',     rank: divRank },
+            { val: db.avg,                       lbl: 'Team AVG',  rank: nlRank(batSplits, 'avg') },
+            { val: db.homeRuns,                  lbl: 'Home Runs', rank: nlRank(batSplits, 'homeRuns') },
+            { val: dp.era,                       lbl: 'Team ERA',  rank: nlRank(pitSplits, 'era', true) },
+            { val: parseInt(dp.strikeOuts).toLocaleString(), lbl: 'Strikeouts' },
+          ]
+          document.getElementById('app-team-stats').innerHTML = liveStats.map(s => `
+            <div class="team-stat">
+              <span class="team-stat-val">${s.val}</span>
+              <span class="team-stat-lbl">${s.lbl}</span>
+              ${s.rank ? `<span class="team-stat-rank">${s.rank}</span>` : ''}
+            </div>`).join('')
+        }
+      } catch (e) { console.warn('App stats fetch failed', e) }
+
+      // Fetch last game performers
+      try {
+        const lsRes = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${TEAM}&season=2025&sportId=1&gameType=R,F,D,L,W&startDate=2025-09-20&endDate=2025-11-10`)
+        const lsData = await lsRes.json()
+
+        let lastGame = null
+        for (const d of [...(lsData.dates ?? [])].reverse()) {
+          const fin = d.games.filter(g => g.status.abstractGameState === 'Final')
+          if (fin.length) { lastGame = fin[fin.length - 1]; break }
+        }
+        if (!lastGame || _appTeam !== key) return
+
+        const bsRes = await fetch(`https://statsapi.mlb.com/api/v1/game/${lastGame.gamePk}/boxscore`)
+        const bs = await bsRes.json()
+
+        const isHome  = lastGame.teams.home.team.id === TEAM
+        const mySide  = isHome ? 'home' : 'away'
+        const oppSide = isHome ? 'away' : 'home'
+        const myAbbr  = lastGame.teams[mySide].team.abbreviation ?? t.nameShort
+        const oppAbbr = lastGame.teams[oppSide].team.abbreviation ?? '???'
+        const myScore = lastGame.teams[mySide].score
+        const oppScore= lastGame.teams[oppSide].score
+        const players = bs.teams[mySide].players
+
+        const batters = Object.values(players)
+          .filter(p => (p.stats?.batting?.atBats ?? 0) > 0)
+          .sort((a, b) => {
+            const hd = (b.stats.batting.hits ?? 0) - (a.stats.batting.hits ?? 0)
+            return hd !== 0 ? hd : (b.stats.batting.rbi ?? 0) - (a.stats.batting.rbi ?? 0)
+          })
+
+        const wp = Object.values(players).find(p => (p.stats?.pitching?.wins ?? 0) > 0)
+        const performers = []
+
+        for (const p of batters.slice(0, 3)) {
+          const s = p.stats.batting
+          const parts = [`${s.hits}-${s.atBats}`]
+          if (s.homeRuns > 0) parts.push('HR')
+          else if (s.doubles > 0) parts.push('2B')
+          if (s.rbi > 0) parts.push(`${s.rbi} RBI`)
+          if (s.baseOnBalls > 0 && parts.length < 4) parts.push('BB')
+          performers.push({ name: p.person.fullName, line: parts.join(' · ') })
+        }
+        if (wp) {
+          const s = wp.stats.pitching
+          performers.push({ name: wp.person.fullName,
+            line: `${s.inningsPitched} IP · ${s.earnedRuns} ER · ${s.strikeOuts} K · W` })
+        }
+
+        if (performers.length && _appTeam === key) {
+          const gd = new Date(lastGame.gameDate)
+          const scoreText = `${myAbbr} ${myScore}, ${oppAbbr} ${oppScore}`
+          const dateText = gd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          const lg = document.getElementById('app-last-game')
+          if (lg) {
+            lg.innerHTML = `
+              <div class="last-game-score">${scoreText}</div>
+              <div class="last-game-date">${dateText}</div>
+              ${performers.map(p => `
+                <div class="performer-row">
+                  <span class="performer-name">${p.name}</span>
+                  <span class="performer-line">${p.line}</span>
+                </div>`).join('')}`
+          }
+        }
+      } catch (e) { console.warn('App last game fetch failed', e) }
+    }
+
     // Initialize
     renderAppTeam(_appTeam)
+    loadAppLiveData(_appTeam)
   </script>
 </body>
 </html>
