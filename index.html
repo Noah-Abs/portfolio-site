@@ -5564,8 +5564,20 @@ ${isLast ? `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" text-anchor="m
     }
 
     // Restore last active view — must run after all let declarations above
-    const savedView = localStorage.getItem('activeView')
-    if (savedView && savedView !== 'home') switchView(savedView)
+    // Check URL hash first (e.g. index.html#depth), then localStorage
+    const hashView = location.hash.replace('#', '')
+    const validViews = ['home','live','depth','contracts','news']
+    const hashPanel = { schedule: 'schedule', roster: 'roster' }
+    if (hashView && validViews.includes(hashView)) {
+      switchView(hashView)
+      history.replaceState(null, '', location.pathname)
+    } else if (hashView && hashPanel[hashView]) {
+      openSidePanel(hashPanel[hashView])
+      history.replaceState(null, '', location.pathname)
+    } else {
+      const savedView = localStorage.getItem('activeView')
+      if (savedView && savedView !== 'home') switchView(savedView)
+    }
   </script>
   <!-- Mobile bottom tab bar (3-tab) -->
   <nav class="mob-tabs" id="mob-tabs">
