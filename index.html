@@ -501,6 +501,7 @@
     }
     /* ── Mobile App Layout ─────────────────────────────── */
     .mob-tabs { display: none; }
+    .mob-home-cards { display: none; }
 
     @media (max-width: 700px) {
       :root { --sb-width: 0px; --rn-width: 0px; }
@@ -520,6 +521,7 @@
       .bar-team-name { font-size: 1.4rem; }
       .bar-team-sub  { font-size: 0.52rem; }
       .bar-actions   { right: 0.75rem; gap: 0.25rem; }
+      .bar-headline  { display: none; }
       .settings-btn  { padding: 0.3rem 0.5rem; font-size: 1.1rem; }
       .team-switcher-btn img { height: 22px; }
 
@@ -537,9 +539,9 @@
       /* ── Hero section ── */
       #view-home { height: auto; overflow: visible; }
       .hero-section {
-        min-height: calc(100dvh - 60px - 58px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        min-height: auto;
         height: auto;
-        padding: 1.5rem 1.25rem 1rem;
+        padding: 2rem 1.25rem 1rem;
         gap: 0.7rem;
       }
       .hero-logo      { height: clamp(75px, 26vw, 120px) !important; }
@@ -572,6 +574,153 @@
 
       /* Hide WS banners on mobile */
       .ws-banners { display: none !important; }
+
+      /* ── Mobile Home Cards ── */
+      .mob-home-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0 1rem 1.5rem;
+      }
+      .mhc-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+      .mhc-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 1rem;
+      }
+      .mhc-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 0.6rem;
+      }
+      .mhc-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+      }
+      .mhc-stat-val {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.3rem;
+        color: #fff;
+        line-height: 1;
+      }
+      .mhc-stat-lbl {
+        font-size: 0.58rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.35);
+        letter-spacing: 0.05em;
+      }
+      .mhc-stat-rank {
+        font-size: 0.5rem;
+        color: rgba(220,170,30,0.7);
+      }
+      /* Next game in mobile card */
+      .mhc-next-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 0.5rem;
+      }
+      .mhc-next-matchup {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.35rem;
+      }
+      .mhc-next-matchup img {
+        height: 22px;
+        width: auto;
+      }
+      .mhc-next-sep {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.4);
+      }
+      .mhc-next-opp {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #fff;
+      }
+      .mhc-next-time {
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.4);
+      }
+      .mhc-next-tag {
+        display: inline-block;
+        font-size: 0.5rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(220,170,30,0.85);
+        background: rgba(220,170,30,0.1);
+        border: 1px solid rgba(220,170,30,0.2);
+        border-radius: 999px;
+        padding: 0.15rem 0.5rem;
+        margin-bottom: 0.4rem;
+      }
+      /* Headline card */
+      .mhc-hl-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.3);
+        margin-bottom: 0.5rem;
+      }
+      .mhc-hl-text {
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: rgba(255,255,255,0.8);
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .mhc-hl-text a {
+        color: inherit;
+        text-decoration: none;
+      }
+      /* Last game compact */
+      .mhc-lg-score {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.4rem;
+        color: #fff;
+        margin-bottom: 0.4rem;
+      }
+      .mhc-performer {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.25rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+      }
+      .mhc-performer:last-child { border-bottom: none; }
+      .mhc-p-name {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.75);
+      }
+      .mhc-p-line {
+        font-size: 0.62rem;
+        color: rgba(255,255,255,0.35);
+      }
+      /* Live card on mobile home */
+      .mhc-live {
+        background: rgba(255,60,60,0.06);
+        border: 1px solid rgba(255,60,60,0.15);
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+      }
 
       /* ── Depth chart ── */
       .dc-grid       { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
@@ -3095,6 +3244,22 @@
     <span class="hero-champs" id="hero-champs">Back-to-Back World Series Champions</span>
     <div class="ws-banners" id="ws-banners"></div>
   </section>
+  <!-- Mobile home cards (hidden on desktop, shown below hero on phone) -->
+  <div class="mob-home-cards" id="mob-home-cards">
+    <div class="mhc-live" id="mhc-live" style="display:none"></div>
+    <div class="mhc-row">
+      <div class="mhc-card" id="mhc-next"></div>
+      <div class="mhc-card" id="mhc-headline"></div>
+    </div>
+    <div class="mhc-card mhc-stats-card">
+      <div class="mhc-label">Team Stats</div>
+      <div class="mhc-stats" id="mhc-stats"></div>
+    </div>
+    <div class="mhc-card">
+      <div class="mhc-label">Last Game</div>
+      <div id="mhc-last-game"></div>
+    </div>
+  </div>
   </div><!-- /view-home -->
 
   <!-- Live game full view -->
@@ -3461,6 +3626,57 @@
       loadLiveData()
       loadNews()
       startLiveTracker()
+
+      // ── Populate mobile home cards ──
+      renderMobHomeCards(t)
+    }
+
+    function renderMobHomeCards(t) {
+      // Next game card
+      const mhcNext = document.getElementById('mhc-next')
+      const g = t.nextGame
+      if (mhcNext && g) {
+        const myLogo  = t.logoSrc
+        const oppLogo = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${g.logoId}.svg`
+        const isHome  = g.atVs === 'vs' || g.isHome === true
+        mhcNext.innerHTML = `
+          <div class="mhc-next-label">Next Game</div>
+          ${g.tag ? `<span class="mhc-next-tag">${g.tag}</span>` : ''}
+          <div class="mhc-next-matchup">
+            <img src="${isHome ? myLogo : oppLogo}" alt="">
+            <span class="mhc-next-sep">${g.atVs || (isHome ? 'vs' : '@')}</span>
+            <img src="${isHome ? oppLogo : myLogo}" alt="">
+          </div>
+          <div class="mhc-next-opp">${g.opponent}</div>
+          <div class="mhc-next-time">${g.dateShort || g.date || ''} · ${g.time}</div>`
+      }
+
+      // Top headline card (populated after news loads)
+      const mhcHL = document.getElementById('mhc-headline')
+      if (mhcHL) mhcHL.innerHTML = `<div class="mhc-hl-label">Top Story</div><div class="mhc-hl-text" id="mhc-hl-text" style="color:rgba(255,255,255,0.35);font-size:0.65rem">Loading...</div>`
+
+      // Stats (show top 6)
+      const mhcStats = document.getElementById('mhc-stats')
+      if (mhcStats) {
+        mhcStats.innerHTML = (t.stats || []).slice(0, 6).map(s => `
+          <div>
+            <div class="mhc-stat-val">${s.val}</div>
+            <div class="mhc-stat-lbl">${s.lbl}</div>
+            ${s.rank ? `<div class="mhc-stat-rank">${s.rank}</div>` : ''}
+          </div>`).join('')
+      }
+
+      // Last game
+      const mhcLG = document.getElementById('mhc-last-game')
+      if (mhcLG) {
+        mhcLG.innerHTML = `
+          <div class="mhc-lg-score">${t.lastGame}</div>
+          ${(t.performers || []).slice(0, 3).map(p => `
+            <div class="mhc-performer">
+              <span class="mhc-p-name">${p.name}</span>
+              <span class="mhc-p-line">${p.line}</span>
+            </div>`).join('')}`
+      }
     }
 
     /* ── Next game renderer ─────────────────────────────── */
@@ -3518,6 +3734,15 @@
           bar.innerHTML = `<a href="${href}" target="_blank" rel="noopener">${a.headline}</a>`
         } else if (bar) {
           bar.innerHTML = ''
+        }
+        // Populate mobile headline card
+        const mhcHL = document.getElementById('mhc-hl-text')
+        if (mhcHL && _newsArticles.length) {
+          const a = _newsArticles[0]
+          const href = a.links?.web?.href ?? '#'
+          mhcHL.style.color = ''
+          mhcHL.style.fontSize = ''
+          mhcHL.innerHTML = `<a href="${href}" target="_blank" rel="noopener">${a.headline}</a>`
         }
       } catch (e) {
         _newsArticles = []
