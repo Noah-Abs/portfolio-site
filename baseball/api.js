@@ -37,16 +37,17 @@ async function fetchTeamStats(teamId) {
   const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
 
   return [
-    { val: `${rec.wins}-${rec.losses}`, lbl: 'Record',    rank: divRank },
-    { val: pct,                          lbl: 'Win %',     rank: divRank },
-    { val: db.avg,                       lbl: 'Team AVG',  rank: _nlRank(batSplits, 'avg', teamId) },
-    { val: db.homeRuns,                  lbl: 'Home Runs', rank: _nlRank(batSplits, 'homeRuns', teamId) },
-    { val: dp.era,                       lbl: 'Team ERA',  rank: _nlRank(pitSplits, 'era', teamId, true) },
+    { val: `${rec.wins}-${rec.losses}`, lbl: 'Record',     rank: divRank },
+    { val: pct,                          lbl: 'Win %',      rank: divRank },
+    { val: db.avg,                       lbl: 'Team AVG',   rank: _nlRank(batSplits, 'avg', teamId) },
+    { val: parseInt(db.hits).toLocaleString(), lbl: 'Hits' },
+    { val: db.homeRuns,                  lbl: 'Home Runs',  rank: _nlRank(batSplits, 'homeRuns', teamId) },
+    { val: dp.era,                       lbl: 'Team ERA',   rank: _nlRank(pitSplits, 'era', teamId, true) },
     { val: parseInt(dp.strikeOuts).toLocaleString(), lbl: 'Strikeouts' },
   ]
 }
 
-async function fetchLastGame(teamId, teamShort) {
+async function fetchLastGame(teamId, teamAbbr) {
   const res = await fetch(
     `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=R,F,D,L,W&startDate=${SEASON}-03-01&endDate=${SEASON}-11-10`
   )
@@ -65,7 +66,7 @@ async function fetchLastGame(teamId, teamShort) {
   const isHome  = lastGame.teams.home.team.id === teamId
   const mySide  = isHome ? 'home' : 'away'
   const oppSide = isHome ? 'away' : 'home'
-  const myAbbr  = lastGame.teams[mySide].team.abbreviation ?? teamShort
+  const myAbbr  = lastGame.teams[mySide].team.abbreviation ?? teamAbbr
   const oppAbbr = lastGame.teams[oppSide].team.abbreviation ?? '???'
   const myScore = lastGame.teams[mySide].score
   const oppScore = lastGame.teams[oppSide].score
@@ -108,9 +109,9 @@ async function fetchLastGame(teamId, teamShort) {
 
 async function fetchNextGame(teamId) {
   const today = new Date().toISOString().slice(0, 10)
-  const endDate = `${SEASON}-11-10`
+  const endDate = `${SEASON + 1}-11-10`
   const res = await fetch(
-    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=R,F,D,L,W&startDate=${today}&endDate=${endDate}`
+    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON + 1}&sportId=1&gameType=R,F,D,L,W&startDate=${today}&endDate=${endDate}`
   )
   const data = await res.json()
 
@@ -125,11 +126,14 @@ async function fetchNextGame(teamId) {
         return {
           atVs: isHome ? 'vs' : '@',
           opponent: opp.name,
+          opponentShort: opp.name.split(' ').pop(),
           logoId: opp.id,
           date: dateStr,
+          dateShort: gd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           time: timeStr,
           venue: isHome ? g.venue?.name : `@ ${g.venue?.name}`,
           tag: null,
+          isHome,
         }
       }
     }
@@ -137,17 +141,107 @@ async function fetchNextGame(teamId) {
   return null
 }
 
+async function fetchSchedule(teamId) {
+  const season = SEASON + 1
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${season}&sportId=1&gameType=R`)
+  const data = await res.json()
+  if (!data.dates?.length) return []
+
+  const games = []
+  for (const d of data.dates) {
+    for (const g of d.games) {
+      const isHome = g.teams.home.team.id === teamId
+      const opp = isHome ? g.teams.away.team : g.teams.home.team
+      const dt = new Date(g.gameDate)
+      games.push({
+        day: dt.toLocaleDateString('en-US', { weekday: 'short' }),
+        monthDay: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDate: dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+        atVs: isHome ? 'vs' : '@',
+        opponent: opp.name,
+        logoId: opp.id,
+        teamLogoId: teamId,
+        venueName: g.venue?.name ?? '',
+        time: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        tv: g.content?.media?.epg?.[0]?.items?.[0]?.callSign ?? '',
+        isHome,
+        gamePk: g.gamePk,
+        isoDate: dt.toLocaleDateString('en-CA'),
+        weekday: dt.toLocaleDateString('en-US', { weekday: 'long' }),
+      })
+    }
+  }
+  return games
+}
+
 async function fetchNews(espnId) {
   const res = await fetch(
-    `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId || 19}&limit=6`
+    `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?team=${espnId || 19}&limit=25`
   )
   const data = await res.json()
   return (data.articles || []).map(a => ({
     headline: a.headline,
+    description: a.description ?? '',
     image: a.images?.[0]?.url || '',
     href: a.links?.web?.href || '#',
     published: a.published,
   }))
+}
+
+async function fetchMLBNews() {
+  const res = await fetch(
+    `https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/news?limit=25`
+  )
+  const data = await res.json()
+  return (data.articles || []).map(a => ({
+    headline: a.headline,
+    description: a.description ?? '',
+    image: a.images?.[0]?.url || '',
+    href: a.links?.web?.href || '#',
+    published: a.published,
+  }))
+}
+
+async function fetchLiveGameFeed(gamePk) {
+  const res = await fetch(`https://statsapi.mlb.com/api/v1.1/game/${gamePk}/feed/live`)
+  return res.json()
+}
+
+async function fetchTodayGame(teamId) {
+  const today = new Date().toLocaleDateString('en-CA')
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${teamId}&date=${today}`)
+  const data = await res.json()
+  return data.dates?.[0]?.games?.[0] ?? null
+}
+
+async function fetchRoster(teamId) {
+  const season = new Date().getFullYear()
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${season}`)
+  const data = await res.json()
+  return data.roster ?? []
+}
+
+async function fetchDepthChart(teamId) {
+  const season = new Date().getFullYear()
+  const res = await fetch(
+    `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=depthChart&season=${season}&hydrate=person`
+  )
+  const data = await res.json()
+  return data.roster ?? []
+}
+
+async function fetchPlayerStats(playerId) {
+  const res = await fetch(
+    `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting,pitching],type=[season,career],season=${SEASON})`
+  )
+  const { people } = await res.json()
+  return people[0] ?? null
+}
+
+async function fetchWikiImage(wikiSlug) {
+  const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wikiSlug}`)
+  const data = await res.json()
+  return data.thumbnail?.source ?? null
 }
 
 function timeAgo(iso) {
