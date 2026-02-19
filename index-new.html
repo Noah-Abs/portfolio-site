@@ -953,6 +953,223 @@
       text-transform: uppercase;
     }
 
+    /* ── Settings Overlay ─────────────────────────────── */
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: var(--bg);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .settings-overlay.open {
+      transform: translateY(0);
+    }
+    .settings-header {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.25rem 1rem;
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .settings-close-btn {
+      background: none;
+      border: none;
+      color: var(--accent2);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-body {
+      padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px));
+    }
+    .settings-section-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      opacity: 0.7;
+    }
+    .settings-team-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .settings-team-row {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-team-row.active {
+      border-color: var(--accent2);
+    }
+    .settings-team-row img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+    .settings-team-row-info {
+      flex: 1;
+    }
+    .settings-team-row-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .settings-team-row-div {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .settings-team-check {
+      font-size: 1.1rem;
+      color: var(--accent2);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .settings-team-row.active .settings-team-check {
+      opacity: 1;
+    }
+    .settings-save-btn {
+      display: block;
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.85rem;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .settings-save-btn:active { background: #6d28d9; }
+    .settings-saved-msg {
+      text-align: center;
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      color: var(--accent2);
+      margin-top: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .settings-saved-msg.show { opacity: 1; }
+
+    /* Nav gear icon */
+    .nav-settings-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-settings-btn:hover { color: var(--text); }
+    .nav-settings-btn svg { width: 20px; height: 20px; }
+
+    /* ── Home Dashboard Cards ────────────────────────── */
+    .home-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 520px;
+      position: relative;
+      z-index: 1;
+    }
+    .home-dash-card {
+      background: rgba(26,26,38,0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .home-dash-card:hover { border-color: rgba(124,58,237,0.3); }
+    .home-dash-card.full-width {
+      grid-column: 1 / -1;
+    }
+    .home-dash-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+    .home-dash-header img {
+      width: 22px;
+      height: 22px;
+    }
+    .home-dash-header span {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .home-dash-big {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 0.2rem;
+    }
+    .home-dash-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+    .home-dash-performers {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    .home-dash-perf {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.75rem;
+    }
+    .home-dash-perf-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .home-dash-perf-line {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
     /* ── Mobile App Bottom Tab Bar ────────────────────── */
     .app-tabs {
       display: none;
@@ -1051,7 +1268,24 @@
       <li><a href="#projects">Projects</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
+    <button class="nav-settings-btn" onclick="openSettings()" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </nav>
+
+  <!-- Settings Overlay -->
+  <div class="settings-overlay" id="settings-overlay">
+    <div class="settings-header">
+      <h2>Settings</h2>
+      <button class="settings-close-btn" onclick="closeSettings()">Done</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-section-label">Your Team</div>
+      <div class="settings-team-list" id="settings-team-list"></div>
+      <button class="settings-save-btn" onclick="settingsSave()">Save as Default</button>
+      <div class="settings-saved-msg" id="settings-saved-msg">Saved!</div>
+    </div>
+  </div>
 
   <!-- Hero -->
   <section class="hero">
@@ -1069,6 +1303,8 @@
         <a href="#projects" class="btn btn-primary">View my work ↓</a>
         <a href="#contact" class="btn btn-ghost">Get in touch</a>
       </div>
+      <!-- Live dashboard cards on home screen -->
+      <div class="home-dashboard" id="home-dashboard"></div>
     </div>
   </section>
 
@@ -1423,6 +1659,7 @@
     }
 
     let _appTeam = localStorage.getItem('defaultTeam') || localStorage.getItem('selectedTeam') || 'dodgers'
+    let _liveStatsCache = null
 
     function renderAppTeam(key) {
       const t = APP_TEAMS[key]
@@ -1566,12 +1803,15 @@
             { val: dp.era,                       lbl: 'Team ERA',  rank: nlRank(pitSplits, 'era', true) },
             { val: parseInt(dp.strikeOuts).toLocaleString(), lbl: 'Strikeouts' },
           ]
+          _liveStatsCache = liveStats
           document.getElementById('app-team-stats').innerHTML = liveStats.map(s => `
             <div class="team-stat">
               <span class="team-stat-val">${s.val}</span>
               <span class="team-stat-lbl">${s.lbl}</span>
               ${s.rank ? `<span class="team-stat-rank">${s.rank}</span>` : ''}
             </div>`).join('')
+          // Also update home dashboard record
+          updateHomeDashLive(key, liveStats, null, null, null)
         }
       } catch (e) { console.warn('App stats fetch failed', e) }
 
@@ -1640,8 +1880,155 @@
                   <span class="performer-line">${p.line}</span>
                 </div>`).join('')}`
           }
+          // Also update home dashboard last game
+          updateHomeDashLive(key, _liveStatsCache || APP_TEAMS[key].stats, scoreText, dateText, performers)
         }
       } catch (e) { console.warn('App last game fetch failed', e) }
+    }
+
+    /* ── Settings ─────────────────────────────────────── */
+    function openSettings() {
+      renderSettingsTeams()
+      document.getElementById('settings-overlay').classList.add('open')
+      document.body.style.overflow = 'hidden'
+    }
+    function closeSettings() {
+      document.getElementById('settings-overlay').classList.remove('open')
+      document.body.style.overflow = ''
+    }
+    function renderSettingsTeams() {
+      const list = document.getElementById('settings-team-list')
+      list.innerHTML = Object.entries(APP_TEAMS).map(([key, t]) => `
+        <div class="settings-team-row ${key === _appTeam ? 'active' : ''}" onclick="settingsPick('${key}')">
+          <img src="${t.logoSrc}" alt="${t.nameShort}">
+          <div class="settings-team-row-info">
+            <div class="settings-team-row-name">${t.name}</div>
+            <div class="settings-team-row-div">${t.nameShort}</div>
+          </div>
+          <span class="settings-team-check">✓</span>
+        </div>`).join('')
+    }
+    function settingsPick(key) {
+      _appTeam = key
+      renderAppTeam(key)
+      loadAppLiveData(key)
+      renderSettingsTeams()
+      renderHomeDashboard(key)
+    }
+    function settingsSave() {
+      localStorage.setItem('defaultTeam', _appTeam)
+      localStorage.setItem('selectedTeam', _appTeam)
+      const msg = document.getElementById('settings-saved-msg')
+      msg.classList.add('show')
+      setTimeout(() => msg.classList.remove('show'), 2200)
+    }
+
+    /* ── Home Dashboard Cards ────────────────────────── */
+    function renderHomeDashboard(key) {
+      const t = APP_TEAMS[key]
+      if (!t) return
+      const dash = document.getElementById('home-dashboard')
+      if (!dash) return
+
+      // Record card
+      const recStat = t.stats.find(s => s.lbl === 'Record') || t.stats[0]
+      const eraStat = t.stats.find(s => s.lbl === 'Team ERA')
+
+      // Next game
+      const g = t.nextGame
+
+      // Last game + performers
+      const perfs = (t.performers || []).slice(0, 3)
+
+      dash.innerHTML = `
+        <div class="home-dash-card">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Record</span>
+          </div>
+          <div class="home-dash-big">${recStat.val}</div>
+          <div class="home-dash-sub">${recStat.rank || ''}</div>
+        </div>
+        <div class="home-dash-card">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Next Game</span>
+          </div>
+          ${g ? `
+            <div class="home-dash-big" style="font-size:1rem">${g.atVs} ${g.opponent}</div>
+            <div class="home-dash-sub">${g.date} · ${g.time}</div>
+            ${g.tag ? `<div class="home-dash-sub" style="color:var(--accent2);margin-top:4px">${g.tag}</div>` : ''}
+          ` : '<div class="home-dash-sub">TBD</div>'}
+        </div>
+        <div class="home-dash-card full-width">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Last Game</span>
+          </div>
+          <div class="home-dash-big">${t.lastGame}</div>
+          <div class="home-dash-sub">${t.lastGameDate || ''}</div>
+          ${perfs.length ? `
+            <div class="home-dash-performers">
+              ${perfs.map(p => `
+                <div class="home-dash-perf">
+                  <span class="home-dash-perf-name">${p.name}</span>
+                  <span class="home-dash-perf-line">${p.line}</span>
+                </div>`).join('')}
+            </div>
+          ` : ''}
+        </div>`
+    }
+
+    // Update home dashboard with live data when API returns
+    function updateHomeDashLive(key, liveStats, scoreText, dateText, performers) {
+      const t = APP_TEAMS[key]
+      if (!t || _appTeam !== key) return
+      const dash = document.getElementById('home-dashboard')
+      if (!dash) return
+
+      const recStat = liveStats.find(s => s.lbl === 'Record') || liveStats[0]
+      const g = t.nextGame
+      const perfs = (performers || t.performers || []).slice(0, 3)
+      const score = scoreText || t.lastGame
+      const date = dateText || t.lastGameDate || ''
+
+      dash.innerHTML = `
+        <div class="home-dash-card">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Record</span>
+          </div>
+          <div class="home-dash-big">${recStat.val}</div>
+          <div class="home-dash-sub">${recStat.rank || ''}</div>
+        </div>
+        <div class="home-dash-card">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Next Game</span>
+          </div>
+          ${g ? `
+            <div class="home-dash-big" style="font-size:1rem">${g.atVs} ${g.opponent}</div>
+            <div class="home-dash-sub">${g.date} · ${g.time}</div>
+            ${g.tag ? `<div class="home-dash-sub" style="color:var(--accent2);margin-top:4px">${g.tag}</div>` : ''}
+          ` : '<div class="home-dash-sub">TBD</div>'}
+        </div>
+        <div class="home-dash-card full-width">
+          <div class="home-dash-header">
+            <img src="${t.logoSrc}" alt="">
+            <span>Last Game</span>
+          </div>
+          <div class="home-dash-big">${score}</div>
+          <div class="home-dash-sub">${date}</div>
+          ${perfs.length ? `
+            <div class="home-dash-performers">
+              ${perfs.map(p => `
+                <div class="home-dash-perf">
+                  <span class="home-dash-perf-name">${p.name}</span>
+                  <span class="home-dash-perf-line">${p.line}</span>
+                </div>`).join('')}
+            </div>
+          ` : ''}
+        </div>`
     }
 
     /* ── Mobile tab bar ─────────────────────────────────── */
@@ -1669,18 +2056,17 @@
           activeIdx = i + 1 // +1 because Home is index 0
         }
       }
-      // Map section index to tab index (Home=0, Team=1, News=2, Projects=3, Contact=4)
-      // Sections: team->1, news->2, about->skip(projects tab), projects->3, contact->4
       let tabIdx = 0
-      if (activeIdx === 1) tabIdx = 1      // team
-      else if (activeIdx === 2) tabIdx = 2  // news
-      else if (activeIdx >= 3 && activeIdx <= 4) tabIdx = 3 // about/projects
-      else if (activeIdx === 5) tabIdx = 4  // contact
+      if (activeIdx === 1) tabIdx = 1
+      else if (activeIdx === 2) tabIdx = 2
+      else if (activeIdx >= 3 && activeIdx <= 4) tabIdx = 3
+      else if (activeIdx === 5) tabIdx = 4
       tabs.forEach((t, i) => t.classList.toggle('active', i === tabIdx))
     }, { passive: true })
 
     // Initialize
     renderAppTeam(_appTeam)
+    renderHomeDashboard(_appTeam)
     loadAppLiveData(_appTeam)
   </script>
 </body>
