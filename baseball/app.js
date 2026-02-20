@@ -247,9 +247,9 @@ async function loadLiveData() {
 /* ── News ── */
 async function loadNews() {
   try {
-    const espnId = APP_TEAMS[_currentTeamKey]?.espnId ?? 19
+    const espnId = APP_TEAMS[_currentTeamKey]?.espnId
     const [teamArticles, mlbArticles] = await Promise.all([
-      fetchNews(espnId),
+      espnId ? fetchNews(espnId) : Promise.resolve([]),
       fetchMLBNews()
     ])
     _newsArticles = teamArticles ?? []

@@ -51,6 +51,22 @@ const APP_TEAMS = {
     bg1: '#1a0510', bg2: '#0C0310', bg3: '#050008',
     h1: '#0C2340', h2: '#BD3039',
   },
+  usa: {
+    id: 2524,
+    espnId: null,
+    name: 'Team USA',
+    cityShort: 'United States',
+    nameShort: 'USA',
+    teamAbbr: 'USA',
+    logoSrc: 'https://www.mlbstatic.com/team-logos/team-cap-on-dark/2524.svg',
+    logoAlt: 'Team USA',
+    venueName: 'Various',
+    division: 'World Baseball Classic',
+    wsTitles: [2017],
+    wsLabel: 'WBC Champions',
+    bg1: '#0A1128', bg2: '#050B1A', bg3: '#020510',
+    h1: '#0A1E3D', h2: '#B31942',
+  },
 }
 
 const ACCENT_COLORS = [
@@ -224,6 +240,14 @@ const WS_INFO = {
     desc: "The 108-win Red Sox dominated the Dodgers. Steve Pearce hit three home runs including two in the clinching Game 5, earning MVP honors.",
     wiki: '2018_World_Series'
   },
+  2017: {
+    subtitle: 'Team USA vs. Puerto Rico',
+    result: 'USA wins 8-0',
+    mvp: 'Marcus Stroman',
+    venue: 'Dodger Stadium',
+    desc: "Team USA won the World Baseball Classic for the first time. Marcus Stroman threw six scoreless innings in the final, and the U.S. offense erupted for eight runs against Puerto Rico.",
+    wiki: '2017_World_Baseball_Classic'
+  },
 }
 
 /* ── Contract Data ── */
@@ -269,7 +293,8 @@ const CONTRACTS = {
       { id: 680737, name: 'C. Rafaela',       pos: 'SS', aav: 1.5,  total: 9,   start: 2025, end: 2030 },
       { id: 680646, name: 'Connor Wong',      pos: 'C',  aav: 1.3,  total: 5.2, start: 2025, end: 2028 },
     ]
-  }
+  },
+  usa: null,
 }
 
 /* ══════════════════════════════════════════════
@@ -390,4 +415,5 @@ const GAME_BREAKDOWN = {
 
   mets: null,
   redsox: null,
+  usa: null,
 }
