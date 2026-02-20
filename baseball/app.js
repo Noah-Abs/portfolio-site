@@ -691,10 +691,7 @@ function pitGrid(s) {
 function renderSettingsTeams() {
   const list = document.getElementById('settings-team-list')
   if (!list) return
-  /* Only show the current team (each subdirectory is its own team page) */
-  const teams = _urlTeam
-    ? Object.entries(APP_TEAMS)
-    : Object.entries(APP_TEAMS).filter(([key]) => key === 'dodgers')
+  const teams = Object.entries(APP_TEAMS)
   list.innerHTML = teams.map(([key, t]) => `
     <div class="settings-team-row ${key === _currentTeamKey ? 'active' : ''}" data-team="${key}" onclick="settingsPickTeam('${key}')">
       <img src="${t.logoSrc}" alt="${t.nameShort}">
