@@ -156,19 +156,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .hero-next-team { font-size: 0.78rem; font-weight: 600; color: #fff; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero-next-time { font-size: 0.7rem; color: rgba(255,255,255,0.38); letter-spacing: 0.05em; }
 
-/* ── Live Game Card ── */
-.live-pill { display: flex; align-items: center; gap: 0.3rem; font-size: 0.48rem; font-weight: 700; letter-spacing: 0.2em; color: rgba(255,80,80,0.9); }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4444; animation: livepulse 1.4s ease-in-out infinite; flex-shrink: 0; }
 @keyframes livepulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.7); } }
-.live-score { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 0.75rem; }
-.live-team { display: flex; align-items: center; gap: 0.4rem; }
-.live-logo { height: 22px; width: auto; }
-.live-abbr { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); }
-.live-runs { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; color: #fff; min-width: 1.2ch; text-align: center; }
-.live-runs.batting { color: rgba(230,170,40,0.9); }
-.live-inning { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); text-align: center; line-height: 1.2; }
-.live-details { display: flex; flex-direction: column; gap: 0.55rem; }
-.live-bases-count { display: flex; align-items: center; gap: 0.9rem; }
 .bases-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
 .base { position: absolute; width: 11px; height: 11px; border: 1.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.06); transform: rotate(45deg); }
 .base.on { background: rgba(230,170,40,0.85); border-color: rgba(230,170,40,1); }
@@ -183,114 +171,10 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .count-dot.ball { background: rgba(100,200,100,0.85); border-color: rgba(100,200,100,1); }
 .count-dot.strike { background: rgba(230,170,40,0.85); border-color: rgba(230,170,40,1); }
 .count-dot.out { background: rgba(220,60,40,0.85); border-color: rgba(220,60,40,1); }
-.live-matchup-row { display: flex; align-items: center; gap: 0.4rem; }
-.live-role { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); border-radius: 3px; padding: 0.12rem 0.3rem; flex-shrink: 0; }
-.live-player { font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.live-last-play { font-size: 0.68rem; color: rgba(255,255,255,0.38); line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.55rem; margin-top: 0.1rem; }
-
-/* ── Full Live Game View ── */
-.live-full { min-height: calc(100dvh - 90px); padding: 1.5rem 2.5rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; position: relative; z-index: 1; }
-
-/* Score Banner */
-.lf-banner { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 1rem 1.5rem 1.15rem; }
-.lf-banner-tag { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.3); text-align: center; margin-bottom: 0.65rem; }
-.lf-banner-score { display: flex; align-items: center; justify-content: center; gap: 0; }
-.lf-banner-team { display: flex; align-items: center; gap: 0.65rem; flex: 1; }
-.lf-banner-team:last-child { justify-content: flex-end; }
-.lf-banner-logo { height: 36px; width: auto; flex-shrink: 0; }
-.lf-banner-info { display: flex; flex-direction: column; }
-.lf-banner-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.7); }
-.lf-banner-runs { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; line-height: 1; color: #fff; min-width: 1.5ch; text-align: center; }
-.lf-banner-status { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 60px; flex-shrink: 0; }
-.lf-banner-status-text { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.35); }
-
-/* Line Score */
-.lf-scoreboard { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
-.lf-sb-table { width: 100%; border-collapse: collapse; font-family: 'Bebas Neue', sans-serif; min-width: 500px; }
-.lf-sb-table th { font-size: 0.58rem; font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 0.5rem 0.4rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.07); }
-.lf-sb-table th:first-child { text-align: left; padding-left: 0.75rem; min-width: 80px; }
-.lf-sb-table th.lf-rhe { background: rgba(255,255,255,0.03); }
-.lf-sb-table td { text-align: center; padding: 0.5rem 0.4rem; font-size: 0.9rem; color: rgba(255,255,255,0.65); border-right: 1px solid rgba(255,255,255,0.04); }
-.lf-sb-table td:last-child { border-right: none; }
-.lf-sb-table td:first-child { text-align: left; padding-left: 0.75rem; font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.85); }
-.lf-sb-table td.lf-rhe { background: rgba(255,255,255,0.03); }
-.lf-sb-table tr:last-child td { border-bottom: none; }
-.lf-sb-table tbody tr:not(:last-child) td { border-bottom: 1px solid rgba(255,255,255,0.04); }
-.lf-sb-table td.lf-cur-inn { color: #fff; background: rgba(255,255,255,0.08); font-weight: 700; }
-.lf-sb-team { display: flex; align-items: center; gap: 0.45rem; }
-.lf-sb-logo { height: 18px; width: auto; }
-
-/* Body Grid */
-.lf-body { display: grid; grid-template-columns: 360px 1fr; gap: 1.25rem; align-items: start; }
-
-/* At-Bat Card */
-.lf-at-bat { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
-.lf-at-bat-header { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.28); padding-bottom: 0.55rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
-.lf-matchup { display: flex; flex-direction: column; gap: 0.3rem; }
-.lf-matchup-row { display: flex; align-items: center; gap: 0.45rem; }
-.lf-role { font-size: 0.44rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); border-radius: 3px; padding: 0.12rem 0.3rem; flex-shrink: 0; }
-.lf-player-name { font-size: 0.88rem; font-weight: 600; color: rgba(255,255,255,0.9); }
-
-/* Zone + Count Area */
-.lf-zone-area { display: flex; align-items: flex-start; gap: 0.75rem; }
-.lf-zone-wrap { flex-shrink: 0; width: 180px; }
-.lf-zone-svg { display: block; width: 100%; height: auto; }
-
-/* Count / Situation */
-.lf-situation { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 2px; }
-.lf-count-text { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; line-height: 1; color: #fff; letter-spacing: 0.06em; }
-.lf-count-col { display: flex; flex-direction: column; gap: 0.35rem; }
-.lf-count-row { display: flex; align-items: center; gap: 0.25rem; }
-.lf-count-lbl { font-size: 0.48rem; font-weight: 700; letter-spacing: 0.12em; color: rgba(255,255,255,0.3); width: 12px; }
-.lf-count-dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.18); background: transparent; }
-.lf-count-dot.ball { background: rgba(100,200,100,0.85); border-color: rgba(100,200,100,1); }
-.lf-count-dot.strike { background: rgba(230,170,40,0.85); border-color: rgba(230,170,40,1); }
-.lf-count-dot.out { background: rgba(220,60,40,0.85); border-color: rgba(220,60,40,1); }
-.lf-bases-mini { position: relative; width: 44px; height: 44px; margin-top: 0.35rem; }
-
-/* Pitch Legend */
-.lf-pitch-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding-top: 0.15rem; }
-.lf-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.55rem; color: rgba(255,255,255,0.4); font-weight: 600; letter-spacing: 0.02em; }
-.lf-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-
-/* Pitch Log */
-.lf-pitch-log { display: flex; flex-direction: column; gap: 0; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.6rem; }
-.lf-pitch-log-label { font-size: 0.52rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 0.35rem; }
-.lf-pitch-row { display: grid; grid-template-columns: 22px 50px 1fr auto; align-items: center; gap: 0.4rem; padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.72rem; }
-.lf-pitch-row:last-child { border-bottom: none; }
-.lf-pitch-num { color: rgba(255,255,255,0.3); font-size: 0.6rem; font-weight: 700; text-align: center; }
-.lf-pitch-speed { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; color: #fff; }
-.lf-pitch-speed small { font-size: 0.55rem; font-family: 'Inter', sans-serif; color: rgba(255,255,255,0.35); }
-.lf-pitch-type { color: rgba(255,255,255,0.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lf-pitch-result { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.12rem 0.4rem; border-radius: 3px; white-space: nowrap; }
-.lf-pitch-result.ball { color: rgba(100,200,100,0.9); background: rgba(100,200,100,0.12); }
-.lf-pitch-result.strike { color: rgba(230,170,40,0.9); background: rgba(230,170,40,0.12); }
-.lf-pitch-result.foul { color: rgba(255,200,80,0.9); background: rgba(255,200,80,0.10); }
-.lf-pitch-result.inplay { color: rgba(100,160,255,0.9); background: rgba(100,160,255,0.12); }
-
-/* Play-by-Play Log */
-.lf-play-log { background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
-.lf-play-log-header { font-size: 0.58rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.28); padding: 0.75rem 1rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
-.lf-play-log-scroll { max-height: 600px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
-.lf-play-log-scroll::-webkit-scrollbar { width: 4px; }
-.lf-play-log-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
-
-/* Inning Groups */
-.lf-pp-group { border-bottom: 1px solid rgba(255,255,255,0.06); }
-.lf-pp-group:last-child { border-bottom: none; }
-.lf-pp-inning-hdr { font-family: 'Bebas Neue', sans-serif; font-size: 0.82rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); padding: 0.55rem 1rem 0.35rem; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 1; }
-.lf-pp-play { padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
-.lf-pp-play:last-child { border-bottom: none; }
-.lf-pp-scoring { background: rgba(255,200,40,0.04); border-left: 3px solid rgba(230,170,40,0.5); }
-.lf-pp-event { font-size: 0.74rem; font-weight: 700; color: rgba(255,255,255,0.82); margin-bottom: 0.15rem; }
-.lf-pp-scoring .lf-pp-event { color: rgba(230,180,40,0.95); }
-.lf-pp-desc { font-size: 0.66rem; color: rgba(255,255,255,0.38); line-height: 1.5; }
-.lf-pp-scoring .lf-pp-desc { color: rgba(255,255,255,0.5); }
-
-.lf-empty { padding: 3rem 1.5rem; text-align: center; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.15); }
 
 /* ── Game Breakdown Center ── */
-.gbc { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+#home-breakdown { padding: 0 2.5rem 4rem; }
+.gbc { display: flex; flex-direction: column; gap: 1.25rem; }
 .gbc-header { text-align: center; padding: 1.5rem 1rem 0.5rem; }
 .gbc-header-tag { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 0.4rem; }
 .gbc-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: #fff; line-height: 1.1; }
@@ -357,6 +241,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .gbc-grade.a { color: rgba(100,200,100,0.95); background: rgba(100,200,100,0.12); }
 .gbc-grade.b { color: rgba(100,160,255,0.95); background: rgba(100,160,255,0.12); }
 .gbc-grade.c { color: rgba(255,180,60,0.95); background: rgba(255,180,60,0.12); }
+.gbc-grade.d { color: rgba(240,80,80,0.95); background: rgba(240,80,80,0.12); }
 
 /* Manager Decisions */
 .gbc-decs { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -642,11 +527,6 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .lf-body { grid-template-columns: 1fr; }
-  .live-full { padding: 1.25rem 1.25rem 3rem; }
-  .lf-banner-logo { height: 28px; }
-  .lf-banner-runs { font-size: 2.4rem; }
-  .lf-banner-name { font-size: 1.1rem; }
   .gbc-grid2 { grid-template-columns: 1fr; }
   .gbc-pitch-bar { grid-template-columns: 90px 1fr 32px 42px; }
 }
@@ -677,18 +557,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .ws-banners { display: none !important; }
 
   .side-panel { width: 100%; top: 0; }
-  .live-full { padding: 0.75rem 0.75rem 2rem; gap: 0.75rem; }
-  .lf-banner { padding: 0.75rem 0.75rem 0.85rem; }
-  .lf-banner-logo { height: 24px; }
-  .lf-banner-runs { font-size: 2rem; }
-  .lf-banner-name { font-size: 0.95rem; }
-  .lf-banner-team { gap: 0.35rem; }
-  .lf-banner-status { min-width: 45px; }
-  .lf-zone-area { flex-direction: column; gap: 0.5rem; }
-  .lf-zone-wrap { width: 160px; }
-  .lf-situation { flex-direction: row; gap: 1rem; align-items: center; }
-  .lf-count-text { font-size: 1.5rem; }
-  .lf-play-log-scroll { max-height: 400px; }
+  #home-breakdown { padding: 0 0.75rem 3rem; }
   .dc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .dc-wrap { padding: 1rem 0.75rem 2rem; }
   .dc-page-title { font-size: 1.5rem; }
@@ -747,7 +616,6 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .mhc-performer:last-child { border-bottom: none; }
   .mhc-p-name { font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.75); }
   .mhc-p-line { font-size: 0.62rem; color: rgba(255,255,255,0.35); }
-  .mhc-live { background: rgba(255,60,60,0.06); border: 1px solid rgba(255,60,60,0.15); border-radius: 14px; padding: 0.75rem 1rem; }
 
   /* Bottom tab bar */
   .mob-tabs {
@@ -769,7 +637,6 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .mob-tab:active { opacity: 0.6; }
   .mob-tab svg { width: 22px; height: 22px; flex-shrink: 0; }
   .mob-tab-label { font-family: 'Inter', sans-serif; font-size: 0.57rem; font-weight: 500; letter-spacing: 0.01em; line-height: 1; }
-  .mob-live-dot { position: absolute; top: 5px; right: calc(50% - 18px); width: 8px; height: 8px; background: #ff3b30; border-radius: 50%; border: 1.5px solid rgba(0,7,32,0.97); animation: livepulse 1.4s ease-in-out infinite; }
   .mob-tab-center { width: 64px; height: 64px; border-radius: 50%; background: var(--team-header2, #003DA5); border: 3px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); flex-shrink: 0; position: relative; z-index: 10; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s; padding: 0; }
   .mob-tab-center:active { opacity: 0.6; }
   .mob-tab-center img { width: 38px; height: 38px; object-fit: contain; }

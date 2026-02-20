@@ -1,8 +1,5 @@
 /* ── App State ── */
 let _currentTeamKey = 'dodgers'
-let _liveGamePk = null
-let _liveTimer = null
-let _lastLiveData = null
 let _depthLoaded = false
 let _contractsLoaded = false
 let _currentView = 'home'
@@ -72,15 +69,10 @@ function renderTeam(key) {
   const centerLogo = document.getElementById('mob-center-logo')
   if (centerLogo) { centerLogo.src = t.logoSrc; centerLogo.alt = t.logoAlt }
 
-  if (_liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
-  _liveGamePk = null
-  _lastLiveData = null
-  document.getElementById('live-game-card').style.display = 'none'
-
   renderMobHomeCards(t, null, null, null)
   loadLiveData()
   loadNews()
-  startLiveTracker()
+  renderBreakdown()
 }
 
 function renderMobHomeCards(t, stats, lastGameData, nextGame) {
@@ -741,12 +733,11 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'live', 'depth', 'contracts', 'news', 'settings']
+  const allViews = ['home', 'depth', 'contracts', 'news', 'settings']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
   })
-  if (view === 'live' && _lastLiveData) renderFullLiveGame(_lastLiveData)
   if (view === 'depth') loadDepthChart()
   if (view === 'contracts') loadContracts(_currentTeamKey)
   if (view === 'news') renderNewsPage()
@@ -759,8 +750,8 @@ function switchView(view) {
 
 function _setMobTab(view) {
   document.querySelectorAll('.mob-tab, .mob-tab-center').forEach(b => b.classList.remove('active'))
-  if (view === 'live') {
-    const t = document.getElementById('mobtab-live')
+  if (view === 'news') {
+    const t = document.getElementById('mobtab-news')
     if (t) t.classList.add('active')
   } else if (view === 'home') {
     const t = document.getElementById('mobtab-home')
@@ -771,575 +762,21 @@ function _setMobTab(view) {
   }
 }
 
-/* ── Demo Live Data (2025 WS Game 7 — Full Game) ── */
-function getDemoLiveData() {
-  const T = true, B = false
-  const p = (inn, top, evt, desc) => ({ about: { inning: inn, isTopInning: top }, result: { event: evt, description: desc } })
-  return {
-    gameData: {
-      status: { abstractGameState: 'Final' },
-      teams: {
-        away: { team: { id: 141, abbreviation: 'TOR', name: 'Toronto Blue Jays' } },
-        home: { team: { id: 119, abbreviation: 'LAD', name: 'Los Angeles Dodgers' } },
-      }
-    },
-    liveData: {
-      linescore: {
-        currentInning: 11, isTopInning: true,
-        balls: 2, strikes: 3, outs: 3, offense: {},
-        innings: [
-          { num: 1,  away: { runs: 0 }, home: { runs: 0 } },
-          { num: 2,  away: { runs: 0 }, home: { runs: 0 } },
-          { num: 3,  away: { runs: 1 }, home: { runs: 0 } },
-          { num: 4,  away: { runs: 0 }, home: { runs: 1 } },
-          { num: 5,  away: { runs: 0 }, home: { runs: 0 } },
-          { num: 6,  away: { runs: 2 }, home: { runs: 0 } },
-          { num: 7,  away: { runs: 0 }, home: { runs: 1 } },
-          { num: 8,  away: { runs: 0 }, home: { runs: 0 } },
-          { num: 9,  away: { runs: 0 }, home: { runs: 1 } },
-          { num: 10, away: { runs: 0 }, home: { runs: 1 } },
-          { num: 11, away: { runs: 0 }, home: {} },
-        ],
-        teams: { away: { runs: 3, hits: 7, errors: 0 }, home: { runs: 4, hits: 9, errors: 1 } }
-      },
-      plays: {
-        currentPlay: {
-          matchup: {
-            batter:  { fullName: 'Vladimir Guerrero Jr.' },
-            pitcher: { fullName: 'Yoshinobu Yamamoto' },
-          },
-          result: { description: 'Vladimir Guerrero Jr. strikes out swinging. Yoshinobu Yamamoto closes it from the bullpen \u2014 Dodgers win the 2025 World Series!' },
-          playEvents: [
-            { isPitch: true, pitchData: { coordinates: { pX: 0.2, pZ: 1.1 }, startSpeed: 90, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'B', type: { description: 'Splitter' }, description: 'Ball' } },
-            { isPitch: true, pitchData: { coordinates: { pX: -0.6, pZ: 2.8 }, startSpeed: 98, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'C', type: { description: 'Four-Seam Fastball' }, description: 'Called Strike' } },
-            { isPitch: true, pitchData: { coordinates: { pX: 1.1, pZ: 1.3 }, startSpeed: 86, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'B', type: { description: 'Slider' }, description: 'Ball' } },
-            { isPitch: true, pitchData: { coordinates: { pX: 0.1, pZ: 2.5 }, startSpeed: 99, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'F', type: { description: 'Four-Seam Fastball' }, description: 'Foul' } },
-            { isPitch: true, pitchData: { coordinates: { pX: 0.6, pZ: 1.8 }, startSpeed: 91, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'F', type: { description: 'Splitter' }, description: 'Foul' } },
-            { isPitch: true, pitchData: { coordinates: { pX: 0.3, pZ: 1.2 }, startSpeed: 90, sz_top: 3.5, sz_bot: 1.5 },
-              details: { code: 'S', type: { description: 'Splitter' }, description: 'Swinging Strike' } },
-          ]
-        },
-        allPlays: [
-          /* ── Top 1 ── */
-          p(1,T,'Flyout','George Springer flies out to center fielder Andy Pages.'),
-          p(1,T,'Groundout','Bo Bichette grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
-          p(1,T,'Lineout','Vladimir Guerrero Jr. lines out to right fielder Mookie Betts.'),
-          /* ── Bottom 1 ── */
-          p(1,B,'Strikeout','Shohei Ohtani called out on strikes.'),
-          p(1,B,'Single','Mookie Betts singles on a ground ball to right field.'),
-          p(1,B,'Grounded Into DP','Freddie Freeman grounds into a double play, shortstop Bo Bichette to second baseman Davis Schneider to first baseman Vladimir Guerrero Jr. Mookie Betts out at 2nd.'),
-          /* ── Top 2 ── */
-          p(2,T,'Walk','Alejandro Kirk walks on 5 pitches.'),
-          p(2,T,'Sac Bunt','Daulton Varsho out on a sacrifice bunt, pitcher Walker Buehler to first baseman Freddie Freeman. Alejandro Kirk to 2nd.'),
-          p(2,T,'Flyout','Addison Barger flies out to left fielder Teoscar Hernandez.'),
-          p(2,T,'Groundout','Davis Schneider grounds out, second baseman Tommy Edman to first baseman Freddie Freeman.'),
-          /* ── Bottom 2 ── */
-          p(2,B,'Flyout','Teoscar Hernandez flies out to center fielder George Springer.'),
-          p(2,B,'Single','Will Smith singles on a line drive to center field.'),
-          p(2,B,'Strikeout','Tommy Edman strikes out swinging.'),
-          p(2,B,'Groundout','Miguel Rojas grounds out, shortstop Bo Bichette to first baseman Vladimir Guerrero Jr.'),
-          /* ── Top 3 ── */
-          p(3,T,'Single','Kevin Kiermaier singles on a ground ball to left field.'),
-          p(3,T,'Groundout','Spencer Horwitz grounds out, second baseman Tommy Edman to first baseman Freddie Freeman. Kevin Kiermaier to 2nd.'),
-          p(3,T,'Flyout','George Springer flies out to right fielder Mookie Betts.'),
-          p(3,T,'Single','Bo Bichette singles on a line drive to left field. Kevin Kiermaier scores.'),
-          p(3,T,'Flyout','Vladimir Guerrero Jr. flies out to center fielder Andy Pages.'),
-          /* ── Bottom 3 ── */
-          p(3,B,'Groundout','Gavin Lux grounds out, third baseman Addison Barger to first baseman Vladimir Guerrero Jr.'),
-          p(3,B,'Strikeout','Andy Pages strikes out swinging.'),
-          p(3,B,'Groundout','Shohei Ohtani grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
-          /* ── Top 4 ── */
-          p(4,T,'Flyout','Alejandro Kirk flies out to left fielder Teoscar Hernandez.'),
-          p(4,T,'Strikeout','Daulton Varsho called out on strikes.'),
-          p(4,T,'Groundout','Addison Barger grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
-          /* ── Bottom 4 ── */
-          p(4,B,'Home Run','Mookie Betts homers (1) on a fly ball to left center field.'),
-          p(4,B,'Single','Freddie Freeman singles on a ground ball to right field.'),
-          p(4,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
-          p(4,B,'Flyout','Will Smith flies out to center fielder George Springer.'),
-          p(4,B,'Groundout','Tommy Edman grounds out, pitcher Jose Berrios to first baseman Vladimir Guerrero Jr.'),
-          /* ── Top 5 ── */
-          p(5,T,'Flyout','Davis Schneider flies out to center fielder Andy Pages.'),
-          p(5,T,'Groundout','Kevin Kiermaier grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
-          p(5,T,'Strikeout','Spencer Horwitz called out on strikes.'),
-          /* ── Bottom 5 ── */
-          p(5,B,'Lineout','Miguel Rojas lines out to second baseman Davis Schneider.'),
-          p(5,B,'Single','Gavin Lux singles on a ground ball to center field.'),
-          p(5,B,'Flyout','Andy Pages flies out to right fielder Kevin Kiermaier.'),
-          p(5,B,'Groundout','Shohei Ohtani grounds out, first baseman Vladimir Guerrero Jr. to pitcher Jose Berrios covering.'),
-          /* ── Top 6 ── */
-          p(6,T,'Single','George Springer singles on a line drive to right field.'),
-          p(6,T,'Strikeout','Bo Bichette strikes out swinging.'),
-          p(6,T,'Home Run','Vladimir Guerrero Jr. homers (2) on a fly ball to left field. George Springer scores.'),
-          p(6,T,'Groundout','Alejandro Kirk grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
-          p(6,T,'Flyout','Daulton Varsho flies out to center fielder Andy Pages.'),
-          /* ── Bottom 6 ── */
-          p(6,B,'Walk','Mookie Betts walks on 4 pitches.'),
-          p(6,B,'Flyout','Freddie Freeman flies out to right fielder Kevin Kiermaier.'),
-          p(6,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
-          p(6,B,'Flyout','Will Smith flies out to left fielder Daulton Varsho.'),
-          /* ── Top 7 ── */
-          p(7,T,'Strikeout','Addison Barger called out on strikes.'),
-          p(7,T,'Groundout','Davis Schneider grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
-          p(7,T,'Flyout','Kevin Kiermaier flies out to center fielder Andy Pages.'),
-          /* ── Bottom 7 ── */
-          p(7,B,'Flyout','Tommy Edman flies out to left fielder Daulton Varsho.'),
-          p(7,B,'Strikeout','Miguel Rojas strikes out looking.'),
-          p(7,B,'Walk','Shohei Ohtani walks on 6 pitches.'),
-          p(7,B,'Double','Freddie Freeman doubles (3) on a sharp line drive to right field. Shohei Ohtani scores.'),
-          p(7,B,'Groundout','Teoscar Hernandez grounds out, shortstop Bo Bichette to first baseman Vladimir Guerrero Jr.'),
-          /* ── Top 8 ── */
-          p(8,T,'Groundout','Spencer Horwitz grounds out, second baseman Tommy Edman to first baseman Freddie Freeman.'),
-          p(8,T,'Single','George Springer singles on a ground ball to center field.'),
-          p(8,T,'Grounded Into DP','Bo Bichette grounds into a double play, shortstop Miguel Rojas to second baseman Tommy Edman to first baseman Freddie Freeman. George Springer out at 2nd.'),
-          /* ── Bottom 8 ── */
-          p(8,B,'Walk','Will Smith walks on 5 pitches.'),
-          p(8,B,'Sac Bunt','Tommy Edman out on a sacrifice bunt, catcher Alejandro Kirk to first baseman Vladimir Guerrero Jr. Will Smith to 2nd.'),
-          p(8,B,'Flyout','Miguel Rojas flies out to center fielder George Springer.'),
-          p(8,B,'Strikeout','Gavin Lux strikes out swinging.'),
-          /* ── Top 9 ── */
-          p(9,T,'Flyout','Vladimir Guerrero Jr. flies out to deep center fielder Andy Pages.'),
-          p(9,T,'Strikeout','Alejandro Kirk strikes out swinging.'),
-          p(9,T,'Groundout','Daulton Varsho grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
-          /* ── Bottom 9 ── */
-          p(9,B,'Strikeout','Andy Pages strikes out looking.'),
-          p(9,B,'Flyout','Teoscar Hernandez flies out to right fielder Kevin Kiermaier.'),
-          p(9,B,'Double','Tommy Edman doubles on a fly ball to left-center field.'),
-          p(9,B,'Single','Miguel Rojas singles on a ground ball to center field. Tommy Edman scores. Tie game, 3\u20133!'),
-          p(9,B,'Groundout','Gavin Lux grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
-          /* ── Top 10 ── */
-          p(10,T,'Strikeout','Addison Barger strikes out swinging.'),
-          p(10,T,'Groundout','Davis Schneider grounds out, third baseman Gavin Lux to first baseman Freddie Freeman.'),
-          p(10,T,'Flyout','George Springer flies out to center fielder Andy Pages.'),
-          /* ── Bottom 10 ── */
-          p(10,B,'Groundout','Mookie Betts grounds out, second baseman Davis Schneider to first baseman Vladimir Guerrero Jr.'),
-          p(10,B,'Flyout','Freddie Freeman flies out to deep center fielder George Springer.'),
-          p(10,B,'Home Run','Will Smith homers (2) on a fly ball to left-center field. Dodgers take the lead, 4\u20133!'),
-          p(10,B,'Strikeout','Teoscar Hernandez strikes out swinging.'),
-          /* ── Top 11 ── */
-          p(11,T,'Groundout','Daulton Varsho grounds out, shortstop Miguel Rojas to first baseman Freddie Freeman.'),
-          p(11,T,'Flyout','George Springer flies out to right fielder Mookie Betts.'),
-          p(11,T,'Strikeout','Vladimir Guerrero Jr. strikes out swinging. Dodgers win the 2025 World Series!'),
-        ]
-      }
-    }
-  }
-}
-
-/* ── Live Game Tracker ── */
-async function startLiveTracker() {
-  try {
-    const liveTeamId = APP_TEAMS[_currentTeamKey]?.id ?? 119
-    const game = await fetchTodayGame(liveTeamId)
-    if (!game) {
-      /* No live game — show demo data (2025 WS Game 7 final out) */
-      if (_currentTeamKey === 'dodgers') {
-        const demo = getDemoLiveData()
-        renderLiveGame(demo)
-      }
-      return
-    }
-    _liveGamePk = game.gamePk
-    const state = game.status.abstractGameState
-    if (state === 'Live' || state === 'Final') {
-      await updateLiveGame()
-      if (state === 'Live') _liveTimer = setInterval(updateLiveGame, 2000)
-    }
-  } catch (e) { console.warn('Live tracker:', e) }
-}
-
-async function updateLiveGame() {
-  if (!_liveGamePk) return
-  try {
-    const data = await fetchLiveGameFeed(_liveGamePk)
-    renderLiveGame(data)
-  } catch (e) {}
-}
-
-function renderLiveGame(data) {
-  _lastLiveData = data
-  const card = document.getElementById('live-game-card')
-  if (!card) return
-
-  const gs = data.gameData.status
-  const ls = data.liveData.linescore
-  const away = data.gameData.teams.away.team
-  const home = data.gameData.teams.home.team
-  const isLive = gs.abstractGameState === 'Live'
-  const isFinal = gs.abstractGameState === 'Final'
-
-  const sbBadge = document.getElementById('sb-live-badge')
-  if (sbBadge) sbBadge.style.display = isLive ? 'inline' : 'none'
-  const mobDot = document.getElementById('mob-live-dot')
-  if (mobDot) mobDot.style.display = isLive ? 'block' : 'none'
-
-  const awayRuns = ls.teams?.away?.runs ?? 0
-  const homeRuns = ls.teams?.home?.runs ?? 0
-  const inning = ls.currentInning ?? 1
-  const isTop = ls.isTopInning ?? true
-  const balls = ls.balls ?? 0
-  const strikes = ls.strikes ?? 0
-  const outs = ls.outs ?? 0
-  const first = !!ls.offense?.first
-  const second = !!ls.offense?.second
-  const third = !!ls.offense?.third
-  const batter = data.liveData.plays?.currentPlay?.matchup?.batter?.fullName ?? ''
-  const pitcher = data.liveData.plays?.currentPlay?.matchup?.pitcher?.fullName ?? ''
-  const lastPlay = data.liveData.plays?.currentPlay?.result?.description ?? ''
-  const inningStr = isFinal ? 'Final' : `${isTop ? '\u25b2' : '\u25bc'}\u00a0${inning}`
-  const awayBatting = isLive && isTop
-  const homeBatting = isLive && !isTop
-
-  function dots(count, max, cls) {
-    return Array.from({ length: max }, (_, i) =>
-      `<span class="count-dot ${i < count ? cls : ''}"></span>`).join('')
-  }
-
-  const isDemo = !_liveGamePk && isFinal
-  card.style.display = 'block'
-  card.innerHTML = `
-    <div class="dash-card-header">
-      <span class="dash-card-label">${isFinal ? 'Final Score' : 'Live Game'}</span>
-      ${isLive ? '<span class="live-pill"><span class="live-dot"></span>LIVE</span>' : ''}
-    </div>
-    ${isDemo ? '<div style="font-size:0.55rem;color:rgba(255,255,255,0.35);text-align:center;margin:-0.2rem 0 0.3rem;letter-spacing:0.04em">2025 World Series \u00b7 Game 7</div>' : ''}
-    <div class="live-score">
-      <div class="live-team">
-        <img class="live-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}">
-        <span class="live-abbr">${away.abbreviation}</span>
-        <span class="live-runs${awayBatting ? ' batting' : ''}">${awayRuns}</span>
-      </div>
-      <span class="live-inning">${inningStr}</span>
-      <div class="live-team">
-        <span class="live-runs${homeBatting ? ' batting' : ''}">${homeRuns}</span>
-        <span class="live-abbr">${home.abbreviation}</span>
-        <img class="live-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}">
-      </div>
-    </div>
-    ${isLive ? `
-    <div class="live-details">
-      <div class="live-bases-count">
-        <div class="bases-wrap">
-          <div class="base base-2b ${second ? 'on' : ''}"></div>
-          <div class="base base-3b ${third ? 'on' : ''}"></div>
-          <div class="base base-1b ${first ? 'on' : ''}"></div>
-          <div class="base base-home"></div>
-        </div>
-        <div class="count-wrap">
-          <div class="count-row"><span class="count-lbl">B</span>${dots(balls, 3, 'ball')}</div>
-          <div class="count-row"><span class="count-lbl">S</span>${dots(strikes, 2, 'strike')}</div>
-          <div class="count-row"><span class="count-lbl">O</span>${dots(outs, 2, 'out')}</div>
-        </div>
-      </div>
-      ${batter ? `<div class="live-matchup-row"><span class="live-role">AB</span><span class="live-player">${batter}</span></div>` : ''}
-      ${pitcher ? `<div class="live-matchup-row"><span class="live-role">P</span><span class="live-player">${pitcher}</span></div>` : ''}
-      ${lastPlay ? `<div class="live-last-play">${lastPlay}</div>` : ''}
-    </div>` : ''}`
-
-  if (isFinal && _liveTimer) { clearInterval(_liveTimer); _liveTimer = null }
-  if (_currentView === 'live') renderFullLiveGame(data)
-}
-
-/* ── Full Live Game View ── */
-function renderFullLiveGame(data) {
-  const el = document.getElementById('live-full-view')
-  if (!el) return
-
-  const gs = data.gameData.status
-  const ls = data.liveData.linescore
-  const away = data.gameData.teams.away.team
-  const home = data.gameData.teams.home.team
-  const isLive = gs.abstractGameState === 'Live'
-  const isFinal = gs.abstractGameState === 'Final'
-
-  if (!isLive && !isFinal) {
-    el.innerHTML = '<div class="lf-empty">No live game data available.</div>'
-    return
-  }
-
-  const isDemo = !_liveGamePk && isFinal
-  const innings = ls.innings ?? []
-  const curInning = ls.currentInning ?? 0
-  const isTop = ls.isTopInning ?? true
-  const awayTotals = ls.teams?.away ?? {}
-  const homeTotals = ls.teams?.home ?? {}
-  const balls = ls.balls ?? 0
-  const strikes = ls.strikes ?? 0
-  const outs = ls.outs ?? 0
-  const first = !!ls.offense?.first, second = !!ls.offense?.second, third = !!ls.offense?.third
-
-  const cp = data.liveData.plays?.currentPlay
-  const batter = cp?.matchup?.batter?.fullName ?? '\u2014'
-  const pitcher = cp?.matchup?.pitcher?.fullName ?? '\u2014'
-  const pitchEvts = (cp?.playEvents ?? []).filter(e => e.isPitch)
-
-  const inningStr = isFinal ? 'FINAL' : `${isTop ? '\u25b2' : '\u25bc'} ${curInning}`
-
-  /* ── Score Banner ── */
-  const awayRuns = awayTotals.runs ?? 0, homeRuns = homeTotals.runs ?? 0
-  const statusDetail = isFinal ? (innings.length > 9 ? `Final/${innings.length}` : 'Final') : inningStr
-  const bannerHtml = `
-    <div class="lf-banner">
-      ${isDemo ? '<div class="lf-banner-tag">2025 World Series \u00b7 Game 7 \u00b7 Dodger Stadium</div>' : ''}
-      <div class="lf-banner-score">
-        <div class="lf-banner-team">
-          <img class="lf-banner-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}">
-          <div class="lf-banner-info">
-            <span class="lf-banner-name">${away.abbreviation}</span>
-          </div>
-          <span class="lf-banner-runs">${awayRuns}</span>
-        </div>
-        <div class="lf-banner-status">
-          ${isLive ? '<span class="live-dot"></span>' : ''}
-          <span class="lf-banner-status-text">${statusDetail}</span>
-        </div>
-        <div class="lf-banner-team">
-          <span class="lf-banner-runs">${homeRuns}</span>
-          <div class="lf-banner-info" style="text-align:right">
-            <span class="lf-banner-name">${home.abbreviation}</span>
-          </div>
-          <img class="lf-banner-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}">
-        </div>
-      </div>
-    </div>`
-
-  /* ── Line Score Table ── */
-  const maxInn = Math.max(9, innings.length)
-  const innHeaders = Array.from({ length: maxInn }, (_, i) => {
-    const n = i + 1
-    const isCur = isLive && n === curInning
-    return `<th${isCur ? ' class="lf-cur-inn"' : ''}>${n}</th>`
-  }).join('')
-
-  function innRow(side) {
-    return Array.from({ length: maxInn }, (_, i) => {
-      const n = i + 1
-      const inn = innings.find(x => x.num === n)
-      const val = inn ? (inn[side]?.runs ?? '') : ''
-      const isCur = isLive && n === curInning
-      const display = val !== '' ? val : (n <= (innings.length || 0) ? '0' : '')
-      return `<td${isCur ? ' class="lf-cur-inn"' : ''}>${display !== '' ? display : '\u00b7'}</td>`
-    }).join('')
-  }
-
-  const lineScoreHtml = `
-    <div class="lf-scoreboard">
-      <table class="lf-sb-table">
-        <thead><tr><th></th>${innHeaders}<th class="lf-rhe">R</th><th class="lf-rhe">H</th><th class="lf-rhe">E</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${away.id}.svg" alt="${away.abbreviation}"><span>${away.abbreviation}</span></div></td>
-            ${innRow('away')}
-            <td class="lf-rhe"><strong>${awayTotals.runs ?? 0}</strong></td><td class="lf-rhe">${awayTotals.hits ?? 0}</td><td class="lf-rhe">${awayTotals.errors ?? 0}</td>
-          </tr>
-          <tr>
-            <td><div class="lf-sb-team"><img class="lf-sb-logo" src="${LOGO}/${home.id}.svg" alt="${home.abbreviation}"><span>${home.abbreviation}</span></div></td>
-            ${innRow('home')}
-            <td class="lf-rhe"><strong>${homeTotals.runs ?? 0}</strong></td><td class="lf-rhe">${homeTotals.hits ?? 0}</td><td class="lf-rhe">${homeTotals.errors ?? 0}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`
-
-  /* ── Strike Zone SVG ── */
-  const SVG_W = 200, SVG_H = 240
-  const mapX = px => ((px + 1.5) / 3.0) * SVG_W
-  const mapY = pz => SVG_H - ((pz - 0.5) / 4.5) * SVG_H
-  let szTop = 3.5, szBot = 1.5
-  if (pitchEvts.length > 0) {
-    const szT = pitchEvts[0].pitchData?.sz_top
-    const szB = pitchEvts[0].pitchData?.sz_bot
-    if (szT) szTop = parseFloat(szT)
-    if (szB) szBot = parseFloat(szB)
-  }
-  const zx1 = mapX(-0.708), zx2 = mapX(0.708)
-  const zy1 = mapY(szTop), zy2 = mapY(szBot)
-  const zw = zx2 - zx1, zh = zy2 - zy1
-  const thirdW = zw / 3, thirdH = zh / 3
-  const plateX = SVG_W / 2, plateY = SVG_H - 8
-  const platePts = `${plateX},${plateY - 10} ${plateX + 9},${plateY - 5} ${plateX + 9},${plateY} ${plateX - 9},${plateY} ${plateX - 9},${plateY - 5}`
-
-  const pitchColor = code => {
-    switch (code) {
-      case 'B': return '#4caf50'; case 'C': return '#f44336'; case 'S': return '#ff9800'
-      case 'F': return '#ffeb3b'; case 'X': return '#2196f3'; default: return '#9e9e9e'
-    }
-  }
-  const pitchResultLabel = code => {
-    switch (code) {
-      case 'B': return 'Ball'; case 'C': return 'Called Strike'; case 'S': return 'Swinging Strike'
-      case 'F': return 'Foul'; case 'X': return 'In Play'; default: return code
-    }
-  }
-  const pitchResultClass = code => {
-    if (code === 'B') return 'ball'
-    if (code === 'C' || code === 'S') return 'strike'
-    if (code === 'F') return 'foul'
-    if (code === 'X') return 'inplay'
-    return ''
-  }
-
-  /* All pitches get numbers */
-  const pitchDots = pitchEvts.map((e, i) => {
-    const px = e.pitchData?.coordinates?.pX
-    const pz = e.pitchData?.coordinates?.pZ
-    if (px == null || pz == null) return ''
-    const cx = mapX(px), cy = mapY(pz)
-    const code = e.details?.code ?? ''
-    const color = pitchColor(code)
-    const isLast = i === pitchEvts.length - 1
-    const r = isLast ? 10 : 8
-    const num = i + 1
-    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="${color}" fill-opacity="0.85" stroke="#fff" stroke-width="${isLast ? 2 : 1}" stroke-opacity="0.7"/>
-      <text x="${cx.toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" text-anchor="middle" font-size="${isLast ? 9 : 7.5}" font-family="Inter,sans-serif" font-weight="700" fill="#fff" stroke="none">${num}</text>`
-  }).join('\n')
-
-  const zoneSvg = `<svg class="lf-zone-svg" viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="${SVG_W}" height="${SVG_H}" fill="none"/>
-  <rect x="${zx1.toFixed(1)}" y="${zy1.toFixed(1)}" width="${zw.toFixed(1)}" height="${zh.toFixed(1)}" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" rx="2"/>
-  <line x1="${(zx1 + thirdW).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
-  <line x1="${(zx1 + thirdW * 2).toFixed(1)}" y1="${zy1.toFixed(1)}" x2="${(zx1 + thirdW * 2).toFixed(1)}" y2="${zy2.toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
-  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH).toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
-  <line x1="${zx1.toFixed(1)}" y1="${(zy1 + thirdH * 2).toFixed(1)}" x2="${zx2.toFixed(1)}" y2="${(zy1 + thirdH * 2).toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" stroke-dasharray="4,3"/>
-  <polygon points="${platePts}" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="1.2"/>
-  ${pitchDots}
-</svg>`
-
-  /* ── Count / Outs / Bases ── */
-  function lfDots(count, max, cls) {
-    return Array.from({ length: max }, (_, i) =>
-      `<span class="lf-count-dot ${i < count ? cls : ''}"></span>`).join('')
-  }
-  const countText = `${balls}\u2013${strikes}`
-  const countHtml = `
-    <div class="lf-situation">
-      <div class="lf-count-text">${countText}</div>
-      <div class="lf-count-col">
-        <div class="lf-count-row"><span class="lf-count-lbl">B</span>${lfDots(balls, 4, 'ball')}</div>
-        <div class="lf-count-row"><span class="lf-count-lbl">S</span>${lfDots(strikes, 3, 'strike')}</div>
-        <div class="lf-count-row"><span class="lf-count-lbl">O</span>${lfDots(outs, 3, 'out')}</div>
-      </div>
-      ${isLive ? `<div class="lf-bases-mini">
-        <div class="base base-2b ${second ? 'on' : ''}"></div>
-        <div class="base base-3b ${third ? 'on' : ''}"></div>
-        <div class="base base-1b ${first ? 'on' : ''}"></div>
-        <div class="base base-home"></div>
-      </div>` : ''}
-    </div>`
-
-  /* ── Pitch Legend ── */
-  const legendHtml = `
-    <div class="lf-pitch-legend">
-      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#4caf50"></span>Ball</span>
-      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#f44336"></span>Called Strike</span>
-      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#ff9800"></span>Swinging Strike</span>
-      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#ffeb3b"></span>Foul</span>
-      <span class="lf-legend-item"><span class="lf-legend-dot" style="background:#2196f3"></span>In Play</span>
-    </div>`
-
-  /* ── Pitch Log ── */
-  const pitchLogRows = pitchEvts.length === 0
-    ? '<div style="font-size:0.65rem;color:rgba(255,255,255,0.2);padding:0.5rem 0;">No pitches yet</div>'
-    : [...pitchEvts].reverse().map((e, ri) => {
-      const idx = pitchEvts.length - ri
-      const speed = e.pitchData?.startSpeed ? `${Math.round(e.pitchData.startSpeed)}` : '\u2014'
-      const type = e.details?.type?.description ?? e.details?.description ?? '\u2014'
-      const code = e.details?.code ?? ''
-      return `<div class="lf-pitch-row">
-        <span class="lf-pitch-num">${idx}</span>
-        <span class="lf-pitch-speed">${speed}<small> mph</small></span>
-        <span class="lf-pitch-type">${type}</span>
-        <span class="lf-pitch-result ${pitchResultClass(code)}">${pitchResultLabel(code)}</span>
-      </div>`
-    }).join('')
-
-  /* ── Inning-Grouped Play-by-Play ── */
-  const ordinal = n => {
-    if (n >= 11 && n <= 13) return n + 'th'
-    const s = ['th','st','nd','rd']
-    return n + (s[n % 10] || s[0])
-  }
-
-  const rawPlays = data.liveData.plays?.allPlays ?? []
-  const groups = []
-  let curKey = null, curGroup = null
-  for (const play of rawPlays) {
-    const inn = play.about?.inning ?? 0
-    const top = play.about?.isTopInning ?? true
-    const key = `${top ? 'T' : 'B'}${inn}`
-    if (key !== curKey) {
-      curGroup = { inning: inn, isTop: top, plays: [] }
-      groups.push(curGroup)
-      curKey = key
-    }
-    curGroup.plays.push(play)
-  }
-  groups.reverse()
-
-  const ppHtml = groups.length === 0
-    ? '<div class="lf-empty">No plays yet</div>'
-    : groups.map(g => {
-      const arrow = g.isTop ? '\u25b2' : '\u25bc'
-      const label = `${arrow} ${g.isTop ? 'Top' : 'Bottom'} ${ordinal(g.inning)}`
-      const playRows = [...g.plays].reverse().map(play => {
-        const event = play.result?.event ?? ''
-        const desc = play.result?.description ?? ''
-        const isScoring = /scores|homers|home run/i.test(desc)
-        return `<div class="lf-pp-play${isScoring ? ' lf-pp-scoring' : ''}">
-          <div class="lf-pp-event">${event}</div>
-          <div class="lf-pp-desc">${desc}</div>
-        </div>`
-      }).join('')
-      return `<div class="lf-pp-group">
-        <div class="lf-pp-inning-hdr">${label}</div>
-        ${playRows}
-      </div>`
-    }).join('')
-
-  /* ── At-Bat Labels ── */
-  const atBatLabel = isFinal ? 'Final At-Bat' : 'Current At-Bat'
-
-  /* ── Assemble ── */
-  el.innerHTML = `
-    ${bannerHtml}
-    ${lineScoreHtml}
-    <div class="lf-body">
-      <div class="lf-at-bat">
-        <div class="lf-at-bat-header">${atBatLabel}</div>
-        <div class="lf-matchup">
-          <div class="lf-matchup-row"><span class="lf-role">AB</span><span class="lf-player-name">${batter}</span></div>
-          <div class="lf-matchup-row"><span class="lf-role">P</span><span class="lf-player-name">${pitcher}</span></div>
-        </div>
-        <div class="lf-zone-area">
-          <div class="lf-zone-wrap">${zoneSvg}</div>
-          ${countHtml}
-        </div>
-        ${legendHtml}
-        <div class="lf-pitch-log">
-          <div class="lf-pitch-log-label">Pitch Log</div>
-          ${pitchLogRows}
-        </div>
-      </div>
-      <div class="lf-play-log">
-        <div class="lf-play-log-header">Play-by-Play</div>
-        <div class="lf-play-log-scroll">${ppHtml}</div>
-      </div>
-    </div>
-    ${isFinal ? buildBreakdownHtml(data) : ''}`
-}
-
 /* ── Game Breakdown Center ── */
-function buildBreakdownHtml(data) {
-  const isDemo = !_liveGamePk
-  if (!isDemo) return ''
+function renderBreakdown() {
+  const el = document.getElementById('home-breakdown')
+  if (!el) return
+  if (_currentTeamKey === 'dodgers') {
+    el.innerHTML = buildBreakdownHtml()
+  } else {
+    el.innerHTML = ''
+  }
+}
 
-  /* ── WPA Data (home team win probability after each play) ── */
-  const wpa = [50,52,53,54,53,54,53,51,50,52,54,53,54,53,52,49,50,52,40,41,40,39,38,40,42,44,56,57,55,53,52,53,54,56,55,56,54,53,49,51,28,30,32,34,32,29,27,30,33,35,33,30,33,42,40,42,39,44,46,44,40,36,39,42,45,40,35,42,55,52,55,58,60,57,53,88,85,90,96,100]
+function buildBreakdownHtml() {
+  /* ── WPA Data (LAD win probability — away team — after each play) ── */
+  /* Real 2025 WS Game 7: LAD 5, TOR 4 (11 inn) at Rogers Centre */
+  const wpa = [48,48,47,47,48,49,48,47,46,47,46,47,49,48,47,46,45,15,14,14,15,14,14,16,20,18,19,18,19,18,17,18,19,18,17,18,19,28,26,25,18,17,18,17,16,17,18,17,16,17,18,17,30,32,31,32,33,32,31,30,55,53,52,51,52,50,48,50,49,50,88,85,90,92,88,90,92,95,98,100]
   const N = wpa.length
   const CW = 800, CH = 250, CL = 48, CR = 785, CT = 22, CB = 225
   const cw = CR - CL, ch = CB - CT
@@ -1359,19 +796,20 @@ function buildBreakdownHtml(data) {
   const yLabels = [0, 25, 50, 75, 100].map(v =>
     `<text x="${CL - 8}" y="${(wy(v) + 3).toFixed(1)}" text-anchor="end" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${v}%</text>`
   ).join('')
-  const innStarts = [0, 6, 14, 22, 30, 37, 46, 54, 61, 69, 76]
+  const innStarts = [0, 7, 15, 23, 30, 37, 43, 50, 58, 66, 73]
   const innLabels = innStarts.map((pi, idx) =>
     `<text x="${wx(pi).toFixed(1)}" y="${(CB + 16).toFixed(1)}" text-anchor="middle" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${idx + 1}</text>
      <line x1="${wx(pi).toFixed(1)}" y1="${CT}" x2="${wx(pi).toFixed(1)}" y2="${CB}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`
   ).join('')
 
   const keyMoments = [
-    { i: 18, lbl: 'Bichette RBI', c: '#ef5350' },
-    { i: 26, lbl: 'Betts HR', c: '#42a5f5' },
-    { i: 40, lbl: 'Vlad 2-run HR', c: '#ef5350' },
-    { i: 53, lbl: 'Freeman RBI', c: '#42a5f5' },
-    { i: 68, lbl: 'Rojas ties it!', c: '#66bb6a' },
-    { i: 75, lbl: 'Smith HR!', c: '#66bb6a' },
+    { i: 17, lbl: 'Bichette 3-Run HR', c: '#ef5350' },
+    { i: 24, lbl: 'Hern\u00e1ndez Sac Fly', c: '#42a5f5' },
+    { i: 37, lbl: 'Edman Sac Fly', c: '#42a5f5' },
+    { i: 40, lbl: 'Gim\u00e9nez RBI 2B', c: '#ef5350' },
+    { i: 52, lbl: 'Muncy HR', c: '#42a5f5' },
+    { i: 60, lbl: 'Rojas ties it!', c: '#66bb6a' },
+    { i: 70, lbl: 'Smith HR!', c: '#66bb6a' },
   ]
   const annots = keyMoments.map(k => {
     const cx = wx(k.i), cy = wy(wpa[k.i])
@@ -1391,21 +829,21 @@ function buildBreakdownHtml(data) {
     <path d="${linePath}" fill="none" stroke="url(#wg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     ${annots}
     <text x="${CL}" y="${CH + 17}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" letter-spacing="0.15em">INNING</text>
-    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">LAD WIN%</text>
+    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">LAD WIN %</text>
   </svg>`
 
   /* ── Turning Points ── */
   const turns = [
-    { rank: 1, title: 'Will Smith Solo HR', inn: '\u25bc Bot 10th', delta: '+35%', cls: 'pos',
-      desc: 'Down to their last 4 outs trailing 3\u20133, Smith launched a go-ahead solo shot to left-center field off Erik Swanson.' },
-    { rank: 2, title: 'Vladimir Guerrero Jr. 2-Run HR', inn: '\u25b2 Top 6th', delta: '\u221223%', cls: 'neg',
-      desc: 'With Springer on first, Guerrero crushed a 2-run homer off Walker Buehler to give Toronto a 3\u20131 lead.' },
-    { rank: 3, title: 'Miguel Rojas Game-Tying Single', inn: '\u25bc Bot 9th', delta: '+20%', cls: 'pos',
-      desc: 'With 2 outs and Edman on second, Rojas fought off a 2\u20132 pitch and poked a single through the middle to tie it 3\u20133.' },
-    { rank: 4, title: 'Mookie Betts Solo HR', inn: '\u25bc Bot 4th', delta: '+12%', cls: 'pos',
-      desc: 'Betts ambushed a first-pitch fastball from Berrios and drove it out to left-center, tying the game 1\u20131.' },
-    { rank: 5, title: 'Bo Bichette RBI Single', inn: '\u25b2 Top 3rd', delta: '\u221212%', cls: 'neg',
-      desc: 'With two outs and Kiermaier on second, Bichette lined a single to left to give Toronto a 1\u20130 lead.' },
+    { rank: 1, title: 'Will Smith Go-Ahead Solo HR', inn: '\u25b2 Top 11th', delta: '+38%', cls: 'pos',
+      desc: 'On a 2\u20130 count, Smith sent a Shane Bieber pitch into the Toronto bullpen in left field. The first extra-inning HR in a winner-take-all World Series game.' },
+    { rank: 2, title: 'Bo Bichette 3-Run HR', inn: '\u25bc Bot 3rd', delta: '\u221230%', cls: 'neg',
+      desc: 'Bichette crushed a 442-foot bomb to deep center off Shohei Ohtani, scoring Springer and Guerrero Jr. to put Toronto up 3\u20130.' },
+    { rank: 3, title: 'Miguel Rojas Game-Tying Solo HR', inn: '\u25b2 Top 9th', delta: '+25%', cls: 'pos',
+      desc: 'Facing closer Jeff Hoffman, Rojas hammered a hanging slider 387 feet to left field, tying the game 4\u20134 and sending it to extras.' },
+    { rank: 4, title: 'Max Muncy Solo HR', inn: '\u25b2 Top 8th', delta: '+12%', cls: 'pos',
+      desc: 'Muncy launched a solo shot 373 feet to right off Trey Yesavage, cutting the Dodgers\u2019 deficit to 4\u20133.' },
+    { rank: 5, title: 'Andr\u00e9s Gim\u00e9nez RBI Double', inn: '\u25bc Bot 6th', delta: '\u221210%', cls: 'neg',
+      desc: 'Gim\u00e9nez ripped a double to right off Tyler Glasnow, scoring Ernie Clement to extend Toronto\u2019s lead to 4\u20132.' },
   ]
   const turnsHtml = turns.map(t => `
     <div class="gbc-tp-card">
@@ -1420,14 +858,14 @@ function buildBreakdownHtml(data) {
 
   /* ── Best At-Bats ── */
   const bestABs = [
-    { batter: 'Will Smith', inn: '\u25bc10th', pitches: 7, result: 'Solo HR', wpa: '+35%', cls: 'pos',
-      note: 'Worked a full count before crushing a splitter. Go-ahead run in extras.' },
-    { batter: 'Miguel Rojas', inn: '\u25bc9th', pitches: 5, result: 'RBI Single', wpa: '+20%', cls: 'pos',
-      note: '2-out, 2-strike delivery. Fought off tough sliders to push the tying run home.' },
-    { batter: 'Freddie Freeman', inn: '\u25bc7th', pitches: 6, result: 'RBI Double', wpa: '+9%', cls: 'pos',
-      note: 'Patient at-bat against Romano. Lined a cutter into the right-field gap to cut the deficit to 1.' },
-    { batter: 'Vladimir Guerrero Jr.', inn: '\u25b2 6th', pitches: 3, result: '2-Run HR', wpa: '\u221223%', cls: 'neg',
-      note: 'Punished an inside fastball. 2-run shot gave Toronto their biggest lead of the night.' },
+    { batter: 'Will Smith', inn: '\u25b2 11th', pitches: 3, result: 'Solo HR', wpa: '+38%', cls: 'pos',
+      note: 'Jumped on a 2\u20130 fastball from Shane Bieber and drove it 366 feet into the Toronto bullpen. Go-ahead run in extras.' },
+    { batter: 'Miguel Rojas', inn: '\u25b2 9th', pitches: 4, result: 'Solo HR', wpa: '+25%', cls: 'pos',
+      note: 'Crushed a hanging slider from closer Jeff Hoffman 387 feet to left. Game-tying blast that forced extras.' },
+    { batter: 'Max Muncy', inn: '\u25b2 8th', pitches: 5, result: 'Solo HR', wpa: '+12%', cls: 'pos',
+      note: 'Launched a 373-foot solo shot to right off Trey Yesavage. Cut the deficit to 4\u20133 and kept the comeback alive.' },
+    { batter: 'Bo Bichette', inn: '\u25bc 3rd', pitches: 4, result: '3-Run HR', wpa: '\u221230%', cls: 'neg',
+      note: 'Hammered a 442-foot moonshot to deep center off Ohtani, scoring Springer and Guerrero Jr. Gave Toronto a commanding 3\u20130 lead.' },
   ]
   const bestABHtml = bestABs.map((ab, i) => `
     <div class="gbc-ab-card">
@@ -1444,14 +882,15 @@ function buildBreakdownHtml(data) {
 
   /* ── Pitch Sequencing ── */
   const pitchData = [
-    { type: 'Four-Seam Fastball', pct: 38, velo: '96.2', color: '#ef5350' },
-    { type: 'Slider', pct: 24, velo: '87.4', color: '#42a5f5' },
-    { type: 'Changeup', pct: 16, velo: '85.1', color: '#66bb6a' },
-    { type: 'Curveball', pct: 12, velo: '79.8', color: '#ab47bc' },
-    { type: 'Sinker', pct: 10, velo: '93.7', color: '#ffa726' },
+    { type: 'Four-Seam Fastball', pct: 35, velo: '95.8', color: '#ef5350' },
+    { type: 'Slider', pct: 22, velo: '86.9', color: '#42a5f5' },
+    { type: 'Splitter', pct: 14, velo: '88.2', color: '#66bb6a' },
+    { type: 'Curveball', pct: 12, velo: '80.1', color: '#ab47bc' },
+    { type: 'Changeup', pct: 10, velo: '84.5', color: '#ffa726' },
+    { type: 'Sinker', pct: 7, velo: '93.4', color: '#78909c' },
   ]
   const pitchHtml = `
-    <div class="gbc-pitch-label">Both Teams Combined \u00b7 298 Total Pitches</div>
+    <div class="gbc-pitch-label">Both Teams Combined \u00b7 364 Total Pitches</div>
     ${pitchData.map(p => `
       <div class="gbc-pitch-bar">
         <span class="gbc-pitch-type">${p.type}</span>
@@ -1461,17 +900,22 @@ function buildBreakdownHtml(data) {
       </div>`).join('')}`
 
   /* ── Bullpen Usage ── */
-  const bullpenHome = [
-    { name: 'Walker Buehler', role: 'SP', ip: '6.0', p: 94, k: 5, bb: 2, er: 3, grade: 'B', gcls: 'b' },
-    { name: 'Blake Treinen', role: 'RP', ip: '1.0', p: 16, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
-    { name: 'Evan Phillips', role: 'RP', ip: '1.0', p: 18, k: 1, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
-    { name: 'Yoshinobu Yamamoto', role: 'CL', ip: '2.0', p: 26, k: 3, bb: 0, er: 0, grade: 'A+', gcls: 'a' },
-  ]
   const bullpenAway = [
-    { name: 'Jos\u00e9 Berrios', role: 'SP', ip: '5.2', p: 88, k: 4, bb: 1, er: 2, grade: 'B+', gcls: 'b' },
-    { name: 'Jordan Romano', role: 'RP', ip: '1.1', p: 22, k: 2, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
-    { name: 'Yimi Garcia', role: 'RP', ip: '1.0', p: 15, k: 1, bb: 0, er: 1, grade: 'B\u2212', gcls: 'b' },
-    { name: 'Erik Swanson', role: 'RP', ip: '2.0', p: 30, k: 2, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
+    { name: 'Shohei Ohtani', role: 'SP', ip: '2.1', p: 51, k: 3, bb: 2, er: 3, grade: 'C+', gcls: 'c' },
+    { name: 'Justin Wrobleski', role: 'RP', ip: '1.1', p: 21, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
+    { name: 'Tyler Glasnow', role: 'RP', ip: '2.1', p: 38, k: 2, bb: 0, er: 1, grade: 'B+', gcls: 'b' },
+    { name: 'Emmet Sheehan', role: 'RP', ip: '1.0', p: 20, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
+    { name: 'Blake Snell', role: 'RP', ip: '1.1', p: 28, k: 2, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
+    { name: 'Yoshinobu Yamamoto', role: 'W', ip: '2.2', p: 34, k: 1, bb: 1, er: 0, grade: 'A+', gcls: 'a' },
+  ]
+  const bullpenHome = [
+    { name: 'Max Scherzer', role: 'SP', ip: '4.1', p: 54, k: 3, bb: 1, er: 1, grade: 'B+', gcls: 'b' },
+    { name: 'Louis Varland', role: 'RP', ip: '0.2', p: 9, k: 0, bb: 0, er: 0, grade: 'B', gcls: 'b' },
+    { name: 'Chris Bassitt', role: 'RP', ip: '1.0', p: 26, k: 0, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
+    { name: 'Trey Yesavage', role: 'RP', ip: '1.2', p: 21, k: 0, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
+    { name: 'Jeff Hoffman', role: 'RP', ip: '1.1', p: 22, k: 2, bb: 0, er: 1, grade: 'C', gcls: 'c' },
+    { name: 'Seranthony Dom\u00ednguez', role: 'RP', ip: '1.0', p: 27, k: 0, bb: 2, er: 0, grade: 'B\u2212', gcls: 'b' },
+    { name: 'Shane Bieber', role: 'L', ip: '1.0', p: 13, k: 0, bb: 0, er: 1, grade: 'D+', gcls: 'd' },
   ]
   const bpRow = p => `<tr>
     <td class="gbc-bp-name">${p.name}<span class="gbc-bp-role">${p.role}</span></td>
@@ -1487,16 +931,16 @@ function buildBreakdownHtml(data) {
 
   /* ── Manager Decisions ── */
   const decisions = [
-    { grade: 'A+', gcls: 'a', title: 'Yamamoto from the bullpen in the 10th',
-      impact: 'Dominant: 2.0 IP, 3 K, 0 BB. Shut down Toronto\u2019s heart of the order twice. Series-clinching decision.' },
-    { grade: 'B', gcls: 'b', title: 'Leaving Buehler in for the 6th (pitch 82+)',
-      impact: 'Buehler surrendered Guerrero\u2019s 2-run HR on his 88th pitch. A quicker hook could have preserved the 1\u20131 tie.' },
-    { grade: 'A', gcls: 'a', title: 'Treinen for the 7th in a high-leverage spot',
-      impact: 'Clean inning. Kept Toronto from adding on after taking a 3\u20131 lead. Set up the comeback.' },
-    { grade: 'A', gcls: 'a', title: 'Batting Rojas 7th \u2014 lineup construction',
-      impact: 'Rojas delivered the game-tying single in the 9th with 2 outs. Right man, right spot.' },
-    { grade: 'C+', gcls: 'c', title: 'Swanson left in for the 10th after the Smith HR',
-      impact: 'Swanson gave up the go-ahead HR on his 26th pitch. A fresh arm could have kept it tied.' },
+    { grade: 'A+', gcls: 'a', title: 'Roberts: Yamamoto from the bullpen on 1 day rest',
+      impact: 'After throwing 96 pitches in Game 6 the night before, Yamamoto tossed 2.2 scoreless innings with a bases-loaded escape. WS MVP performance. Series-defining decision.' },
+    { grade: 'B+', gcls: 'b', title: 'Roberts: Pulling Ohtani after 2.1 IP',
+      impact: 'Gutsy to pull your two-way ace early, but the right call after Bichette\u2019s 3-run bomb. The bullpen was dominant the rest of the way.' },
+    { grade: 'A', gcls: 'a', title: 'Roberts: All-hands bullpen approach (6 relievers)',
+      impact: 'Used Wrobleski, Glasnow, Sheehan, Snell, and Yamamoto in relief. Combined for 8.2 IP, 1 ER, 9 K. Masterful management.' },
+    { grade: 'C', gcls: 'c', title: 'Schneider: Leaving Hoffman in for the 9th',
+      impact: 'Hoffman surrendered the game-tying Rojas HR on a hanging slider. A fresh arm might have held the 4\u20133 lead.' },
+    { grade: 'C+', gcls: 'c', title: 'Schneider: Bieber for the 11th inning',
+      impact: 'Bieber gave up the go-ahead Smith HR on just his 7th pitch. Seranthony Dom\u00ednguez had just thrown a scoreless 10th and might have continued.' },
   ]
   const decsHtml = decisions.map(d => `
     <div class="gbc-dec-card">
@@ -1513,7 +957,7 @@ function buildBreakdownHtml(data) {
       <div class="gbc-header">
         <div class="gbc-header-tag">FILM STUDY</div>
         <div class="gbc-header-title">Game Breakdown Center</div>
-        <div class="gbc-header-sub">2025 World Series \u00b7 Game 7 \u00b7 LAD 4, TOR 3 (11)</div>
+        <div class="gbc-header-sub">2025 World Series \u00b7 Game 7 \u00b7 LAD 5, TOR 4 (11) \u00b7 Rogers Centre</div>
       </div>
       <div class="gbc-section">
         <div class="gbc-section-title">Win Probability</div>
@@ -1536,8 +980,8 @@ function buildBreakdownHtml(data) {
       <div class="gbc-section">
         <div class="gbc-section-title">Bullpen Usage</div>
         <div class="gbc-bullpen">
-          ${bpTable('Los Angeles Dodgers', bullpenHome)}
-          ${bpTable('Toronto Blue Jays', bullpenAway)}
+          ${bpTable('Los Angeles Dodgers', bullpenAway)}
+          ${bpTable('Toronto Blue Jays', bullpenHome)}
         </div>
       </div>
       <div class="gbc-section">
