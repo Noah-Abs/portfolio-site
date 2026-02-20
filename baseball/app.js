@@ -73,7 +73,6 @@ function renderTeam(key) {
   renderMobHomeCards(t, null, null, null)
   loadLiveData()
   loadNews()
-  renderBreakdown()
 }
 
 function renderMobHomeCards(t, stats, lastGameData, nextGame) {
@@ -765,13 +764,6 @@ function _setMobTab(view) {
 }
 
 /* ── Game Breakdown Center ── */
-function renderBreakdown() {
-  const el = document.getElementById('home-breakdown')
-  if (!el) return
-  const cfg = GAME_BREAKDOWN[_currentTeamKey]
-  el.innerHTML = cfg ? buildBreakdownHtml(cfg, '-home') : ''
-}
-
 function loadBreakdownView() {
   const wrap = document.getElementById('breakdown-wrap')
   if (!wrap) return

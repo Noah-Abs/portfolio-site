@@ -173,7 +173,6 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .count-dot.out { background: rgba(220,60,40,0.85); border-color: rgba(220,60,40,1); }
 
 /* ── Game Breakdown Center ── */
-#home-breakdown { padding: 0 2.5rem 4rem; }
 .gbc { display: flex; flex-direction: column; gap: 1.25rem; }
 .gbc-header { text-align: center; padding: 1.5rem 1rem 0.5rem; }
 .gbc-header-tag { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 0.4rem; }
@@ -569,7 +568,6 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .ws-banners { display: none !important; }
 
   .side-panel { width: 100%; top: 0; }
-  #home-breakdown { padding: 0 0.75rem 3rem; }
   .breakdown-wrap { padding: 1rem 0.75rem 3rem; }
   .dc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .dc-wrap { padding: 1rem 0.75rem 2rem; }
