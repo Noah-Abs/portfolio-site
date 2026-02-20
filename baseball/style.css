@@ -252,6 +252,18 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .gbc-dec-title { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); margin-bottom: 0.2rem; }
 .gbc-dec-impact { font-size: 0.64rem; color: rgba(255,255,255,0.38); line-height: 1.5; }
 
+/* ── Breakdown View Wrap ── */
+.breakdown-wrap { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
+
+/* Line Score Table */
+.gbc-linescore { margin-bottom: 0.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gbc-ls-table { width: 100%; border-collapse: collapse; min-width: 420px; }
+.gbc-ls-table th { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.22); padding: 0.4rem 0.45rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.gbc-ls-table td { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 0.04em; color: rgba(255,255,255,0.6); padding: 0.4rem 0.45rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.gbc-ls-team { text-align: left !important; font-family: 'Inter', sans-serif !important; font-size: 0.72rem !important; font-weight: 700 !important; letter-spacing: 0.1em !important; color: rgba(255,255,255,0.5) !important; }
+.gbc-ls-rhe { font-weight: 700; color: rgba(255,255,255,0.8); }
+.gbc-ls-total { border-left: 1px solid rgba(255,255,255,0.08); }
+
 /* ── Sidebar Nav ── */
 .sb-nav { background: rgba(5,7,20,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; margin-bottom: 0.5rem; flex-shrink: 0; }
 .sb-nav-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.85rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); background: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; color: rgba(255,255,255,0.45); text-align: left; width: 100%; transition: background 0.15s, color 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -558,6 +570,7 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 
   .side-panel { width: 100%; top: 0; }
   #home-breakdown { padding: 0 0.75rem 3rem; }
+  .breakdown-wrap { padding: 1rem 0.75rem 3rem; }
   .dc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .dc-wrap { padding: 1rem 0.75rem 2rem; }
   .dc-page-title { font-size: 1.5rem; }

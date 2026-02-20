@@ -61,6 +61,7 @@ function renderTeam(key) {
   document.getElementById('schedule-list').innerHTML = '<div style="padding:2rem 1.25rem;font-size:0.72rem;color:rgba(255,255,255,0.25);text-align:center">Loading schedule\u2026</div>'
 
   if (_currentView === 'settings') renderSettingsTeams()
+  if (_currentView === 'breakdown') loadBreakdownView()
 
   _depthLoaded = false
   rosterLoaded = false
@@ -733,7 +734,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'depth', 'contracts', 'news', 'settings']
+  const allViews = ['home', 'depth', 'contracts', 'news', 'breakdown', 'settings']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -741,6 +742,7 @@ function switchView(view) {
   if (view === 'depth') loadDepthChart()
   if (view === 'contracts') loadContracts(_currentTeamKey)
   if (view === 'news') renderNewsPage()
+  if (view === 'breakdown') loadBreakdownView()
   if (view === 'settings') renderSettingsTeams()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
@@ -766,17 +768,46 @@ function _setMobTab(view) {
 function renderBreakdown() {
   const el = document.getElementById('home-breakdown')
   if (!el) return
-  if (_currentTeamKey === 'dodgers') {
-    el.innerHTML = buildBreakdownHtml()
+  const cfg = GAME_BREAKDOWN[_currentTeamKey]
+  el.innerHTML = cfg ? buildBreakdownHtml(cfg, '-home') : ''
+}
+
+function loadBreakdownView() {
+  const wrap = document.getElementById('breakdown-wrap')
+  if (!wrap) return
+  const cfg = GAME_BREAKDOWN[_currentTeamKey]
+  if (cfg) {
+    wrap.innerHTML = buildBreakdownHtml(cfg, '-view')
   } else {
-    el.innerHTML = ''
+    wrap.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15)">No game breakdown available for this team.</div>'
   }
 }
 
-function buildBreakdownHtml() {
-  /* ── WPA Data (LAD win probability — away team — after each play) ── */
-  /* Real 2025 WS Game 7: LAD 5, TOR 4 (11 inn) at Rogers Centre */
-  const wpa = [48,48,47,47,48,49,48,47,46,47,46,47,49,48,47,46,45,15,14,14,15,14,14,16,20,18,19,18,19,18,17,18,19,18,17,18,19,28,26,25,18,17,18,17,16,17,18,17,16,17,18,17,30,32,31,32,33,32,31,30,55,53,52,51,52,50,48,50,49,50,88,85,90,92,88,90,92,95,98,100]
+function buildLineScoreHtml(ls) {
+  if (!ls) return ''
+  const innH = ls.innings.map(n => `<th>${n}</th>`).join('')
+  const awayR = ls.away.runs.map(r => `<td>${r}</td>`).join('')
+  const homeR = ls.home.runs.map(r => `<td>${r}</td>`).join('')
+  return `<div class="gbc-linescore">
+    <table class="gbc-ls-table">
+      <thead><tr><th></th>${innH}<th class="gbc-ls-rhe">R</th><th class="gbc-ls-rhe">H</th><th class="gbc-ls-rhe">E</th></tr></thead>
+      <tbody>
+        <tr><td class="gbc-ls-team">${ls.away.abbr}</td>${awayR}<td class="gbc-ls-total">${ls.away.R}</td><td class="gbc-ls-total">${ls.away.H}</td><td class="gbc-ls-total">${ls.away.E}</td></tr>
+        <tr><td class="gbc-ls-team">${ls.home.abbr}</td>${homeR}<td class="gbc-ls-total">${ls.home.R}</td><td class="gbc-ls-total">${ls.home.H}</td><td class="gbc-ls-total">${ls.home.E}</td></tr>
+      </tbody>
+    </table>
+  </div>`
+}
+
+function buildBreakdownHtml(cfg, idSuffix) {
+  if (!cfg) return ''
+  const sfx = idSuffix || ''
+
+  /* ── Line Score ── */
+  const lineScoreHtml = buildLineScoreHtml(cfg.lineScore)
+
+  /* ── WPA Chart ── */
+  const wpa = cfg.wpa.data
   const N = wpa.length
   const CW = 800, CH = 250, CL = 48, CR = 785, CT = 22, CB = 225
   const cw = CR - CL, ch = CB - CT
@@ -796,22 +827,12 @@ function buildBreakdownHtml() {
   const yLabels = [0, 25, 50, 75, 100].map(v =>
     `<text x="${CL - 8}" y="${(wy(v) + 3).toFixed(1)}" text-anchor="end" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${v}%</text>`
   ).join('')
-  const innStarts = [0, 7, 15, 23, 30, 37, 43, 50, 58, 66, 73]
-  const innLabels = innStarts.map((pi, idx) =>
+  const innLabels = cfg.wpa.innStarts.map((pi, idx) =>
     `<text x="${wx(pi).toFixed(1)}" y="${(CB + 16).toFixed(1)}" text-anchor="middle" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${idx + 1}</text>
      <line x1="${wx(pi).toFixed(1)}" y1="${CT}" x2="${wx(pi).toFixed(1)}" y2="${CB}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`
   ).join('')
 
-  const keyMoments = [
-    { i: 17, lbl: 'Bichette 3-Run HR', c: '#ef5350' },
-    { i: 24, lbl: 'Hern\u00e1ndez Sac Fly', c: '#42a5f5' },
-    { i: 37, lbl: 'Edman Sac Fly', c: '#42a5f5' },
-    { i: 40, lbl: 'Gim\u00e9nez RBI 2B', c: '#ef5350' },
-    { i: 52, lbl: 'Muncy HR', c: '#42a5f5' },
-    { i: 60, lbl: 'Rojas ties it!', c: '#66bb6a' },
-    { i: 70, lbl: 'Smith HR!', c: '#66bb6a' },
-  ]
-  const annots = keyMoments.map(k => {
+  const annots = cfg.wpa.keyMoments.map(k => {
     const cx = wx(k.i), cy = wy(wpa[k.i])
     const above = wpa[k.i] > 50
     const ly = above ? cy - 14 : cy + 16
@@ -821,31 +842,19 @@ function buildBreakdownHtml() {
 
   const wpaSvg = `<svg class="gbc-wpa-svg" viewBox="0 0 ${CW} ${CH + 20}" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1565c0"/><stop offset="45%" stop-color="#43a047"/><stop offset="55%" stop-color="#43a047"/><stop offset="100%" stop-color="#1565c0"/></linearGradient>
-      <linearGradient id="wf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(66,165,245,0.12)"/><stop offset="100%" stop-color="rgba(66,165,245,0)"/></linearGradient>
+      <linearGradient id="wg${sfx}" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1565c0"/><stop offset="45%" stop-color="#43a047"/><stop offset="55%" stop-color="#43a047"/><stop offset="100%" stop-color="#1565c0"/></linearGradient>
+      <linearGradient id="wf${sfx}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(66,165,245,0.12)"/><stop offset="100%" stop-color="rgba(66,165,245,0)"/></linearGradient>
     </defs>
     ${gridLines}${yLabels}${innLabels}
-    <path d="${areaAbove}" fill="url(#wf)"/>
-    <path d="${linePath}" fill="none" stroke="url(#wg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${areaAbove}" fill="url(#wf${sfx})"/>
+    <path d="${linePath}" fill="none" stroke="url(#wg${sfx})" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     ${annots}
     <text x="${CL}" y="${CH + 17}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" letter-spacing="0.15em">INNING</text>
-    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">LAD WIN %</text>
+    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">${cfg.wpa.label}</text>
   </svg>`
 
   /* ── Turning Points ── */
-  const turns = [
-    { rank: 1, title: 'Will Smith Go-Ahead Solo HR', inn: '\u25b2 Top 11th', delta: '+38%', cls: 'pos',
-      desc: 'On a 2\u20130 count, Smith sent a Shane Bieber pitch into the Toronto bullpen in left field. The first extra-inning HR in a winner-take-all World Series game.' },
-    { rank: 2, title: 'Bo Bichette 3-Run HR', inn: '\u25bc Bot 3rd', delta: '\u221230%', cls: 'neg',
-      desc: 'Bichette crushed a 442-foot bomb to deep center off Shohei Ohtani, scoring Springer and Guerrero Jr. to put Toronto up 3\u20130.' },
-    { rank: 3, title: 'Miguel Rojas Game-Tying Solo HR', inn: '\u25b2 Top 9th', delta: '+25%', cls: 'pos',
-      desc: 'Facing closer Jeff Hoffman, Rojas hammered a hanging slider 387 feet to left field, tying the game 4\u20134 and sending it to extras.' },
-    { rank: 4, title: 'Max Muncy Solo HR', inn: '\u25b2 Top 8th', delta: '+12%', cls: 'pos',
-      desc: 'Muncy launched a solo shot 373 feet to right off Trey Yesavage, cutting the Dodgers\u2019 deficit to 4\u20133.' },
-    { rank: 5, title: 'Andr\u00e9s Gim\u00e9nez RBI Double', inn: '\u25bc Bot 6th', delta: '\u221210%', cls: 'neg',
-      desc: 'Gim\u00e9nez ripped a double to right off Tyler Glasnow, scoring Ernie Clement to extend Toronto\u2019s lead to 4\u20132.' },
-  ]
-  const turnsHtml = turns.map(t => `
+  const turnsHtml = cfg.turningPoints.map(t => `
     <div class="gbc-tp-card">
       <div class="gbc-tp-rank">${t.rank}</div>
       <div class="gbc-tp-body">
@@ -857,17 +866,7 @@ function buildBreakdownHtml() {
     </div>`).join('')
 
   /* ── Best At-Bats ── */
-  const bestABs = [
-    { batter: 'Will Smith', inn: '\u25b2 11th', pitches: 3, result: 'Solo HR', wpa: '+38%', cls: 'pos',
-      note: 'Jumped on a 2\u20130 fastball from Shane Bieber and drove it 366 feet into the Toronto bullpen. Go-ahead run in extras.' },
-    { batter: 'Miguel Rojas', inn: '\u25b2 9th', pitches: 4, result: 'Solo HR', wpa: '+25%', cls: 'pos',
-      note: 'Crushed a hanging slider from closer Jeff Hoffman 387 feet to left. Game-tying blast that forced extras.' },
-    { batter: 'Max Muncy', inn: '\u25b2 8th', pitches: 5, result: 'Solo HR', wpa: '+12%', cls: 'pos',
-      note: 'Launched a 373-foot solo shot to right off Trey Yesavage. Cut the deficit to 4\u20133 and kept the comeback alive.' },
-    { batter: 'Bo Bichette', inn: '\u25bc 3rd', pitches: 4, result: '3-Run HR', wpa: '\u221230%', cls: 'neg',
-      note: 'Hammered a 442-foot moonshot to deep center off Ohtani, scoring Springer and Guerrero Jr. Gave Toronto a commanding 3\u20130 lead.' },
-  ]
-  const bestABHtml = bestABs.map((ab, i) => `
+  const bestABHtml = cfg.bestAtBats.map((ab, i) => `
     <div class="gbc-ab-card">
       <div class="gbc-ab-rank">${i + 1}</div>
       <div class="gbc-ab-body">
@@ -881,17 +880,9 @@ function buildBreakdownHtml() {
     </div>`).join('')
 
   /* ── Pitch Sequencing ── */
-  const pitchData = [
-    { type: 'Four-Seam Fastball', pct: 35, velo: '95.8', color: '#ef5350' },
-    { type: 'Slider', pct: 22, velo: '86.9', color: '#42a5f5' },
-    { type: 'Splitter', pct: 14, velo: '88.2', color: '#66bb6a' },
-    { type: 'Curveball', pct: 12, velo: '80.1', color: '#ab47bc' },
-    { type: 'Changeup', pct: 10, velo: '84.5', color: '#ffa726' },
-    { type: 'Sinker', pct: 7, velo: '93.4', color: '#78909c' },
-  ]
   const pitchHtml = `
-    <div class="gbc-pitch-label">Both Teams Combined \u00b7 364 Total Pitches</div>
-    ${pitchData.map(p => `
+    <div class="gbc-pitch-label">${cfg.pitchSequencing.label}</div>
+    ${cfg.pitchSequencing.pitches.map(p => `
       <div class="gbc-pitch-bar">
         <span class="gbc-pitch-type">${p.type}</span>
         <div class="gbc-pitch-track"><div class="gbc-pitch-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
@@ -900,23 +891,6 @@ function buildBreakdownHtml() {
       </div>`).join('')}`
 
   /* ── Bullpen Usage ── */
-  const bullpenAway = [
-    { name: 'Shohei Ohtani', role: 'SP', ip: '2.1', p: 51, k: 3, bb: 2, er: 3, grade: 'C+', gcls: 'c' },
-    { name: 'Justin Wrobleski', role: 'RP', ip: '1.1', p: 21, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
-    { name: 'Tyler Glasnow', role: 'RP', ip: '2.1', p: 38, k: 2, bb: 0, er: 1, grade: 'B+', gcls: 'b' },
-    { name: 'Emmet Sheehan', role: 'RP', ip: '1.0', p: 20, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
-    { name: 'Blake Snell', role: 'RP', ip: '1.1', p: 28, k: 2, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
-    { name: 'Yoshinobu Yamamoto', role: 'W', ip: '2.2', p: 34, k: 1, bb: 1, er: 0, grade: 'A+', gcls: 'a' },
-  ]
-  const bullpenHome = [
-    { name: 'Max Scherzer', role: 'SP', ip: '4.1', p: 54, k: 3, bb: 1, er: 1, grade: 'B+', gcls: 'b' },
-    { name: 'Louis Varland', role: 'RP', ip: '0.2', p: 9, k: 0, bb: 0, er: 0, grade: 'B', gcls: 'b' },
-    { name: 'Chris Bassitt', role: 'RP', ip: '1.0', p: 26, k: 0, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
-    { name: 'Trey Yesavage', role: 'RP', ip: '1.2', p: 21, k: 0, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
-    { name: 'Jeff Hoffman', role: 'RP', ip: '1.1', p: 22, k: 2, bb: 0, er: 1, grade: 'C', gcls: 'c' },
-    { name: 'Seranthony Dom\u00ednguez', role: 'RP', ip: '1.0', p: 27, k: 0, bb: 2, er: 0, grade: 'B\u2212', gcls: 'b' },
-    { name: 'Shane Bieber', role: 'L', ip: '1.0', p: 13, k: 0, bb: 0, er: 1, grade: 'D+', gcls: 'd' },
-  ]
   const bpRow = p => `<tr>
     <td class="gbc-bp-name">${p.name}<span class="gbc-bp-role">${p.role}</span></td>
     <td>${p.ip}</td><td>${p.p}</td><td>${p.k}</td><td>${p.bb}</td><td>${p.er}</td>
@@ -930,19 +904,7 @@ function buildBreakdownHtml() {
     </table>`
 
   /* ── Manager Decisions ── */
-  const decisions = [
-    { grade: 'A+', gcls: 'a', title: 'Roberts: Yamamoto from the bullpen on 1 day rest',
-      impact: 'After throwing 96 pitches in Game 6 the night before, Yamamoto tossed 2.2 scoreless innings with a bases-loaded escape. WS MVP performance. Series-defining decision.' },
-    { grade: 'B+', gcls: 'b', title: 'Roberts: Pulling Ohtani after 2.1 IP',
-      impact: 'Gutsy to pull your two-way ace early, but the right call after Bichette\u2019s 3-run bomb. The bullpen was dominant the rest of the way.' },
-    { grade: 'A', gcls: 'a', title: 'Roberts: All-hands bullpen approach (6 relievers)',
-      impact: 'Used Wrobleski, Glasnow, Sheehan, Snell, and Yamamoto in relief. Combined for 8.2 IP, 1 ER, 9 K. Masterful management.' },
-    { grade: 'C', gcls: 'c', title: 'Schneider: Leaving Hoffman in for the 9th',
-      impact: 'Hoffman surrendered the game-tying Rojas HR on a hanging slider. A fresh arm might have held the 4\u20133 lead.' },
-    { grade: 'C+', gcls: 'c', title: 'Schneider: Bieber for the 11th inning',
-      impact: 'Bieber gave up the go-ahead Smith HR on just his 7th pitch. Seranthony Dom\u00ednguez had just thrown a scoreless 10th and might have continued.' },
-  ]
-  const decsHtml = decisions.map(d => `
+  const decsHtml = cfg.managerDecisions.map(d => `
     <div class="gbc-dec-card">
       <span class="gbc-grade ${d.gcls} gbc-dec-badge">${d.grade}</span>
       <div class="gbc-dec-body">
@@ -951,13 +913,20 @@ function buildBreakdownHtml() {
       </div>
     </div>`).join('')
 
+  /* ── Header ── */
+  const headerSub = `${cfg.seriesLabel} \u00b7 ${cfg.gameLabel} \u00b7 ${cfg.scoreLabel} \u00b7 ${cfg.venue}`
+
   /* ── Assemble ── */
   return `
     <div class="gbc">
       <div class="gbc-header">
-        <div class="gbc-header-tag">FILM STUDY</div>
-        <div class="gbc-header-title">Game Breakdown Center</div>
-        <div class="gbc-header-sub">2025 World Series \u00b7 Game 7 \u00b7 LAD 5, TOR 4 (11) \u00b7 Rogers Centre</div>
+        <div class="gbc-header-tag">${cfg.tag}</div>
+        <div class="gbc-header-title">${cfg.title}</div>
+        <div class="gbc-header-sub">${headerSub}</div>
+      </div>
+      <div class="gbc-section">
+        <div class="gbc-section-title">Line Score</div>
+        ${lineScoreHtml}
       </div>
       <div class="gbc-section">
         <div class="gbc-section-title">Win Probability</div>
@@ -980,8 +949,8 @@ function buildBreakdownHtml() {
       <div class="gbc-section">
         <div class="gbc-section-title">Bullpen Usage</div>
         <div class="gbc-bullpen">
-          ${bpTable('Los Angeles Dodgers', bullpenAway)}
-          ${bpTable('Toronto Blue Jays', bullpenHome)}
+          ${bpTable(cfg.bullpen.away.name, cfg.bullpen.away.pitchers)}
+          ${bpTable(cfg.bullpen.home.name, cfg.bullpen.home.pitchers)}
         </div>
       </div>
       <div class="gbc-section">
