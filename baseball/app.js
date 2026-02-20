@@ -1329,6 +1329,221 @@ function renderFullLiveGame(data) {
         <div class="lf-play-log-header">Play-by-Play</div>
         <div class="lf-play-log-scroll">${ppHtml}</div>
       </div>
+    </div>
+    ${isFinal ? buildBreakdownHtml(data) : ''}`
+}
+
+/* ── Game Breakdown Center ── */
+function buildBreakdownHtml(data) {
+  const isDemo = !_liveGamePk
+  if (!isDemo) return ''
+
+  /* ── WPA Data (home team win probability after each play) ── */
+  const wpa = [50,52,53,54,53,54,53,51,50,52,54,53,54,53,52,49,50,52,40,41,40,39,38,40,42,44,56,57,55,53,52,53,54,56,55,56,54,53,49,51,28,30,32,34,32,29,27,30,33,35,33,30,33,42,40,42,39,44,46,44,40,36,39,42,45,40,35,42,55,52,55,58,60,57,53,88,85,90,96,100]
+  const N = wpa.length
+  const CW = 800, CH = 250, CL = 48, CR = 785, CT = 22, CB = 225
+  const cw = CR - CL, ch = CB - CT
+  const wx = i => CL + (i / (N - 1)) * cw
+  const wy = v => CT + ((100 - v) / 100) * ch
+  const y50 = wy(50)
+
+  const pts = wpa.map((v, i) => `${wx(i).toFixed(1)},${wy(v).toFixed(1)}`)
+  const linePath = `M${pts.join(' L')}`
+  const areaAbove = `M${pts.join(' L')} L${wx(N-1).toFixed(1)},${y50.toFixed(1)} L${wx(0).toFixed(1)},${y50.toFixed(1)} Z`
+
+  const gridLines = [25, 50, 75].map(v => {
+    const yy = wy(v)
+    const mid = v === 50
+    return `<line x1="${CL}" y1="${yy.toFixed(1)}" x2="${CR}" y2="${yy.toFixed(1)}" stroke="rgba(255,255,255,${mid ? 0.15 : 0.06})" stroke-width="${mid ? 1 : 0.5}" ${!mid ? 'stroke-dasharray="4,4"' : ''}/>`
+  }).join('')
+  const yLabels = [0, 25, 50, 75, 100].map(v =>
+    `<text x="${CL - 8}" y="${(wy(v) + 3).toFixed(1)}" text-anchor="end" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${v}%</text>`
+  ).join('')
+  const innStarts = [0, 6, 14, 22, 30, 37, 46, 54, 61, 69, 76]
+  const innLabels = innStarts.map((pi, idx) =>
+    `<text x="${wx(pi).toFixed(1)}" y="${(CB + 16).toFixed(1)}" text-anchor="middle" font-size="9" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.22)">${idx + 1}</text>
+     <line x1="${wx(pi).toFixed(1)}" y1="${CT}" x2="${wx(pi).toFixed(1)}" y2="${CB}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`
+  ).join('')
+
+  const keyMoments = [
+    { i: 18, lbl: 'Bichette RBI', c: '#ef5350' },
+    { i: 26, lbl: 'Betts HR', c: '#42a5f5' },
+    { i: 40, lbl: 'Vlad 2-run HR', c: '#ef5350' },
+    { i: 53, lbl: 'Freeman RBI', c: '#42a5f5' },
+    { i: 68, lbl: 'Rojas ties it!', c: '#66bb6a' },
+    { i: 75, lbl: 'Smith HR!', c: '#66bb6a' },
+  ]
+  const annots = keyMoments.map(k => {
+    const cx = wx(k.i), cy = wy(wpa[k.i])
+    const above = wpa[k.i] > 50
+    const ly = above ? cy - 14 : cy + 16
+    return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="${k.c}" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>
+      <text x="${cx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="7" font-family="Inter,sans-serif" font-weight="700" fill="rgba(255,255,255,0.55)">${k.lbl}</text>`
+  }).join('')
+
+  const wpaSvg = `<svg class="gbc-wpa-svg" viewBox="0 0 ${CW} ${CH + 20}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="wg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1565c0"/><stop offset="45%" stop-color="#43a047"/><stop offset="55%" stop-color="#43a047"/><stop offset="100%" stop-color="#1565c0"/></linearGradient>
+      <linearGradient id="wf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(66,165,245,0.12)"/><stop offset="100%" stop-color="rgba(66,165,245,0)"/></linearGradient>
+    </defs>
+    ${gridLines}${yLabels}${innLabels}
+    <path d="${areaAbove}" fill="url(#wf)"/>
+    <path d="${linePath}" fill="none" stroke="url(#wg)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${annots}
+    <text x="${CL}" y="${CH + 17}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" letter-spacing="0.15em">INNING</text>
+    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">LAD WIN%</text>
+  </svg>`
+
+  /* ── Turning Points ── */
+  const turns = [
+    { rank: 1, title: 'Will Smith Solo HR', inn: '\u25bc Bot 10th', delta: '+35%', cls: 'pos',
+      desc: 'Down to their last 4 outs trailing 3\u20133, Smith launched a go-ahead solo shot to left-center field off Erik Swanson.' },
+    { rank: 2, title: 'Vladimir Guerrero Jr. 2-Run HR', inn: '\u25b2 Top 6th', delta: '\u221223%', cls: 'neg',
+      desc: 'With Springer on first, Guerrero crushed a 2-run homer off Walker Buehler to give Toronto a 3\u20131 lead.' },
+    { rank: 3, title: 'Miguel Rojas Game-Tying Single', inn: '\u25bc Bot 9th', delta: '+20%', cls: 'pos',
+      desc: 'With 2 outs and Edman on second, Rojas fought off a 2\u20132 pitch and poked a single through the middle to tie it 3\u20133.' },
+    { rank: 4, title: 'Mookie Betts Solo HR', inn: '\u25bc Bot 4th', delta: '+12%', cls: 'pos',
+      desc: 'Betts ambushed a first-pitch fastball from Berrios and drove it out to left-center, tying the game 1\u20131.' },
+    { rank: 5, title: 'Bo Bichette RBI Single', inn: '\u25b2 Top 3rd', delta: '\u221212%', cls: 'neg',
+      desc: 'With two outs and Kiermaier on second, Bichette lined a single to left to give Toronto a 1\u20130 lead.' },
+  ]
+  const turnsHtml = turns.map(t => `
+    <div class="gbc-tp-card">
+      <div class="gbc-tp-rank">${t.rank}</div>
+      <div class="gbc-tp-body">
+        <div class="gbc-tp-title">${t.title}</div>
+        <div class="gbc-tp-inn">${t.inn}</div>
+        <div class="gbc-tp-desc">${t.desc}</div>
+      </div>
+      <div class="gbc-tp-delta ${t.cls}">${t.delta}</div>
+    </div>`).join('')
+
+  /* ── Best At-Bats ── */
+  const bestABs = [
+    { batter: 'Will Smith', inn: '\u25bc10th', pitches: 7, result: 'Solo HR', wpa: '+35%', cls: 'pos',
+      note: 'Worked a full count before crushing a splitter. Go-ahead run in extras.' },
+    { batter: 'Miguel Rojas', inn: '\u25bc9th', pitches: 5, result: 'RBI Single', wpa: '+20%', cls: 'pos',
+      note: '2-out, 2-strike delivery. Fought off tough sliders to push the tying run home.' },
+    { batter: 'Freddie Freeman', inn: '\u25bc7th', pitches: 6, result: 'RBI Double', wpa: '+9%', cls: 'pos',
+      note: 'Patient at-bat against Romano. Lined a cutter into the right-field gap to cut the deficit to 1.' },
+    { batter: 'Vladimir Guerrero Jr.', inn: '\u25b2 6th', pitches: 3, result: '2-Run HR', wpa: '\u221223%', cls: 'neg',
+      note: 'Punished an inside fastball. 2-run shot gave Toronto their biggest lead of the night.' },
+  ]
+  const bestABHtml = bestABs.map((ab, i) => `
+    <div class="gbc-ab-card">
+      <div class="gbc-ab-rank">${i + 1}</div>
+      <div class="gbc-ab-body">
+        <div class="gbc-ab-top">
+          <span class="gbc-ab-name">${ab.batter}</span>
+          <span class="gbc-ab-result">${ab.result}</span>
+        </div>
+        <div class="gbc-ab-meta">${ab.inn} \u00b7 ${ab.pitches} pitches \u00b7 <span class="gbc-ab-wpa ${ab.cls}">${ab.wpa} WPA</span></div>
+        <div class="gbc-ab-note">${ab.note}</div>
+      </div>
+    </div>`).join('')
+
+  /* ── Pitch Sequencing ── */
+  const pitchData = [
+    { type: 'Four-Seam Fastball', pct: 38, velo: '96.2', color: '#ef5350' },
+    { type: 'Slider', pct: 24, velo: '87.4', color: '#42a5f5' },
+    { type: 'Changeup', pct: 16, velo: '85.1', color: '#66bb6a' },
+    { type: 'Curveball', pct: 12, velo: '79.8', color: '#ab47bc' },
+    { type: 'Sinker', pct: 10, velo: '93.7', color: '#ffa726' },
+  ]
+  const pitchHtml = `
+    <div class="gbc-pitch-label">Both Teams Combined \u00b7 298 Total Pitches</div>
+    ${pitchData.map(p => `
+      <div class="gbc-pitch-bar">
+        <span class="gbc-pitch-type">${p.type}</span>
+        <div class="gbc-pitch-track"><div class="gbc-pitch-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
+        <span class="gbc-pitch-pct">${p.pct}%</span>
+        <span class="gbc-pitch-velo">${p.velo}</span>
+      </div>`).join('')}`
+
+  /* ── Bullpen Usage ── */
+  const bullpenHome = [
+    { name: 'Walker Buehler', role: 'SP', ip: '6.0', p: 94, k: 5, bb: 2, er: 3, grade: 'B', gcls: 'b' },
+    { name: 'Blake Treinen', role: 'RP', ip: '1.0', p: 16, k: 2, bb: 0, er: 0, grade: 'A', gcls: 'a' },
+    { name: 'Evan Phillips', role: 'RP', ip: '1.0', p: 18, k: 1, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
+    { name: 'Yoshinobu Yamamoto', role: 'CL', ip: '2.0', p: 26, k: 3, bb: 0, er: 0, grade: 'A+', gcls: 'a' },
+  ]
+  const bullpenAway = [
+    { name: 'Jos\u00e9 Berrios', role: 'SP', ip: '5.2', p: 88, k: 4, bb: 1, er: 2, grade: 'B+', gcls: 'b' },
+    { name: 'Jordan Romano', role: 'RP', ip: '1.1', p: 22, k: 2, bb: 1, er: 0, grade: 'A\u2212', gcls: 'a' },
+    { name: 'Yimi Garcia', role: 'RP', ip: '1.0', p: 15, k: 1, bb: 0, er: 1, grade: 'B\u2212', gcls: 'b' },
+    { name: 'Erik Swanson', role: 'RP', ip: '2.0', p: 30, k: 2, bb: 1, er: 1, grade: 'C+', gcls: 'c' },
+  ]
+  const bpRow = p => `<tr>
+    <td class="gbc-bp-name">${p.name}<span class="gbc-bp-role">${p.role}</span></td>
+    <td>${p.ip}</td><td>${p.p}</td><td>${p.k}</td><td>${p.bb}</td><td>${p.er}</td>
+    <td><span class="gbc-grade ${p.gcls}">${p.grade}</span></td>
+  </tr>`
+  const bpTable = (team, rows) => `
+    <div class="gbc-bp-team">${team}</div>
+    <table class="gbc-bp-table">
+      <thead><tr><th>Pitcher</th><th>IP</th><th>P</th><th>K</th><th>BB</th><th>ER</th><th></th></tr></thead>
+      <tbody>${rows.map(bpRow).join('')}</tbody>
+    </table>`
+
+  /* ── Manager Decisions ── */
+  const decisions = [
+    { grade: 'A+', gcls: 'a', title: 'Yamamoto from the bullpen in the 10th',
+      impact: 'Dominant: 2.0 IP, 3 K, 0 BB. Shut down Toronto\u2019s heart of the order twice. Series-clinching decision.' },
+    { grade: 'B', gcls: 'b', title: 'Leaving Buehler in for the 6th (pitch 82+)',
+      impact: 'Buehler surrendered Guerrero\u2019s 2-run HR on his 88th pitch. A quicker hook could have preserved the 1\u20131 tie.' },
+    { grade: 'A', gcls: 'a', title: 'Treinen for the 7th in a high-leverage spot',
+      impact: 'Clean inning. Kept Toronto from adding on after taking a 3\u20131 lead. Set up the comeback.' },
+    { grade: 'A', gcls: 'a', title: 'Batting Rojas 7th \u2014 lineup construction',
+      impact: 'Rojas delivered the game-tying single in the 9th with 2 outs. Right man, right spot.' },
+    { grade: 'C+', gcls: 'c', title: 'Swanson left in for the 10th after the Smith HR',
+      impact: 'Swanson gave up the go-ahead HR on his 26th pitch. A fresh arm could have kept it tied.' },
+  ]
+  const decsHtml = decisions.map(d => `
+    <div class="gbc-dec-card">
+      <span class="gbc-grade ${d.gcls} gbc-dec-badge">${d.grade}</span>
+      <div class="gbc-dec-body">
+        <div class="gbc-dec-title">${d.title}</div>
+        <div class="gbc-dec-impact">${d.impact}</div>
+      </div>
+    </div>`).join('')
+
+  /* ── Assemble ── */
+  return `
+    <div class="gbc">
+      <div class="gbc-header">
+        <div class="gbc-header-tag">FILM STUDY</div>
+        <div class="gbc-header-title">Game Breakdown Center</div>
+        <div class="gbc-header-sub">2025 World Series \u00b7 Game 7 \u00b7 LAD 4, TOR 3 (11)</div>
+      </div>
+      <div class="gbc-section">
+        <div class="gbc-section-title">Win Probability</div>
+        <div class="gbc-wpa">${wpaSvg}</div>
+      </div>
+      <div class="gbc-section">
+        <div class="gbc-section-title">Turning Points</div>
+        <div class="gbc-turns">${turnsHtml}</div>
+      </div>
+      <div class="gbc-grid2">
+        <div class="gbc-section">
+          <div class="gbc-section-title">Best At-Bats</div>
+          <div class="gbc-abs">${bestABHtml}</div>
+        </div>
+        <div class="gbc-section">
+          <div class="gbc-section-title">Pitch Sequencing</div>
+          <div class="gbc-pitches">${pitchHtml}</div>
+        </div>
+      </div>
+      <div class="gbc-section">
+        <div class="gbc-section-title">Bullpen Usage</div>
+        <div class="gbc-bullpen">
+          ${bpTable('Los Angeles Dodgers', bullpenHome)}
+          ${bpTable('Toronto Blue Jays', bullpenAway)}
+        </div>
+      </div>
+      <div class="gbc-section">
+        <div class="gbc-section-title">Manager Decisions</div>
+        <div class="gbc-decs">${decsHtml}</div>
+      </div>
     </div>`
 }
 

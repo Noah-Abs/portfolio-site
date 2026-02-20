@@ -289,6 +289,84 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 
 .lf-empty { padding: 3rem 1.5rem; text-align: center; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.15); }
 
+/* ── Game Breakdown Center ── */
+.gbc { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.gbc-header { text-align: center; padding: 1.5rem 1rem 0.5rem; }
+.gbc-header-tag { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 0.4rem; }
+.gbc-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.1em; color: #fff; line-height: 1.1; }
+.gbc-header-sub { font-size: 0.62rem; color: rgba(255,255,255,0.35); margin-top: 0.3rem; letter-spacing: 0.04em; }
+.gbc-section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1rem; }
+.gbc-section-title { font-size: 0.56rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 0.75rem; }
+.gbc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+/* WPA Chart */
+.gbc-wpa { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.gbc-wpa-svg { display: block; width: 100%; height: auto; min-width: 500px; }
+
+/* Turning Points */
+.gbc-turns { display: flex; flex-direction: column; gap: 0.5rem; }
+.gbc-tp-card { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.65rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.gbc-tp-card:last-child { border-bottom: none; }
+.gbc-tp-rank { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: rgba(255,255,255,0.15); line-height: 1; min-width: 22px; text-align: center; }
+.gbc-tp-body { flex: 1; min-width: 0; }
+.gbc-tp-title { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.88); margin-bottom: 0.15rem; }
+.gbc-tp-inn { font-size: 0.58rem; color: rgba(255,255,255,0.35); margin-bottom: 0.3rem; letter-spacing: 0.04em; }
+.gbc-tp-desc { font-size: 0.66rem; color: rgba(255,255,255,0.4); line-height: 1.5; }
+.gbc-tp-delta { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 0.04em; flex-shrink: 0; min-width: 48px; text-align: right; }
+.gbc-tp-delta.pos { color: rgba(100,200,100,0.85); }
+.gbc-tp-delta.neg { color: rgba(240,80,80,0.85); }
+
+/* Best At-Bats */
+.gbc-abs { display: flex; flex-direction: column; gap: 0.5rem; }
+.gbc-ab-card { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.gbc-ab-card:last-child { border-bottom: none; }
+.gbc-ab-rank { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: rgba(255,255,255,0.12); line-height: 1; min-width: 18px; text-align: center; }
+.gbc-ab-body { flex: 1; min-width: 0; }
+.gbc-ab-top { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.1rem; }
+.gbc-ab-name { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.85); }
+.gbc-ab-result { font-size: 0.6rem; font-weight: 600; color: rgba(255,255,255,0.45); }
+.gbc-ab-meta { font-size: 0.55rem; color: rgba(255,255,255,0.3); margin-bottom: 0.2rem; }
+.gbc-ab-wpa { font-weight: 700; }
+.gbc-ab-wpa.pos { color: rgba(100,200,100,0.8); }
+.gbc-ab-wpa.neg { color: rgba(240,80,80,0.8); }
+.gbc-ab-note { font-size: 0.62rem; color: rgba(255,255,255,0.35); line-height: 1.45; }
+
+/* Pitch Sequencing */
+.gbc-pitches { display: flex; flex-direction: column; gap: 0.45rem; }
+.gbc-pitch-label { font-size: 0.55rem; color: rgba(255,255,255,0.25); margin-bottom: 0.3rem; letter-spacing: 0.04em; }
+.gbc-pitch-bar { display: grid; grid-template-columns: 110px 1fr 36px 48px; align-items: center; gap: 0.5rem; padding: 0.22rem 0; }
+.gbc-pitch-type { font-size: 0.68rem; font-weight: 600; color: rgba(255,255,255,0.65); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gbc-pitch-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+.gbc-pitch-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.gbc-pitch-pct { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.55); text-align: right; }
+.gbc-pitch-velo { font-size: 0.58rem; color: rgba(255,255,255,0.3); text-align: right; white-space: nowrap; }
+
+/* Bullpen Usage */
+.gbc-bullpen { display: flex; flex-direction: column; gap: 1rem; }
+.gbc-bp-team { font-size: 0.62rem; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; margin-bottom: 0.15rem; }
+.gbc-bp-table { width: 100%; border-collapse: collapse; }
+.gbc-bp-table th { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.22); padding: 0.4rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.gbc-bp-table th:first-child { text-align: left; }
+.gbc-bp-table td { font-size: 0.72rem; color: rgba(255,255,255,0.6); padding: 0.45rem 0.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.03); font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.04em; }
+.gbc-bp-table td:first-child { text-align: left; font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+.gbc-bp-name { display: flex; align-items: center; gap: 0.4rem; }
+.gbc-bp-role { font-size: 0.48rem; font-weight: 700; letter-spacing: 0.12em; color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.05); border-radius: 2px; padding: 0.08rem 0.25rem; margin-left: 0.3rem; }
+
+/* Grade Badges */
+.gbc-grade { display: inline-block; font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 0.06em; padding: 0.1rem 0.45rem; border-radius: 4px; line-height: 1.2; }
+.gbc-grade.a { color: rgba(100,200,100,0.95); background: rgba(100,200,100,0.12); }
+.gbc-grade.b { color: rgba(100,160,255,0.95); background: rgba(100,160,255,0.12); }
+.gbc-grade.c { color: rgba(255,180,60,0.95); background: rgba(255,180,60,0.12); }
+
+/* Manager Decisions */
+.gbc-decs { display: flex; flex-direction: column; gap: 0.5rem; }
+.gbc-dec-card { display: flex; align-items: flex-start; gap: 0.65rem; padding: 0.6rem 0.25rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.gbc-dec-card:last-child { border-bottom: none; }
+.gbc-dec-badge { flex-shrink: 0; min-width: 36px; text-align: center; }
+.gbc-dec-body { flex: 1; min-width: 0; }
+.gbc-dec-title { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); margin-bottom: 0.2rem; }
+.gbc-dec-impact { font-size: 0.64rem; color: rgba(255,255,255,0.38); line-height: 1.5; }
+
 /* ── Sidebar Nav ── */
 .sb-nav { background: rgba(5,7,20,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; margin-bottom: 0.5rem; flex-shrink: 0; }
 .sb-nav-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.6rem 0.85rem; border: none; border-bottom: 1px solid rgba(255,255,255,0.06); background: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; color: rgba(255,255,255,0.45); text-align: left; width: 100%; transition: background 0.15s, color 0.15s; -webkit-tap-highlight-color: transparent; }
@@ -569,6 +647,8 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .lf-banner-logo { height: 28px; }
   .lf-banner-runs { font-size: 2.4rem; }
   .lf-banner-name { font-size: 1.1rem; }
+  .gbc-grid2 { grid-template-columns: 1fr; }
+  .gbc-pitch-bar { grid-template-columns: 90px 1fr 32px 42px; }
 }
 
 @media (max-width: 700px) {
