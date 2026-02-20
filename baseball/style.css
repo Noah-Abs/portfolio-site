@@ -265,6 +265,15 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .hub-card-desc { font-size: 0.62rem; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
 .hub-card-disabled { opacity: 0.35; cursor: default; pointer-events: none; }
 
+/* ── Prospects View ── */
+.prospects-wrap { max-width: 700px; margin: 0 auto; padding: 2rem 1.25rem 6rem; }
+.prospect-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+.prospect-row:hover { background: rgba(255,255,255,0.03); }
+.prospect-rank { width: 2rem; text-align: center; font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+.prospect-info { flex: 1; display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.prospect-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prospect-pos { font-size: 0.6rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; flex-shrink: 0; }
+
 /* ── Breakdown View Wrap ── */
 .breakdown-wrap { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
 

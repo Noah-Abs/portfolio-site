@@ -250,5 +250,17 @@ function timeAgo(iso) {
   if (mins < 60)   return `${mins}m ago`
   if (mins < 1440) return `${Math.floor(mins / 60)}h ago`
   return `${Math.floor(mins / 1440)}d ago`
-}"
-"
+}
+
+async function fetchProspects(teamId) {
+  const year = new Date().getFullYear()
+  const res = await fetch(
+    `https://statsapi.mlb.com/api/v1/draft/prospects/${year}`
+  )
+  const data = await res.json()
+  const all = data.prospects ?? []
+  return all
+    .filter(p => p.team?.id === teamId)
+    .sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999))
+    .slice(0, 30)
+}

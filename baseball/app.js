@@ -8,6 +8,7 @@ let _mlbNewsArticles = []
 let _allScheduleGames = []
 let _filteredGames = []
 let rosterLoaded = false
+let _prospectsLoaded = false
 
 const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 
@@ -67,6 +68,7 @@ function renderTeam(key) {
   _depthLoaded = false
   rosterLoaded = false
   _contractsLoaded = false
+  _prospectsLoaded = false
 
   const centerLogo = document.getElementById('mob-center-logo')
   if (centerLogo) { centerLogo.src = t.logoSrc; centerLogo.alt = t.logoAlt }
@@ -731,7 +733,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'settings']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'settings']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -741,6 +743,7 @@ function switchView(view) {
   if (view === 'contracts') loadContracts(_currentTeamKey)
   if (view === 'news') renderNewsPage()
   if (view === 'breakdown') loadBreakdownView()
+  if (view === 'prospects') loadProspects()
   if (view === 'settings') renderSettingsTeams()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
@@ -766,6 +769,51 @@ function _setMobTab(view) {
 function loadHub() {
   const sub = document.getElementById('hub-sub')
   if (sub) sub.textContent = APP_TEAMS[_currentTeamKey]?.name ?? ''
+}
+
+/* ── Prospects ── */
+async function loadProspects() {
+  if (_prospectsLoaded) return
+  const el = document.getElementById('prospects-list')
+  if (!el) return
+  el.innerHTML = '<div class="dc-loading">Loading prospects…</div>'
+
+  const t = APP_TEAMS[_currentTeamKey]
+  const sub = document.getElementById('prospects-sub')
+  if (sub && t) sub.textContent = `${t.name} · Pipeline`
+
+  try {
+    const teamId = t?.id ?? 119
+    const prospects = await fetchProspects(teamId)
+    if (!prospects.length) {
+      el.innerHTML = '<div class="dc-loading">No prospect data available.</div>'
+      return
+    }
+    _prospectsLoaded = true
+    el.innerHTML = prospects.map((p, i) => {
+      const name = p.person?.fullName ?? 'Unknown'
+      const pos = p.position?.abbreviation ?? ''
+      const rank = p.rank ?? (i + 1)
+      const id = p.person?.id
+      const posType = pos === 'P' ? 'Pitcher' : 'Hitter'
+      const safeName = name.replace(/'/g, "\\'")
+      const clickAttr = id
+        ? `onclick="openPlayerOverlay(${id},'${posType}','','${safeName}','${pos}')" style="cursor:pointer"`
+        : ''
+      return `
+        <div class="prospect-row" ${clickAttr}>
+          <span class="prospect-rank">${rank}</span>
+          <div class="prospect-info">
+            <span class="prospect-name">${name}</span>
+            <span class="prospect-pos">${pos}</span>
+          </div>
+          <span class="roster-chevron">›</span>
+        </div>`
+    }).join('')
+  } catch (e) {
+    console.warn('Prospects fetch failed:', e)
+    el.innerHTML = '<div class="dc-loading">Could not load prospects.</div>'
+  }
 }
 
 /* ── Game Breakdown Center ── */
@@ -1215,7 +1263,7 @@ function loadContracts(key) {
     <div class="contract-timeline">
       <div class="contract-timeline-title">Contract Timeline</div>
       <div class="ct-year-labels">
-        ${yearLabels.map(y => `<span class="ct-year-label">${y}</span>`).join('')}
+        ${yearLabels.map(y => `<span class="ct-year-label">'${y.toString().slice(-2)}</span>`).join('')}
       </div>
       ${data.players.map(p => {
         const leftPct = ((p.start - minYear) / totalYears) * 100
