@@ -251,6 +251,20 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .gbc-dec-title { font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.82); margin-bottom: 0.2rem; }
 .gbc-dec-impact { font-size: 0.64rem; color: rgba(255,255,255,0.38); line-height: 1.5; }
 
+/* ── Hub View ── */
+.hub-wrap { max-width: 600px; margin: 0 auto; padding: 2rem 2rem 4rem; }
+.hub-header { margin-bottom: 1.75rem; }
+.hub-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.08em; color: #fff; line-height: 1; }
+.hub-sub { font-size: 0.72rem; color: rgba(255,255,255,0.35); margin-top: 0.25rem; }
+.hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.hub-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 1.75rem 1rem 1.5rem; cursor: pointer; color: rgba(255,255,255,0.8); font-family: 'Inter', sans-serif; transition: background 0.15s, border-color 0.15s; -webkit-tap-highlight-color: transparent; text-align: center; }
+.hub-card:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); }
+.hub-card:active { background: rgba(255,255,255,0.1); }
+.hub-card svg { width: 32px; height: 32px; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+.hub-card-label { font-size: 0.88rem; font-weight: 600; color: #fff; }
+.hub-card-desc { font-size: 0.62rem; color: rgba(255,255,255,0.3); letter-spacing: 0.04em; }
+.hub-card-disabled { opacity: 0.35; cursor: default; pointer-events: none; }
+
 /* ── Breakdown View Wrap ── */
 .breakdown-wrap { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
 
@@ -568,6 +582,8 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .ws-banners { display: none !important; }
 
   .side-panel { width: 100%; top: 0; }
+  .hub-wrap { padding: 1.25rem 1rem 3rem; }
+  .hub-title { font-size: 1.8rem; }
   .breakdown-wrap { padding: 1rem 0.75rem 3rem; }
   .dc-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
   .dc-wrap { padding: 1rem 0.75rem 2rem; }

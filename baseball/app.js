@@ -62,6 +62,7 @@ function renderTeam(key) {
 
   if (_currentView === 'settings') renderSettingsTeams()
   if (_currentView === 'breakdown') loadBreakdownView()
+  if (_currentView === 'hub') loadHub()
 
   _depthLoaded = false
   rosterLoaded = false
@@ -730,11 +731,12 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'depth', 'contracts', 'news', 'breakdown', 'settings']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'settings']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
   })
+  if (view === 'hub') loadHub()
   if (view === 'depth') loadDepthChart()
   if (view === 'contracts') loadContracts(_currentTeamKey)
   if (view === 'news') renderNewsPage()
@@ -748,8 +750,8 @@ function switchView(view) {
 
 function _setMobTab(view) {
   document.querySelectorAll('.mob-tab, .mob-tab-center').forEach(b => b.classList.remove('active'))
-  if (view === 'news') {
-    const t = document.getElementById('mobtab-news')
+  if (view === 'hub') {
+    const t = document.getElementById('mobtab-hub')
     if (t) t.classList.add('active')
   } else if (view === 'home') {
     const t = document.getElementById('mobtab-home')
@@ -758,6 +760,12 @@ function _setMobTab(view) {
     const t = document.getElementById('mobtab-more')
     if (t) t.classList.add('active')
   }
+}
+
+/* ── Hub View ── */
+function loadHub() {
+  const sub = document.getElementById('hub-sub')
+  if (sub) sub.textContent = APP_TEAMS[_currentTeamKey]?.name ?? ''
 }
 
 /* ── Game Breakdown Center ── */

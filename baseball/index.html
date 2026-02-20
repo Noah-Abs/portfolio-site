@@ -133,6 +133,43 @@
     </div>
   </div>
 
+  <!-- Hub view -->
+  <div class="view-section" id="view-hub">
+    <div class="hub-wrap">
+      <div class="hub-header">
+        <div class="hub-title">Team Hub</div>
+        <div class="hub-sub" id="hub-sub">Los Angeles Dodgers</div>
+      </div>
+      <div class="hub-grid">
+        <button class="hub-card" onclick="openSidePanel('roster')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          <span class="hub-card-label">Roster</span>
+          <span class="hub-card-desc">40-man roster</span>
+        </button>
+        <button class="hub-card" onclick="switchView('depth')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="14" width="3.5" height="7" rx="1"/><rect x="10.25" y="9" width="3.5" height="12" rx="1"/><rect x="16.5" y="5" width="3.5" height="16" rx="1"/></svg>
+          <span class="hub-card-label">Depth Chart</span>
+          <span class="hub-card-desc">Lineup & rotation</span>
+        </button>
+        <button class="hub-card" onclick="switchView('contracts')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          <span class="hub-card-label">Payroll</span>
+          <span class="hub-card-desc">Contracts & salary</span>
+        </button>
+        <button class="hub-card hub-card-disabled">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21c0-3.5 2.1-6.5 5-7.5"/><circle cx="17" cy="14" r="3"/><path d="M17 11v6M14 14h6"/></svg>
+          <span class="hub-card-label">Prospects</span>
+          <span class="hub-card-desc">Coming soon</span>
+        </button>
+        <button class="hub-card hub-card-disabled">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span class="hub-card-label">History</span>
+          <span class="hub-card-desc">Coming soon</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Film Study (Breakdown) view -->
   <div class="view-section" id="view-breakdown">
     <div class="breakdown-wrap" id="breakdown-wrap"></div>
@@ -299,12 +336,14 @@
 
   <!-- Mobile bottom tab bar (3-tab) -->
   <nav class="mob-tabs" id="mob-tabs">
-    <button class="mob-tab" id="mobtab-news" onclick="switchView('news')">
+    <button class="mob-tab" id="mobtab-hub" onclick="switchView('hub')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/>
-        <path d="M10 6h8M10 10h8M10 14h4"/>
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
       </svg>
-      <span class="mob-tab-label">News</span>
+      <span class="mob-tab-label">Hub</span>
     </button>
     <button class="mob-tab-center" id="mobtab-home" onclick="switchView('home')">
       <img id="mob-center-logo" src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/119.svg" alt="Home">
@@ -369,13 +408,6 @@
             <path d="M10 6h8M10 10h8M10 14h4"/>
           </svg>
           <span>News</span>
-        </button>
-        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('settings')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-          <span>Settings</span>
         </button>
       </div>
     </div>
