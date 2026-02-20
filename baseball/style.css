@@ -267,12 +267,25 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 
 /* ── Prospects View ── */
 .prospects-wrap { max-width: 700px; margin: 0 auto; padding: 2rem 1.25rem 6rem; }
-.prospect-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+.prospect-header-row {
+  display: grid; grid-template-columns: 2.2rem 1fr 3rem 4rem 3rem;
+  gap: 0.5rem; padding: 0.5rem 0.5rem 0.4rem; align-items: center;
+  font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.25); border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.prospect-hdr-rank { text-align: center; }
+.prospect-hdr-ovr, .prospect-hdr-eta { text-align: center; }
+.prospect-row {
+  display: grid; grid-template-columns: 2.2rem 1fr 3rem 4rem 3rem;
+  gap: 0.5rem; padding: 0.65rem 0.5rem; align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;
+}
 .prospect-row:hover { background: rgba(255,255,255,0.03); }
-.prospect-rank { width: 2rem; text-align: center; font-weight: 700; font-size: 0.85rem; color: rgba(255,255,255,0.35); flex-shrink: 0; }
-.prospect-info { flex: 1; display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
-.prospect-name { font-size: 0.8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.prospect-pos { font-size: 0.6rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; flex-shrink: 0; }
+.prospect-rank { text-align: center; font-weight: 700; font-size: 0.8rem; color: rgba(255,255,255,0.35); }
+.prospect-name { font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prospect-pos { font-size: 0.62rem; color: rgba(255,255,255,0.45); text-align: center; font-weight: 500; }
+.prospect-ovr { font-size: 0.7rem; text-align: center; color: rgba(255,255,255,0.5); font-weight: 600; }
+.prospect-eta { font-size: 0.68rem; text-align: center; color: rgba(255,255,255,0.4); font-weight: 500; }
 
 /* ── Breakdown View Wrap ── */
 .breakdown-wrap { max-width: 960px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }

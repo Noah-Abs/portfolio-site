@@ -241,3 +241,33 @@ const GAME_BREAKDOWN = {
   },
 
 }
+
+/* ── Prospect Rankings (MLB Pipeline 2025 Preseason) ── */
+const PROSPECTS = {
+  dodgers: {
+    source: 'MLB Pipeline',
+    updated: '2025 Preseason',
+    players: [
+      { rank: 1,  ovr: 1,    name: 'Roki Sasaki',        pos: 'RHP', eta: 2025 },
+      { rank: 2,  ovr: 30,   name: 'Dalton Rushing',      pos: 'C/OF', eta: 2025 },
+      { rank: 3,  ovr: 40,   name: 'Josue De Paula',      pos: 'LHP', eta: 2026 },
+      { rank: 4,  ovr: 70,   name: 'Jackson Ferris',      pos: 'LHP', eta: 2026 },
+      { rank: 5,  ovr: 71,   name: 'Alex Freeland',       pos: 'SS',  eta: 2025 },
+      { rank: 6,  ovr: null, name: 'Zyhir Hope',          pos: 'OF',  eta: 2027 },
+      { rank: 7,  ovr: null, name: 'Justin Wrobleski',    pos: 'LHP', eta: 2025 },
+      { rank: 8,  ovr: null, name: 'Kellon Lindsey',      pos: 'SS',  eta: 2027 },
+      { rank: 9,  ovr: 80,   name: 'Emil Morales',        pos: 'SS',  eta: 2028 },
+      { rank: 10, ovr: null, name: 'Eduardo Quintero',    pos: 'CF',  eta: 2027 },
+      { rank: 11, ovr: null, name: 'Joendry Vargas',      pos: 'SS',  eta: 2027 },
+      { rank: 12, ovr: null, name: 'River Ryan',          pos: 'RHP', eta: 2026 },
+      { rank: 13, ovr: null, name: 'Kyle Hurt',           pos: 'RHP', eta: 2026 },
+      { rank: 14, ovr: null, name: 'Nick Frasso',         pos: 'RHP', eta: 2026 },
+      { rank: 15, ovr: null, name: 'Kendall George',      pos: 'OF',  eta: 2027 },
+      { rank: 16, ovr: null, name: 'Payton Martin',       pos: 'RHP', eta: 2027 },
+      { rank: 17, ovr: null, name: 'Edgardo Henriquez',   pos: 'RHP', eta: 2025 },
+      { rank: 18, ovr: null, name: 'Hyun-Seok Jang',      pos: 'RHP', eta: 2027 },
+      { rank: 19, ovr: null, name: 'Mike Sirota',         pos: 'OF',  eta: 2026 },
+      { rank: 20, ovr: null, name: 'Maddux Bruns',        pos: 'LHP', eta: 2026 },
+    ]
+  },
+}

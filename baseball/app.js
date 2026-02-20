@@ -8,7 +8,6 @@ let _mlbNewsArticles = []
 let _allScheduleGames = []
 let _filteredGames = []
 let rosterLoaded = false
-let _prospectsLoaded = false
 
 const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 
@@ -68,7 +67,6 @@ function renderTeam(key) {
   _depthLoaded = false
   rosterLoaded = false
   _contractsLoaded = false
-  _prospectsLoaded = false
 
   const centerLogo = document.getElementById('mob-center-logo')
   if (centerLogo) { centerLogo.src = t.logoSrc; centerLogo.alt = t.logoAlt }
@@ -772,48 +770,37 @@ function loadHub() {
 }
 
 /* ── Prospects ── */
-async function loadProspects() {
-  if (_prospectsLoaded) return
+function loadProspects() {
   const el = document.getElementById('prospects-list')
   if (!el) return
-  el.innerHTML = '<div class="dc-loading">Loading prospects…</div>'
 
   const t = APP_TEAMS[_currentTeamKey]
   const sub = document.getElementById('prospects-sub')
-  if (sub && t) sub.textContent = `${t.name} · Pipeline`
+  const data = PROSPECTS[_currentTeamKey]
 
-  try {
-    const teamId = t?.id ?? 119
-    const prospects = await fetchProspects(teamId)
-    if (!prospects.length) {
-      el.innerHTML = '<div class="dc-loading">No prospect data available.</div>'
-      return
-    }
-    _prospectsLoaded = true
-    el.innerHTML = prospects.map((p, i) => {
-      const name = p.person?.fullName ?? 'Unknown'
-      const pos = p.position?.abbreviation ?? ''
-      const rank = p.rank ?? (i + 1)
-      const id = p.person?.id
-      const posType = pos === 'P' ? 'Pitcher' : 'Hitter'
-      const safeName = name.replace(/'/g, "\\'")
-      const clickAttr = id
-        ? `onclick="openPlayerOverlay(${id},'${posType}','','${safeName}','${pos}')" style="cursor:pointer"`
-        : ''
-      return `
-        <div class="prospect-row" ${clickAttr}>
-          <span class="prospect-rank">${rank}</span>
-          <div class="prospect-info">
-            <span class="prospect-name">${name}</span>
-            <span class="prospect-pos">${pos}</span>
-          </div>
-          <span class="roster-chevron">›</span>
-        </div>`
-    }).join('')
-  } catch (e) {
-    console.warn('Prospects fetch failed:', e)
-    el.innerHTML = '<div class="dc-loading">Could not load prospects.</div>'
+  if (sub && t) sub.textContent = `${t.name} · ${data?.source ?? 'Pipeline'} · ${data?.updated ?? ''}`
+
+  if (!data?.players?.length) {
+    el.innerHTML = '<div class="dc-loading">No prospect data available.</div>'
+    return
   }
+
+  el.innerHTML = `
+    <div class="prospect-header-row">
+      <span class="prospect-hdr-rank">#</span>
+      <span class="prospect-hdr-name">Player</span>
+      <span class="prospect-hdr-pos">Pos</span>
+      <span class="prospect-hdr-ovr">Overall</span>
+      <span class="prospect-hdr-eta">ETA</span>
+    </div>` +
+    data.players.map(p => `
+      <div class="prospect-row">
+        <span class="prospect-rank">${p.rank}</span>
+        <span class="prospect-name">${p.name}</span>
+        <span class="prospect-pos">${p.pos}</span>
+        <span class="prospect-ovr">${p.ovr ? '#' + p.ovr : '—'}</span>
+        <span class="prospect-eta">${p.eta}</span>
+      </div>`).join('')
 }
 
 /* ── Game Breakdown Center ── */
