@@ -727,6 +727,10 @@ function switchTeam(key) {
 
 /* ── View Switching ── */
 function switchView(view) {
+  if (view === 'home' && _currentView === 'home') {
+    renderTeam(_currentTeamKey)
+    return
+  }
   _currentView = view
   /* always start on home - no view persistence */
   closePanel()
