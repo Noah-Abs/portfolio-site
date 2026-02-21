@@ -49,7 +49,10 @@ function renderStars(rating, size = 14) {
     if (rating >= i) {
       html += `<span class="star-svg filled">${starSVG(size)}</span>`;
     } else if (rating >= i - 0.5) {
-      html += `<span class="star-svg filled" style="opacity:.5">${starSVG(size)}</span>`;
+      html += `<span class="star-half-wrap" style="position:relative;display:inline-flex;width:${size}px;height:${size}px">
+        <span class="star-svg filled" style="position:absolute;clip-path:inset(0 50% 0 0)">${starSVG(size)}</span>
+        <span class="star-svg" style="position:absolute;clip-path:inset(0 0 0 50%)">${starSVG(size)}</span>
+      </span>`;
     } else {
       html += `<span class="star-svg">${starSVG(size)}</span>`;
     }
@@ -63,32 +66,39 @@ function renderInteractiveStars(currentRating, large = false) {
   const sz = large ? 28 : 20;
   let html = `<div class="${cls}" id="modal-stars">`;
   for (let i = 1; i <= 5; i++) {
-    const filled = currentRating >= i;
-    const halfFilled = !filled && currentRating >= i - 0.5;
-    const colorClass = filled ? 'filled' : (halfFilled ? 'filled' : '');
-    const opacity = halfFilled ? 'style="opacity:.55"' : '';
-
     html += `<span class="star-interactive" data-star="${i}">
       <span class="star-half star-half-left" onclick="setModalRating(${i - 0.5})"></span>
       <span class="star-half star-half-right" onclick="setModalRating(${i})"></span>
-      <span class="star-svg ${colorClass}" ${opacity}>${starSVG(sz)}</span>
+      ${_renderSingleStar(i, currentRating, sz)}
     </span>`;
   }
   html += '</div>';
   return html;
 }
 
+function _renderSingleStar(starNum, rating, sz) {
+  if (rating >= starNum) {
+    return `<span class="star-svg filled">${starSVG(sz)}</span>`;
+  } else if (rating >= starNum - 0.5) {
+    return `<span class="star-half-visual" style="position:relative;display:inline-flex;width:${sz}px;height:${sz}px">
+      <span class="star-svg filled" style="position:absolute;clip-path:inset(0 50% 0 0)">${starSVG(sz)}</span>
+      <span class="star-svg" style="position:absolute;clip-path:inset(0 0 0 50%)">${starSVG(sz)}</span>
+    </span>`;
+  }
+  return `<span class="star-svg">${starSVG(sz)}</span>`;
+}
+
 function setModalRating(val) {
   _modalRating = (_modalRating === val) ? 0 : val;
   const container = document.getElementById('modal-stars');
   if (container) {
+    const sz = container.classList.contains('lg') ? 28 : 20;
     container.querySelectorAll('.star-interactive').forEach(el => {
       const starNum = parseInt(el.dataset.star);
-      const svg = el.querySelector('.star-svg');
-      const filled = _modalRating >= starNum;
-      const halfFilled = !filled && _modalRating >= starNum - 0.5;
-      svg.classList.toggle('filled', filled || halfFilled);
-      svg.style.opacity = halfFilled ? '.55' : '';
+      // Remove old visual, keep click zones
+      const oldVis = el.querySelector('.star-svg, .star-half-visual');
+      if (oldVis) oldVis.remove();
+      el.insertAdjacentHTML('beforeend', _renderSingleStar(starNum, _modalRating, sz));
     });
   }
   const label = document.getElementById('rating-label');
@@ -344,9 +354,6 @@ async function loadAlbumDetail(albumId) {
             </div>
           </div>
           ${myLog.reviewText ? `<p class="your-log-text">${esc(myLog.reviewText)}</p>` : ''}
-          <div style="font-size:.68rem;color:var(--text-muted);margin-top:.5rem">
-            Listened ${myLog.listenedDate || ''}
-          </div>
         </div>`;
     }
 
@@ -399,11 +406,6 @@ async function openLogModal(albumId, editing = false) {
     </div>
 
     <div class="form-group">
-      <label class="form-label">Date Listened</label>
-      <input type="date" class="form-input" id="modal-date" value="${dateVal}" />
-    </div>
-
-    <div class="form-group">
       <div class="modal-rating-row">
         <label class="form-label" style="margin-bottom:0">Rating</label>
         <span id="rating-label" style="font-size:.85rem;font-weight:700;color:var(--accent)">${_modalRating ? _modalRating.toFixed(1) : '—'}</span>
@@ -444,7 +446,6 @@ function toggleLiked() {
 function submitLog() {
   if (!_modalAlbum) return;
 
-  const date = document.getElementById('modal-date').value;
   const review = document.getElementById('modal-review').value.trim();
 
   const data = {
@@ -455,7 +456,6 @@ function submitLog() {
     genre:        _modalAlbum.primaryGenreName,
     rating:       _modalRating || null,
     reviewText:   review,
-    listenedDate: date,
     liked:        _modalLiked,
   };
 
@@ -463,7 +463,6 @@ function submitLog() {
     updateLog(_modalExistingLog.id, {
       rating:       data.rating,
       reviewText:   data.reviewText,
-      listenedDate: data.listenedDate,
       liked:        data.liked,
     });
   } else {
@@ -555,29 +554,29 @@ function loadProfile() {
   }
 
   wrap.innerHTML = `
-    <div class="profile-header">
-      <div class="profile-info" style="width:100%">
-        <div class="profile-name">${esc(profile.displayName)}</div>
-        ${profile.bio ? `<p class="profile-bio">${esc(profile.bio)}</p>` : ''}
-        <div class="profile-stats">
-          <div class="profile-stat">
+    <div class="profile-banner">
+      <div class="profile-banner-inner">
+        <div class="profile-name-large">${esc(profile.displayName)}</div>
+        ${profile.bio ? `<p class="profile-bio-large">${esc(profile.bio)}</p>` : ''}
+        <div class="profile-stats-bar">
+          <div class="profile-stat-pill">
             <span class="profile-stat-val">${totalLogged}</span>
             <span class="profile-stat-lbl">Albums</span>
           </div>
-          <div class="profile-stat">
+          <div class="profile-stat-pill">
             <span class="profile-stat-val">${thisYear}</span>
             <span class="profile-stat-lbl">This Year</span>
           </div>
-          <div class="profile-stat">
+          <div class="profile-stat-pill">
             <span class="profile-stat-val">${avgRating ? avgRating.toFixed(1) : '—'}</span>
             <span class="profile-stat-lbl">Avg Rating</span>
           </div>
-          <div class="profile-stat">
+          <div class="profile-stat-pill">
             <span class="profile-stat-val">${lists.length}</span>
             <span class="profile-stat-lbl">Lists</span>
           </div>
         </div>
-        <div class="profile-actions" style="margin-top:.75rem">
+        <div class="profile-actions-bar">
           <button class="btn-secondary btn-sm" onclick="switchView('settings')">Edit Profile</button>
           <button class="btn-secondary btn-sm" onclick="switchView('lists')">My Lists</button>
           <button class="btn-secondary btn-sm" onclick="switchView('stats')">Stats</button>
@@ -585,9 +584,9 @@ function loadProfile() {
       </div>
     </div>
 
-    <div class="favorite-albums">
+    <div class="profile-favs-section">
       <div class="favorite-albums-title">Favorite Albums</div>
-      <div class="favorite-albums-grid">${favsHtml}</div>
+      <div class="profile-favs-grid">${favsHtml}</div>
     </div>
 
     <div class="profile-tabs">
@@ -623,7 +622,6 @@ function renderDiary(logs) {
 
   return logs.map(l => `
     <div class="diary-entry">
-      <div class="diary-date">${formatDate(l.listenedDate)}</div>
       <img class="diary-art" src="${(l.artworkUrl || '').replace('600x600','300x300')}" alt="" onclick="switchView('album','${l.albumId}')" />
       <div class="diary-info">
         <div class="diary-name" onclick="switchView('album','${l.albumId}')">${esc(l.albumName)}</div>
@@ -1142,13 +1140,6 @@ function esc(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[d.getMonth()]} ${d.getDate()}`;
 }
 
 
