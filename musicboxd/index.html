@@ -25,10 +25,7 @@
       </div>
     </div>
     <div class="top-bar-right">
-      <button class="btn-signin" id="auth-btn" onclick="handleAuth()">Sign In</button>
-      <div class="user-avatar-wrap" id="user-avatar" style="display:none" onclick="switchView('profile')">
-        <img id="avatar-img" src="" alt="avatar" />
-      </div>
+      <button class="btn-secondary btn-sm" onclick="switchView('profile')" style="font-size:.75rem">Profile</button>
     </div>
   </header>
 
@@ -45,10 +42,6 @@
         <section class="section" id="recent-section" style="display:none">
           <h2 class="section-title">Your Recent</h2>
           <div class="album-grid" id="recent-grid"></div>
-        </section>
-        <section class="section" id="feed-section" style="display:none">
-          <h2 class="section-title">Friend Activity</h2>
-          <div class="activity-feed" id="activity-feed"></div>
         </section>
         <section class="section" id="popular-section">
           <h2 class="section-title">Popular Albums</h2>
@@ -77,11 +70,6 @@
     <!-- PROFILE VIEW -->
     <div class="view-section" id="view-profile">
       <div class="page-wrap" id="profile-wrap"></div>
-    </div>
-
-    <!-- OTHER USER PROFILE VIEW -->
-    <div class="view-section" id="view-user">
-      <div class="page-wrap" id="user-profile-wrap"></div>
     </div>
 
     <!-- LISTS VIEW -->
@@ -142,10 +130,6 @@
   </nav>
 
   <!-- ===== SCRIPTS ===== -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
   <script src="api.js"></script>
   <script src="app.js"></script>
 

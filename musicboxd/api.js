@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    MUSICBOXD — API Layer
-   iTunes Search API + Firebase Firestore CRUD
+   iTunes Search API + localStorage persistence
    ═══════════════════════════════════════════ */
 
 // ─── iTunes Search API ───────────────────────
@@ -40,342 +40,156 @@ function _parseAlbum(a) {
 }
 
 
-// ─── Firebase Auth ───────────────────────────
+// ─── localStorage helpers ────────────────────
 
-async function signInWithGoogle() {
-  if (!_firebaseReady) { alert('Firebase not configured. Edit firebase-config.js first.'); return null; }
-  try {
-    const result = await auth.signInWithPopup(googleProvider);
-    return result.user;
-  } catch (e) {
-    console.error('Sign-in error:', e);
-    return null;
-  }
+const LS_LOGS    = 'musicboxd_logs';
+const LS_LISTS   = 'musicboxd_lists';
+const LS_PROFILE = 'musicboxd_profile';
+
+function _getJSON(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+  catch { return fallback; }
 }
-
-function signOutUser() {
-  if (!_firebaseReady) return;
-  return auth.signOut();
+function _setJSON(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+function _genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 
 // ─── User Profile ────────────────────────────
 
-async function ensureUserProfile(user) {
-  if (!_firebaseReady || !user) return null;
-  const ref = db.collection('users').doc(user.uid);
-  const snap = await ref.get();
-  if (snap.exists) return snap.data();
-
-  const profile = {
-    uid:            user.uid,
-    displayName:    user.displayName || 'User',
-    photoURL:       user.photoURL || '',
-    username:       (user.email || '').split('@')[0] || 'user' + Date.now(),
-    bio:            '',
+function getUserProfile() {
+  return _getJSON(LS_PROFILE, {
+    displayName: 'User',
+    username:    'user',
+    bio:         '',
     favoriteAlbums: [],
-    following:      [],
-    followers:      [],
-    joinedAt:       firebase.firestore.FieldValue.serverTimestamp(),
-    stats:          { totalLogged: 0, totalReviews: 0, averageRating: 0 }
-  };
-  await ref.set(profile);
-  return profile;
+  });
 }
 
-async function getUserProfile(uid) {
-  if (!_firebaseReady) return null;
-  const snap = await db.collection('users').doc(uid).get();
-  return snap.exists ? snap.data() : null;
-}
-
-async function updateUserProfile(uid, data) {
-  if (!_firebaseReady) return;
-  await db.collection('users').doc(uid).update(data);
-}
-
-async function searchUsers(query) {
-  if (!_firebaseReady) return [];
-  const snap = await db.collection('users')
-    .where('username', '>=', query.toLowerCase())
-    .where('username', '<=', query.toLowerCase() + '\uf8ff')
-    .limit(10)
-    .get();
-  return snap.docs.map(d => d.data());
+function updateUserProfile(data) {
+  const profile = getUserProfile();
+  Object.assign(profile, data);
+  _setJSON(LS_PROFILE, profile);
 }
 
 
 // ─── Album Logging ───────────────────────────
 
-async function logAlbum(data) {
-  if (!_firebaseReady || !currentUser) return null;
-
-  const logDoc = {
-    userId:       currentUser.uid,
+function logAlbum(data) {
+  const logs = _getJSON(LS_LOGS, []);
+  const entry = {
+    id:           _genId(),
     albumId:      data.albumId,
     albumName:    data.albumName,
     artistName:   data.artistName,
     artworkUrl:   data.artworkUrl,
+    genre:        data.genre || '',
     rating:       data.rating || null,
     reviewText:   data.reviewText || '',
     listenedDate: data.listenedDate || new Date().toISOString().split('T')[0],
-    loggedAt:     firebase.firestore.FieldValue.serverTimestamp(),
+    loggedAt:     new Date().toISOString(),
     liked:        data.liked || false,
   };
-
-  const ref = await db.collection('logs').add(logDoc);
-
-  // Upsert album doc
-  const albumRef = db.collection('albums').doc(data.albumId);
-  const albumSnap = await albumRef.get();
-  if (!albumSnap.exists) {
-    await albumRef.set({
-      collectionId:    data.albumId,
-      collectionName:  data.albumName,
-      artistName:      data.artistName,
-      artworkUrl:      data.artworkUrl,
-      primaryGenreName:data.genre || '',
-      totalLogs:       1,
-      ratingSum:       data.rating || 0,
-      ratingCount:     data.rating ? 1 : 0,
-    });
-  } else {
-    const updates = { totalLogs: firebase.firestore.FieldValue.increment(1) };
-    if (data.rating) {
-      updates.ratingSum = firebase.firestore.FieldValue.increment(data.rating);
-      updates.ratingCount = firebase.firestore.FieldValue.increment(1);
-    }
-    await albumRef.update(updates);
-  }
-
-  // Update user stats
-  const statsUpdates = {
-    'stats.totalLogged': firebase.firestore.FieldValue.increment(1),
-  };
-  if (data.reviewText) {
-    statsUpdates['stats.totalReviews'] = firebase.firestore.FieldValue.increment(1);
-  }
-  await db.collection('users').doc(currentUser.uid).update(statsUpdates);
-
-  // Add activity
-  await _addActivity('log', {
-    albumId:    data.albumId,
-    albumName:  data.albumName,
-    artistName: data.artistName,
-    artworkUrl: data.artworkUrl,
-    rating:     data.rating,
-  });
-
-  return ref.id;
+  logs.unshift(entry);
+  _setJSON(LS_LOGS, logs);
+  return entry.id;
 }
 
-async function updateLog(logId, data) {
-  if (!_firebaseReady) return;
-  await db.collection('logs').doc(logId).update(data);
+function updateLog(logId, data) {
+  const logs = _getJSON(LS_LOGS, []);
+  const idx = logs.findIndex(l => l.id === logId);
+  if (idx === -1) return;
+  Object.assign(logs[idx], data);
+  _setJSON(LS_LOGS, logs);
 }
 
-async function deleteLog(logId) {
-  if (!_firebaseReady || !currentUser) return;
-  const snap = await db.collection('logs').doc(logId).get();
-  if (!snap.exists) return;
-  const log = snap.data();
-
-  await db.collection('logs').doc(logId).delete();
-
-  // Update album stats
-  const albumRef = db.collection('albums').doc(log.albumId);
-  const updates = { totalLogs: firebase.firestore.FieldValue.increment(-1) };
-  if (log.rating) {
-    updates.ratingSum = firebase.firestore.FieldValue.increment(-log.rating);
-    updates.ratingCount = firebase.firestore.FieldValue.increment(-1);
-  }
-  await albumRef.update(updates);
-
-  // Update user stats
-  const userUpdates = {
-    'stats.totalLogged': firebase.firestore.FieldValue.increment(-1),
-  };
-  if (log.reviewText) {
-    userUpdates['stats.totalReviews'] = firebase.firestore.FieldValue.increment(-1);
-  }
-  await db.collection('users').doc(currentUser.uid).update(userUpdates);
+function deleteLog(logId) {
+  const logs = _getJSON(LS_LOGS, []);
+  _setJSON(LS_LOGS, logs.filter(l => l.id !== logId));
 }
 
-async function getUserLogs(uid, limit = 100) {
-  if (!_firebaseReady) return [];
-  const snap = await db.collection('logs')
-    .where('userId', '==', uid)
-    .orderBy('loggedAt', 'desc')
-    .limit(limit)
-    .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function getUserLogs(limit = 100) {
+  const logs = _getJSON(LS_LOGS, []);
+  return logs.slice(0, limit);
 }
 
-async function getUserLogForAlbum(uid, albumId) {
-  if (!_firebaseReady) return null;
-  const snap = await db.collection('logs')
-    .where('userId', '==', uid)
-    .where('albumId', '==', albumId)
-    .limit(1)
-    .get();
-  if (snap.empty) return null;
-  return { id: snap.docs[0].id, ...snap.docs[0].data() };
+function getUserLogForAlbum(albumId) {
+  const logs = _getJSON(LS_LOGS, []);
+  return logs.find(l => l.albumId === albumId) || null;
 }
 
-async function getAlbumLogs(albumId, limit = 30) {
-  if (!_firebaseReady) return [];
-  const snap = await db.collection('logs')
-    .where('albumId', '==', albumId)
-    .orderBy('loggedAt', 'desc')
-    .limit(limit)
-    .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function getAlbumLogs(albumId) {
+  const logs = _getJSON(LS_LOGS, []);
+  return logs.filter(l => l.albumId === albumId);
 }
 
-async function getAlbumStats(albumId) {
-  if (!_firebaseReady) return { totalLogs: 0, averageRating: 0 };
-  const snap = await db.collection('albums').doc(albumId).get();
-  if (!snap.exists) return { totalLogs: 0, averageRating: 0 };
-  const d = snap.data();
+function getAlbumStats(albumId) {
+  const logs = getAlbumLogs(albumId);
+  const rated = logs.filter(l => l.rating);
   return {
-    totalLogs:     d.totalLogs || 0,
-    averageRating: d.ratingCount > 0 ? (d.ratingSum / d.ratingCount) : 0,
-    ratingCount:   d.ratingCount || 0,
+    totalLogs:     logs.length,
+    averageRating: rated.length ? rated.reduce((s, l) => s + l.rating, 0) / rated.length : 0,
+    ratingCount:   rated.length,
   };
 }
 
 
 // ─── Lists ───────────────────────────────────
 
-async function createList(data) {
-  if (!_firebaseReady || !currentUser) return null;
-  const doc = {
-    userId:      currentUser.uid,
+function createList(data) {
+  const lists = _getJSON(LS_LISTS, []);
+  const entry = {
+    id:          _genId(),
     title:       data.title,
     description: data.description || '',
     albums:      data.albums || [],
-    isPublic:    true,
-    createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    createdAt:   new Date().toISOString(),
+    updatedAt:   new Date().toISOString(),
   };
-  const ref = await db.collection('lists').add(doc);
-
-  await _addActivity('list', {
-    listId:    ref.id,
-    listTitle: data.title,
-  });
-
-  return ref.id;
+  lists.unshift(entry);
+  _setJSON(LS_LISTS, lists);
+  return entry.id;
 }
 
-async function updateList(listId, data) {
-  if (!_firebaseReady) return;
-  data.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-  await db.collection('lists').doc(listId).update(data);
+function updateList(listId, data) {
+  const lists = _getJSON(LS_LISTS, []);
+  const idx = lists.findIndex(l => l.id === listId);
+  if (idx === -1) return;
+  Object.assign(lists[idx], data, { updatedAt: new Date().toISOString() });
+  _setJSON(LS_LISTS, lists);
 }
 
-async function deleteList(listId) {
-  if (!_firebaseReady) return;
-  await db.collection('lists').doc(listId).delete();
+function deleteList(listId) {
+  const lists = _getJSON(LS_LISTS, []);
+  _setJSON(LS_LISTS, lists.filter(l => l.id !== listId));
 }
 
-async function getUserLists(uid) {
-  if (!_firebaseReady) return [];
-  const snap = await db.collection('lists')
-    .where('userId', '==', uid)
-    .orderBy('updatedAt', 'desc')
-    .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+function getUserLists() {
+  return _getJSON(LS_LISTS, []);
 }
 
-async function getListById(listId) {
-  if (!_firebaseReady) return null;
-  const snap = await db.collection('lists').doc(listId).get();
-  return snap.exists ? { id: snap.id, ...snap.data() } : null;
+function getListById(listId) {
+  const lists = _getJSON(LS_LISTS, []);
+  return lists.find(l => l.id === listId) || null;
 }
 
 
-// ─── Social / Following ──────────────────────
+// ─── Stats (computed from logs) ──────────────
 
-async function followUser(targetUid) {
-  if (!_firebaseReady || !currentUser || currentUser.uid === targetUid) return;
-
-  await db.collection('users').doc(currentUser.uid).update({
-    following: firebase.firestore.FieldValue.arrayUnion(targetUid)
-  });
-  await db.collection('users').doc(targetUid).update({
-    followers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-  });
-
-  const targetProfile = await getUserProfile(targetUid);
-  await _addActivity('follow', {
-    targetUserId:      targetUid,
-    targetDisplayName: targetProfile ? targetProfile.displayName : 'User',
-  });
-}
-
-async function unfollowUser(targetUid) {
-  if (!_firebaseReady || !currentUser) return;
-  await db.collection('users').doc(currentUser.uid).update({
-    following: firebase.firestore.FieldValue.arrayRemove(targetUid)
-  });
-  await db.collection('users').doc(targetUid).update({
-    followers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-  });
-}
-
-
-// ─── Activity Feed ───────────────────────────
-
-async function _addActivity(type, payload) {
-  if (!_firebaseReady || !currentUser) return;
-  const doc = {
-    type,
-    userId:      currentUser.uid,
-    displayName: currentUser.displayName || 'User',
-    photoURL:    currentUser.photoURL || '',
-    createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
-    ...payload,
-  };
-  await db.collection('activity').add(doc);
-}
-
-async function getFollowingActivity(followingUids, limit = 30) {
-  if (!_firebaseReady || !followingUids.length) return [];
-  // Firestore 'in' supports max 30
-  const batch = followingUids.slice(0, 30);
-  const snap = await db.collection('activity')
-    .where('userId', 'in', batch)
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
-    .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-async function getRecentActivity(limit = 20) {
-  if (!_firebaseReady) return [];
-  const snap = await db.collection('activity')
-    .orderBy('createdAt', 'desc')
-    .limit(limit)
-    .get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-
-// ─── Stats (computed client-side) ────────────
-
-async function computeUserStats(uid) {
-  const logs = await getUserLogs(uid, 500);
+function computeUserStats() {
+  const logs = _getJSON(LS_LOGS, []);
   if (!logs.length) {
     return {
       totalLogged: 0, totalReviews: 0, averageRating: 0,
       thisYear: 0, genreBreakdown: [], monthlyBreakdown: [],
-      ratingDist: {}, highestRated: null, mostRecentYear: null,
+      ratingDist: {}, highestRated: null,
     };
   }
 
-  const now = new Date();
-  const thisYear = now.getFullYear();
+  const thisYear = new Date().getFullYear();
   let ratingSum = 0, ratingCount = 0, reviewCount = 0, thisYearCount = 0;
   const genres = {};
   const months = {};
@@ -393,13 +207,12 @@ async function computeUserStats(uid) {
     const date = log.listenedDate || '';
     if (date.startsWith(String(thisYear))) thisYearCount++;
 
-    const monthKey = date.slice(0, 7); // YYYY-MM
+    const monthKey = date.slice(0, 7);
     if (monthKey) months[monthKey] = (months[monthKey] || 0) + 1;
 
-    // Genre from cached album data
-    const cached = _albumCache[log.albumId];
-    if (cached && cached.primaryGenreName) {
-      genres[cached.primaryGenreName] = (genres[cached.primaryGenreName] || 0) + 1;
+    const genre = log.genre || (_albumCache[log.albumId] && _albumCache[log.albumId].primaryGenreName);
+    if (genre) {
+      genres[genre] = (genres[genre] || 0) + 1;
     }
   }
 
