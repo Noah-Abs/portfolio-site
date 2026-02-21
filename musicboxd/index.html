@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#14181C" />
+  <title>Musicboxd</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== TOP HEADER BAR ===== -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <span class="logo" onclick="switchView('home')">musicboxd</span>
+    </div>
+    <div class="top-bar-center">
+      <div class="search-bar" id="header-search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search albums..." autocomplete="off" />
+        <div class="search-dropdown" id="search-dropdown"></div>
+      </div>
+    </div>
+    <div class="top-bar-right">
+      <button class="btn-signin" id="auth-btn" onclick="handleAuth()">Sign In</button>
+      <div class="user-avatar-wrap" id="user-avatar" style="display:none" onclick="switchView('profile')">
+        <img id="avatar-img" src="" alt="avatar" />
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- HOME VIEW -->
+    <div class="view-section active" id="view-home">
+      <section class="hero-banner" id="hero-banner">
+        <h1 class="hero-title">Track albums you've listened to.</h1>
+        <p class="hero-sub">Rate, review, and share your music taste with friends.</p>
+      </section>
+      <div class="home-wrap">
+        <section class="section" id="recent-section" style="display:none">
+          <h2 class="section-title">Your Recent</h2>
+          <div class="album-grid" id="recent-grid"></div>
+        </section>
+        <section class="section" id="feed-section" style="display:none">
+          <h2 class="section-title">Friend Activity</h2>
+          <div class="activity-feed" id="activity-feed"></div>
+        </section>
+        <section class="section" id="popular-section">
+          <h2 class="section-title">Popular Albums</h2>
+          <div class="album-grid" id="popular-grid"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- SEARCH RESULTS VIEW -->
+    <div class="view-section" id="view-search">
+      <div class="page-wrap">
+        <h2 class="page-title">Search Results</h2>
+        <p class="page-sub" id="search-query-label"></p>
+        <div class="album-grid" id="search-results-grid"></div>
+        <div class="empty-state" id="search-empty" style="display:none">
+          <p>No albums found. Try a different search.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALBUM DETAIL VIEW -->
+    <div class="view-section" id="view-album">
+      <div class="album-detail-wrap" id="album-detail"></div>
+    </div>
+
+    <!-- PROFILE VIEW -->
+    <div class="view-section" id="view-profile">
+      <div class="page-wrap" id="profile-wrap"></div>
+    </div>
+
+    <!-- OTHER USER PROFILE VIEW -->
+    <div class="view-section" id="view-user">
+      <div class="page-wrap" id="user-profile-wrap"></div>
+    </div>
+
+    <!-- LISTS VIEW -->
+    <div class="view-section" id="view-lists">
+      <div class="page-wrap" id="lists-wrap"></div>
+    </div>
+
+    <!-- LIST DETAIL VIEW -->
+    <div class="view-section" id="view-list-detail">
+      <div class="page-wrap" id="list-detail-wrap"></div>
+    </div>
+
+    <!-- LIST EDITOR VIEW -->
+    <div class="view-section" id="view-list-edit">
+      <div class="page-wrap" id="list-edit-wrap"></div>
+    </div>
+
+    <!-- STATS VIEW -->
+    <div class="view-section" id="view-stats">
+      <div class="page-wrap" id="stats-wrap"></div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view-section" id="view-settings">
+      <div class="page-wrap" id="settings-wrap"></div>
+    </div>
+
+  </main>
+
+  <!-- ===== LOG / REVIEW MODAL ===== -->
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal" id="log-modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Log Album</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+
+  <!-- ===== MOBILE BOTTOM NAV ===== -->
+  <nav class="mob-nav" id="mob-nav">
+    <button class="mob-nav-item active" data-view="home" onclick="switchView('home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="mob-nav-item" data-view="search" onclick="focusSearch()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <span>Search</span>
+    </button>
+    <button class="mob-nav-item" data-view="profile" onclick="switchView('profile')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </button>
+    <button class="mob-nav-item" data-view="stats" onclick="switchView('stats')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Stats</span>
+    </button>
+  </nav>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
