@@ -208,8 +208,7 @@ async function loadLiveData() {
   if (scheduleResult.status === 'fulfilled' && scheduleResult.value?.length && _currentTeamKey === key) {
     const games = scheduleResult.value
     renderSchedule(games)
-    const today = new Date().toLocaleDateString('en-CA')
-    nextGame = games.find(g => g.isoDate >= today) || games[0]
+    nextGame = games.find(g => !g.isFinal) || games[games.length - 1]
     if (nextGame) {
       renderNextGame(nextGame)
       renderMobHomeCards(t,
@@ -375,8 +374,20 @@ function applyScheduleFilters() {
     list.innerHTML = '<div style="padding:2rem 1.25rem;font-size:0.72rem;color:rgba(255,255,255,0.25);text-align:center">No games match this filter</div>'
     return
   }
-  list.innerHTML = _filteredGames.map((g, i) => `
-    <div class="schedule-row" onclick="openGameDetail(${i})">
+  let lastType = ''
+  list.innerHTML = _filteredGames.map((g, i) => {
+    let header = ''
+    if (g.gameTypeLabel !== lastType) {
+      lastType = g.gameTypeLabel
+      header = `<div class="sr-type-header">${g.gameTypeLabel}</div>`
+    }
+    const scoreHtml = g.isFinal
+      ? `<span class="sr-score ${g.won ? 'sr-win' : g.lost ? 'sr-loss' : ''}">${g.won ? 'W' : g.lost ? 'L' : 'T'} ${g.myScore}\u2013${g.oppScore}</span>`
+      : g.isLive
+      ? `<span class="sr-score sr-live">${g.inningHalf ? g.inningHalf.slice(0,3) : ''} ${g.inning || ''} · ${g.myScore}\u2013${g.oppScore}</span>`
+      : `<span class="sr-time">${g.time}</span>`
+    return header + `
+    <div class="schedule-row${g.isLive ? ' sr-live-row' : ''}" onclick="openGameDetail(${i})">
       <div class="sr-date">
         <span class="sr-day">${g.day}</span>
         <span class="sr-monthday">${g.monthDay}</span>
@@ -388,9 +399,10 @@ function applyScheduleFilters() {
           <span class="sr-name">${g.opponent}</span>
         </div>
       </div>
-      <span class="sr-time">${g.time}</span>
+      ${scoreHtml}
       <span class="sr-chevron">\u203a</span>
-    </div>`).join('')
+    </div>`
+  }).join('')
 }
 
 function clearScheduleFilters() {
@@ -418,8 +430,25 @@ function openGameDetail(idx) {
   const gameUrl = `https://www.mlb.com/gameday/${g.gamePk}`
   const homeLabel = g.isHome ? `Home \u00b7 ${t.venueName ?? 'Home Stadium'}` : 'Away'
 
+  const homeScore = g.isHome ? g.myScore : g.oppScore
+  const awayScore = g.isHome ? g.oppScore : g.myScore
+  const scoreSection = g.isFinal ? `
+    <div class="gd-score-final">
+      <span class="gd-score-num${!g.isHome && g.won || g.isHome && g.lost ? ' gd-score-hi' : ''}">${awayScore}</span>
+      <span class="gd-score-label">Final</span>
+      <span class="gd-score-num${g.isHome && g.won || !g.isHome && g.lost ? ' gd-score-hi' : ''}">${homeScore}</span>
+    </div>` : g.isLive ? `
+    <div class="gd-score-final gd-score-live">
+      <span class="gd-score-num">${awayScore}</span>
+      <span class="gd-score-label">${g.inningHalf ? g.inningHalf.slice(0,3) : ''} ${g.inning || 'Live'}</span>
+      <span class="gd-score-num">${homeScore}</span>
+    </div>` : ''
+
+  const typeTag = g.gameTypeLabel && g.gameTypeLabel !== 'Regular Season' ? `<div class="gd-type-tag">${g.gameTypeLabel}</div>` : ''
+
   document.getElementById('gd-scroll').innerHTML = `
     <div class="gd-date-label">${g.fullDate}</div>
+    ${typeTag}
     <div class="gd-matchup">
       <div class="gd-team">
         <img class="gd-team-logo" src="${LOGO}/${awayLogoId}.svg" alt="${awayName}">
@@ -431,9 +460,10 @@ function openGameDetail(idx) {
         <span class="gd-team-name">${homeName}</span>
       </div>
     </div>
+    ${scoreSection}
     <div class="gd-info-grid">
       <div class="gd-info-row">
-        <span class="gd-info-label">First Pitch</span>
+        <span class="gd-info-label">${g.isFinal ? 'Game Time' : 'First Pitch'}</span>
         <span class="gd-info-val">${g.time}</span>
       </div>
       <div class="gd-info-row">
@@ -449,7 +479,7 @@ function openGameDetail(idx) {
         <span class="gd-info-val">${homeLabel}</span>
       </div>
     </div>
-    <a class="gd-tickets-btn" href="${gameUrl}" target="_blank" rel="noopener">Get Tickets</a>`
+    <a class="gd-tickets-btn" href="${gameUrl}" target="_blank" rel="noopener">${g.isFinal ? 'View on MLB.com' : 'Get Tickets'}</a>`
 }
 
 function closeGameDetail() {
@@ -1272,9 +1302,27 @@ function loadContracts(key) {
     </div>`
 }
 
+/* ── Auto-refresh for live games (every 30s) ── */
+let _refreshTimer = null
+function startAutoRefresh() {
+  stopAutoRefresh()
+  _refreshTimer = setInterval(() => {
+    if (document.hidden) return
+    loadLiveData()
+  }, 30000)
+}
+function stopAutoRefresh() {
+  if (_refreshTimer) { clearInterval(_refreshTimer); _refreshTimer = null }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopAutoRefresh()
+  else startAutoRefresh()
+})
+
 /* ── Initialize ── */
 const _urlTeam = window.__TEAM_KEY__ || null
 const _initTeam = _urlTeam && APP_TEAMS[_urlTeam] ? _urlTeam : 'dodgers'
 renderTeam(_initTeam)
+startAutoRefresh()
 
 /* Always start on home */

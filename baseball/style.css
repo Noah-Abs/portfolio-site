@@ -417,6 +417,13 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .sr-at-vs { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
 .sr-name { font-size: 0.78rem; font-weight: 600; color: #fff; }
 .sr-time { font-size: 0.65rem; color: rgba(255,255,255,0.38); flex-shrink: 0; white-space: nowrap; }
+.sr-score { font-size: 0.68rem; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+.sr-win { color: #34d399; }
+.sr-loss { color: #f87171; }
+.sr-live { color: #fbbf24; animation: sr-pulse 1.5s ease-in-out infinite; }
+.sr-live-row { background: rgba(251,191,36,0.04); }
+@keyframes sr-pulse { 0%,100% { opacity: 1 } 50% { opacity: .6 } }
+.sr-type-header { padding: 0.65rem 1.25rem 0.35rem; font-size: 0.52rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); }
 
 /* ── Game Detail ── */
 .game-detail { display: flex; flex-direction: column; height: 100%; }
@@ -429,6 +436,12 @@ body.no-left-sidebar .main-content { margin-left: 0; }
 .gd-team-logo { height: 52px; width: auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4)); }
 .gd-team-name { font-size: 0.68rem; font-weight: 600; color: rgba(255,255,255,0.65); text-align: center; line-height: 1.2; }
 .gd-vs { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+.gd-score-final { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding: 0.75rem 2rem; background: rgba(255,255,255,0.04); border-radius: 10px; }
+.gd-score-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: rgba(255,255,255,0.45); }
+.gd-score-num.gd-score-hi { color: #fff; }
+.gd-score-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+.gd-score-live .gd-score-label { color: #fbbf24; }
+.gd-type-tag { display: inline-block; font-size: 0.52rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.06); border-radius: 4px; padding: 0.25rem 0.6rem; margin-bottom: 1rem; }
 .gd-info-grid { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.75rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 1rem 1.1rem; }
 .gd-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; }
 .gd-info-label { color: rgba(255,255,255,0.35); font-size: 0.68rem; }

@@ -1,6 +1,6 @@
 /* ── Team Data & Constants ── */
 
-const SEASON = 2025
+const SEASON = new Date().getFullYear()
 
 const APP_TEAMS = {
   dodgers: {

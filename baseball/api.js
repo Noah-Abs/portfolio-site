@@ -13,43 +13,51 @@ function _nlRank(splits, statKey, teamId, asc = false) {
 }
 
 async function fetchTeamStats(teamId) {
-  const [standRes, batRes, pitRes] = await Promise.all([
-    fetch(`https://statsapi.mlb.com/api/v1/standings?leagueId=104&season=${SEASON}&standingsTypes=regularSeason`),
-    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${SEASON}&sportId=1`),
-    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=${SEASON}&sportId=1`),
-  ])
-  const [stand, bat, pit] = await Promise.all([standRes.json(), batRes.json(), pitRes.json()])
+  // Try current season first; if no data yet (preseason), fall back to previous year
+  let season = SEASON
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const [standRes, batRes, pitRes] = await Promise.all([
+        fetch(`https://statsapi.mlb.com/api/v1/standings?leagueId=104&season=${season}&standingsTypes=regularSeason`),
+        fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${season}&sportId=1`),
+        fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=${season}&sportId=1`),
+      ])
+      const [stand, bat, pit] = await Promise.all([standRes.json(), batRes.json(), pitRes.json()])
 
-  let rec = null
-  for (const div of stand.records) {
-    rec = div.teamRecords.find(r => r.team.id === teamId)
-    if (rec) break
+      let rec = null
+      for (const div of (stand.records || [])) {
+        rec = div.teamRecords.find(r => r.team.id === teamId)
+        if (rec) break
+      }
+
+      const batSplits = bat.stats?.[0]?.splits ?? []
+      const pitSplits = pit.stats?.[0]?.splits ?? []
+      const db = batSplits.find(s => s.team.id === teamId)?.stat
+      const dp = pitSplits.find(s => s.team.id === teamId)?.stat
+
+      if (!rec || !db || !dp) { season = SEASON - 1; continue }
+
+      const divRank = `#${rec.divisionRank} ${rec.division?.nameShort || ''}`
+      const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
+      const label = season < SEASON ? ` (${season})` : ''
+
+      return [
+        { val: `${rec.wins}-${rec.losses}`, lbl: `Record${label}`,     rank: divRank },
+        { val: pct,                          lbl: `Win %${label}`,      rank: divRank },
+        { val: db.avg,                       lbl: 'Team AVG',   rank: _nlRank(batSplits, 'avg', teamId) },
+        { val: parseInt(db.hits).toLocaleString(), lbl: 'Hits' },
+        { val: db.homeRuns,                  lbl: 'Home Runs',  rank: _nlRank(batSplits, 'homeRuns', teamId) },
+        { val: dp.era,                       lbl: 'Team ERA',   rank: _nlRank(pitSplits, 'era', teamId, true) },
+        { val: parseInt(dp.strikeOuts).toLocaleString(), lbl: 'Strikeouts' },
+      ]
+    } catch { season = SEASON - 1 }
   }
-
-  const batSplits = bat.stats[0].splits
-  const pitSplits = pit.stats[0].splits
-  const db = batSplits.find(s => s.team.id === teamId)?.stat
-  const dp = pitSplits.find(s => s.team.id === teamId)?.stat
-
-  if (!rec || !db || !dp) return null
-
-  const divRank = `#${rec.divisionRank} ${rec.division?.nameShort || ''}`
-  const pct = parseFloat(rec.winningPercentage).toFixed(3).replace('0.', '.')
-
-  return [
-    { val: `${rec.wins}-${rec.losses}`, lbl: 'Record',     rank: divRank },
-    { val: pct,                          lbl: 'Win %',      rank: divRank },
-    { val: db.avg,                       lbl: 'Team AVG',   rank: _nlRank(batSplits, 'avg', teamId) },
-    { val: parseInt(db.hits).toLocaleString(), lbl: 'Hits' },
-    { val: db.homeRuns,                  lbl: 'Home Runs',  rank: _nlRank(batSplits, 'homeRuns', teamId) },
-    { val: dp.era,                       lbl: 'Team ERA',   rank: _nlRank(pitSplits, 'era', teamId, true) },
-    { val: parseInt(dp.strikeOuts).toLocaleString(), lbl: 'Strikeouts' },
-  ]
+  return null
 }
 
 async function fetchLastGame(teamId, teamAbbr) {
   const res = await fetch(
-    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=R,F,D,L,W&hydrate=team&startDate=${SEASON}-03-01&endDate=${SEASON}-11-10`
+    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=S,R,F,D,L,W,E&hydrate=team&startDate=${SEASON}-02-01&endDate=${SEASON}-11-10`
   )
   const data = await res.json()
 
@@ -109,9 +117,9 @@ async function fetchLastGame(teamId, teamAbbr) {
 
 async function fetchNextGame(teamId) {
   const today = new Date().toISOString().slice(0, 10)
-  const endDate = `${SEASON + 1}-11-10`
+  const endDate = `${SEASON}-11-10`
   const res = await fetch(
-    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON + 1}&sportId=1&gameType=R,F,D,L,W&startDate=${today}&endDate=${endDate}`
+    `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=S,R,F,D,L,W,E&startDate=${today}&endDate=${endDate}`
   )
   const data = await res.json()
 
@@ -141,9 +149,10 @@ async function fetchNextGame(teamId) {
   return null
 }
 
+const GAME_TYPE_LABELS = { S: 'Spring Training', R: 'Regular Season', F: 'Wild Card', D: 'Division Series', L: 'Championship Series', W: 'World Series', E: 'Exhibition', A: 'All-Star' }
+
 async function fetchSchedule(teamId) {
-  const season = SEASON + 1
-  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${season}&sportId=1&gameType=R`)
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=S,R,F,D,L,W,E&hydrate=linescore`)
   const data = await res.json()
   if (!data.dates?.length) return []
 
@@ -153,6 +162,13 @@ async function fetchSchedule(teamId) {
       const isHome = g.teams.home.team.id === teamId
       const opp = isHome ? g.teams.away.team : g.teams.home.team
       const dt = new Date(g.gameDate)
+      const isFinal = g.status.abstractGameState === 'Final'
+      const isLive = g.status.abstractGameState === 'Live'
+      const myScore = isHome ? g.teams.home.score : g.teams.away.score
+      const oppScore = isHome ? g.teams.away.score : g.teams.home.score
+      const won = isFinal && myScore > oppScore
+      const lost = isFinal && myScore < oppScore
+      const tied = isFinal && myScore === oppScore
       games.push({
         day: dt.toLocaleDateString('en-US', { weekday: 'short' }),
         monthDay: dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -168,6 +184,18 @@ async function fetchSchedule(teamId) {
         gamePk: g.gamePk,
         isoDate: dt.toLocaleDateString('en-CA'),
         weekday: dt.toLocaleDateString('en-US', { weekday: 'long' }),
+        gameType: g.gameType,
+        gameTypeLabel: GAME_TYPE_LABELS[g.gameType] || g.gameType,
+        isFinal,
+        isLive,
+        myScore: myScore ?? null,
+        oppScore: oppScore ?? null,
+        won,
+        lost,
+        tied,
+        statusDetail: g.status.detailedState,
+        inning: g.linescore?.currentInningOrdinal ?? null,
+        inningHalf: g.linescore?.inningHalf ?? null,
       })
     }
   }
