@@ -374,8 +374,20 @@ function applyScheduleFilters() {
     list.innerHTML = '<div style="padding:2rem 1.25rem;font-size:0.72rem;color:rgba(255,255,255,0.25);text-align:center">No games match this filter</div>'
     return
   }
+  // Show record summary at top
+  const finalGames = _filteredGames.filter(g => g.isFinal)
+  let recordHtml = ''
+  if (finalGames.length > 0) {
+    const wins = finalGames.filter(g => g.won).length
+    const losses = finalGames.filter(g => g.lost).length
+    const types = [...new Set(finalGames.map(g => g.gameType))]
+    const isAllPreseason = types.every(t => t === 'S' || t === 'E')
+    const label = isAllPreseason ? 'Spring Training' : types.includes('R') ? 'Season' : 'Preseason'
+    recordHtml = `<div class="sr-record-bar"><span class="sr-record-label">${label} Record</span><span class="sr-record-val">${wins}\u2013${losses}</span></div>`
+  }
+
   let lastType = ''
-  list.innerHTML = _filteredGames.map((g, i) => {
+  list.innerHTML = recordHtml + _filteredGames.map((g, i) => {
     let header = ''
     if (g.gameTypeLabel !== lastType) {
       lastType = g.gameTypeLabel
