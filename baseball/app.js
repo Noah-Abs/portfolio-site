@@ -838,14 +838,49 @@ function loadProspects() {
 }
 
 /* ── Game Breakdown Center ── */
-function loadBreakdownView() {
+async function loadBreakdownView() {
   const wrap = document.getElementById('breakdown-wrap')
   if (!wrap) return
-  const cfg = GAME_BREAKDOWN[_currentTeamKey]
-  if (cfg) {
-    wrap.innerHTML = buildBreakdownHtml(cfg, '-view')
-  } else {
-    wrap.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15)">No game breakdown available for this team.</div>'
+  const t = APP_TEAMS[_currentTeamKey] ?? APP_TEAMS.dodgers
+
+  const completed = (_allScheduleGames || []).filter(g => g.isFinal)
+  if (completed.length === 0) {
+    const cfg = GAME_BREAKDOWN[_currentTeamKey]
+    if (cfg) { wrap.innerHTML = buildBreakdownHtml(cfg, '-view'); return }
+    wrap.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;font-size:0.65rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.15)">No completed games yet this season.</div>'
+    return
+  }
+
+  const reversed = [...completed].reverse()
+  wrap.innerHTML = `
+    <div class="gbc-game-picker">
+      <label class="gbc-picker-label">Select Game</label>
+      <select id="breakdown-game-select" onchange="loadBreakdownForGame()">
+        ${reversed.map((g,i) => {
+          const typeTag = g.gameTypeLabel && g.gameTypeLabel !== 'Regular Season' ? `[${g.gameTypeLabel}] ` : ''
+          return `<option value="${g.gamePk}" ${i===0?'selected':''}>${typeTag}${g.monthDay} \u2014 ${g.atVs} ${g.opponent} (${g.won?'W':g.lost?'L':'T'} ${g.myScore}\u2013${g.oppScore})</option>`
+        }).join('')}
+      </select>
+    </div>
+    <div id="breakdown-content">
+      <div class="gbc-loading">Loading game breakdown\u2026</div>
+    </div>`
+  loadBreakdownForGame()
+}
+
+async function loadBreakdownForGame() {
+  const select = document.getElementById('breakdown-game-select')
+  const content = document.getElementById('breakdown-content')
+  if (!select || !content) return
+  const t = APP_TEAMS[_currentTeamKey] ?? APP_TEAMS.dodgers
+  content.innerHTML = '<div class="gbc-loading">Loading game breakdown\u2026</div>'
+  try {
+    const cfg = await fetchGameBreakdown(select.value, t.id)
+    if (cfg) { content.innerHTML = buildBreakdownHtml(cfg, '-view') }
+    else { content.innerHTML = '<div class="gbc-loading">No data available for this game.</div>' }
+  } catch(e) {
+    console.error('Breakdown error:', e)
+    content.innerHTML = '<div class="gbc-loading">Error loading game data.</div>'
   }
 }
 
@@ -873,8 +908,11 @@ function buildBreakdownHtml(cfg, idSuffix) {
   const lineScoreHtml = buildLineScoreHtml(cfg.lineScore)
 
   /* ── WPA Chart ── */
-  const wpa = cfg.wpa.data
+  const wpa = cfg.wpa?.data || []
   const N = wpa.length
+  let wpaSvg = ''
+  if (N < 2) { wpaSvg = '<div class="gbc-loading">No play-by-play data available for win probability chart.</div>' }
+  else {
   const CW = 800, CH = 250, CL = 48, CR = 785, CT = 22, CB = 225
   const cw = CR - CL, ch = CB - CT
   const wx = i => CL + (i / (N - 1)) * cw
@@ -898,7 +936,8 @@ function buildBreakdownHtml(cfg, idSuffix) {
      <line x1="${wx(pi).toFixed(1)}" y1="${CT}" x2="${wx(pi).toFixed(1)}" y2="${CB}" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`
   ).join('')
 
-  const annots = cfg.wpa.keyMoments.map(k => {
+  const annots = (cfg.wpa.keyMoments||[]).map(k => {
+    if (k.i >= N) return ''
     const cx = wx(k.i), cy = wy(wpa[k.i])
     const above = wpa[k.i] > 50
     const ly = above ? cy - 14 : cy + 16
@@ -906,7 +945,7 @@ function buildBreakdownHtml(cfg, idSuffix) {
       <text x="${cx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="7" font-family="Inter,sans-serif" font-weight="700" fill="rgba(255,255,255,0.55)">${k.lbl}</text>`
   }).join('')
 
-  const wpaSvg = `<svg class="gbc-wpa-svg" viewBox="0 0 ${CW} ${CH + 20}" xmlns="http://www.w3.org/2000/svg">
+  wpaSvg = `<svg class="gbc-wpa-svg" viewBox="0 0 ${CW} ${CH + 20}" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="wg${sfx}" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#1565c0"/><stop offset="45%" stop-color="#43a047"/><stop offset="55%" stop-color="#43a047"/><stop offset="100%" stop-color="#1565c0"/></linearGradient>
       <linearGradient id="wf${sfx}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(66,165,245,0.12)"/><stop offset="100%" stop-color="rgba(66,165,245,0)"/></linearGradient>
@@ -916,11 +955,12 @@ function buildBreakdownHtml(cfg, idSuffix) {
     <path d="${linePath}" fill="none" stroke="url(#wg${sfx})" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     ${annots}
     <text x="${CL}" y="${CH + 17}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" letter-spacing="0.15em">INNING</text>
-    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">${cfg.wpa.label}</text>
+    <text x="${CL - 8}" y="${CT - 6}" font-size="7.5" font-family="Inter,sans-serif" fill="rgba(255,255,255,0.18)" text-anchor="end">${cfg.wpa?.label || ''}</text>
   </svg>`
+  } // end else (N >= 2)
 
   /* ── Turning Points ── */
-  const turnsHtml = cfg.turningPoints.map(t => `
+  const turnsHtml = (cfg.turningPoints||[]).map(t => `
     <div class="gbc-tp-card">
       <div class="gbc-tp-rank">${t.rank}</div>
       <div class="gbc-tp-body">
@@ -932,7 +972,7 @@ function buildBreakdownHtml(cfg, idSuffix) {
     </div>`).join('')
 
   /* ── Best At-Bats ── */
-  const bestABHtml = cfg.bestAtBats.map((ab, i) => `
+  const bestABHtml = (cfg.bestAtBats||[]).map((ab, i) => `
     <div class="gbc-ab-card">
       <div class="gbc-ab-rank">${i + 1}</div>
       <div class="gbc-ab-body">
@@ -946,15 +986,16 @@ function buildBreakdownHtml(cfg, idSuffix) {
     </div>`).join('')
 
   /* ── Pitch Sequencing ── */
-  const pitchHtml = `
-    <div class="gbc-pitch-label">${cfg.pitchSequencing.label}</div>
-    ${cfg.pitchSequencing.pitches.map(p => `
+  const pSeq = cfg.pitchSequencing
+  const pitchHtml = pSeq?.pitches?.length ? `
+    <div class="gbc-pitch-label">${pSeq.label}</div>
+    ${pSeq.pitches.map(p => `
       <div class="gbc-pitch-bar">
         <span class="gbc-pitch-type">${p.type}</span>
         <div class="gbc-pitch-track"><div class="gbc-pitch-fill" style="width:${p.pct}%;background:${p.color}"></div></div>
         <span class="gbc-pitch-pct">${p.pct}%</span>
         <span class="gbc-pitch-velo">${p.velo}</span>
-      </div>`).join('')}`
+      </div>`).join('')}` : '<div class="gbc-loading">No pitch data available.</div>'
 
   /* ── Bullpen Usage ── */
   const bpRow = p => `<tr>
@@ -962,22 +1003,27 @@ function buildBreakdownHtml(cfg, idSuffix) {
     <td>${p.ip}</td><td>${p.p}</td><td>${p.k}</td><td>${p.bb}</td><td>${p.er}</td>
     <td><span class="gbc-grade ${p.gcls}">${p.grade}</span></td>
   </tr>`
-  const bpTable = (team, rows) => `
+  const bpTable = (team, rows) => rows.length ? `
     <div class="gbc-bp-team">${team}</div>
     <table class="gbc-bp-table">
       <thead><tr><th>Pitcher</th><th>IP</th><th>P</th><th>K</th><th>BB</th><th>ER</th><th></th></tr></thead>
       <tbody>${rows.map(bpRow).join('')}</tbody>
-    </table>`
+    </table>` : ''
 
-  /* ── Manager Decisions ── */
-  const decsHtml = cfg.managerDecisions.map(d => `
-    <div class="gbc-dec-card">
-      <span class="gbc-grade ${d.gcls} gbc-dec-badge">${d.grade}</span>
-      <div class="gbc-dec-body">
-        <div class="gbc-dec-title">${d.title}</div>
-        <div class="gbc-dec-impact">${d.impact}</div>
-      </div>
-    </div>`).join('')
+  /* ── Manager Decisions (optional) ── */
+  const decs = cfg.managerDecisions || []
+  const decsSection = decs.length ? `
+      <div class="gbc-section">
+        <div class="gbc-section-title">Manager Decisions</div>
+        <div class="gbc-decs">${decs.map(d => `
+          <div class="gbc-dec-card">
+            <span class="gbc-grade ${d.gcls} gbc-dec-badge">${d.grade}</span>
+            <div class="gbc-dec-body">
+              <div class="gbc-dec-title">${d.title}</div>
+              <div class="gbc-dec-impact">${d.impact}</div>
+            </div>
+          </div>`).join('')}</div>
+      </div>` : ''
 
   /* ── Header ── */
   const headerSub = `${cfg.seriesLabel} \u00b7 ${cfg.gameLabel} \u00b7 ${cfg.scoreLabel} \u00b7 ${cfg.venue}`
@@ -998,31 +1044,28 @@ function buildBreakdownHtml(cfg, idSuffix) {
         <div class="gbc-section-title">Win Probability</div>
         <div class="gbc-wpa">${wpaSvg}</div>
       </div>
-      <div class="gbc-section">
-        <div class="gbc-section-title">Turning Points</div>
+      ${turnsHtml ? `<div class="gbc-section">
+        <div class="gbc-section-title">Scoring Plays</div>
         <div class="gbc-turns">${turnsHtml}</div>
-      </div>
+      </div>` : ''}
       <div class="gbc-grid2">
-        <div class="gbc-section">
-          <div class="gbc-section-title">Best At-Bats</div>
+        ${bestABHtml ? `<div class="gbc-section">
+          <div class="gbc-section-title">Key At-Bats</div>
           <div class="gbc-abs">${bestABHtml}</div>
-        </div>
+        </div>` : ''}
         <div class="gbc-section">
-          <div class="gbc-section-title">Pitch Sequencing</div>
+          <div class="gbc-section-title">Pitch Mix</div>
           <div class="gbc-pitches">${pitchHtml}</div>
         </div>
       </div>
-      <div class="gbc-section">
-        <div class="gbc-section-title">Bullpen Usage</div>
+      ${cfg.bullpen ? `<div class="gbc-section">
+        <div class="gbc-section-title">Pitcher Breakdown</div>
         <div class="gbc-bullpen">
           ${bpTable(cfg.bullpen.away.name, cfg.bullpen.away.pitchers)}
           ${bpTable(cfg.bullpen.home.name, cfg.bullpen.home.pitchers)}
         </div>
-      </div>
-      <div class="gbc-section">
-        <div class="gbc-section-title">Manager Decisions</div>
-        <div class="gbc-decs">${decsHtml}</div>
-      </div>
+      </div>` : ''}
+      ${decsSection}
     </div>`
 }
 

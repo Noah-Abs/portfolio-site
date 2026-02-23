@@ -272,6 +272,183 @@ async function fetchWikiImage(wikiSlug) {
   return data.thumbnail?.source ?? null
 }
 
+/* ── Game Breakdown Helpers ── */
+
+const PITCH_COLORS = {
+  'Four-Seam Fastball':'#ef5350','Fastball':'#ef5350','Sinker':'#78909c',
+  'Cutter':'#26c6da','Slider':'#42a5f5','Curveball':'#ab47bc',
+  'Changeup':'#ffa726','Splitter':'#66bb6a','Knuckle Curve':'#ce93d8',
+  'Sweeper':'#00bcd4','Slurve':'#7e57c2','Knuckleball':'#8d6e63',
+}
+
+function _estimateWP(homeScore, awayScore, inning, isTop, totalInn) {
+  const diff = homeScore - awayScore
+  const remaining = Math.max(0.5, (totalInn - inning) * 2 + (isTop ? 2 : 1))
+  const k = 1.8 / Math.sqrt(remaining * 0.5)
+  const p = 1 / (1 + Math.exp(-k * diff))
+  return Math.max(2, Math.min(98, Math.round(p * 100)))
+}
+
+function _gradePitcher(ip, er, k, bb) {
+  const ipN = parseFloat(ip) || 0.1
+  const era = (er / ipN) * 9, kp9 = (k / ipN) * 9
+  let s = 70
+  s += era < 0.01 ? 15 : era < 2 ? 10 : era < 4 ? 5 : era < 6 ? 0 : -10
+  s += kp9 > 12 ? 8 : kp9 > 9 ? 5 : kp9 > 6 ? 2 : 0
+  s -= bb * 3
+  s += ipN > 6 ? 5 : ipN > 4 ? 3 : ipN > 2 ? 1 : 0
+  if (s >= 93) return { grade:'A+', gcls:'a' }
+  if (s >= 87) return { grade:'A', gcls:'a' }
+  if (s >= 82) return { grade:'A\u2212', gcls:'a' }
+  if (s >= 78) return { grade:'B+', gcls:'b' }
+  if (s >= 72) return { grade:'B', gcls:'b' }
+  if (s >= 67) return { grade:'B\u2212', gcls:'b' }
+  if (s >= 62) return { grade:'C+', gcls:'c' }
+  if (s >= 57) return { grade:'C', gcls:'c' }
+  if (s >= 52) return { grade:'C\u2212', gcls:'c' }
+  if (s >= 47) return { grade:'D+', gcls:'d' }
+  return { grade:'D', gcls:'d' }
+}
+
+async function fetchGameBreakdown(gamePk, teamId) {
+  const feed = await fetchLiveGameFeed(gamePk)
+  const gd = feed.gameData, ld = feed.liveData
+  const ls = ld.linescore, bs = ld.boxscore
+  if (!ls?.innings?.length) return null
+
+  const homeTeam = gd.teams.home, awayTeam = gd.teams.away
+  const isHome = homeTeam.id === teamId
+  const myAbbr = isHome ? homeTeam.abbreviation : awayTeam.abbreviation
+  const oppAbbr = isHome ? awayTeam.abbreviation : homeTeam.abbreviation
+  const totalInn = ls.innings.length
+  const homeR = ls.teams.home.runs, awayR = ls.teams.away.runs
+  const myScore = isHome ? homeR : awayR
+  const oppScore = isHome ? awayR : homeR
+  const venue = gd.venue?.name || ''
+  const dt = new Date(gd.datetime?.dateTime || Date.now())
+  const dateStr = dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+  const gameTypeCode = gd.game?.type || 'R'
+
+  /* ── Line Score ── */
+  const lineScore = {
+    innings: ls.innings.map((_,i) => i+1),
+    away: { abbr: awayTeam.abbreviation, runs: ls.innings.map(inn => inn.away?.runs ?? 0), R: awayR, H: ls.teams.away.hits, E: ls.teams.away.errors },
+    home: { abbr: homeTeam.abbreviation, runs: ls.innings.map(inn => inn.home?.runs ?? 0), R: homeR, H: ls.teams.home.hits, E: ls.teams.home.errors },
+  }
+
+  /* ── WPA from play-by-play ── */
+  const allPlays = ld.plays?.allPlays || []
+  const wpaData = [50]
+  const innStarts = [0]
+  const scoringMoments = []
+  let curInn = 1, hS = 0, aS = 0
+
+  for (const play of allPlays) {
+    if (!play.about?.isComplete) continue
+    const inn = play.about.inning
+    const isTop = play.about.halfInning === 'top'
+    while (inn > curInn) { curInn++; innStarts.push(wpaData.length) }
+    if (play.result?.homeScore !== undefined) { hS = play.result.homeScore; aS = play.result.awayScore }
+    const hwp = _estimateWP(hS, aS, inn, isTop, Math.max(totalInn, 9))
+    const myWP = isHome ? hwp : 100 - hwp
+    const prev = wpaData[wpaData.length - 1]
+    wpaData.push(myWP)
+    if (play.about?.isScoringPlay) {
+      scoringMoments.push({
+        i: wpaData.length - 1, delta: myWP - prev,
+        desc: play.result?.description || '', event: play.result?.event || '',
+        batter: play.matchup?.batter?.fullName || '',
+        inn, isTop, rbi: play.result?.rbi || 0,
+        pitchCount: (play.playEvents || []).filter(e => e.isPitch).length,
+      })
+    }
+  }
+  wpaData.push(myScore > oppScore ? 100 : myScore < oppScore ? 0 : 50)
+  scoringMoments.sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta))
+
+  const keyMoments = scoringMoments.slice(0,7).map(m => ({
+    i: m.i,
+    lbl: m.batter ? `${m.batter.split(' ').pop()} ${m.event}` : m.event,
+    c: m.delta > 0 ? (m.delta > 15 ? '#66bb6a' : '#42a5f5') : '#ef5350',
+  }))
+
+  /* ── Turning Points ── */
+  const _ord = n => { const s=['th','st','nd','rd']; const v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]) }
+  const turningPoints = scoringMoments.slice(0,5).map((m,idx) => ({
+    rank: idx+1,
+    title: `${m.batter} ${m.event}`,
+    inn: `${m.isTop?'\u25b2':'\u25bc'} ${m.isTop?'Top':'Bot'} ${_ord(m.inn)}`,
+    delta: `${m.delta>0?'+':''}${Math.round(m.delta)}%`,
+    cls: m.delta > 0 ? 'pos' : 'neg',
+    desc: m.desc,
+  }))
+
+  /* ── Best At-Bats ── */
+  const bestAtBats = scoringMoments.filter(m=>m.batter).slice(0,4).map(m => ({
+    batter: m.batter,
+    inn: `${m.isTop?'\u25b2':'\u25bc'} ${_ord(m.inn)}`,
+    pitches: m.pitchCount,
+    result: m.event,
+    wpa: `${m.delta>0?'+':''}${Math.round(m.delta)}%`,
+    cls: m.delta > 0 ? 'pos' : 'neg',
+    note: m.desc,
+  }))
+
+  /* ── Pitch Sequencing ── */
+  const pitchCounts = {}, pitchVelos = {}
+  let totalPitches = 0
+  for (const play of allPlays) {
+    for (const evt of (play.playEvents || [])) {
+      if (!evt.isPitch || !evt.details?.type?.description) continue
+      const t = evt.details.type.description
+      pitchCounts[t] = (pitchCounts[t]||0) + 1; totalPitches++
+      if (evt.pitchData?.startSpeed) { (pitchVelos[t] = pitchVelos[t]||[]).push(evt.pitchData.startSpeed) }
+    }
+  }
+  const pitchSequencing = {
+    label: `Both Teams Combined \u00b7 ${totalPitches} Total Pitches`,
+    pitches: Object.entries(pitchCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([type,cnt]) => ({
+      type, pct: Math.round((cnt/totalPitches)*100),
+      velo: pitchVelos[type]?.length ? (pitchVelos[type].reduce((a,b)=>a+b,0)/pitchVelos[type].length).toFixed(1) : '\u2014',
+      color: PITCH_COLORS[type] || '#90a4ae',
+    })),
+  }
+
+  /* ── Bullpen / Pitcher Usage ── */
+  function _buildPitchers(side) {
+    const tb = bs.teams[side]
+    return (tb.pitchers || []).map((pid,idx) => {
+      const p = tb.players[`ID${pid}`]
+      if (!p?.stats?.pitching) return null
+      const s = p.stats.pitching
+      const ip = s.inningsPitched||'0.0', er = s.earnedRuns??0, k = s.strikeOuts??0, bb = s.baseOnBalls??0
+      const pc = s.numberOfPitches ?? s.pitchesThrown ?? 0
+      let role = idx === 0 ? 'SP' : 'RP'
+      if (s.saves > 0) role = 'SV'
+      else if (s.wins > 0) role = 'W'
+      else if (s.losses > 0) role = 'L'
+      const { grade, gcls } = _gradePitcher(ip, er, k, bb)
+      return { name: p.person?.fullName||'Unknown', role, ip, p: pc, k, bb, er, grade, gcls }
+    }).filter(Boolean)
+  }
+  const bullpen = {
+    away: { name: awayTeam.name, pitchers: _buildPitchers('away') },
+    home: { name: homeTeam.name, pitchers: _buildPitchers('home') },
+  }
+
+  /* ── Assemble ── */
+  const resultStr = `${myAbbr} ${myScore}, ${oppAbbr} ${oppScore}${totalInn>9 ? ' ('+totalInn+')' : ''}`
+  return {
+    tag: 'FILM STUDY', title: 'Game Breakdown Center',
+    seriesLabel: GAME_TYPE_LABELS[gameTypeCode] || 'Game',
+    gameLabel: dateStr, scoreLabel: resultStr, venue,
+    lineScore,
+    wpa: { label: `${myAbbr} WIN %`, data: wpaData, innStarts, keyMoments },
+    turningPoints, bestAtBats, pitchSequencing, bullpen,
+    managerDecisions: [],
+  }
+}
+
 function timeAgo(iso) {
   if (!iso) return ''
   const mins = Math.floor((Date.now() - new Date(iso)) / 60000)
