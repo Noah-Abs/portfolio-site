@@ -67,6 +67,38 @@ body::after {
 .bar-team-info { display: flex; flex-direction: column; align-items: flex-start; gap: 0.05rem; }
 .bar-actions { position: absolute; right: 1.5rem; display: flex; align-items: center; gap: 0.4rem; }
 
+/* Live scoreboard ticker */
+.scoreboard-ticker {
+  display: flex; overflow-x: auto; gap: 0; background: rgba(0,4,18,0.92);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  scrollbar-width: none; -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.scoreboard-ticker::-webkit-scrollbar { display: none; }
+.scoreboard-ticker:empty { display: none; }
+.st-game {
+  flex-shrink: 0; display: flex; flex-direction: column; align-items: center;
+  padding: 0.4rem 0.75rem; gap: 0.15rem; min-width: 80px;
+  border-right: 1px solid rgba(255,255,255,0.06); cursor: default;
+  transition: background 0.15s;
+}
+.st-game:last-child { border-right: none; }
+.st-game:hover { background: rgba(255,255,255,0.04); }
+.st-my { background: rgba(0,61,165,0.12); }
+.st-game-live { background: rgba(251,191,36,0.06); }
+.st-team {
+  display: flex; align-items: center; gap: 0.3rem; width: 100%;
+  font-size: 0.62rem; color: rgba(255,255,255,0.5);
+}
+.st-winner { color: #fff; }
+.st-winner .st-score { font-weight: 800; }
+.st-logo { height: 14px; width: 14px; flex-shrink: 0; }
+.st-abbr { font-weight: 600; font-size: 0.58rem; letter-spacing: 0.04em; width: 26px; }
+.st-score { margin-left: auto; font-family: 'Bebas Neue', sans-serif; font-size: 0.82rem; min-width: 12px; text-align: right; }
+.st-status { font-size: 0.46rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.25); }
+.st-live { color: #fbbf24; animation: sr-pulse 1.5s ease-in-out infinite; }
+.st-final { color: rgba(255,255,255,0.2); }
+
 /* Settings gear button & dropdown */
 .bar-settings-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.45); padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: color 0.15s, background 0.15s; -webkit-tap-highlight-color: transparent; position: relative; }
 .bar-settings-btn:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.06); }
@@ -735,9 +767,55 @@ body.no-left-sidebar .main-content { margin-left: 0; }
   .po-name { font-size: 1.9rem; }
 }
 
+/* ── Stats AI ── */
+.sai-wrap { display: flex; flex-direction: column; height: calc(100vh - 56px); max-width: 800px; margin: 0 auto; padding: 0; }
+.sai-header { padding: 2rem 1.5rem 1rem; }
+.sai-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.04em; color: #fff; }
+.sai-sub { font-size: 0.7rem; color: rgba(255,255,255,0.35); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 0.15rem; }
+.sai-key-bar { display: flex; gap: 0.5rem; padding: 0 1.5rem 0.75rem; align-items: center; }
+.sai-key-bar.sai-key-saved { display: none; }
+.sai-key-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.55rem 0.75rem; color: #fff; font-size: 0.72rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+.sai-key-input:focus { border-color: rgba(255,255,255,0.25); }
+.sai-key-btn { background: var(--team-header2, #003DA5); color: #fff; border: none; border-radius: 8px; padding: 0.55rem 1rem; font-size: 0.7rem; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+.sai-key-btn:hover { opacity: 0.85; }
+.sai-key-needed { animation: saiShake 0.4s ease; }
+@keyframes saiShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)} }
+
+.sai-messages { flex: 1; overflow-y: auto; padding: 0.5rem 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.sai-welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 1rem; text-align: center; padding: 2rem 1rem; }
+.sai-welcome-icon { color: rgba(255,255,255,0.15); }
+.sai-welcome-title { font-size: 1.1rem; font-weight: 600; color: rgba(255,255,255,0.5); }
+.sai-welcome-examples { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; max-width: 400px; margin-top: 0.5rem; }
+.sai-example { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0.65rem 0.9rem; color: rgba(255,255,255,0.55); font-size: 0.72rem; font-family: 'Inter', sans-serif; cursor: pointer; text-align: left; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.sai-example:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.15); }
+
+.sai-msg { display: flex; }
+.sai-msg-user { justify-content: flex-end; }
+.sai-msg-ai { justify-content: flex-start; }
+.sai-msg-bubble { max-width: 85%; padding: 0.7rem 1rem; border-radius: 14px; font-size: 0.78rem; line-height: 1.55; font-family: 'Inter', sans-serif; word-wrap: break-word; }
+.sai-msg-user .sai-msg-bubble { background: var(--team-header2, #003DA5); color: #fff; border-bottom-right-radius: 4px; }
+.sai-msg-ai .sai-msg-bubble { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.88); border-bottom-left-radius: 4px; }
+.sai-msg-ai .sai-msg-bubble strong { color: #fff; }
+.sai-msg-ai .sai-h1 { font-size: 1rem; font-weight: 700; color: #fff; margin: 0.5rem 0 0.3rem; }
+.sai-msg-ai .sai-h2 { font-size: 0.88rem; font-weight: 700; color: #fff; margin: 0.5rem 0 0.2rem; }
+.sai-msg-ai .sai-h3 { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.9); margin: 0.4rem 0 0.2rem; }
+.sai-msg-ai .sai-li { padding-left: 0.3rem; margin: 0.15rem 0; }
+.sai-msg-ai .sai-code { background: rgba(0,0,0,0.35); border-radius: 6px; padding: 0.6rem 0.75rem; margin: 0.4rem 0; overflow-x: auto; font-size: 0.7rem; }
+.sai-msg-ai .sai-inline-code { background: rgba(0,0,0,0.3); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.72rem; }
+
+.sai-input-bar { display: flex; gap: 0.5rem; padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom, 0px)); background: rgba(0,5,20,0.8); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.06); }
+.sai-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 0.6rem 0.75rem; color: #fff; font-size: 0.78rem; font-family: 'Inter', sans-serif; resize: none; max-height: 120px; outline: none; transition: border-color 0.2s; }
+.sai-input:focus { border-color: rgba(255,255,255,0.25); }
+.sai-send { width: 38px; height: 38px; border-radius: 10px; background: var(--team-header2, #003DA5); border: none; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: opacity 0.15s; }
+.sai-send:hover { opacity: 0.85; }
+.sai-send.sai-loading { opacity: 0.5; pointer-events: none; }
+
 @media (max-width: 390px) {
   .opening-day-bar { padding: calc(0.4rem + env(safe-area-inset-top, 0px)) 0.75rem 0.4rem; gap: 0.5rem; }
   .bar-logo { height: 30px; }
   .bar-team-name { font-size: 1.2rem; }
   .p-name { white-space: normal; }
+  .st-game { padding: 0.35rem 0.5rem; min-width: 68px; }
+  .st-abbr { font-size: 0.52rem; width: 22px; }
+  .st-score { font-size: 0.72rem; }
 }

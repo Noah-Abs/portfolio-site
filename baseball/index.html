@@ -38,10 +38,13 @@
     </div>
   </div>
 
+  <!-- Live scoreboard ticker -->
+  <div class="scoreboard-ticker" id="scoreboard-ticker"></div>
+
   <!-- Fixed left sidebar -->
   <div class="fixed-sidebar" id="fixed-sidebar">
     <div class="dash-label">
-      <span class="stats-season">2025 Season</span>
+      <span class="stats-season" id="stats-season"></span>
       <span class="stats-divider">·</span>
       <span class="stats-division">NL West</span>
     </div>
@@ -188,6 +191,40 @@
     <div class="breakdown-wrap" id="breakdown-wrap"></div>
   </div>
 
+  <!-- Stats AI view -->
+  <div class="view-section" id="view-statsai">
+    <div class="sai-wrap">
+      <div class="sai-header">
+        <div class="sai-title">Stats AI</div>
+        <div class="sai-sub">Ask any statistics, probability, or data question</div>
+      </div>
+      <div class="sai-key-bar" id="sai-key-bar">
+        <input type="password" class="sai-key-input" id="sai-key-input" placeholder="Enter OpenAI API key to get started" />
+        <button class="sai-key-btn" onclick="saveAiKey()">Save</button>
+      </div>
+      <div class="sai-messages" id="sai-messages">
+        <div class="sai-welcome">
+          <div class="sai-welcome-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div class="sai-welcome-title">What can I help you with?</div>
+          <div class="sai-welcome-examples">
+            <button class="sai-example" onclick="askExample(this)">What are the Dodgers' odds of winning the World Series?</button>
+            <button class="sai-example" onclick="askExample(this)">Compare Ohtani's 2025 stats to his career averages</button>
+            <button class="sai-example" onclick="askExample(this)">What's the probability of a .300 hitter going 0 for 4?</button>
+            <button class="sai-example" onclick="askExample(this)">Explain WAR and how it's calculated</button>
+          </div>
+        </div>
+      </div>
+      <div class="sai-input-bar">
+        <textarea class="sai-input" id="sai-input" placeholder="Ask a stats question..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiMessage()}"></textarea>
+        <button class="sai-send" id="sai-send" onclick="sendAiMessage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings view -->
   <div class="view-section" id="view-settings">
     <div class="settings-wrap">
@@ -217,6 +254,10 @@
     <button class="rn-item active" data-view="home" onclick="switchView('home')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 21V13h6v8"/></svg>
       Home
+    </button>
+    <button class="rn-item" data-view="statsai" onclick="switchView('statsai')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 9h8M8 13h4"/></svg>
+      Stats AI
     </button>
     <button class="rn-item" data-view="news" onclick="switchView('news')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>

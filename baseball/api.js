@@ -242,6 +242,32 @@ async function fetchTodayGame(teamId) {
   return data.dates?.[0]?.games?.[0] ?? null
 }
 
+async function fetchTodayScoreboard() {
+  const today = new Date().toLocaleDateString('en-CA')
+  const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}&gameType=S,R,F,D,L,W,E&hydrate=linescore,team`)
+  const data = await res.json()
+  if (!data.dates?.length) return []
+  return data.dates[0].games.map(g => {
+    const isFinal = g.status.abstractGameState === 'Final'
+    const isLive = g.status.abstractGameState === 'Live'
+    const isPre = g.status.abstractGameState === 'Preview'
+    const away = g.teams.away, home = g.teams.home
+    const dt = new Date(g.gameDate)
+    return {
+      gamePk: g.gamePk,
+      awayAbbr: away.team.abbreviation || away.team.name?.split(' ').pop()?.substring(0,3).toUpperCase() || '???',
+      homeAbbr: home.team.abbreviation || home.team.name?.split(' ').pop()?.substring(0,3).toUpperCase() || '???',
+      awayId: away.team.id, homeId: home.team.id,
+      awayScore: away.score ?? 0, homeScore: home.score ?? 0,
+      isFinal, isLive, isPre,
+      inning: g.linescore?.currentInningOrdinal || '',
+      inningHalf: g.linescore?.inningHalf || '',
+      time: dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+      status: g.status.detailedState,
+    }
+  })
+}
+
 async function fetchRoster(teamId) {
   const season = new Date().getFullYear()
   const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${season}`)

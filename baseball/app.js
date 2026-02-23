@@ -777,7 +777,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'settings']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -1357,6 +1357,43 @@ function loadContracts(key) {
     </div>`
 }
 
+/* ── Live Scoreboard Ticker ── */
+async function loadScoreboard() {
+  try {
+    const games = await fetchTodayScoreboard()
+    const ticker = document.getElementById('scoreboard-ticker')
+    if (!ticker) return
+    if (!games.length) { ticker.style.display = 'none'; return }
+    ticker.style.display = ''
+    const myTeamId = (APP_TEAMS[_currentTeamKey] ?? APP_TEAMS.dodgers).id
+    ticker.innerHTML = games.map(g => {
+      const isMy = g.awayId === myTeamId || g.homeId === myTeamId
+      let statusHtml
+      if (g.isLive) {
+        const half = g.inningHalf === 'Top' ? '\u25b2' : g.inningHalf === 'Bottom' ? '\u25bc' : ''
+        statusHtml = `<span class="st-status st-live">${half}${g.inning}</span>`
+      } else if (g.isFinal) {
+        statusHtml = `<span class="st-status st-final">Final</span>`
+      } else {
+        statusHtml = `<span class="st-status">${g.time}</span>`
+      }
+      return `<div class="st-game${isMy ? ' st-my' : ''}${g.isLive ? ' st-game-live' : ''}">
+        <div class="st-team${g.isFinal && g.awayScore > g.homeScore ? ' st-winner' : ''}">
+          <img class="st-logo" src="${LOGO}/${g.awayId}.svg" alt="${g.awayAbbr}">
+          <span class="st-abbr">${g.awayAbbr}</span>
+          <span class="st-score">${g.isPre ? '' : g.awayScore}</span>
+        </div>
+        <div class="st-team${g.isFinal && g.homeScore > g.awayScore ? ' st-winner' : ''}">
+          <img class="st-logo" src="${LOGO}/${g.homeId}.svg" alt="${g.homeAbbr}">
+          <span class="st-abbr">${g.homeAbbr}</span>
+          <span class="st-score">${g.isPre ? '' : g.homeScore}</span>
+        </div>
+        ${statusHtml}
+      </div>`
+    }).join('')
+  } catch(e) { console.error('Scoreboard error:', e) }
+}
+
 /* ── Auto-refresh for live games (every 30s) ── */
 let _refreshTimer = null
 function startAutoRefresh() {
@@ -1364,6 +1401,7 @@ function startAutoRefresh() {
   _refreshTimer = setInterval(() => {
     if (document.hidden) return
     loadLiveData()
+    loadScoreboard()
   }, 30000)
 }
 function stopAutoRefresh() {
@@ -1371,13 +1409,177 @@ function stopAutoRefresh() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) stopAutoRefresh()
-  else startAutoRefresh()
+  else { startAutoRefresh(); loadScoreboard() }
 })
 
 /* ── Initialize ── */
 const _urlTeam = window.__TEAM_KEY__ || null
 const _initTeam = _urlTeam && APP_TEAMS[_urlTeam] ? _urlTeam : 'dodgers'
 renderTeam(_initTeam)
+loadScoreboard()
 startAutoRefresh()
+
+/* ── Stats AI ── */
+const SAI_SYSTEM_PROMPT = `You are an expert statistics and probability AI assistant. You specialize in:
+- Baseball statistics (traditional and sabermetrics: WAR, wRC+, FIP, xFIP, BABIP, OPS+, ERA+, etc.)
+- Probability calculations and statistical modeling
+- Data interpretation and analysis
+- Historical baseball data and comparisons
+- Predictive modeling concepts (playoff odds, MVP races, etc.)
+
+Guidelines:
+- Provide precise, well-reasoned statistical analysis
+- Show your mathematical work when doing probability calculations
+- Reference specific stats and data when available
+- Explain complex sabermetric concepts in accessible terms
+- When uncertain, clearly state assumptions
+- Use markdown formatting for clarity (tables, bold, headers)
+- Keep responses concise but thorough`
+
+let _saiMessages = []
+let _saiStreaming = false
+
+function saveAiKey() {
+  const input = document.getElementById('sai-key-input')
+  if (!input) return
+  const key = input.value.trim()
+  if (!key) return
+  localStorage.setItem('sai_openai_key', key)
+  input.value = ''
+  document.getElementById('sai-key-bar').classList.add('sai-key-saved')
+}
+
+function _getAiKey() {
+  return localStorage.getItem('sai_openai_key') || ''
+}
+
+function askExample(btn) {
+  const text = btn.textContent.trim()
+  const input = document.getElementById('sai-input')
+  if (input) { input.value = text; input.focus() }
+}
+
+function _renderSaiMessages() {
+  const el = document.getElementById('sai-messages')
+  if (!el) return
+  if (_saiMessages.length === 0) return // keep welcome screen
+  el.innerHTML = _saiMessages.map(m => {
+    const cls = m.role === 'user' ? 'sai-msg sai-msg-user' : 'sai-msg sai-msg-ai'
+    const content = m.role === 'user' ? _escHtml(m.content) : _renderMarkdown(m.content)
+    return `<div class="${cls}"><div class="sai-msg-bubble">${content}</div></div>`
+  }).join('')
+  el.scrollTop = el.scrollHeight
+}
+
+function _escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function _renderMarkdown(text) {
+  // Simple markdown: bold, headers, code blocks, inline code, lists
+  let html = _escHtml(text)
+  // Code blocks
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="sai-code"><code>$2</code></pre>')
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code class="sai-inline-code">$1</code>')
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<div class="sai-h3">$1</div>')
+  html = html.replace(/^## (.+)$/gm, '<div class="sai-h2">$1</div>')
+  html = html.replace(/^# (.+)$/gm, '<div class="sai-h1">$1</div>')
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<div class="sai-li">\u2022 $1</div>')
+  // Paragraphs
+  html = html.replace(/\n\n/g, '<br><br>')
+  html = html.replace(/\n/g, '<br>')
+  return html
+}
+
+async function sendAiMessage() {
+  if (_saiStreaming) return
+  const input = document.getElementById('sai-input')
+  if (!input) return
+  const text = input.value.trim()
+  if (!text) return
+
+  const key = _getAiKey()
+  if (!key) {
+    document.getElementById('sai-key-bar')?.classList.add('sai-key-needed')
+    document.getElementById('sai-key-input')?.focus()
+    setTimeout(() => document.getElementById('sai-key-bar')?.classList.remove('sai-key-needed'), 1500)
+    return
+  }
+
+  // Add user message
+  _saiMessages.push({ role: 'user', content: text })
+  input.value = ''
+  input.style.height = 'auto'
+  _renderSaiMessages()
+
+  // Add placeholder for AI response
+  _saiMessages.push({ role: 'assistant', content: '' })
+  _saiStreaming = true
+  document.getElementById('sai-send')?.classList.add('sai-loading')
+
+  try {
+    const apiMessages = [
+      { role: 'system', content: SAI_SYSTEM_PROMPT },
+      ..._saiMessages.filter(m => m.content).map(m => ({ role: m.role, content: m.content }))
+    ]
+    // Remove the empty assistant placeholder from API messages
+    if (apiMessages.length && apiMessages[apiMessages.length - 1].role === 'assistant' && !apiMessages[apiMessages.length - 1].content) {
+      apiMessages.pop()
+    }
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o-mini', messages: apiMessages, stream: true })
+    })
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}))
+      throw new Error(err.error?.message || `API error ${resp.status}`)
+    }
+
+    const reader = resp.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    const aiMsg = _saiMessages[_saiMessages.length - 1]
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        const data = line.slice(6).trim()
+        if (data === '[DONE]') break
+        try {
+          const parsed = JSON.parse(data)
+          const delta = parsed.choices?.[0]?.delta?.content
+          if (delta) {
+            aiMsg.content += delta
+            _renderSaiMessages()
+          }
+        } catch {}
+      }
+    }
+
+    if (!aiMsg.content) {
+      aiMsg.content = 'No response received.'
+    }
+  } catch (e) {
+    const aiMsg = _saiMessages[_saiMessages.length - 1]
+    aiMsg.content = `Error: ${e.message}`
+  }
+
+  _saiStreaming = false
+  document.getElementById('sai-send')?.classList.remove('sai-loading')
+  _renderSaiMessages()
+}
 
 /* Always start on home */
