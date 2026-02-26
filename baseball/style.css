@@ -629,6 +629,298 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .mob-more-backdrop { display: none; }
 .mob-more-sheet { display: none; }
 
+/* ══════════════════════════════════════════════
+   DESKTOP PROFESSIONAL REDESIGN
+   Only applies ≥701px — mobile is untouched
+   ══════════════════════════════════════════════ */
+@media (min-width: 701px) {
+
+  /* ── Base / remove decorative layers ── */
+  body {
+    background: #080c14;
+    transition: none;
+  }
+  body::before { display: none; }
+  body::after  { display: none; }
+
+  /* ── Header Bar ── */
+  .opening-day-bar {
+    background: #0d1117;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0 1.5rem;
+    height: 48px;
+    gap: 1rem;
+    justify-content: flex-start;
+  }
+  .bar-logo {
+    height: 30px;
+    filter: none;
+  }
+  .bar-team-name { font-size: 1.15rem; letter-spacing: 0.06em; }
+  .bar-team-sub { font-size: 0.5rem; letter-spacing: 0.2em; color: rgba(255,255,255,0.3); }
+  .bar-actions { right: 1rem; }
+
+  /* ── Scoreboard Ticker ── */
+  .scoreboard-ticker {
+    background: #0a0e18;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    top: 48px;
+  }
+
+  /* ── Settings dropdown ── */
+  .settings-dropdown {
+    background: #12161f;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+
+  /* ── Fixed Left Sidebar ── */
+  .fixed-sidebar {
+    top: 48px;
+    background: #0d1117;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 1rem 0.9rem;
+    gap: 0.6rem;
+    width: 240px;
+  }
+  :root { --sb-width: 240px; --rn-width: 180px; }
+
+  .sb-nav { border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+  .sb-nav-item { padding: 0.5rem 0.75rem; font-size: 0.78rem; }
+  .sb-nav-item.active { background: rgba(255,255,255,0.07); }
+
+  /* ── Right Navigation Panel ── */
+  .right-nav {
+    top: 48px;
+    width: 180px;
+    background: #0d1117;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0.9rem 0;
+  }
+  .rn-item { padding: 0.55rem 0.85rem; font-size: 0.78rem; }
+  .rn-item.active { background: rgba(255,255,255,0.05); }
+
+  /* ── Dashboard Cards ── */
+  .dash-card {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 0.75rem 0.8rem;
+  }
+
+  /* ── Hero Section — compact info strip ── */
+  #view-home { height: auto; overflow: visible; }
+  .hero-section {
+    height: auto;
+    min-height: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .hero-logo {
+    height: 72px;
+    filter: none;
+    opacity: 1;
+  }
+  .hero-wordmark {
+    align-items: flex-start;
+  }
+  .hero-city {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.35);
+  }
+  .hero-team-name {
+    font-size: 2.8rem !important;
+    text-shadow: none;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .hero-champs {
+    font-size: 0.55rem !important;
+    border-color: rgba(220,160,30,0.2);
+    color: rgba(220,160,30,0.65);
+    padding: 0.2rem 0.7rem !important;
+    margin-top: 0.3rem;
+    border-radius: 3px;
+  }
+  .hero-scroll { display: none; }
+
+  .ws-banners { gap: 3px; }
+  .ws-banner {
+    width: 24px;
+    height: 42px;
+    filter: none;
+    background: linear-gradient(175deg, rgba(30,68,204,0.7) 0%, rgba(24,48,168,0.6) 100%);
+  }
+  .ws-banner:hover { filter: none; transform: translateY(-2px); }
+  .ws-banner-year { font-size: 0.72rem; }
+
+  /* ── Next Game (hero card) ── */
+  .hero-next {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    margin: 0;
+  }
+
+  /* ── Game Breakdown ── */
+  .breakdown-wrap { padding: 1.5rem 2rem 3rem; }
+  .gbc-section {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+  .gbc-header-title { font-size: 1.6rem; }
+
+  /* ── Hub View ── */
+  .hub-card {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 1.25rem 1rem 1.1rem;
+  }
+  .hub-card:hover { background: #161b26; border-color: rgba(255,255,255,0.1); }
+  .hub-title { font-size: 1.8rem; }
+
+  /* ── Depth Chart ── */
+  .dc-card {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+  .dc-pos-header { background: rgba(0,30,98,0.35); }
+  .dc-page-title { font-size: 1.8rem; }
+
+  /* ── News ── */
+  .news-featured-card {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+  }
+  .news-featured-card:hover { background: #161b26; border-color: rgba(255,255,255,0.1); }
+  .news-card {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+  }
+  .news-card:hover { background: #161b26; border-color: rgba(255,255,255,0.1); }
+  .news-page-title { font-size: 2rem; }
+
+  /* ── Side Panel ── */
+  .side-panel {
+    background: #0d1117;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    width: 360px;
+  }
+
+  /* ── Player Overlay ── */
+  .player-overlay {
+    background: #080c14;
+  }
+  .po-scroll { padding: 2rem 2.5rem 3rem; }
+  .po-summary {
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .po-summary-stat { background: #11151e; }
+  .po-headshot-wrap {
+    border-radius: 6px;
+    background: linear-gradient(160deg, rgba(0,30,80,0.2), rgba(0,8,30,0.3));
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ── Contracts & Payroll ── */
+  .payroll-bar-wrap {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+  .salary-chart {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+  .contract-timeline {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+
+  /* ── Settings ── */
+  .settings-section {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+  }
+  .settings-team-row {
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+  }
+  .settings-title { font-size: 2rem; }
+
+  /* ── WS Modal ── */
+  .ws-modal-card {
+    background: #0d1117;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+  }
+
+  /* ── Stats AI ── */
+  .sai-wrap { height: calc(100vh - 48px); }
+  .sai-title { font-size: 1.8rem; }
+  .sai-msg-bubble { border-radius: 10px; }
+  .sai-msg-user .sai-msg-bubble { border-bottom-right-radius: 3px; }
+  .sai-msg-ai .sai-msg-bubble {
+    background: rgba(255,255,255,0.05);
+    border-bottom-left-radius: 3px;
+  }
+  .sai-example { border-radius: 6px; }
+  .sai-input-bar {
+    background: #0a0e18;
+    backdrop-filter: none;
+  }
+
+  /* ── Prospects ── */
+  .prospects-wrap { padding: 1.5rem 1.25rem 4rem; }
+
+  /* ── Game Detail ── */
+  .gd-info-grid {
+    background: #11151e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+  }
+  .gd-score-final {
+    background: #11151e;
+    border-radius: 6px;
+  }
+  .gd-tickets-btn {
+    background: var(--team-header2, #003DA5);
+    border-radius: 6px;
+  }
+
+  /* ── Stat grids tighter ── */
+  .stat-val { font-size: 1.35rem; }
+  .pd-stat-val { font-size: 1.7rem; }
+  .po-summary-val { font-size: 2.2rem; }
+  .lgs-num { font-size: 2.4rem; }
+
+  /* ── Schedule filter ── */
+  .sched-filter-sheet { background: #0d1117; }
+  .filter-trigger-btn { border-radius: 5px; }
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .gbc-grid2 { grid-template-columns: 1fr; }
