@@ -1444,13 +1444,13 @@ function saveAiKey() {
   if (!input) return
   const key = input.value.trim()
   if (!key) return
-  localStorage.setItem('sai_openai_key', key)
+  localStorage.setItem('sai_gemini_key', key)
   input.value = ''
   document.getElementById('sai-key-bar').classList.add('sai-key-saved')
 }
 
 function _getAiKey() {
-  return localStorage.getItem('sai_openai_key') || ''
+  return localStorage.getItem('sai_gemini_key') || ''
 }
 
 function askExample(btn) {
@@ -1523,20 +1523,23 @@ async function sendAiMessage() {
   document.getElementById('sai-send')?.classList.add('sai-loading')
 
   try {
-    const apiMessages = [
-      { role: 'system', content: SAI_SYSTEM_PROMPT },
-      ..._saiMessages.filter(m => m.content).map(m => ({ role: m.role, content: m.content }))
-    ]
-    // Remove the empty assistant placeholder from API messages
-    if (apiMessages.length && apiMessages[apiMessages.length - 1].role === 'assistant' && !apiMessages[apiMessages.length - 1].content) {
-      apiMessages.pop()
-    }
+    // Build Gemini message history (role: user/model)
+    const contents = _saiMessages.filter(m => m.content).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }))
 
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'gpt-4o-mini', messages: apiMessages, stream: true })
-    })
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SAI_SYSTEM_PROMPT }] },
+          contents,
+        })
+      }
+    )
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}))
@@ -1557,10 +1560,10 @@ async function sendAiMessage() {
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue
         const data = line.slice(6).trim()
-        if (data === '[DONE]') break
+        if (!data) continue
         try {
           const parsed = JSON.parse(data)
-          const delta = parsed.choices?.[0]?.delta?.content
+          const delta = parsed.candidates?.[0]?.content?.parts?.[0]?.text
           if (delta) {
             aiMsg.content += delta
             _renderSaiMessages()

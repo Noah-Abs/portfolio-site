@@ -73,6 +73,8 @@ body::after {
   border-bottom: 1px solid rgba(255,255,255,0.08);
   scrollbar-width: none; -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
+  margin-left: var(--sb-width); margin-right: var(--rn-width);
+  position: sticky; top: 56px; z-index: 95;
 }
 .scoreboard-ticker::-webkit-scrollbar { display: none; }
 .scoreboard-ticker:empty { display: none; }
@@ -126,6 +128,7 @@ body::after {
 .main-content { margin-left: var(--sb-width); margin-right: var(--rn-width); }
 body.no-left-sidebar .fixed-sidebar { display: none; }
 body.no-left-sidebar .main-content { margin-left: 0; }
+body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .view-section { display: none; }
 .view-section.active { display: block; }
 
