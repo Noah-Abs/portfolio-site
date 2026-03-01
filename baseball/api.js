@@ -782,12 +782,16 @@ function extractPlayByPlayData(feeds, teamId) {
       const isMyBatter = batterSide === mySide
       const isMyPitcher = batterSide !== mySide
 
-      for (const evt of (play.playEvents || [])) {
-        if (!evt.isPitch) continue
+      const playResult = play.result?.event || ''
+      const playEvents = (play.playEvents || []).filter(e => e.isPitch)
+      const lastPitchIdx = playEvents.length - 1
+
+      for (let pi = 0; pi < playEvents.length; pi++) {
+        const evt = playEvents[pi]
         const pd = evt.pitchData
         const details = evt.details
         if (pd?.coordinates?.pX != null && pd?.coordinates?.pZ != null) {
-          pitches.push({
+          const pitch = {
             pX: pd.coordinates.pX, pZ: pd.coordinates.pZ,
             startSpeed: pd.startSpeed || null,
             pitchType: details?.type?.description || 'Unknown',
@@ -797,7 +801,9 @@ function extractPlayByPlayData(feeds, teamId) {
             isBall: details?.isBall || false,
             batterId, pitcherId, batterName, pitcherName,
             isMyBatter, isMyPitcher, gamePk
-          })
+          }
+          if (pi === lastPitchIdx && playResult) pitch.atBatResult = playResult
+          pitches.push(pitch)
         }
       }
 

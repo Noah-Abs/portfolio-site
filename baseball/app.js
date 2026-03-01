@@ -2369,111 +2369,119 @@ function renderVaSpray(el) {
 
 /* ── 2. Pitch Heat Map ── */
 function renderVaHeatmap(el) {
-  const allPitches = _vaData.pitches.filter(p => _vaPlayerFilter ? (p.pitcherId == _vaPlayerFilter || p.batterId == _vaPlayerFilter) : p.isMyPitcher)
+  const HIT_EVENTS = new Set(['Single', 'Double', 'Triple', 'Home Run'])
+  const NO_AB_EVENTS = new Set(['Walk', 'Intent Walk', 'Hit By Pitch', 'Sac Fly', 'Sac Bunt', 'Sac Fly DP',
+    'Catcher Interference', 'Batter Interference', 'Fan Interference'])
 
-  // Use the rule-book zone for the grid, with padding outside for chase pitches
-  const szXMin = -0.83, szXMax = 0.83, szZMin = 1.5, szZMax = 3.5
-  const padX = 0.9, padZ = 0.8
-  const zoneLeft = szXMin - padX, zoneRight = szXMax + padX, zoneBot = szZMin - padZ, zoneTop = szZMax + padZ
-  const GRID = 9
-  const cellW = (zoneRight - zoneLeft) / GRID
-  const cellH = (zoneTop - zoneBot) / GRID
-  const grid = Array.from({ length: GRID }, () => Array(GRID).fill(0))
+  // Filter pitches that ended an at-bat (have atBatResult)
+  const abPitches = _vaData.pitches.filter(p => {
+    if (!p.atBatResult) return false
+    if (NO_AB_EVENTS.has(p.atBatResult)) return false
+    if (_vaPlayerFilter) return p.batterId == _vaPlayerFilter
+    return p.isMyBatter
+  })
 
-  for (const p of allPitches) {
-    const col = Math.floor((p.pX - zoneLeft) / cellW)
-    const row = Math.floor((zoneTop - p.pZ) / cellH)
-    if (col >= 0 && col < GRID && row >= 0 && row < GRID) grid[row][col]++
+  // 5x5 zone grid: inner 3x3 = strike zone, outer ring = chase zones
+  // Strike zone: pX [-0.83, 0.83], pZ [1.5, 3.5]
+  // Each inner cell = 1/3 of zone. Outer border = one cell-width outside.
+  const szW = 0.83 * 2, szH = 3.5 - 1.5 // 1.66, 2.0
+  const cellPX = szW / 3, cellPZ = szH / 3
+  const GRID = 5
+  const hits = Array.from({ length: GRID }, () => Array(GRID).fill(0))
+  const abs = Array.from({ length: GRID }, () => Array(GRID).fill(0))
+
+  for (const p of abPitches) {
+    // Map pitch coords to 5x5 grid
+    // Columns: 0 = left chase, 1-3 = zone thirds, 4 = right chase
+    let col, row
+    if (p.pX < -0.83) col = 0
+    else if (p.pX < -0.83 + cellPX) col = 1
+    else if (p.pX < -0.83 + cellPX * 2) col = 2
+    else if (p.pX <= 0.83) col = 3
+    else col = 4
+
+    if (p.pZ > 3.5) row = 0  // above zone
+    else if (p.pZ > 3.5 - cellPZ) row = 1
+    else if (p.pZ > 3.5 - cellPZ * 2) row = 2
+    else if (p.pZ >= 1.5) row = 3
+    else row = 4  // below zone
+
+    if (col >= 0 && col < GRID && row >= 0 && row < GRID) {
+      abs[row][col]++
+      if (HIT_EVENTS.has(p.atBatResult)) hits[row][col]++
+    }
   }
-  const maxCount = Math.max(1, ...grid.flat())
 
-  const W = 380, H = 440, PAD = 55
-  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD - 30
-
-  // Strike zone pixel coords
-  const szInL = szL + (szR - szL) * ((szXMin - zoneLeft) / (zoneRight - zoneLeft))
-  const szInR = szL + (szR - szL) * ((szXMax - zoneLeft) / (zoneRight - zoneLeft))
-  const szInT = szT + (szB - szT) * ((zoneTop - szZMax) / (zoneTop - zoneBot))
-  const szInB = szT + (szB - szT) * ((zoneTop - szZMin) / (zoneTop - zoneBot))
+  // SVG dimensions
+  const W = 380, H = 430, PAD = 50
+  const gridL = PAD + 20, gridR = W - PAD - 20, gridT = PAD + 10, gridB = H - PAD - 40
+  const totalW = gridR - gridL, totalH = gridB - gridT
+  const cw = totalW / GRID, ch = totalH / GRID
+  const gap = 2
 
   let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
-  // Defs: blur filter for smooth heat
-  svg += `<defs><filter id="hm-blur"><feGaussianBlur in="SourceGraphic" stdDeviation="4"/></filter></defs>`
-  // Dark background behind zone
-  svg += `<rect x="${szL}" y="${szT}" width="${szR - szL}" height="${szB - szT}" rx="4" fill="rgba(0,0,0,0.3)"/>`
 
-  // Heat cells (blurred layer)
-  svg += `<g filter="url(#hm-blur)">`
-  for (let r = 0; r < GRID; r++) {
-    for (let c = 0; c < GRID; c++) {
-      const intensity = grid[r][c] / maxCount
-      if (intensity < 0.015) continue
-      const x = szL + (c / GRID) * (szR - szL)
-      const y = szT + (r / GRID) * (szB - szT)
-      const w = (szR - szL) / GRID
-      const h = (szB - szT) / GRID
-      // Cool blue → warm yellow → hot red
-      let red, green, blue
-      if (intensity < 0.35) { const t = intensity / 0.35; red = Math.round(20 + t * 40); green = Math.round(60 + t * 60); blue = Math.round(180 + t * 40) }
-      else if (intensity < 0.65) { const t = (intensity - 0.35) / 0.3; red = Math.round(60 + t * 190); green = Math.round(120 + t * 80); blue = Math.round(220 - t * 180) }
-      else { const t = (intensity - 0.65) / 0.35; red = Math.round(250); green = Math.round(200 - t * 160); blue = Math.round(40 - t * 30) }
-      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.15 + intensity * 0.7})"/>`
-    }
+  // BA color: red (low) → yellow (mid) → green (high)
+  function baColor(ba) {
+    if (ba < 0.200) { const t = ba / 0.200; return { r: Math.round(180 + t * 40), g: Math.round(40 + t * 50), b: Math.round(40 + t * 10) } }
+    if (ba < 0.300) { const t = (ba - 0.200) / 0.100; return { r: Math.round(220 - t * 30), g: Math.round(90 + t * 110), b: Math.round(50 - t * 10) } }
+    return { r: Math.round(190 - Math.min((ba - 0.300) / 0.200, 1) * 140), g: Math.round(200 + Math.min((ba - 0.300) / 0.200, 1) * 40), b: Math.round(40 + Math.min((ba - 0.300) / 0.200, 1) * 40) }
   }
-  svg += '</g>'
 
-  // Sharp count cells on top (subtle)
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID; c++) {
-      if (grid[r][c] === 0) continue
-      const x = szL + (c / GRID) * (szR - szL)
-      const y = szT + (r / GRID) * (szB - szT)
-      const w = (szR - szL) / GRID
-      const h = (szB - szT) / GRID
-      const intensity = grid[r][c] / maxCount
-      if (intensity > 0.15) {
-        svg += `<text x="${x + w / 2}" y="${y + h / 2 + 3.5}" fill="rgba(255,255,255,${Math.min(0.3 + intensity * 0.6, 0.85)})" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">${grid[r][c]}</text>`
+      const x = gridL + c * cw + gap
+      const y = gridT + r * ch + gap
+      const w = cw - gap * 2
+      const h = ch - gap * 2
+      const isInner = r >= 1 && r <= 3 && c >= 1 && c <= 3
+      const isCorner = (r === 0 || r === 4) && (c === 0 || c === 4)
+
+      if (abs[r][c] === 0) {
+        // Empty cell — faint outline
+        svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,${isInner ? 0.12 : 0.06})" stroke-width="0.75" rx="${isCorner ? 6 : isInner ? 3 : 4}"/>`
+        continue
       }
+
+      const ba = hits[r][c] / abs[r][c]
+      const clr = baColor(ba)
+      const alpha = isInner ? 0.55 : 0.35
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${clr.r},${clr.g},${clr.b},${alpha})" stroke="rgba(255,255,255,${isInner ? 0.15 : 0.08})" stroke-width="0.75" rx="${isCorner ? 6 : isInner ? 3 : 4}"/>`
+
+      // BA text
+      const baStr = ba.toFixed(3).replace('0.', '.')
+      svg += `<text x="${x + w / 2}" y="${y + h / 2}" fill="rgba(255,255,255,${isInner ? 0.95 : 0.7})" font-size="${isInner ? 14 : 11}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Inter">${baStr}</text>`
+      // AB count
+      svg += `<text x="${x + w / 2}" y="${y + h / 2 + (isInner ? 13 : 10)}" fill="rgba(255,255,255,0.25)" font-size="8" text-anchor="middle" font-family="Inter">${abs[r][c]} AB</text>`
     }
   }
 
-  // Strike zone border (solid white)
-  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" rx="1"/>`
-  // 3x3 inner grid lines
-  const zW3 = (szInR - szInL) / 3, zH3 = (szInB - szInT) / 3
-  for (let i = 1; i < 3; i++) {
-    svg += `<line x1="${szInL + zW3 * i}" y1="${szInT}" x2="${szInL + zW3 * i}" y2="${szInB}" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>`
-    svg += `<line x1="${szInL}" y1="${szInT + zH3 * i}" x2="${szInR}" y2="${szInT + zH3 * i}" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>`
-  }
+  // Strike zone border (around inner 3x3)
+  const zoneX = gridL + cw, zoneY = gridT + ch
+  const zoneW = cw * 3, zoneH = ch * 3
+  svg += `<rect x="${zoneX}" y="${zoneY}" width="${zoneW}" height="${zoneH}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" rx="2"/>`
 
   // Home plate
-  const cx = W / 2, py = szB + 16
+  const cx = W / 2, py = gridB + 14
   svg += `<path d="M${cx},${py + 14} L${cx - 12},${py + 6} L${cx - 12},${py - 2} L${cx + 12},${py - 2} L${cx + 12},${py + 6} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
 
-  // Labels
-  svg += `<text x="${W / 2}" y="${szT - 10}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
+  svg += `<text x="${W / 2}" y="${gridT - 6}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
 
-  // Color scale legend
-  const lx = szR + 8, ly = szInT, lh = szInB - szInT
-  for (let i = 0; i < 20; i++) {
-    const t = i / 19
-    let r, g, b
-    if (t < 0.35) { const s = t / 0.35; r = Math.round(20 + s * 40); g = Math.round(60 + s * 60); b = Math.round(180 + s * 40) }
-    else if (t < 0.65) { const s = (t - 0.35) / 0.3; r = Math.round(60 + s * 190); g = Math.round(120 + s * 80); b = Math.round(220 - s * 180) }
-    else { const s = (t - 0.65) / 0.35; r = 250; g = Math.round(200 - s * 160); b = Math.round(40 - s * 30) }
-    svg += `<rect x="${lx}" y="${ly + lh - (i + 1) * (lh / 20)}" width="8" height="${lh / 20 + 0.5}" fill="rgb(${r},${g},${b})" opacity="0.8"/>`
-  }
-  svg += `<text x="${lx + 4}" y="${ly - 4}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">${maxCount}</text>`
-  svg += `<text x="${lx + 4}" y="${ly + lh + 10}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">0</text>`
+  // Legend
+  svg += `<text x="${W / 2}" y="${H - 6}" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle" font-family="Inter">Green = high BA &nbsp; Red = low BA</text>`
 
   svg += '</svg>'
 
+  const totalABs = abs.flat().reduce((a, b) => a + b, 0)
+  const totalHits = hits.flat().reduce((a, b) => a + b, 0)
+  const overallBA = totalABs > 0 ? (totalHits / totalABs).toFixed(3) : '.000'
+
   el.innerHTML = `
-    ${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}
+    ${_vaPlayerToggle(_getVaBatterList(), 'Batters')}
     <div class="va-chart-section">
-      <div class="adv-section-title">Pitch Location Heat Map (Last ${_vaGameCount} Games)</div>
-      <div class="adv-chart-wrap">${allPitches.length > 0 ? svg : '<div class="va-loading">No pitch data available.</div>'}</div>
-      <div class="va-chart-meta">${allPitches.length} pitches mapped</div>
+      <div class="adv-section-title">Hot / Cold Zone — Batting Average (Last ${_vaGameCount} Games)</div>
+      <div class="adv-chart-wrap">${totalABs > 0 ? svg : '<div class="va-loading">No at-bat data available.</div>'}</div>
+      <div class="va-chart-meta">Overall: ${overallBA} (${totalHits}-for-${totalABs})</div>
     </div>`
 }
 
