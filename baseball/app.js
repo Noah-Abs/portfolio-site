@@ -2371,8 +2371,11 @@ function renderVaSpray(el) {
 function renderVaHeatmap(el) {
   const allPitches = _vaData.pitches.filter(p => _vaPlayerFilter ? (p.pitcherId == _vaPlayerFilter || p.batterId == _vaPlayerFilter) : p.isMyPitcher)
 
-  const zoneLeft = -1.8, zoneRight = 1.8, zoneBot = 0.8, zoneTop = 4.2
-  const GRID = 7
+  // Use the rule-book zone for the grid, with padding outside for chase pitches
+  const szXMin = -0.83, szXMax = 0.83, szZMin = 1.5, szZMax = 3.5
+  const padX = 0.9, padZ = 0.8
+  const zoneLeft = szXMin - padX, zoneRight = szXMax + padX, zoneBot = szZMin - padZ, zoneTop = szZMax + padZ
+  const GRID = 9
   const cellW = (zoneRight - zoneLeft) / GRID
   const cellH = (zoneTop - zoneBot) / GRID
   const grid = Array.from({ length: GRID }, () => Array(GRID).fill(0))
@@ -2384,35 +2387,85 @@ function renderVaHeatmap(el) {
   }
   const maxCount = Math.max(1, ...grid.flat())
 
-  const W = 340, H = 380, PAD = 50
-  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD
+  const W = 380, H = 440, PAD = 55
+  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD - 30
 
-  let svg = `<svg class="va-chart-svg" viewBox="0 0 ${W} ${H}" style="max-width:400px;margin:0 auto">`
-  // Strike zone outline (inner box)
-  const szInL = szL + (szR - szL) * ((-0.83 - zoneLeft) / (zoneRight - zoneLeft))
-  const szInR = szL + (szR - szL) * ((0.83 - zoneLeft) / (zoneRight - zoneLeft))
-  const szInT = szT + (szB - szT) * ((zoneTop - 3.5) / (zoneTop - zoneBot))
-  const szInB = szT + (szB - szT) * ((zoneTop - 1.5) / (zoneTop - zoneBot))
-  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4"/>`
+  // Strike zone pixel coords
+  const szInL = szL + (szR - szL) * ((szXMin - zoneLeft) / (zoneRight - zoneLeft))
+  const szInR = szL + (szR - szL) * ((szXMax - zoneLeft) / (zoneRight - zoneLeft))
+  const szInT = szT + (szB - szT) * ((zoneTop - szZMax) / (zoneTop - zoneBot))
+  const szInB = szT + (szB - szT) * ((zoneTop - szZMin) / (zoneTop - zoneBot))
 
+  let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
+  // Defs: blur filter for smooth heat
+  svg += `<defs><filter id="hm-blur"><feGaussianBlur in="SourceGraphic" stdDeviation="4"/></filter></defs>`
+  // Dark background behind zone
+  svg += `<rect x="${szL}" y="${szT}" width="${szR - szL}" height="${szB - szT}" rx="4" fill="rgba(0,0,0,0.3)"/>`
+
+  // Heat cells (blurred layer)
+  svg += `<g filter="url(#hm-blur)">`
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID; c++) {
       const intensity = grid[r][c] / maxCount
-      if (intensity < 0.02) continue
+      if (intensity < 0.015) continue
       const x = szL + (c / GRID) * (szR - szL)
       const y = szT + (r / GRID) * (szB - szT)
       const w = (szR - szL) / GRID
       const h = (szB - szT) / GRID
-      const red = Math.round(40 + intensity * 200)
-      const green = Math.round(60 * (1 - intensity * 0.7))
-      const blue = Math.round(180 * (1 - intensity) + 30)
-      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.12 + intensity * 0.55})" rx="3"><title>${grid[r][c]} pitches</title></rect>`
+      // Cool blue → warm yellow → hot red
+      let red, green, blue
+      if (intensity < 0.35) { const t = intensity / 0.35; red = Math.round(20 + t * 40); green = Math.round(60 + t * 60); blue = Math.round(180 + t * 40) }
+      else if (intensity < 0.65) { const t = (intensity - 0.35) / 0.3; red = Math.round(60 + t * 190); green = Math.round(120 + t * 80); blue = Math.round(220 - t * 180) }
+      else { const t = (intensity - 0.65) / 0.35; red = Math.round(250); green = Math.round(200 - t * 160); blue = Math.round(40 - t * 30) }
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.15 + intensity * 0.7})"/>`
+    }
+  }
+  svg += '</g>'
+
+  // Sharp count cells on top (subtle)
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID; c++) {
+      if (grid[r][c] === 0) continue
+      const x = szL + (c / GRID) * (szR - szL)
+      const y = szT + (r / GRID) * (szB - szT)
+      const w = (szR - szL) / GRID
+      const h = (szB - szT) / GRID
+      const intensity = grid[r][c] / maxCount
+      if (intensity > 0.15) {
+        svg += `<text x="${x + w / 2}" y="${y + h / 2 + 3.5}" fill="rgba(255,255,255,${Math.min(0.3 + intensity * 0.6, 0.85)})" font-size="9" font-weight="600" text-anchor="middle" font-family="Inter">${grid[r][c]}</text>`
+      }
     }
   }
 
+  // Strike zone border (solid white)
+  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" rx="1"/>`
+  // 3x3 inner grid lines
+  const zW3 = (szInR - szInL) / 3, zH3 = (szInB - szInT) / 3
+  for (let i = 1; i < 3; i++) {
+    svg += `<line x1="${szInL + zW3 * i}" y1="${szInT}" x2="${szInL + zW3 * i}" y2="${szInB}" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>`
+    svg += `<line x1="${szInL}" y1="${szInT + zH3 * i}" x2="${szInR}" y2="${szInT + zH3 * i}" stroke="rgba(255,255,255,0.2)" stroke-width="0.75"/>`
+  }
+
   // Home plate
-  svg += `<path d="M${W / 2 - 10},${szB + 20} L${W / 2 - 6},${szB + 15} L${W / 2 + 6},${szB + 15} L${W / 2 + 10},${szB + 20} L${W / 2},${szB + 26} Z" fill="rgba(255,255,255,0.15)"/>`
-  svg += `<text x="${W / 2}" y="${H - 4}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle" font-family="Inter">Catcher's Perspective</text>`
+  const cx = W / 2, py = szB + 16
+  svg += `<path d="M${cx},${py + 14} L${cx - 12},${py + 6} L${cx - 12},${py - 2} L${cx + 12},${py - 2} L${cx + 12},${py + 6} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
+
+  // Labels
+  svg += `<text x="${W / 2}" y="${szT - 10}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
+
+  // Color scale legend
+  const lx = szR + 8, ly = szInT, lh = szInB - szInT
+  for (let i = 0; i < 20; i++) {
+    const t = i / 19
+    let r, g, b
+    if (t < 0.35) { const s = t / 0.35; r = Math.round(20 + s * 40); g = Math.round(60 + s * 60); b = Math.round(180 + s * 40) }
+    else if (t < 0.65) { const s = (t - 0.35) / 0.3; r = Math.round(60 + s * 190); g = Math.round(120 + s * 80); b = Math.round(220 - s * 180) }
+    else { const s = (t - 0.65) / 0.35; r = 250; g = Math.round(200 - s * 160); b = Math.round(40 - s * 30) }
+    svg += `<rect x="${lx}" y="${ly + lh - (i + 1) * (lh / 20)}" width="8" height="${lh / 20 + 0.5}" fill="rgb(${r},${g},${b})" opacity="0.8"/>`
+  }
+  svg += `<text x="${lx + 4}" y="${ly - 4}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">${maxCount}</text>`
+  svg += `<text x="${lx + 4}" y="${ly + lh + 10}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">0</text>`
+
   svg += '</svg>'
 
   el.innerHTML = `
@@ -2640,8 +2693,11 @@ function renderVaVelocity(el) {
 function renderVaWhiff(el) {
   const allPitches = _vaData.pitches.filter(p => _vaPlayerFilter ? p.pitcherId == _vaPlayerFilter : p.isMyPitcher)
 
-  const zoneLeft = -1.8, zoneRight = 1.8, zoneBot = 0.8, zoneTop = 4.2
-  const GRID = 5
+  // Same zone geometry as heatmap
+  const szXMin = -0.83, szXMax = 0.83, szZMin = 1.5, szZMax = 3.5
+  const padX = 0.9, padZ = 0.8
+  const zoneLeft = szXMin - padX, zoneRight = szXMax + padX, zoneBot = szZMin - padZ, zoneTop = szZMax + padZ
+  const GRID = 7
   const cellW = (zoneRight - zoneLeft) / GRID
   const cellH = (zoneTop - zoneBot) / GRID
   const swings = Array.from({ length: GRID }, () => Array(GRID).fill(0))
@@ -2658,32 +2714,70 @@ function renderVaWhiff(el) {
     }
   }
 
-  const W = 340, H = 380, PAD = 50
-  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD
-  const szInL = szL + (szR - szL) * ((-0.83 - zoneLeft) / (zoneRight - zoneLeft))
-  const szInR = szL + (szR - szL) * ((0.83 - zoneLeft) / (zoneRight - zoneLeft))
-  const szInT = szT + (szB - szT) * ((zoneTop - 3.5) / (zoneTop - zoneBot))
-  const szInB = szT + (szB - szT) * ((zoneTop - 1.5) / (zoneTop - zoneBot))
+  const W = 380, H = 440, PAD = 55
+  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD - 30
 
-  let svg = `<svg class="va-chart-svg" viewBox="0 0 ${W} ${H}" style="max-width:400px;margin:0 auto">`
-  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4"/>`
+  // Strike zone pixel coords
+  const szInL = szL + (szR - szL) * ((szXMin - zoneLeft) / (zoneRight - zoneLeft))
+  const szInR = szL + (szR - szL) * ((szXMax - zoneLeft) / (zoneRight - zoneLeft))
+  const szInT = szT + (szB - szT) * ((zoneTop - szZMax) / (zoneTop - zoneBot))
+  const szInB = szT + (szB - szT) * ((zoneTop - szZMin) / (zoneTop - zoneBot))
 
+  let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
+  // Dark background
+  svg += `<rect x="${szL}" y="${szT}" width="${szR - szL}" height="${szB - szT}" rx="4" fill="rgba(0,0,0,0.3)"/>`
+
+  // Whiff rate cells with gaps
+  const gap = 1.5
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID; c++) {
       if (swings[r][c] < 2) continue
       const rate = whiffs[r][c] / swings[r][c]
-      const x = szL + (c / GRID) * (szR - szL)
-      const y = szT + (r / GRID) * (szB - szT)
-      const w = (szR - szL) / GRID
-      const h = (szB - szT) / GRID
-      const red = Math.round(50 + rate * 200)
-      const green = Math.round(180 * (1 - rate))
-      const blue = Math.round(60 * (1 - rate))
-      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.2 + rate * 0.5})" rx="3"/>`
-      svg += `<text x="${x + w / 2}" y="${y + h / 2 + 4}" fill="rgba(255,255,255,${0.4 + rate * 0.4})" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">${(rate * 100).toFixed(0)}%</text>`
+      const x = szL + (c / GRID) * (szR - szL) + gap
+      const y = szT + (r / GRID) * (szB - szT) + gap
+      const w = (szR - szL) / GRID - gap * 2
+      const h = (szB - szT) / GRID - gap * 2
+      // Green (low whiff) → Yellow (mid) → Red (high)
+      let red, green, blue
+      if (rate < 0.25) { const t = rate / 0.25; red = Math.round(30 + t * 80); green = Math.round(160 + t * 40); blue = Math.round(80 - t * 30) }
+      else if (rate < 0.5) { const t = (rate - 0.25) / 0.25; red = Math.round(110 + t * 140); green = Math.round(200 - t * 40); blue = Math.round(50 - t * 30) }
+      else { const t = Math.min((rate - 0.5) / 0.35, 1); red = Math.round(250); green = Math.round(160 - t * 130); blue = Math.round(20 + t * 10) }
+      const alpha = 0.25 + rate * 0.55
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${alpha})" rx="4"/>`
+      svg += `<text x="${x + w / 2}" y="${y + h / 2 + 1}" fill="rgba(255,255,255,${0.5 + rate * 0.4})" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Inter">${(rate * 100).toFixed(0)}%</text>`
+      svg += `<text x="${x + w / 2}" y="${y + h / 2 + 12}" fill="rgba(255,255,255,0.2)" font-size="7" text-anchor="middle" font-family="Inter">${swings[r][c]}</text>`
     }
   }
-  svg += `<text x="${W / 2}" y="${H - 4}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle" font-family="Inter">Whiff Rate by Zone \u00b7 Catcher's View</text>`
+
+  // Strike zone border
+  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" rx="1"/>`
+  // 3x3 inner grid
+  const zW3 = (szInR - szInL) / 3, zH3 = (szInB - szInT) / 3
+  for (let i = 1; i < 3; i++) {
+    svg += `<line x1="${szInL + zW3 * i}" y1="${szInT}" x2="${szInL + zW3 * i}" y2="${szInB}" stroke="rgba(255,255,255,0.15)" stroke-width="0.75"/>`
+    svg += `<line x1="${szInL}" y1="${szInT + zH3 * i}" x2="${szInR}" y2="${szInT + zH3 * i}" stroke="rgba(255,255,255,0.15)" stroke-width="0.75"/>`
+  }
+
+  // Home plate
+  const cx = W / 2, py = szB + 16
+  svg += `<path d="M${cx},${py + 14} L${cx - 12},${py + 6} L${cx - 12},${py - 2} L${cx + 12},${py - 2} L${cx + 12},${py + 6} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
+
+  // Labels
+  svg += `<text x="${W / 2}" y="${szT - 10}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
+
+  // Color scale legend
+  const lx = szR + 8, ly = szInT, lh = szInB - szInT
+  for (let i = 0; i < 20; i++) {
+    const t = i / 19
+    let r, g, b
+    if (t < 0.25) { const s = t / 0.25; r = Math.round(30 + s * 80); g = Math.round(160 + s * 40); b = Math.round(80 - s * 30) }
+    else if (t < 0.5) { const s = (t - 0.25) / 0.25; r = Math.round(110 + s * 140); g = Math.round(200 - s * 40); b = Math.round(50 - s * 30) }
+    else { const s = Math.min((t - 0.5) / 0.35, 1); r = 250; g = Math.round(160 - s * 130); b = Math.round(20 + s * 10) }
+    svg += `<rect x="${lx}" y="${ly + lh - (i + 1) * (lh / 20)}" width="8" height="${lh / 20 + 0.5}" fill="rgb(${r},${g},${b})" opacity="0.8"/>`
+  }
+  svg += `<text x="${lx + 4}" y="${ly - 4}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">High</text>`
+  svg += `<text x="${lx + 4}" y="${ly + lh + 10}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">Low</text>`
+
   svg += '</svg>'
 
   const totalSwings = swings.flat().reduce((a, b) => a + b, 0)
@@ -2694,7 +2788,7 @@ function renderVaWhiff(el) {
     ${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}
     <div class="va-chart-section">
       <div class="adv-section-title">Strike Zone Whiff Map (Last ${_vaGameCount} Games)</div>
-      <div class="va-chart-desc">Swing-and-miss rate per zone. Red = high whiff rate, green = low. Min 2 swings per zone.</div>
+      <div class="va-chart-desc">Swing-and-miss rate per zone. Red = high whiff rate, green = low. Small numbers = swing count. Min 2 swings per zone.</div>
       <div class="adv-chart-wrap">${totalSwings > 0 ? svg : '<div class="va-loading">No swing data available.</div>'}</div>
       <div class="va-chart-meta">Overall whiff rate: ${overallRate}% (${totalWhiffs}/${totalSwings} swings)</div>
     </div>`
