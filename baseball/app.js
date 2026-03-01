@@ -692,8 +692,84 @@ async function fetchPlayerStatsOverlay(playerId, posType) {
       if (cp) { const g = pitGrid(cp); html += statSection('Career \u00b7 Pitching', g.primary, g.secondary) }
     }
     document.getElementById('po-stats').innerHTML = html || '<div class="pd-loading">No stats available</div>'
+
+    // Async: load radar chart from advanced data or sabermetrics
+    _loadPlayerRadar(playerId, posType)
   } catch (e) {
     document.getElementById('po-stats').innerHTML = '<div class="pd-loading">Could not load stats</div>'
+  }
+}
+
+async function _loadPlayerRadar(playerId, posType) {
+  try {
+    const isPit = posType === 'Pitcher'
+    const group = isPit ? 'pitching' : 'hitting'
+    const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[${group}],type=[season,sabermetrics,seasonAdvanced],season=${SEASON})`
+    const res = await fetch(url)
+    const data = await res.json()
+    const p = data.people?.[0]
+    if (!p?.stats) return
+
+    const _s = (type, grp) => p.stats.find(s => s.type?.displayName === type && s.group?.displayName === grp)?.splits?.[0]?.stat || {}
+    const season = _s('season', group)
+    const saber = _s('sabermetrics', group)
+    const adv = _s('seasonAdvanced', group)
+
+    const playerData = isPit
+      ? { k9: +adv.strikeoutsPer9Inn || 0, bb9: +adv.walksPer9Inn || 0, strikePct: +adv.strikePercentage || 0, ip: parseFloat(season.inningsPitched) || 0, war: +saber.war || 0 }
+      : {
+          iso: +adv.iso || 0, kPct: +adv.strikeoutsPerPlateAppearance || 0,
+          bbPct: +adv.walksPerPlateAppearance || 0, spd: +saber.spd || 0,
+          war: +saber.war || 0, fielding: +saber.fielding || 0
+        }
+
+    const radarSvg = buildRadarChart(playerData, group)
+    const statsEl = document.getElementById('po-stats')
+    if (statsEl) {
+      const paceHtml = _buildPaceProjection(season, group)
+      statsEl.insertAdjacentHTML('beforeend', `
+        <div class="pd-section">
+          <div class="pd-section-title">Player Profile</div>
+          <div class="po-radar-wrap">${radarSvg}</div>
+        </div>
+        ${paceHtml}
+      `)
+    }
+  } catch {}
+}
+
+function _buildPaceProjection(season, group) {
+  const g = +season.gamesPlayed || 0
+  if (g < 5) return ''
+  const pace = v => Math.round(v / g * 162)
+  if (group === 'hitting') {
+    const items = [
+      { lbl: 'HR', val: pace(+season.homeRuns || 0) },
+      { lbl: 'RBI', val: pace(+season.rbi || 0) },
+      { lbl: 'Runs', val: pace(+season.runs || 0) },
+      { lbl: 'SB', val: pace(+season.stolenBases || 0) },
+      { lbl: 'Hits', val: pace(+season.hits || 0) },
+      { lbl: 'BB', val: pace(+season.baseOnBalls || 0) },
+    ]
+    return `<div class="pd-section">
+      <div class="pd-section-title">162-Game Pace</div>
+      <div class="pd-stat-grid">${items.map(i => pdStat(i.val, i.lbl)).join('')}</div>
+    </div>`
+  } else {
+    const ip = parseFloat(season.inningsPitched) || 0
+    const gs = +season.gamesStarted || 0
+    const starts162 = gs > 0 ? Math.round(gs / g * 162) : 0
+    const ipPace = gs > 0 ? Math.round(ip / gs * starts162) : Math.round(ip / g * 162)
+    const items = [
+      { lbl: 'IP', val: ipPace },
+      { lbl: 'K', val: pace(+season.strikeOuts || 0) },
+      { lbl: 'W', val: pace(+season.wins || 0) },
+      { lbl: 'Starts', val: starts162 },
+    ]
+    return `<div class="pd-section">
+      <div class="pd-section-title">162-Game Pace</div>
+      <div class="pd-stat-grid">${items.map(i => pdStat(i.val, i.lbl)).join('')}</div>
+    </div>`
   }
 }
 
@@ -777,7 +853,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings', 'advanced']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -789,6 +865,7 @@ function switchView(view) {
   if (view === 'breakdown') loadBreakdownView()
   if (view === 'prospects') loadProspects()
   if (view === 'settings') renderSettingsTeams()
+  if (view === 'advanced') loadAdvancedStats()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
   })
@@ -1583,6 +1660,576 @@ async function sendAiMessage() {
   _saiStreaming = false
   document.getElementById('sai-send')?.classList.remove('sai-loading')
   _renderSaiMessages()
+}
+
+/* ══════════════════════════════════════════════
+   ADVANCED STATS DASHBOARD
+   ══════════════════════════════════════════════ */
+
+let _advData = null   // { hitters, pitchers, overview }
+let _advLoaded = false
+let _advTab = 'overview'
+let _advSortCol = 'war'
+let _advSortAsc = false
+let _advFilter = 'all' // all, vl, vr, h, a
+let _advSplitsCache = {}
+let _advGameLogCache = {}
+
+async function loadAdvancedStats() {
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!team) return
+  document.getElementById('adv-page-sub').textContent = `${team.name} · ${SEASON} Season`
+
+  if (_advLoaded) {
+    _renderAdvTab()
+    return
+  }
+
+  const el = document.getElementById('adv-content')
+  el.innerHTML = '<div class="adv-loading">Loading advanced stats\u2026</div>'
+
+  try {
+    const [roster, overview] = await Promise.all([
+      fetchAdvancedRoster(team.id),
+      fetchAdvancedTeamOverview(team.id),
+    ])
+    _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview }
+    _advLoaded = true
+    _renderAdvTab()
+  } catch (e) {
+    el.innerHTML = `<div class="adv-loading">Error loading stats: ${e.message}</div>`
+  }
+}
+
+function switchAdvTab(tab) {
+  _advTab = tab
+  document.querySelectorAll('.adv-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  _renderAdvTab()
+}
+
+function _renderAdvTab() {
+  const el = document.getElementById('adv-content')
+  if (!_advData) return
+  switch (_advTab) {
+    case 'overview':  renderAdvOverview(el); break
+    case 'hitting':   renderAdvHitting(el); break
+    case 'pitching':  renderAdvPitching(el); break
+    case 'charts':    renderAdvCharts(el); break
+    case 'value':     renderAdvValue(el); break
+  }
+}
+
+/* ── Overview Tab ── */
+function renderAdvOverview(el) {
+  const o = _advData.overview
+  const h = o.teamHit, p = o.teamPit
+  const rk = o.ranks
+
+  function card(label, val, rank, suffix = '') {
+    if (rank === '' || rank === undefined) {
+      return `<div class="adv-stat-card">
+        <div class="adv-stat-val">${val}${suffix}</div>
+        <div class="adv-stat-label">${label}</div>
+      </div>`
+    }
+    const rkColor = rank <= 5 ? 'adv-rank-elite' : rank <= 10 ? 'adv-rank-good' : rank <= 20 ? 'adv-rank-mid' : 'adv-rank-bad'
+    return `<div class="adv-stat-card">
+      <div class="adv-stat-val">${val}${suffix}</div>
+      <div class="adv-stat-label">${label}</div>
+      <span class="adv-rank ${rkColor}">#${rank} MLB</span>
+    </div>`
+  }
+
+  const teamPA = +h.plateAppearances || 1
+  const kPct = ((+h.strikeOuts || 0) / teamPA * 100).toFixed(1)
+  const bbPct = ((+h.baseOnBalls || 0) / teamPA * 100).toFixed(1)
+
+  el.innerHTML = `
+    <div class="adv-section-title">Team Overview</div>
+    <div class="adv-overview-grid">
+      ${card('Team AVG', h.avg || '.000', rk.avg)}
+      ${card('Team OPS', h.ops || '.000', rk.ops)}
+      ${card('Home Runs', h.homeRuns || 0, rk.hr)}
+      ${card('Runs Scored', h.runs || 0, rk.runs)}
+      ${card('Team ERA', p.era || '0.00', rk.era)}
+      ${card('Team WHIP', p.whip || '0.00', rk.whip)}
+      ${card('Strikeouts', p.strikeOuts || 0, rk.k)}
+      ${card('Run Differential', (o.runDiff >= 0 ? '+' : '') + o.runDiff, '')}
+      ${card('Pythagorean Record', o.pythRecord, '')}
+    </div>
+
+    <div class="adv-section-title" style="margin-top:2rem">Rate Stats</div>
+    <div class="adv-overview-grid adv-grid-4">
+      <div class="adv-stat-card">
+        <div class="adv-stat-val">${kPct}%</div>
+        <div class="adv-stat-label">K%</div>
+      </div>
+      <div class="adv-stat-card">
+        <div class="adv-stat-val">${bbPct}%</div>
+        <div class="adv-stat-label">BB%</div>
+      </div>
+      <div class="adv-stat-card">
+        <div class="adv-stat-val">${o.kbbPct}%</div>
+        <div class="adv-stat-label">K-BB%</div>
+      </div>
+      <div class="adv-stat-card">
+        <div class="adv-stat-val">${h.babip || '.000'}</div>
+        <div class="adv-stat-label">BABIP</div>
+      </div>
+    </div>
+
+    <div class="adv-section-title" style="margin-top:2rem">Run Production</div>
+    <div class="adv-era-compare">
+      <div class="adv-era-side">
+        <div class="adv-era-val">${o.runsScored}</div>
+        <div class="adv-era-lbl">Runs Scored</div>
+      </div>
+      <div class="adv-era-bar-wrap">
+        <div class="adv-era-bar adv-era-bar-scored" style="width:${o.runsScored / Math.max(o.runsScored, o.runsAllowed, 1) * 100}%"></div>
+        <div class="adv-era-bar adv-era-bar-allowed" style="width:${o.runsAllowed / Math.max(o.runsScored, o.runsAllowed, 1) * 100}%"></div>
+      </div>
+      <div class="adv-era-side">
+        <div class="adv-era-val">${o.runsAllowed}</div>
+        <div class="adv-era-lbl">Runs Allowed</div>
+      </div>
+    </div>
+  `
+}
+
+/* ── Hitting Tab ── */
+function renderAdvHitting(el) {
+  const rows = _advData.hitters.sort((a, b) => {
+    if (_advSortCol === 'name') return _advSortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
+  })
+
+  const cols = [
+    { key: 'name', label: 'Player', fmt: v => v },
+    { key: 'pa', label: 'PA', fmt: v => v },
+    { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+    { key: 'wrc', label: 'wRC+', fmt: v => Math.round(v) },
+    { key: 'woba', label: 'wOBA', fmt: v => v.toFixed(3) },
+    { key: 'ops', label: 'OPS', fmt: v => v.toFixed(3) },
+    { key: 'avg', label: 'AVG', fmt: v => v.toFixed(3) },
+    { key: 'slg', label: 'SLG', fmt: v => v.toFixed(3) },
+    { key: 'iso', label: 'ISO', fmt: v => v.toFixed(3) },
+    { key: 'babip', label: 'BABIP', fmt: v => v.toFixed(3) },
+    { key: 'kPct', label: 'K%', fmt: v => (v * 100).toFixed(1) + '%' },
+    { key: 'bbPct', label: 'BB%', fmt: v => (v * 100).toFixed(1) + '%' },
+    { key: 'hr', label: 'HR', fmt: v => v },
+    { key: 'sb', label: 'SB', fmt: v => v },
+    { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+    { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+  ]
+
+  el.innerHTML = `
+    <div class="adv-filter-bar">
+      <button class="adv-filter-pill ${_advFilter === 'all' ? 'active' : ''}" onclick="setAdvFilter('all')">All</button>
+      <button class="adv-filter-pill ${_advFilter === 'vl' ? 'active' : ''}" onclick="setAdvFilter('vl')">vs LHP</button>
+      <button class="adv-filter-pill ${_advFilter === 'vr' ? 'active' : ''}" onclick="setAdvFilter('vr')">vs RHP</button>
+      <button class="adv-filter-pill ${_advFilter === 'h' ? 'active' : ''}" onclick="setAdvFilter('h')">Home</button>
+      <button class="adv-filter-pill ${_advFilter === 'a' ? 'active' : ''}" onclick="setAdvFilter('a')">Away</button>
+    </div>
+    <div class="adv-table-wrap">
+      <table class="adv-table">
+        <thead><tr>
+          ${cols.map(c => {
+            const arrow = _advSortCol === c.key ? (_advSortAsc ? ' ↑' : ' ↓') : ''
+            return `<th class="${c.key === 'name' ? 'adv-th-name' : 'adv-th-num'}" onclick="advSort('${c.key}')">${c.label}${arrow}</th>`
+          }).join('')}
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr>
+            ${cols.map(c => {
+              const v = r[c.key]
+              const cls = c.key === 'name' ? 'adv-td-name' : 'adv-td-num'
+              let color = ''
+              if (c.key === 'war') color = v >= 4 ? ' adv-cell-elite' : v >= 2 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
+              if (c.key === 'wrc') color = v >= 130 ? ' adv-cell-elite' : v >= 100 ? ' adv-cell-good' : v < 80 ? ' adv-cell-bad' : ''
+              if (c.key === 'woba') color = v >= .370 ? ' adv-cell-elite' : v >= .320 ? ' adv-cell-good' : v < .290 ? ' adv-cell-bad' : ''
+              return `<td class="${cls}${color}">${c.fmt(v)}</td>`
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `
+}
+
+function advSort(col) {
+  if (_advSortCol === col) _advSortAsc = !_advSortAsc
+  else { _advSortCol = col; _advSortAsc = col === 'name' }
+  _renderAdvTab()
+}
+
+async function setAdvFilter(f) {
+  _advFilter = f
+  if (f === 'all') {
+    _renderAdvTab()
+    return
+  }
+  // Fetch splits for all players if not cached
+  const el = document.getElementById('adv-content')
+  const group = _advTab === 'pitching' ? 'pitching' : 'hitting'
+  const players = _advTab === 'pitching' ? _advData.pitchers : _advData.hitters
+  const uncached = players.filter(p => !_advSplitsCache[`${p.id}_${group}_${f}`])
+
+  if (uncached.length > 0) {
+    el.insertAdjacentHTML('afterbegin', '<div class="adv-loading adv-loading-overlay">Loading splits\u2026</div>')
+    const batches = []
+    for (let i = 0; i < uncached.length; i += 5) batches.push(uncached.slice(i, i + 5))
+    for (const batch of batches) {
+      await Promise.all(batch.map(async p => {
+        try {
+          const splits = await fetchPlayerSplits(p.id, group)
+          for (const code of Object.keys(splits)) {
+            _advSplitsCache[`${p.id}_${group}_${code}`] = splits[code]
+          }
+        } catch {}
+      }))
+    }
+    document.querySelector('.adv-loading-overlay')?.remove()
+  }
+
+  // Apply split data over the base stats
+  for (const p of players) {
+    const split = _advSplitsCache[`${p.id}_${group}_${f}`]
+    if (split) {
+      if (group === 'hitting') {
+        p.avg = +split.avg || 0; p.obp = +split.obp || 0; p.slg = +split.slg || 0
+        p.ops = +split.ops || 0; p.hr = +split.homeRuns || 0; p.k = +split.strikeOuts || 0
+        p.bb = +split.baseOnBalls || 0; p.pa = +split.plateAppearances || 0
+        p.babip = +split.babip || 0
+        if (p.pa > 0) {
+          p.kPct = p.k / p.pa; p.bbPct = p.bb / p.pa
+          p.iso = p.slg - p.avg
+        }
+      } else {
+        p.era = +split.era || 0; p.whip = +split.whip || 0
+        p.ip = parseFloat(split.inningsPitched) || 0
+        p.k = +split.strikeOuts || 0; p.bb = +split.baseOnBalls || 0
+        p.wl = `${split.wins || 0}-${split.losses || 0}`
+      }
+    }
+  }
+  _renderAdvTab()
+}
+
+/* ── Pitching Tab ── */
+function renderAdvPitching(el) {
+  const rows = _advData.pitchers.sort((a, b) => {
+    if (_advSortCol === 'name' || _advSortCol === 'wl') {
+      const av = String(a[_advSortCol]), bv = String(b[_advSortCol])
+      return _advSortAsc ? av.localeCompare(bv) : bv.localeCompare(av)
+    }
+    return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
+  })
+
+  const cols = [
+    { key: 'name', label: 'Player', fmt: v => v },
+    { key: 'ip', label: 'IP', fmt: v => v.toFixed(1) },
+    { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+    { key: 'era', label: 'ERA', fmt: v => v.toFixed(2) },
+    { key: 'fip', label: 'FIP', fmt: v => v.toFixed(2) },
+    { key: 'xfip', label: 'xFIP', fmt: v => v.toFixed(2) },
+    { key: 'whip', label: 'WHIP', fmt: v => v.toFixed(2) },
+    { key: 'k9', label: 'K/9', fmt: v => v.toFixed(1) },
+    { key: 'bb9', label: 'BB/9', fmt: v => v.toFixed(1) },
+    { key: 'kbbPct', label: 'K-BB%', fmt: v => (v * 100).toFixed(1) + '%' },
+    { key: 'babip', label: 'BABIP', fmt: v => v.toFixed(3) },
+    { key: 'hr9', label: 'HR/9', fmt: v => v.toFixed(2) },
+    { key: 'wl', label: 'W-L', fmt: v => v },
+  ]
+
+  el.innerHTML = `
+    <div class="adv-filter-bar">
+      <button class="adv-filter-pill ${_advFilter === 'all' ? 'active' : ''}" onclick="setAdvFilter('all')">All</button>
+      <button class="adv-filter-pill ${_advFilter === 'vl' ? 'active' : ''}" onclick="setAdvFilter('vl')">vs LHB</button>
+      <button class="adv-filter-pill ${_advFilter === 'vr' ? 'active' : ''}" onclick="setAdvFilter('vr')">vs RHB</button>
+      <button class="adv-filter-pill ${_advFilter === 'h' ? 'active' : ''}" onclick="setAdvFilter('h')">Home</button>
+      <button class="adv-filter-pill ${_advFilter === 'a' ? 'active' : ''}" onclick="setAdvFilter('a')">Away</button>
+    </div>
+    <div class="adv-table-wrap">
+      <table class="adv-table">
+        <thead><tr>
+          ${cols.map(c => {
+            const arrow = _advSortCol === c.key ? (_advSortAsc ? ' ↑' : ' ↓') : ''
+            return `<th class="${c.key === 'name' ? 'adv-th-name' : 'adv-th-num'}" onclick="advSort('${c.key}')">${c.label}${arrow}</th>`
+          }).join('')}
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `<tr>
+            ${cols.map(c => {
+              const v = r[c.key]
+              const cls = c.key === 'name' ? 'adv-td-name' : 'adv-td-num'
+              let color = ''
+              if (c.key === 'war') color = v >= 3 ? ' adv-cell-elite' : v >= 1.5 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
+              if (c.key === 'era') color = v <= 2.50 ? ' adv-cell-elite' : v <= 3.50 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
+              if (c.key === 'fip') color = v <= 3.00 ? ' adv-cell-elite' : v <= 3.80 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
+              return `<td class="${cls}${color}">${c.fmt(v)}</td>`
+            }).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `
+}
+
+/* ── Charts Tab ── */
+async function renderAdvCharts(el) {
+  el.innerHTML = '<div class="adv-loading">Loading chart data\u2026</div>'
+
+  // Get top 5 hitters by WAR for rolling OPS
+  const topHitters = [..._advData.hitters].sort((a, b) => b.war - a.war).slice(0, 5)
+  const topPitchers = [..._advData.pitchers].sort((a, b) => b.war - a.war).slice(0, 5)
+
+  // Fetch game logs
+  const [hitLogs, pitLogs] = await Promise.all([
+    Promise.all(topHitters.map(async p => {
+      if (!_advGameLogCache[`${p.id}_hit`]) _advGameLogCache[`${p.id}_hit`] = await fetchPlayerGameLog(p.id, 'hitting')
+      return { name: p.name, logs: _advGameLogCache[`${p.id}_hit`] }
+    })),
+    Promise.all(topPitchers.map(async p => {
+      if (!_advGameLogCache[`${p.id}_pit`]) _advGameLogCache[`${p.id}_pit`] = await fetchPlayerGameLog(p.id, 'pitching')
+      return { name: p.name, logs: _advGameLogCache[`${p.id}_pit`] }
+    })),
+  ])
+
+  const chartColors = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8']
+
+  // Rolling 15-game OPS chart
+  function rollingOps(logs, window = 15) {
+    const pts = []
+    for (let i = window - 1; i < logs.length; i++) {
+      let ab = 0, h = 0, bb = 0, hbp = 0, sf = 0, tb = 0, pa = 0
+      for (let j = i - window + 1; j <= i; j++) {
+        const s = logs[j].stat
+        ab += +s.atBats || 0; h += +s.hits || 0; bb += +s.baseOnBalls || 0
+        hbp += +s.hitByPitch || 0; sf += +s.sacFlies || 0; tb += +s.totalBases || 0
+        pa += +s.plateAppearances || 0
+      }
+      const obp = pa > 0 ? (h + bb + hbp) / pa : 0
+      const slg = ab > 0 ? tb / ab : 0
+      pts.push(obp + slg)
+    }
+    return pts
+  }
+
+  // Build OPS SVG
+  const W = 700, H = 200, PAD = 40
+  let opsSvg = ''
+  let maxPts = 0
+  const opsData = hitLogs.map(h => {
+    const pts = rollingOps(h.logs)
+    maxPts = Math.max(maxPts, pts.length)
+    return { name: h.name, pts }
+  })
+
+  if (maxPts > 0) {
+    let maxOps = 0, minOps = 2
+    opsData.forEach(d => d.pts.forEach(v => { maxOps = Math.max(maxOps, v); minOps = Math.min(minOps, v) }))
+    const range = Math.max(maxOps - minOps, 0.1)
+
+    // Grid lines
+    opsSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+    for (let i = 0; i <= 4; i++) {
+      const y = PAD + (H - PAD * 2) * i / 4
+      const val = (maxOps - range * i / 4).toFixed(3)
+      opsSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
+      opsSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+    }
+
+    // Lines
+    opsData.forEach((d, ci) => {
+      if (d.pts.length < 2) return
+      const path = d.pts.map((v, i) => {
+        const x = PAD + (W - PAD - 10) * i / (maxPts - 1)
+        const y = PAD + (H - PAD * 2) * (1 - (v - minOps) / range)
+        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+      }).join(' ')
+      opsSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+    })
+    opsSvg += `</svg>`
+  }
+
+  // Rolling ERA chart for pitchers
+  function rollingEra(logs, window = 5) {
+    const pts = []
+    for (let i = window - 1; i < logs.length; i++) {
+      let ip = 0, er = 0
+      for (let j = i - window + 1; j <= i; j++) {
+        const s = logs[j].stat
+        ip += parseFloat(s.inningsPitched) || 0
+        er += +s.earnedRuns || 0
+      }
+      pts.push(ip > 0 ? (er / ip) * 9 : 0)
+    }
+    return pts
+  }
+
+  let eraSvg = ''
+  let maxEraPts = 0
+  const eraData = pitLogs.map(p => {
+    const pts = rollingEra(p.logs)
+    maxEraPts = Math.max(maxEraPts, pts.length)
+    return { name: p.name, pts }
+  })
+
+  if (maxEraPts > 0) {
+    let maxEra = 0, minEra = 20
+    eraData.forEach(d => d.pts.forEach(v => { maxEra = Math.max(maxEra, v); minEra = Math.min(minEra, v) }))
+    minEra = Math.max(0, minEra - 0.5)
+    maxEra += 0.5
+    const range = Math.max(maxEra - minEra, 0.5)
+
+    eraSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+    for (let i = 0; i <= 4; i++) {
+      const y = PAD + (H - PAD * 2) * i / 4
+      const val = (maxEra - range * i / 4).toFixed(2)
+      eraSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
+      eraSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+    }
+    eraData.forEach((d, ci) => {
+      if (d.pts.length < 2) return
+      const path = d.pts.map((v, i) => {
+        const x = PAD + (W - PAD - 10) * i / (maxEraPts - 1)
+        const y = PAD + (H - PAD * 2) * ((v - minEra) / range)
+        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+      }).join(' ')
+      eraSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+    })
+    eraSvg += `</svg>`
+  }
+
+  function legendHtml(data) {
+    return `<div class="adv-chart-legend">${data.map((d, i) =>
+      `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${chartColors[i]}"></span>${d.name.split(' ').pop()}</span>`
+    ).join('')}</div>`
+  }
+
+  el.innerHTML = `
+    <div class="adv-chart-section">
+      <div class="adv-section-title">Rolling 15-Game OPS (Top 5 by WAR)</div>
+      ${legendHtml(opsData)}
+      <div class="adv-chart-wrap">${opsSvg || '<div class="adv-loading">No data available</div>'}</div>
+    </div>
+    <div class="adv-chart-section">
+      <div class="adv-section-title">Rolling 5-Start ERA (Top 5 by WAR)</div>
+      ${legendHtml(eraData)}
+      <div class="adv-chart-wrap">${eraSvg || '<div class="adv-loading">No data available</div>'}</div>
+    </div>
+  `
+}
+
+/* ── Value Tab ── */
+async function renderAdvValue(el) {
+  const contractData = typeof CONTRACTS !== 'undefined' ? CONTRACTS[_currentTeamKey] : null
+
+  const players = [..._advData.hitters, ..._advData.pitchers]
+  // Deduplicate by id
+  const seen = new Set()
+  const unique = players.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true })
+
+  // Match with contract data
+  const valued = unique.map(p => {
+    let aav = 0
+    if (contractData?.players) {
+      const match = contractData.players.find(c => c.id === p.id)
+      if (match) aav = match.aav || 0
+    }
+    const dollarPerWar = p.war > 0 && aav > 0 ? aav / p.war : null
+    return { ...p, aav, dollarPerWar }
+  }).filter(p => p.aav > 0 && p.war !== undefined)
+    .sort((a, b) => (a.dollarPerWar || Infinity) - (b.dollarPerWar || Infinity))
+
+  const fmtMoney = v => `$${v.toFixed(1)}M`
+
+  el.innerHTML = `
+    <div class="adv-section-title">Contract Value Efficiency</div>
+    <p class="adv-value-sub">Sorted by $ per WAR — lower is better value</p>
+    <div class="adv-table-wrap">
+      <table class="adv-table">
+        <thead><tr>
+          <th class="adv-th-name">Player</th>
+          <th class="adv-th-num">WAR</th>
+          <th class="adv-th-num">AAV</th>
+          <th class="adv-th-num">$/WAR</th>
+        </tr></thead>
+        <tbody>
+          ${valued.map(p => {
+            let color = ''
+            if (p.dollarPerWar !== null) {
+              color = p.dollarPerWar < 5e6 ? ' adv-cell-elite' : p.dollarPerWar < 10e6 ? ' adv-cell-good' : p.dollarPerWar > 20e6 ? ' adv-cell-bad' : ''
+            }
+            return `<tr>
+              <td class="adv-td-name">${p.name}</td>
+              <td class="adv-td-num">${p.war.toFixed(1)}</td>
+              <td class="adv-td-num">${fmtMoney(p.aav)}</td>
+              <td class="adv-td-num${color}">${p.dollarPerWar !== null ? fmtMoney(p.dollarPerWar) : '—'}</td>
+            </tr>`
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `
+}
+
+/* ── Radar Chart (Player Overlay Integration) ── */
+function buildRadarChart(player, group) {
+  const axes = group === 'pitching'
+    ? [
+        { label: 'Strikeouts', val: Math.min((player.k9 || 0) / 12 * 100, 100) },
+        { label: 'Control', val: Math.min((1 - Math.min((player.bb9 || 0) / 6, 1)) * 100, 100) },
+        { label: 'Ground Ball', val: Math.min(((player.strikePct || 0)) * 100 * 1.5, 100) },
+        { label: 'Durability', val: Math.min((player.ip || 0) / 200 * 100, 100) },
+        { label: 'WAR', val: Math.min((player.war || 0) / 6 * 100, 100) },
+      ]
+    : [
+        { label: 'Power', val: Math.min((player.iso || 0) / 0.300 * 100, 100) },
+        { label: 'Contact', val: Math.min((1 - (player.kPct || 0)) * 100 * 1.3, 100) },
+        { label: 'Discipline', val: Math.min((player.bbPct || 0) / 0.18 * 100, 100) },
+        { label: 'Speed', val: Math.min((player.spd || 0) / 10 * 100, 100) },
+        { label: 'WAR', val: Math.min((player.war || 0) / 8 * 100, 100) },
+      ]
+
+  const cx = 90, cy = 90, r = 70, n = axes.length
+  const angles = axes.map((_, i) => (Math.PI * 2 * i / n) - Math.PI / 2)
+
+  // Grid rings
+  let svg = `<svg class="po-radar-svg" viewBox="0 0 180 195">`
+  for (let ring = 1; ring <= 4; ring++) {
+    const rr = r * ring / 4
+    const pts = angles.map(a => `${cx + rr * Math.cos(a)},${cy + rr * Math.sin(a)}`).join(' ')
+    svg += `<polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>`
+  }
+
+  // Axis lines
+  for (const a of angles) {
+    svg += `<line x1="${cx}" y1="${cy}" x2="${cx + r * Math.cos(a)}" y2="${cy + r * Math.sin(a)}" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>`
+  }
+
+  // Data polygon
+  const dataPts = axes.map((ax, i) => {
+    const v = Math.max(ax.val, 0) / 100
+    return `${cx + r * v * Math.cos(angles[i])},${cy + r * v * Math.sin(angles[i])}`
+  }).join(' ')
+  svg += `<polygon points="${dataPts}" fill="rgba(0,120,255,0.15)" stroke="rgba(0,150,255,0.7)" stroke-width="1.5"/>`
+
+  // Dots + labels
+  axes.forEach((ax, i) => {
+    const v = Math.max(ax.val, 0) / 100
+    const dx = cx + r * v * Math.cos(angles[i])
+    const dy = cy + r * v * Math.sin(angles[i])
+    svg += `<circle cx="${dx}" cy="${dy}" r="3" fill="rgba(0,150,255,0.9)"/>`
+
+    const lx = cx + (r + 16) * Math.cos(angles[i])
+    const ly = cy + (r + 16) * Math.sin(angles[i])
+    const anchor = Math.abs(Math.cos(angles[i])) < 0.3 ? 'middle' : Math.cos(angles[i]) > 0 ? 'start' : 'end'
+    svg += `<text x="${lx}" y="${ly + 3}" fill="rgba(255,255,255,0.4)" font-size="8" font-family="Inter" text-anchor="${anchor}" font-weight="600">${ax.label}</text>`
+  })
+
+  svg += `</svg>`
+  return svg
 }
 
 /* Always start on home */

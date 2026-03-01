@@ -482,3 +482,173 @@ function timeAgo(iso) {
   if (mins < 1440) return `${Math.floor(mins / 60)}h ago`
   return `${Math.floor(mins / 1440)}d ago`
 }
+
+/* ══════════════════════════════════════════════
+   ADVANCED STATS API FUNCTIONS
+   ══════════════════════════════════════════════ */
+
+function _mlbRank(allTeams, statKey, teamId, asc = false) {
+  const sorted = [...allTeams].sort((a, b) =>
+    asc ? parseFloat(a.stat[statKey]) - parseFloat(b.stat[statKey])
+        : parseFloat(b.stat[statKey]) - parseFloat(a.stat[statKey])
+  )
+  const i = sorted.findIndex(s => s.team.id === teamId)
+  return i >= 0 ? i + 1 : 30
+}
+
+async function fetchAdvancedRoster(teamId) {
+  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${SEASON}&hydrate=person(stats(group=[hitting,pitching],type=[season,sabermetrics,seasonAdvanced,expectedStatistics],season=${SEASON}))`
+  const res = await fetch(url)
+  const data = await res.json()
+  const roster = data.roster || []
+
+  const hitters = []
+  const pitchers = []
+
+  for (const entry of roster) {
+    const p = entry.person
+    if (!p || !p.stats) continue
+    const pos = entry.position?.abbreviation || ''
+    const posType = entry.position?.type || ''
+
+    // Collect all stat groups into flat objects
+    const seasonHit = p.stats.find(s => s.type?.displayName === 'season' && s.group?.displayName === 'hitting')
+    const seasonPit = p.stats.find(s => s.type?.displayName === 'season' && s.group?.displayName === 'pitching')
+    const saberHit  = p.stats.find(s => s.type?.displayName === 'sabermetrics' && s.group?.displayName === 'hitting')
+    const saberPit  = p.stats.find(s => s.type?.displayName === 'sabermetrics' && s.group?.displayName === 'pitching')
+    const advHit    = p.stats.find(s => s.type?.displayName === 'seasonAdvanced' && s.group?.displayName === 'hitting')
+    const advPit    = p.stats.find(s => s.type?.displayName === 'seasonAdvanced' && s.group?.displayName === 'pitching')
+    const expHit    = p.stats.find(s => s.type?.displayName === 'expectedStatistics' && s.group?.displayName === 'hitting')
+
+    const _s = (group) => group?.splits?.[0]?.stat || {}
+
+    // Build hitter entry
+    if (seasonHit && _s(seasonHit).plateAppearances > 0 && (posType === 'Hitter' || posType === 'TwoWay' || (posType === 'Pitcher' && parseFloat(_s(seasonHit).plateAppearances) >= 30))) {
+      const s = _s(seasonHit), sb = _s(saberHit), adv = _s(advHit), exp = _s(expHit)
+      hitters.push({
+        id: p.id, name: p.fullName, pos,
+        pa: +s.plateAppearances || 0,
+        avg: +s.avg || 0, obp: +s.obp || 0, slg: +s.slg || 0, ops: +s.ops || 0,
+        hr: +s.homeRuns || 0, rbi: +s.rbi || 0, sb: +s.stolenBases || 0,
+        k: +s.strikeOuts || 0, bb: +s.baseOnBalls || 0, g: +s.gamesPlayed || 0,
+        war: +sb.war || 0, woba: +sb.woba || 0, wrc: +sb.wRcPlus || 0,
+        wRaa: +sb.wRaa || 0, spd: +sb.spd || 0,
+        fielding: +sb.fielding || 0, baseRunning: +sb.baseRunning || 0,
+        iso: +adv.iso || 0, babip: +adv.babip || 0,
+        kPct: +adv.strikeoutsPerPlateAppearance || 0,
+        bbPct: +adv.walksPerPlateAppearance || 0,
+        totalSwings: +adv.totalSwings || 0, swingAndMiss: +adv.swingAndMiss || 0,
+        xAvg: +exp.avg || 0, xSlg: +exp.slg || 0, xWoba: +exp.woba || 0,
+      })
+    }
+
+    // Build pitcher entry
+    if (seasonPit && _s(seasonPit).inningsPitched && parseFloat(_s(seasonPit).inningsPitched) > 0) {
+      const s = _s(seasonPit), sb = _s(saberPit), adv = _s(advPit)
+      pitchers.push({
+        id: p.id, name: p.fullName, pos,
+        g: +s.gamesPlayed || 0, gs: +s.gamesStarted || 0,
+        ip: parseFloat(s.inningsPitched) || 0,
+        era: +s.era || 0, whip: +s.whip || 0,
+        k: +s.strikeOuts || 0, bb: +s.baseOnBalls || 0,
+        h: +s.hits || 0, hr: +s.homeRuns || 0,
+        w: +s.wins || 0, l: +s.losses || 0, sv: +s.saves || 0,
+        bf: +s.battersFaced || 0,
+        war: +sb.war || 0, fip: +sb.fip || 0, xfip: +sb.xfip || 0,
+        babip: +(adv.babip) || 0,
+        k9: +(adv.strikeoutsPer9) || 0, bb9: +(adv.baseOnBallsPer9) || 0,
+        hr9: +(adv.homeRunsPer9) || 0,
+        kbbPct: +(adv.strikeoutsMinusWalksPercentage) || 0,
+        whiffPct: +(adv.whiffPercentage) || 0,
+        strikePct: +(adv.strikePercentage) || 0,
+        wl: `${s.wins || 0}-${s.losses || 0}`,
+      })
+    }
+  }
+
+  return { hitters, pitchers }
+}
+
+async function fetchAdvancedTeamOverview(teamId) {
+  // Fetch all 30 teams' hitting + pitching stats for MLB ranking
+  const [hitRes, pitRes] = await Promise.all([
+    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${SEASON}&sportId=1`).then(r => r.json()),
+    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=${SEASON}&sportId=1`).then(r => r.json()),
+  ])
+
+  const hitSplits = hitRes.stats?.[0]?.splits || []
+  const pitSplits = pitRes.stats?.[0]?.splits || []
+  const myHit = hitSplits.find(s => s.team.id === teamId)?.stat || {}
+  const myPit = pitSplits.find(s => s.team.id === teamId)?.stat || {}
+
+  // Compute run differential from schedule
+  let runsScored = 0, runsAllowed = 0, gamesPlayed = 0
+  if (typeof _allScheduleGames !== 'undefined' && _allScheduleGames.length > 0) {
+    for (const g of _allScheduleGames) {
+      if (g.result === 'W' || g.result === 'L') {
+        gamesPlayed++
+        const parts = g.score.split(/\D+/).map(Number)
+        if (g.homeAway === 'home') {
+          runsScored += parts[0] || 0; runsAllowed += parts[1] || 0
+        } else {
+          runsScored += parts[1] || 0; runsAllowed += parts[0] || 0
+        }
+      }
+    }
+  } else {
+    runsScored = +myHit.runs || 0
+    runsAllowed = +myPit.runs || 0
+    gamesPlayed = +myHit.gamesPlayed || 0
+  }
+
+  const runDiff = runsScored - runsAllowed
+  // Pythagorean record
+  const exp = 1.83
+  const pythPct = runsScored > 0 ? Math.pow(runsScored, exp) / (Math.pow(runsScored, exp) + Math.pow(runsAllowed || 1, exp)) : 0.5
+  const pythW = Math.round(pythPct * gamesPlayed)
+  const pythL = gamesPlayed - pythW
+
+  // K-BB%
+  const teamPA = +myHit.plateAppearances || 1
+  const teamKPct = (+myHit.strikeOuts || 0) / teamPA
+  const teamBBPct = (+myHit.baseOnBalls || 0) / teamPA
+
+  // MLB ranks (1-30)
+  const ranks = {
+    avg:  _mlbRank(hitSplits, 'avg', teamId),
+    ops:  _mlbRank(hitSplits, 'ops', teamId),
+    hr:   _mlbRank(hitSplits, 'homeRuns', teamId),
+    runs: _mlbRank(hitSplits, 'runs', teamId),
+    era:  _mlbRank(pitSplits, 'era', teamId, true),
+    whip: _mlbRank(pitSplits, 'whip', teamId, true),
+    k:    _mlbRank(pitSplits, 'strikeOuts', teamId),
+    opsAgainst: _mlbRank(pitSplits, 'ops', teamId, true),
+  }
+
+  return {
+    teamHit: myHit, teamPit: myPit, ranks,
+    runsScored, runsAllowed, runDiff, pythRecord: `${pythW}-${pythL}`,
+    kbbPct: ((teamKPct - teamBBPct) * 100).toFixed(1),
+    gamesPlayed,
+  }
+}
+
+async function fetchPlayerSplits(playerId, group) {
+  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=statSplits&group=${group}&season=${SEASON}&sitCodes=vl,vr,h,a`
+  const res = await fetch(url)
+  const data = await res.json()
+  const splits = data.stats?.[0]?.splits || []
+  const result = {}
+  for (const sp of splits) {
+    const code = sp.split?.code || ''
+    result[code] = sp.stat || {}
+  }
+  return result // { vl: {...}, vr: {...}, h: {...}, a: {...} }
+}
+
+async function fetchPlayerGameLog(playerId, group) {
+  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=${group}&season=${SEASON}`
+  const res = await fetch(url)
+  const data = await res.json()
+  return data.stats?.[0]?.splits || []
+}
