@@ -885,6 +885,11 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .po-radar-wrap { display: flex; justify-content: center; padding: 0.5rem 0; }
 .po-radar-svg { width: 180px; height: 195px; }
 
+/* Zone Chart (Player Overlay) */
+.po-zone-wrap { display: flex; justify-content: center; padding: 0.5rem 0; }
+.po-zone-wrap .va-zone-svg { max-width: 280px; }
+.po-zone-meta { font-size: 0.68rem; color: rgba(255,255,255,0.25); text-align: center; margin-top: 0.35rem; }
+
 /* Advanced Stats Responsive */
 @media (max-width: 700px) {
   .adv-wrap { padding: 1rem 0.75rem 3rem; }

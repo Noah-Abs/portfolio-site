@@ -8,6 +8,7 @@ let _mlbNewsArticles = []
 let _allScheduleGames = []
 let _filteredGames = []
 let rosterLoaded = false
+let _cachedRoster = null
 
 const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 
@@ -15,7 +16,7 @@ const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 function renderTeam(key) {
   const t = APP_TEAMS[key]
   if (!t) return
-  if (_currentTeamKey !== key) { _advData = null; _advDataOriginal = null; _advLoaded = false; _vaLoaded = false; _vaFeeds = null; _vaData = null; _advGameType = null }
+  if (_currentTeamKey !== key) { _advData = null; _advDataOriginal = null; _advLoaded = false; _vaLoaded = false; _vaFeeds = null; _vaData = null; _advGameType = null; _cachedRoster = null; rosterLoaded = false }
   _currentTeamKey = key
   document.body.dataset.team = key
   localStorage.setItem('selectedTeam', key)
@@ -572,10 +573,18 @@ async function loadRoster() {
   try {
     const teamId = APP_TEAMS[_currentTeamKey]?.id ?? 119
     const roster = await fetchRoster(teamId)
+    _cachedRoster = roster
     renderRoster(roster)
   } catch (e) {
     el.innerHTML = '<div class="roster-placeholder">Could not load roster</div>'
   }
+}
+
+async function _ensureRosterLoaded() {
+  if (_cachedRoster) return _cachedRoster
+  const teamId = APP_TEAMS[_currentTeamKey]?.id ?? 119
+  _cachedRoster = await fetchRoster(teamId)
+  return _cachedRoster
 }
 
 function renderRoster(roster) {
@@ -696,6 +705,7 @@ async function fetchPlayerStatsOverlay(playerId, posType) {
 
     // Async: load radar chart from advanced data or sabermetrics
     _loadPlayerRadar(playerId, posType)
+    _loadPlayerZoneChart(playerId, posType)
   } catch (e) {
     document.getElementById('po-stats').innerHTML = '<div class="pd-loading">Could not load stats</div>'
   }
@@ -736,6 +746,42 @@ async function _loadPlayerRadar(playerId, posType) {
         ${paceHtml}
       `)
     }
+  } catch {}
+}
+
+async function _loadPlayerZoneChart(playerId, posType) {
+  try {
+    const vaData = await _ensureVaDataLoaded()
+    if (!vaData) return
+    const statsEl = document.getElementById('po-stats')
+    if (!statsEl) return
+    const isPit = posType === 'Pitcher'
+    let zoneSvg, sectionTitle, meta
+
+    if (isPit) {
+      const pitcherPitches = vaData.pitches.filter(p => p.pitcherId == playerId)
+      if (pitcherPitches.length === 0) return
+      const result = _renderPitcherHeatmap(pitcherPitches, { width: 280, height: 320, compact: true })
+      zoneSvg = result.svg
+      sectionTitle = 'Pitch Location Density'
+      meta = `${result.totalPitches} pitches (last ${_vaGameCount} games)`
+    } else {
+      const batterPitches = vaData.pitches.filter(p => p.batterId == playerId)
+      if (batterPitches.length === 0) return
+      const result = _renderBatterZone(batterPitches, { width: 260, height: 270, compact: true })
+      zoneSvg = result.svg
+      sectionTitle = 'Hot Zone \u2014 Batting Average'
+      const overallBA = result.totalABs > 0 ? (result.totalHits / result.totalABs).toFixed(3) : '.000'
+      meta = `${overallBA} overall (${result.totalHits}-for-${result.totalABs}, last ${_vaGameCount} games)`
+    }
+
+    statsEl.insertAdjacentHTML('beforeend', `
+      <div class="pd-section">
+        <div class="pd-section-title">${sectionTitle}</div>
+        <div class="po-zone-wrap">${zoneSvg}</div>
+        <div class="po-zone-meta">${meta}</div>
+      </div>
+    `)
   } catch {}
 }
 
@@ -2239,7 +2285,20 @@ let _vaTab = 'spray'
 let _vaFeeds = null
 let _vaData = null
 let _vaPlayerFilter = null
+let _vaPlayerFilterType = null
 let _vaGameCount = 10
+
+async function _ensureVaDataLoaded() {
+  if (_vaData) return _vaData
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!team) return null
+  const isSpring = (_advGameType || await _detectGameType()) === 'S'
+  _vaGameCount = isSpring ? 5 : 10
+  _vaFeeds = await fetchRecentGameFeeds(team.id, _vaGameCount)
+  if (!_vaFeeds || _vaFeeds.length === 0) return null
+  _vaData = extractPlayByPlayData(_vaFeeds, team.id)
+  return _vaData
+}
 
 async function loadVisualAnalytics() {
   const team = APP_TEAMS[_currentTeamKey]
@@ -2255,6 +2314,7 @@ async function loadVisualAnalytics() {
 
   try {
     _vaGameCount = isSpring ? 5 : 10
+    await _ensureRosterLoaded()
     _vaFeeds = await fetchRecentGameFeeds(team.id, _vaGameCount)
     if (!_vaFeeds || _vaFeeds.length === 0) {
       el.innerHTML = '<div class="va-loading">No completed games with play-by-play data available yet.</div>'
@@ -2273,6 +2333,7 @@ async function loadVisualAnalytics() {
 function switchVaTab(tab) {
   _vaTab = tab
   _vaPlayerFilter = null
+  _vaPlayerFilterType = null
   document.querySelectorAll('.va-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
   _renderVaTab()
 }
@@ -2304,23 +2365,43 @@ function _vaPlayerToggle(playerList, label) {
   return `<div class="va-filter-bar"><select class="va-player-select" onchange="_vaPlayerFilter=this.value||null; _renderVaTab()">${opts.join('')}</select></div>`
 }
 
+function _vaHeatmapPlayerToggle() {
+  const batters = _getVaBatterList(), pitchers = _getVaPitcherList()
+  let opts = `<option value="">Team-wide (All)</option>`
+  if (batters.length) {
+    opts += `<optgroup label="Batters">`
+    for (const p of batters) opts += `<option value="${p.id}" data-type="batter" ${_vaPlayerFilter == p.id ? 'selected' : ''}>${p.name}</option>`
+    opts += `</optgroup>`
+  }
+  if (pitchers.length) {
+    opts += `<optgroup label="Pitchers">`
+    for (const p of pitchers) opts += `<option value="${p.id}" data-type="pitcher" ${_vaPlayerFilter == p.id ? 'selected' : ''}>${p.name}</option>`
+    opts += `</optgroup>`
+  }
+  return `<div class="va-filter-bar"><select class="va-player-select" onchange="_vaSetHeatmapPlayer(this)">${opts}</select></div>`
+}
+
+function _vaSetHeatmapPlayer(sel) {
+  _vaPlayerFilter = sel.value || null
+  const opt = sel.options[sel.selectedIndex]
+  _vaPlayerFilterType = opt?.dataset?.type || null
+  _renderVaTab()
+}
+
 function _getVaBatterList() {
-  const seen = new Map()
-  for (const b of (_vaData?.battedBalls || [])) {
-    if (b.isMyBatter && !seen.has(b.batterId)) seen.set(b.batterId, b.batterName)
-  }
-  for (const p of (_vaData?.pitches || [])) {
-    if (p.isMyBatter && !seen.has(p.batterId)) seen.set(p.batterId, p.batterName)
-  }
-  return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  if (!_cachedRoster) return []
+  return _cachedRoster
+    .filter(p => p.position?.type !== 'Pitcher')
+    .map(p => ({ id: p.person.id, name: p.person.fullName }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 function _getVaPitcherList() {
-  const seen = new Map()
-  for (const p of (_vaData?.pitches || [])) {
-    if (p.isMyPitcher && !seen.has(p.pitcherId)) seen.set(p.pitcherId, p.pitcherName)
-  }
-  return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  if (!_cachedRoster) return []
+  return _cachedRoster
+    .filter(p => p.position?.type === 'Pitcher' || p.position?.type === 'Two-Way Player')
+    .map(p => ({ id: p.person.id, name: p.person.fullName }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 const VA_CHART_COLORS = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8']
@@ -2367,122 +2448,176 @@ function renderVaSpray(el) {
     </div>`
 }
 
-/* ── 2. Pitch Heat Map ── */
-function renderVaHeatmap(el) {
-  const HIT_EVENTS = new Set(['Single', 'Double', 'Triple', 'Home Run'])
-  const NO_AB_EVENTS = new Set(['Walk', 'Intent Walk', 'Hit By Pitch', 'Sac Fly', 'Sac Bunt', 'Sac Fly DP',
-    'Catcher Interference', 'Batter Interference', 'Fan Interference'])
+/* ── Reusable Zone Renderers ── */
+const _HIT_EVENTS = new Set(['Single', 'Double', 'Triple', 'Home Run'])
+const _NO_AB_EVENTS = new Set(['Walk', 'Intent Walk', 'Hit By Pitch', 'Sac Fly', 'Sac Bunt',
+  'Sac Fly DP', 'Catcher Interference', 'Batter Interference', 'Fan Interference'])
 
-  // Filter pitches that ended an at-bat (have atBatResult)
-  const abPitches = _vaData.pitches.filter(p => {
-    if (!p.atBatResult) return false
-    if (NO_AB_EVENTS.has(p.atBatResult)) return false
-    if (_vaPlayerFilter) return p.batterId == _vaPlayerFilter
-    return p.isMyBatter
-  })
+function _renderBatterZone(pitches, opts = {}) {
+  const { width = 300, height = 310, compact = false } = opts
+  const abPitches = pitches.filter(p => p.atBatResult && !_NO_AB_EVENTS.has(p.atBatResult))
 
-  // 5x5 zone grid: inner 3x3 = strike zone, outer ring = chase zones
-  // Strike zone: pX [-0.83, 0.83], pZ [1.5, 3.5]
-  // Each inner cell = 1/3 of zone. Outer border = one cell-width outside.
-  const szW = 0.83 * 2, szH = 3.5 - 1.5 // 1.66, 2.0
-  const cellPX = szW / 3, cellPZ = szH / 3
-  const GRID = 5
+  const GRID = 3
+  const szXMin = -0.83, szXMax = 0.83, szZMin = 1.5, szZMax = 3.5
+  const cellW = (szXMax - szXMin) / GRID, cellH = (szZMax - szZMin) / GRID
   const hits = Array.from({ length: GRID }, () => Array(GRID).fill(0))
   const abs = Array.from({ length: GRID }, () => Array(GRID).fill(0))
 
   for (const p of abPitches) {
-    // Map pitch coords to 5x5 grid
-    // Columns: 0 = left chase, 1-3 = zone thirds, 4 = right chase
-    let col, row
-    if (p.pX < -0.83) col = 0
-    else if (p.pX < -0.83 + cellPX) col = 1
-    else if (p.pX < -0.83 + cellPX * 2) col = 2
-    else if (p.pX <= 0.83) col = 3
-    else col = 4
-
-    if (p.pZ > 3.5) row = 0  // above zone
-    else if (p.pZ > 3.5 - cellPZ) row = 1
-    else if (p.pZ > 3.5 - cellPZ * 2) row = 2
-    else if (p.pZ >= 1.5) row = 3
-    else row = 4  // below zone
-
-    if (col >= 0 && col < GRID && row >= 0 && row < GRID) {
-      abs[row][col]++
-      if (HIT_EVENTS.has(p.atBatResult)) hits[row][col]++
-    }
+    if (p.pX < szXMin || p.pX > szXMax || p.pZ < szZMin || p.pZ > szZMax) continue
+    const col = Math.min(Math.floor((p.pX - szXMin) / cellW), GRID - 1)
+    const row = Math.min(Math.floor((szZMax - p.pZ) / cellH), GRID - 1)
+    abs[row][col]++
+    if (_HIT_EVENTS.has(p.atBatResult)) hits[row][col]++
   }
 
-  // SVG dimensions
-  const W = 380, H = 430, PAD = 50
-  const gridL = PAD + 20, gridR = W - PAD - 20, gridT = PAD + 10, gridB = H - PAD - 40
-  const totalW = gridR - gridL, totalH = gridB - gridT
-  const cw = totalW / GRID, ch = totalH / GRID
-  const gap = 2
+  // Red gradient: all red/coral tones, darker = higher BA
+  function baRedColor(ba) {
+    const t = Math.min(ba / 0.400, 1)
+    return { r: Math.round(200 + t * 30), g: Math.round(80 - t * 50), b: Math.round(70 - t * 40), a: 0.3 + t * 0.55 }
+  }
+
+  const W = width, H = height, PAD = compact ? 15 : 30
+  const gridT = PAD + (compact ? 0 : 18), gridB = H - PAD - (compact ? 8 : 28)
+  const gridL = (W - (gridB - gridT) * 0.85) / 2, gridR = W - gridL
+  const cw = (gridR - gridL) / GRID, ch = (gridB - gridT) / GRID
+  const gap = 3
 
   let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
-
-  // BA color: red (low) → yellow (mid) → green (high)
-  function baColor(ba) {
-    if (ba < 0.200) { const t = ba / 0.200; return { r: Math.round(180 + t * 40), g: Math.round(40 + t * 50), b: Math.round(40 + t * 10) } }
-    if (ba < 0.300) { const t = (ba - 0.200) / 0.100; return { r: Math.round(220 - t * 30), g: Math.round(90 + t * 110), b: Math.round(50 - t * 10) } }
-    return { r: Math.round(190 - Math.min((ba - 0.300) / 0.200, 1) * 140), g: Math.round(200 + Math.min((ba - 0.300) / 0.200, 1) * 40), b: Math.round(40 + Math.min((ba - 0.300) / 0.200, 1) * 40) }
-  }
+  if (!compact) svg += `<text x="${W / 2}" y="${PAD + 6}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
 
   for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID; c++) {
-      const x = gridL + c * cw + gap
-      const y = gridT + r * ch + gap
-      const w = cw - gap * 2
-      const h = ch - gap * 2
-      const isInner = r >= 1 && r <= 3 && c >= 1 && c <= 3
-      const isCorner = (r === 0 || r === 4) && (c === 0 || c === 4)
-
+      const x = gridL + c * cw + gap, y = gridT + r * ch + gap
+      const w = cw - gap * 2, h = ch - gap * 2
       if (abs[r][c] === 0) {
-        // Empty cell — faint outline
-        svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,${isInner ? 0.12 : 0.06})" stroke-width="0.75" rx="${isCorner ? 6 : isInner ? 3 : 4}"/>`
+        svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(200,80,70,0.12)" stroke="rgba(255,255,255,0.1)" stroke-width="1" rx="4"/>`
+        svg += `<text x="${x + w / 2}" y="${y + h / 2 + 1}" fill="rgba(255,255,255,0.2)" font-size="${compact ? 12 : 15}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Inter">.000</text>`
         continue
       }
-
       const ba = hits[r][c] / abs[r][c]
-      const clr = baColor(ba)
-      const alpha = isInner ? 0.55 : 0.35
-      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${clr.r},${clr.g},${clr.b},${alpha})" stroke="rgba(255,255,255,${isInner ? 0.15 : 0.08})" stroke-width="0.75" rx="${isCorner ? 6 : isInner ? 3 : 4}"/>`
-
-      // BA text
+      const clr = baRedColor(ba)
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${clr.r},${clr.g},${clr.b},${clr.a})" stroke="rgba(255,255,255,0.12)" stroke-width="1" rx="4"/>`
       const baStr = ba.toFixed(3).replace('0.', '.')
-      svg += `<text x="${x + w / 2}" y="${y + h / 2}" fill="rgba(255,255,255,${isInner ? 0.95 : 0.7})" font-size="${isInner ? 14 : 11}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Inter">${baStr}</text>`
-      // AB count
-      svg += `<text x="${x + w / 2}" y="${y + h / 2 + (isInner ? 13 : 10)}" fill="rgba(255,255,255,0.25)" font-size="8" text-anchor="middle" font-family="Inter">${abs[r][c]} AB</text>`
+      svg += `<text x="${x + w / 2}" y="${y + h / 2 + (compact ? 1 : -2)}" fill="#fff" font-size="${compact ? 13 : 18}" font-weight="700" text-anchor="middle" dominant-baseline="middle" font-family="Inter">${baStr}</text>`
+      if (!compact) svg += `<text x="${x + w / 2}" y="${y + h / 2 + 14}" fill="rgba(255,255,255,0.25)" font-size="8" text-anchor="middle" font-family="Inter">${abs[r][c]} AB</text>`
     }
   }
-
-  // Strike zone border (around inner 3x3)
-  const zoneX = gridL + cw, zoneY = gridT + ch
-  const zoneW = cw * 3, zoneH = ch * 3
-  svg += `<rect x="${zoneX}" y="${zoneY}" width="${zoneW}" height="${zoneH}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" rx="2"/>`
-
+  // Zone border
+  svg += `<rect x="${gridL}" y="${gridT}" width="${gridR - gridL}" height="${gridB - gridT}" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" rx="2"/>`
   // Home plate
-  const cx = W / 2, py = gridB + 14
-  svg += `<path d="M${cx},${py + 14} L${cx - 12},${py + 6} L${cx - 12},${py - 2} L${cx + 12},${py - 2} L${cx + 12},${py + 6} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
-
-  svg += `<text x="${W / 2}" y="${gridT - 6}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
-
-  // Legend
-  svg += `<text x="${W / 2}" y="${H - 6}" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle" font-family="Inter">Green = high BA &nbsp; Red = low BA</text>`
-
+  if (!compact) {
+    const cx = W / 2, py = gridB + 10
+    svg += `<path d="M${cx},${py + 12} L${cx - 10},${py + 5} L${cx - 10},${py - 1} L${cx + 10},${py - 1} L${cx + 10},${py + 5} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
+  }
   svg += '</svg>'
-
   const totalABs = abs.flat().reduce((a, b) => a + b, 0)
   const totalHits = hits.flat().reduce((a, b) => a + b, 0)
-  const overallBA = totalABs > 0 ? (totalHits / totalABs).toFixed(3) : '.000'
+  return { svg, totalABs, totalHits }
+}
 
-  el.innerHTML = `
-    ${_vaPlayerToggle(_getVaBatterList(), 'Batters')}
-    <div class="va-chart-section">
-      <div class="adv-section-title">Hot / Cold Zone — Batting Average (Last ${_vaGameCount} Games)</div>
-      <div class="adv-chart-wrap">${totalABs > 0 ? svg : '<div class="va-loading">No at-bat data available.</div>'}</div>
-      <div class="va-chart-meta">Overall: ${overallBA} (${totalHits}-for-${totalABs})</div>
+function _renderPitcherHeatmap(pitches, opts = {}) {
+  const { width = 300, height = 340, compact = false } = opts
+  const uid = Math.random().toString(36).slice(2, 8)
+  const W = width, H = height, PAD = compact ? 15 : 30
+  const viewXMin = -1.8, viewXMax = 1.8, viewZMin = 0.5, viewZMax = 4.5
+  const plotL = PAD, plotR = W - PAD
+  const plotT = PAD + (compact ? 0 : 18), plotB = H - PAD - (compact ? 8 : 28)
+  const plotW = plotR - plotL, plotH = plotB - plotT
+
+  const DENSITY_GRID = 15
+  const dCellW = (viewXMax - viewXMin) / DENSITY_GRID
+  const dCellH = (viewZMax - viewZMin) / DENSITY_GRID
+  const density = Array.from({ length: DENSITY_GRID }, () => Array(DENSITY_GRID).fill(0))
+
+  for (const p of pitches) {
+    if (p.pX < viewXMin || p.pX > viewXMax || p.pZ < viewZMin || p.pZ > viewZMax) continue
+    const col = Math.min(Math.floor((p.pX - viewXMin) / dCellW), DENSITY_GRID - 1)
+    const row = Math.min(Math.floor((viewZMax - p.pZ) / dCellH), DENSITY_GRID - 1)
+    density[row][col]++
+  }
+  let maxD = 0
+  density.forEach(r => r.forEach(v => { if (v > maxD) maxD = v }))
+
+  let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
+  svg += `<defs><filter id="hb_${uid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>`
+  svg += `<clipPath id="hc_${uid}"><rect x="${plotL}" y="${plotT}" width="${plotW}" height="${plotH}" rx="4"/></clipPath></defs>`
+  svg += `<rect x="${plotL}" y="${plotT}" width="${plotW}" height="${plotH}" fill="rgba(0,5,20,0.85)" rx="4"/>`
+
+  if (!compact) svg += `<text x="${W / 2}" y="${PAD + 6}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
+
+  if (maxD > 0) {
+    svg += `<g clip-path="url(#hc_${uid})" filter="url(#hb_${uid})">`
+    for (let r = 0; r < DENSITY_GRID; r++) {
+      for (let c = 0; c < DENSITY_GRID; c++) {
+        if (density[r][c] === 0) continue
+        const t = density[r][c] / maxD
+        const cx = plotL + (c + 0.5) / DENSITY_GRID * plotW
+        const cy = plotT + (r + 0.5) / DENSITY_GRID * plotH
+        let red, green, blue
+        if (t < 0.33) { const s = t / 0.33; red = 0; green = Math.round(s * 200); blue = Math.round(200 - s * 200) }
+        else if (t < 0.66) { const s = (t - 0.33) / 0.33; red = Math.round(s * 255); green = Math.round(200 + s * 55); blue = 0 }
+        else { const s = (t - 0.66) / 0.34; red = 255; green = Math.round(255 - s * 200); blue = 0 }
+        const alpha = 0.2 + t * 0.6
+        svg += `<circle cx="${cx}" cy="${cy}" r="${12 + t * 10}" fill="rgba(${red},${green},${blue},${alpha})"/>`
+      }
+    }
+    svg += '</g>'
+  }
+
+  // Strike zone white outline
+  const szL = plotL + ((-0.83 - viewXMin) / (viewXMax - viewXMin)) * plotW
+  const szR = plotL + ((0.83 - viewXMin) / (viewXMax - viewXMin)) * plotW
+  const szT = plotT + ((viewZMax - 3.5) / (viewZMax - viewZMin)) * plotH
+  const szB = plotT + ((viewZMax - 1.5) / (viewZMax - viewZMin)) * plotH
+  svg += `<rect x="${szL}" y="${szT}" width="${szR - szL}" height="${szB - szT}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>`
+  // Dashed outer border
+  svg += `<rect x="${szL - 18}" y="${szT - 14}" width="${szR - szL + 36}" height="${szB - szT + 28}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4" rx="2"/>`
+
+  if (!compact) {
+    const cx = W / 2, py = plotB + 10
+    svg += `<path d="M${cx},${py + 12} L${cx - 10},${py + 5} L${cx - 10},${py - 1} L${cx + 10},${py - 1} L${cx + 10},${py + 5} Z" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`
+  }
+  svg += '</svg>'
+  return { svg, totalPitches: pitches.length }
+}
+
+/* ── 2. Heat Map / Hot Zone ── */
+function renderVaHeatmap(el) {
+  const isBatter = _vaPlayerFilterType === 'batter'
+  const isPitcher = _vaPlayerFilterType === 'pitcher'
+  const isTeamWide = !_vaPlayerFilter
+
+  let html = _vaHeatmapPlayerToggle()
+
+  if (isBatter || isTeamWide) {
+    const batterPitches = _vaData.pitches.filter(p => {
+      if (_vaPlayerFilter && isBatter) return p.batterId == _vaPlayerFilter
+      return p.isMyBatter
+    })
+    const result = _renderBatterZone(batterPitches)
+    const overallBA = result.totalABs > 0 ? (result.totalHits / result.totalABs).toFixed(3) : '.000'
+    html += `<div class="va-chart-section">
+      <div class="adv-section-title">${isTeamWide ? 'Team ' : ''}Hot Zone \u2014 Batting Average (Last ${_vaGameCount} Games)</div>
+      <div class="adv-chart-wrap">${result.totalABs > 0 ? result.svg : '<div class="va-loading">No at-bat data available.</div>'}</div>
+      <div class="va-chart-meta">Overall: ${overallBA} (${result.totalHits}-for-${result.totalABs})</div>
     </div>`
+  }
+
+  if (isPitcher || isTeamWide) {
+    const pitcherPitches = _vaData.pitches.filter(p => {
+      if (_vaPlayerFilter && isPitcher) return p.pitcherId == _vaPlayerFilter
+      return p.isMyPitcher
+    })
+    const result = _renderPitcherHeatmap(pitcherPitches)
+    html += `<div class="va-chart-section">
+      <div class="adv-section-title">${isTeamWide ? 'Team ' : ''}Pitch Location Density (Last ${_vaGameCount} Games)</div>
+      <div class="adv-chart-wrap">${result.totalPitches > 0 ? result.svg : '<div class="va-loading">No pitch data available.</div>'}</div>
+      <div class="va-chart-meta">${result.totalPitches} pitches</div>
+    </div>`
+  }
+
+  el.innerHTML = html
 }
 
 /* ── 3. Rolling OPS ── */
