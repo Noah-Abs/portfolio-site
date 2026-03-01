@@ -15,6 +15,7 @@ const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 function renderTeam(key) {
   const t = APP_TEAMS[key]
   if (!t) return
+  if (_currentTeamKey !== key) { _advData = null; _advLoaded = false; _lbLoaded = false; _lbCache = {}; _advGameType = null }
   _currentTeamKey = key
   document.body.dataset.team = key
   localStorage.setItem('selectedTeam', key)
@@ -853,7 +854,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings', 'advanced']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings', 'advanced', 'leaderboards']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -866,6 +867,7 @@ function switchView(view) {
   if (view === 'prospects') loadProspects()
   if (view === 'settings') renderSettingsTeams()
   if (view === 'advanced') loadAdvancedStats()
+  if (view === 'leaderboards') loadLeaderboards()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
   })
@@ -2243,6 +2245,820 @@ function buildRadarChart(player, group) {
 
   svg += `</svg>`
   return svg
+}
+
+/* ══════════════════════════════════════════════
+   Custom Leaderboards
+   ══════════════════════════════════════════════ */
+
+let _lbData = null
+let _lbLoaded = false
+let _lbTab = 'clutch'
+let _lbSortCol = null
+let _lbSortAsc = false
+let _lbSubFilter = 'hitting'
+let _lbCache = {} // { risp: [...], lc: [...], lcPit: [...], prevSeason: {...}, exitVelo: [...], speed: [...], speedAll: [...] }
+
+const LB_TOOLTIPS = {
+  name: 'Player name',
+  rispAvg: 'Batting average with runners in scoring position',
+  rispOps: 'OPS with runners in scoring position',
+  rispObp: 'On-base percentage with RISP',
+  rispSlg: 'Slugging percentage with RISP',
+  rispRbi: 'RBI in at-bats with RISP',
+  rispKPct: 'Strikeout rate with RISP',
+  rispBbPct: 'Walk rate with RISP',
+  rispPa: 'Plate appearances with RISP',
+  lcAvg: 'Batting average in Late & Close situations',
+  lcOps: 'OPS in Late & Close situations',
+  lcObp: 'On-base pct in Late & Close',
+  lcHr: 'Home runs in Late & Close',
+  lcRbi: 'RBI in Late & Close',
+  lcKPct: 'Strikeout rate in Late & Close',
+  lcEra: 'ERA in Late & Close situations',
+  lcWhip: 'WHIP in Late & Close',
+  lcK: 'Strikeouts in Late & Close',
+  lcBb: 'Walks in Late & Close',
+  lcIp: 'Innings pitched in Late & Close',
+  lcAvgAgainst: 'Opponent batting avg in Late & Close',
+  wRaa: 'Weighted Runs Above Average — offensive value in runs',
+  rbi: 'Runs Batted In',
+  curWar: 'Current season WAR',
+  prevWar: 'Previous season WAR',
+  warDiff: 'WAR change year-over-year',
+  curOps: 'Current season OPS',
+  prevOps: 'Previous season OPS',
+  opsDiff: 'OPS change year-over-year',
+  curEra: 'Current season ERA',
+  prevEra: 'Previous season ERA',
+  eraDiff: 'ERA change year-over-year',
+  age: 'Player age',
+  avgEV: 'Average exit velocity (mph)',
+  maxEV: 'Maximum exit velocity (mph)',
+  hardHitPct: 'Percentage of batted balls 95+ mph',
+  barrelPct: 'Barrel rate — optimal exit velo + launch angle',
+  barrelPA: 'Barrels per plate appearance',
+  sweetSpotPct: 'Launch angle sweet spot percentage',
+  avgAngle: 'Average launch angle (degrees)',
+  sprintSpeed: 'Sprint speed (ft/sec) — 90th percentile of runs',
+  hpTo1b: 'Home plate to first base time (seconds)',
+  competitiveRuns: 'Number of competitive (max-effort) runs',
+  bolts: 'Runs of 30+ ft/sec',
+  sb: 'Stolen bases',
+  aav: 'Average Annual Value ($M)',
+  war: 'Wins Above Replacement',
+  dollarPerWar: 'Cost per WAR ($ millions)',
+  yrsRemaining: 'Contract years remaining',
+  totalVal: 'Total contract value ($M)',
+  ba: 'Batting average', xBa: 'Expected batting average (Statcast)',
+  baDiff: 'xBA minus BA — positive = unlucky',
+  slg: 'Slugging percentage', xSlg: 'Expected slugging (Statcast)',
+  slgDiff: 'xSLG minus SLG — positive = unlucky',
+  woba: 'Weighted On-Base Average', xWoba: 'Expected wOBA (Statcast)',
+  wobaDiff: 'xwOBA minus wOBA — positive = unlucky',
+  babip: 'Batting Average on Balls In Play',
+  iso: 'Isolated Power (SLG - AVG)',
+}
+
+async function loadLeaderboards() {
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!team) return
+
+  if (_lbLoaded) { _renderLbTab(); return }
+
+  const el = document.getElementById('lb-content')
+  el.innerHTML = '<div class="lb-loading">Loading leaderboards\u2026</div>'
+
+  try {
+    // Reuse advanced stats data if available, otherwise fetch
+    if (!_advData) {
+      const [roster, overview] = await Promise.all([
+        fetchAdvancedRoster(team.id),
+        fetchAdvancedTeamOverview(team.id),
+      ])
+      const isSpring = _advGameType === 'S'
+      _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview, isSpring }
+      _advLoaded = true
+    }
+
+    const isSpring = _advData.isSpring
+    const label = isSpring ? `${SEASON} Spring Training` : `${SEASON} Season`
+    document.getElementById('lb-page-sub').textContent = `${team.name} \u00b7 ${label}`
+    _lbLoaded = true
+    _lbTab = 'clutch'
+    _lbSortCol = null
+    document.querySelectorAll('.lb-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'clutch'))
+    _renderLbTab()
+  } catch (e) {
+    el.innerHTML = `<div class="lb-loading">Error loading leaderboards: ${e.message}</div>`
+  }
+}
+
+function switchLbTab(tab) {
+  _lbTab = tab
+  _lbSortCol = null
+  _lbSortAsc = false
+  _lbSubFilter = 'hitting'
+  document.querySelectorAll('.lb-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  _renderLbTab()
+}
+
+function _renderLbTab() {
+  const el = document.getElementById('lb-content')
+  if (!_lbData && !_advData) return
+  switch (_lbTab) {
+    case 'clutch':     renderLbClutch(el); break
+    case 'risp':       renderLbRisp(el); break
+    case 'pressure':   renderLbPressure(el); break
+    case 'improved':   renderLbImproved(el); break
+    case 'exitvelo':   renderLbExitVelo(el); break
+    case 'speed':      renderLbSpeed(el); break
+    case 'value':      renderLbValue(el); break
+    case 'underrated': renderLbUnderrated(el); break
+  }
+}
+
+function lbSort(col) {
+  if (_lbSortCol === col) _lbSortAsc = !_lbSortAsc
+  else { _lbSortCol = col; _lbSortAsc = col === 'name' }
+  _renderLbTab()
+}
+
+function _lbTh(cols) {
+  return cols.map(c => {
+    const arrow = _lbSortCol === c.key ? (_lbSortAsc ? ' \u2191' : ' \u2193') : ''
+    const tip = LB_TOOLTIPS[c.key] ? ` data-tooltip="${LB_TOOLTIPS[c.key]}"` : ''
+    const cls = c.key === 'name' ? 'lb-th-name' : 'lb-th-num'
+    return `<th class="${cls}" onclick="lbSort('${c.key}')"${tip}>${c.label}${arrow}</th>`
+  }).join('')
+}
+
+function _lbSortRows(rows, defaultCol) {
+  const col = _lbSortCol || defaultCol
+  const asc = _lbSortCol ? _lbSortAsc : (col === 'name')
+  return [...rows].sort((a, b) => {
+    if (col === 'name') return asc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
+    const av = a[col] ?? 0, bv = b[col] ?? 0
+    return asc ? av - bv : bv - av
+  })
+}
+
+function _lbCellClass(val, goodThresh, eliteThresh, badThresh, invert) {
+  if (val == null || isNaN(val)) return ''
+  if (invert) {
+    if (val <= eliteThresh) return 'lb-cell-elite'
+    if (val <= goodThresh) return 'lb-cell-good'
+    if (val >= badThresh) return 'lb-cell-bad'
+  } else {
+    if (val >= eliteThresh) return 'lb-cell-elite'
+    if (val >= goodThresh) return 'lb-cell-good'
+    if (val <= badThresh) return 'lb-cell-bad'
+  }
+  return ''
+}
+
+function _lbFmt(v, dec = 3) {
+  if (v == null || isNaN(v)) return '\u2014'
+  if (dec === 3) return v === 0 ? '.000' : parseFloat(v).toFixed(3).replace(/^0/, '')
+  return parseFloat(v).toFixed(dec)
+}
+
+function _lbPct(v) {
+  if (v == null || isNaN(v)) return '\u2014'
+  return (v * 100).toFixed(1) + '%'
+}
+
+/* ── Tab 1: Clutch Hitters ── */
+async function renderLbClutch(el) {
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!_lbCache.risp || !_lbCache.lc) {
+    el.innerHTML = '<div class="lb-loading">Loading clutch data\u2026</div>'
+    const [risp, lc] = await Promise.all([
+      fetchRosterSituational(team.id, 'risp', 'hitting'),
+      fetchRosterSituational(team.id, 'lc', 'hitting'),
+    ])
+    _lbCache.risp = risp
+    _lbCache.lc = lc
+  }
+
+  const rispMap = {}; _lbCache.risp.forEach(p => rispMap[p.id] = p)
+  const lcMap = {}; _lbCache.lc.forEach(p => lcMap[p.id] = p)
+  const baseHitters = _advData.hitters || []
+
+  let rows = baseHitters.map(h => {
+    const r = rispMap[h.id] || {}
+    const l = lcMap[h.id] || {}
+    return {
+      name: h.name, id: h.id,
+      rispAvg: r.avg || 0, rispOps: r.ops || 0,
+      lcAvg: l.avg || 0, lcOps: l.ops || 0,
+      rbi: r.rbi || 0, wRaa: h.wRaa || 0,
+    }
+  }).filter(r => r.rispOps > 0 || r.lcOps > 0)
+
+  rows = _lbSortRows(rows, 'rispOps')
+  const top10 = rows.slice(0, 10)
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'rispAvg', label: 'RISP AVG' },
+    { key: 'rispOps', label: 'RISP OPS' },
+    { key: 'lcAvg', label: 'LC AVG' },
+    { key: 'lcOps', label: 'LC OPS' },
+    { key: 'rbi', label: 'RBI' },
+    { key: 'wRaa', label: 'wRAA' },
+  ]
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Top 10 Clutch Hitters</h3>
+    <p class="lb-section-desc">RISP & Late/Close performance combined with overall run production</p>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${top10.map((r, i) => `<tr>
+        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispAvg, .280, .320, .200)}">${_lbFmt(r.rispAvg)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispOps, .800, .900, .600)}">${_lbFmt(r.rispOps)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.lcAvg, .280, .320, .200)}">${_lbFmt(r.lcAvg)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.lcOps, .800, .900, .600)}">${_lbFmt(r.lcOps)}</td>
+        <td class="lb-td-num">${r.rbi}</td>
+        <td class="lb-td-num ${_lbCellClass(r.wRaa, 10, 25, -5)}">${_lbFmt(r.wRaa, 1)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 2: RISP Hitters ── */
+async function renderLbRisp(el) {
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!_lbCache.risp) {
+    el.innerHTML = '<div class="lb-loading">Loading RISP data\u2026</div>'
+    _lbCache.risp = await fetchRosterSituational(team.id, 'risp', 'hitting')
+  }
+
+  let rows = _lbCache.risp.filter(p => p.pa >= 5).map(p => ({
+    ...p,
+    rispAvg: p.avg, rispOps: p.ops, rispObp: p.obp, rispSlg: p.slg,
+    rispRbi: p.rbi, rispKPct: p.kPct, rispBbPct: p.bbPct, rispPa: p.pa,
+  }))
+  rows = _lbSortRows(rows, 'rispAvg')
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'rispAvg', label: 'AVG' },
+    { key: 'rispOps', label: 'OPS' },
+    { key: 'rispObp', label: 'OBP' },
+    { key: 'rispSlg', label: 'SLG' },
+    { key: 'rispRbi', label: 'RBI' },
+    { key: 'rispKPct', label: 'K%' },
+    { key: 'rispBbPct', label: 'BB%' },
+    { key: 'rispPa', label: 'PA' },
+  ]
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Best Hitters with RISP</h3>
+    <p class="lb-section-desc">Batting stats with runners in scoring position (min 5 PA)</p>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr>
+        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispAvg, .280, .320, .200)}">${_lbFmt(r.rispAvg)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispOps, .800, .900, .600)}">${_lbFmt(r.rispOps)}</td>
+        <td class="lb-td-num">${_lbFmt(r.rispObp)}</td>
+        <td class="lb-td-num">${_lbFmt(r.rispSlg)}</td>
+        <td class="lb-td-num">${r.rispRbi}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispKPct, .18, .12, .28, true)}">${_lbPct(r.rispKPct)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.rispBbPct, .10, .14, .04)}">${_lbPct(r.rispBbPct)}</td>
+        <td class="lb-td-num">${r.rispPa}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 3: Pressure Performers ── */
+async function renderLbPressure(el) {
+  const team = APP_TEAMS[_currentTeamKey]
+  const isHitting = _lbSubFilter === 'hitting'
+
+  if (isHitting && !_lbCache.lc) {
+    el.innerHTML = '<div class="lb-loading">Loading Late & Close data\u2026</div>'
+    _lbCache.lc = await fetchRosterSituational(team.id, 'lc', 'hitting')
+  }
+  if (!isHitting && !_lbCache.lcPit) {
+    el.innerHTML = '<div class="lb-loading">Loading Late & Close pitching data\u2026</div>'
+    _lbCache.lcPit = await fetchRosterSituational(team.id, 'lc', 'pitching')
+  }
+
+  const toggleHtml = `
+    <div class="lb-toggle-bar">
+      <button class="lb-toggle-pill ${isHitting ? 'active' : ''}" onclick="_lbSubFilter='hitting'; _lbSortCol=null; _renderLbTab()">Hitters</button>
+      <button class="lb-toggle-pill ${!isHitting ? 'active' : ''}" onclick="_lbSubFilter='pitching'; _lbSortCol=null; _renderLbTab()">Pitchers</button>
+    </div>`
+
+  if (isHitting) {
+    let rows = (_lbCache.lc || []).filter(p => p.pa >= 3).map(p => ({
+      name: p.name, id: p.id,
+      lcAvg: p.avg, lcOps: p.ops, lcObp: p.obp,
+      lcHr: p.hr, lcRbi: p.rbi, lcKPct: p.kPct,
+    }))
+    rows = _lbSortRows(rows, 'lcOps')
+    const cols = [
+      { key: 'name', label: 'Player' },
+      { key: 'lcAvg', label: 'AVG' },
+      { key: 'lcOps', label: 'OPS' },
+      { key: 'lcObp', label: 'OBP' },
+      { key: 'lcHr', label: 'HR' },
+      { key: 'lcRbi', label: 'RBI' },
+      { key: 'lcKPct', label: 'K%' },
+    ]
+    el.innerHTML = `
+      <h3 class="lb-section-title">High Leverage Performers</h3>
+      <p class="lb-section-desc">Late & Close situations (7th inning or later, tie or within 1 run)</p>
+      ${toggleHtml}
+      <div class="lb-table-wrap"><table class="lb-table">
+        <thead><tr>${_lbTh(cols)}</tr></thead>
+        <tbody>${rows.map((r, i) => `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcAvg, .280, .320, .200)}">${_lbFmt(r.lcAvg)}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcOps, .800, .900, .600)}">${_lbFmt(r.lcOps)}</td>
+          <td class="lb-td-num">${_lbFmt(r.lcObp)}</td>
+          <td class="lb-td-num">${r.lcHr}</td>
+          <td class="lb-td-num">${r.lcRbi}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcKPct, .18, .12, .28, true)}">${_lbPct(r.lcKPct)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+  } else {
+    let rows = (_lbCache.lcPit || []).filter(p => p.ip > 0).map(p => ({
+      name: p.name, id: p.id,
+      lcEra: p.era, lcAvgAgainst: p.avg, lcWhip: p.whip,
+      lcK: p.k, lcBb: p.bb, lcIp: p.ip,
+    }))
+    rows = _lbSortRows(rows, 'lcEra')
+    if (!_lbSortCol) rows.sort((a, b) => a.lcEra - b.lcEra) // default asc for ERA
+    const cols = [
+      { key: 'name', label: 'Player' },
+      { key: 'lcEra', label: 'ERA' },
+      { key: 'lcAvgAgainst', label: 'AVG Against' },
+      { key: 'lcWhip', label: 'WHIP' },
+      { key: 'lcK', label: 'K' },
+      { key: 'lcBb', label: 'BB' },
+      { key: 'lcIp', label: 'IP' },
+    ]
+    el.innerHTML = `
+      <h3 class="lb-section-title">High Leverage Performers</h3>
+      <p class="lb-section-desc">Late & Close situations — pitching performance under pressure</p>
+      ${toggleHtml}
+      <div class="lb-table-wrap"><table class="lb-table">
+        <thead><tr>${_lbTh(cols)}</tr></thead>
+        <tbody>${rows.map((r, i) => `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcEra, 3.50, 2.50, 5.00, true)}">${_lbFmt(r.lcEra, 2)}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcAvgAgainst, .230, .200, .280, true)}">${_lbFmt(r.lcAvgAgainst)}</td>
+          <td class="lb-td-num ${_lbCellClass(r.lcWhip, 1.20, 1.00, 1.50, true)}">${_lbFmt(r.lcWhip, 2)}</td>
+          <td class="lb-td-num">${r.lcK}</td>
+          <td class="lb-td-num">${r.lcBb}</td>
+          <td class="lb-td-num">${_lbFmt(r.lcIp, 1)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+  }
+}
+
+/* ── Tab 4: Most Improved ── */
+async function renderLbImproved(el) {
+  const team = APP_TEAMS[_currentTeamKey]
+  if (!_lbCache.prevSeason) {
+    el.innerHTML = '<div class="lb-loading">Loading previous season data\u2026</div>'
+    _lbCache.prevSeason = await fetchPreviousSeasonRoster(team.id)
+  }
+
+  const prev = _lbCache.prevSeason
+  const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
+  let rows = []
+
+  for (const p of allPlayers) {
+    const old = prev[p.id]
+    if (!old || old.g < 10) continue
+    const isHitter = _advData.hitters?.some(h => h.id === p.id)
+    const curWar = p.war || 0
+    const prevWar = old.war || 0
+    const warDiff = curWar - prevWar
+    rows.push({
+      name: p.name, id: p.id,
+      curWar, prevWar, warDiff,
+      curOps: isHitter ? (p.ops || 0) : null,
+      prevOps: isHitter ? (old.ops || 0) : null,
+      opsDiff: isHitter ? ((p.ops || 0) - (old.ops || 0)) : null,
+      curEra: !isHitter ? (p.era || 0) : null,
+      prevEra: !isHitter ? (old.era || 0) : null,
+      eraDiff: !isHitter ? ((p.era || 0) - (old.era || 0)) : null,
+      age: old.age || 0,
+    })
+  }
+
+  rows = _lbSortRows(rows, 'warDiff')
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'curWar', label: `${SEASON} WAR` },
+    { key: 'prevWar', label: `${SEASON - 1} WAR` },
+    { key: 'warDiff', label: 'WAR \u0394' },
+    { key: 'curOps', label: `${SEASON} OPS` },
+    { key: 'prevOps', label: `${SEASON - 1} OPS` },
+    { key: 'curEra', label: `${SEASON} ERA` },
+    { key: 'prevEra', label: `${SEASON - 1} ERA` },
+    { key: 'age', label: 'Age' },
+  ]
+
+  // Bar chart for top 10
+  const top10 = rows.slice(0, 10)
+  const maxAbs = Math.max(...top10.map(r => Math.abs(r.warDiff)), 1)
+  const W = 700, H = Math.max(200, top10.length * 32 + 40), PAD = 120
+  let barSvg = `<svg viewBox="0 0 ${W} ${H}" class="lb-bar-svg">`
+  barSvg += `<line x1="${PAD + (W - PAD - 20) / 2}" y1="10" x2="${PAD + (W - PAD - 20) / 2}" y2="${H - 10}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4"/>`
+  top10.forEach((r, i) => {
+    const y = 20 + i * 30
+    const barW = (Math.abs(r.warDiff) / maxAbs) * ((W - PAD - 20) / 2 - 10)
+    const cx = PAD + (W - PAD - 20) / 2
+    const x = r.warDiff >= 0 ? cx : cx - barW
+    const color = r.warDiff >= 0 ? 'rgba(76,175,80,0.7)' : 'rgba(244,67,54,0.7)'
+    barSvg += `<text x="${PAD - 6}" y="${y + 13}" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="end" font-family="Inter">${r.name.split(' ').pop()}</text>`
+    barSvg += `<rect x="${x}" y="${y}" width="${barW}" height="20" rx="3" fill="${color}"/>`
+    barSvg += `<text x="${r.warDiff >= 0 ? x + barW + 5 : x - 5}" y="${y + 14}" fill="rgba(255,255,255,0.6)" font-size="10" text-anchor="${r.warDiff >= 0 ? 'start' : 'end'}" font-family="Inter">${r.warDiff > 0 ? '+' : ''}${r.warDiff.toFixed(1)}</text>`
+  })
+  barSvg += '</svg>'
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Most Improved (WAR Jump)</h3>
+    <p class="lb-section-desc">Year-over-year WAR change — ${SEASON - 1} vs ${SEASON}</p>
+    <div class="lb-bar-chart">${barSvg}</div>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr>
+        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+        <td class="lb-td-num">${_lbFmt(r.curWar, 1)}</td>
+        <td class="lb-td-num">${_lbFmt(r.prevWar, 1)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.warDiff, 1.0, 2.0, -1.0)}">${r.warDiff > 0 ? '+' : ''}${_lbFmt(r.warDiff, 1)}</td>
+        <td class="lb-td-num">${r.curOps != null ? _lbFmt(r.curOps) : '\u2014'}</td>
+        <td class="lb-td-num">${r.prevOps != null ? _lbFmt(r.prevOps) : '\u2014'}</td>
+        <td class="lb-td-num">${r.curEra != null ? _lbFmt(r.curEra, 2) : '\u2014'}</td>
+        <td class="lb-td-num">${r.prevEra != null ? _lbFmt(r.prevEra, 2) : '\u2014'}</td>
+        <td class="lb-td-num">${r.age || '\u2014'}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 5: Exit Velocity ── */
+async function renderLbExitVelo(el) {
+  if (!_lbCache.hasOwnProperty('exitVelo')) {
+    el.innerHTML = '<div class="lb-loading">Fetching Statcast exit velocity data\u2026</div>'
+    const team = APP_TEAMS[_currentTeamKey]
+    _lbCache.exitVelo = await fetchStatcastExitVelo(team.id)
+  }
+
+  const data = _lbCache.exitVelo
+  if (!data || data.length === 0) {
+    // Fallback to power stats from MLB API
+    const hitters = _advData.hitters || []
+    let rows = hitters.filter(h => h.pa >= 20).map(h => ({
+      name: h.name, iso: h.iso, hr: h.hr, xSlg: h.xSlg, slg: h.slg, babip: h.babip,
+    }))
+    rows = _lbSortRows(rows, 'iso')
+    const cols = [
+      { key: 'name', label: 'Player' },
+      { key: 'iso', label: 'ISO' },
+      { key: 'hr', label: 'HR' },
+      { key: 'slg', label: 'SLG' },
+      { key: 'xSlg', label: 'xSLG' },
+      { key: 'babip', label: 'BABIP' },
+    ]
+    el.innerHTML = `
+      <h3 class="lb-section-title">Power Leaders</h3>
+      <div class="lb-fallback-msg">Statcast exit velocity data unavailable \u2014 showing power stats from MLB API. <a href="https://baseballsavant.mlb.com/leaderboard/statcast" target="_blank">View on Baseball Savant \u2192</a></div>
+      <div class="lb-table-wrap"><table class="lb-table">
+        <thead><tr>${_lbTh(cols)}</tr></thead>
+        <tbody>${rows.map((r, i) => `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num ${_lbCellClass(r.iso, .180, .250, .100)}">${_lbFmt(r.iso)}</td>
+          <td class="lb-td-num">${r.hr}</td>
+          <td class="lb-td-num">${_lbFmt(r.slg)}</td>
+          <td class="lb-td-num">${_lbFmt(r.xSlg)}</td>
+          <td class="lb-td-num">${_lbFmt(r.babip)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    return
+  }
+
+  let rows = data.map(d => ({
+    name: d.name, avgEV: d.avgEV, maxEV: d.maxEV,
+    hardHitPct: d.hardHitPct, barrelPct: d.barrelPct,
+    barrelPA: d.barrelPA, sweetSpotPct: d.sweetSpotPct, avgAngle: d.avgAngle,
+  }))
+  rows = _lbSortRows(rows, 'avgEV')
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'avgEV', label: 'Avg EV' },
+    { key: 'maxEV', label: 'Max EV' },
+    { key: 'hardHitPct', label: 'Hard Hit%' },
+    { key: 'barrelPct', label: 'Barrel%' },
+    { key: 'barrelPA', label: 'Brl/PA' },
+    { key: 'sweetSpotPct', label: 'Sweet Spot%' },
+    { key: 'avgAngle', label: 'Avg LA' },
+  ]
+
+  // Scatter plot: X=avgEV, Y=avgAngle, size=barrelPct
+  const SPAD = 50, SW = 650, SH = 300
+  const evMin = Math.min(...data.map(d => d.avgEV)) - 1
+  const evMax = Math.max(...data.map(d => d.avgEV)) + 1
+  const laMin = Math.min(...data.map(d => d.avgAngle)) - 2
+  const laMax = Math.max(...data.map(d => d.avgAngle)) + 2
+  const chartColors = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8', '#4dd0e1', '#fff176', '#a1887f', '#90a4ae', '#f48fb1']
+  let scatter = `<svg viewBox="0 0 ${SW} ${SH}" class="lb-scatter-svg">`
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = SPAD + (SH - SPAD * 2) * i / 4
+    scatter += `<line x1="${SPAD}" y1="${y}" x2="${SW - 20}" y2="${y}" stroke="rgba(255,255,255,0.06)"/>`
+    const lv = laMax - (laMax - laMin) * i / 4
+    scatter += `<text x="${SPAD - 5}" y="${y + 3}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="end">${lv.toFixed(0)}\u00b0</text>`
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = SPAD + (SW - SPAD - 20) * i / 4
+    scatter += `<line x1="${x}" y1="${SPAD}" x2="${x}" y2="${SH - SPAD}" stroke="rgba(255,255,255,0.06)"/>`
+    const ev = evMin + (evMax - evMin) * i / 4
+    scatter += `<text x="${x}" y="${SH - SPAD + 15}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">${ev.toFixed(0)}</text>`
+  }
+  scatter += `<text x="${SW / 2}" y="${SH - 5}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Avg Exit Velocity (mph)</text>`
+  scatter += `<text x="12" y="${SH / 2}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle" transform="rotate(-90,12,${SH / 2})">Launch Angle (\u00b0)</text>`
+  // Dots
+  data.forEach((d, ci) => {
+    const x = SPAD + ((d.avgEV - evMin) / (evMax - evMin)) * (SW - SPAD - 20)
+    const y = SPAD + ((laMax - d.avgAngle) / (laMax - laMin)) * (SH - SPAD * 2)
+    const r = Math.max(4, Math.min(14, (d.barrelPct || 1) * 1.5))
+    const color = chartColors[ci % chartColors.length]
+    scatter += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${color}" opacity="0.7"><title>${d.name}: ${d.avgEV} mph, ${d.avgAngle}\u00b0, ${d.barrelPct}% barrel</title></circle>`
+  })
+  scatter += '</svg>'
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Exit Velocity Leaders</h3>
+    <p class="lb-section-desc">Statcast batted ball data \u2014 powered by Baseball Savant</p>
+    <div class="lb-scatter-wrap">${scatter}</div>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr>
+        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+        <td class="lb-td-num ${_lbCellClass(r.avgEV, 90, 93, 86)}">${_lbFmt(r.avgEV, 1)}</td>
+        <td class="lb-td-num">${_lbFmt(r.maxEV, 1)}</td>
+        <td class="lb-td-num ${_lbCellClass(r.hardHitPct, 40, 50, 30)}">${_lbFmt(r.hardHitPct, 1)}%</td>
+        <td class="lb-td-num ${_lbCellClass(r.barrelPct, 8, 12, 4)}">${_lbFmt(r.barrelPct, 1)}%</td>
+        <td class="lb-td-num">${_lbFmt(r.barrelPA, 1)}%</td>
+        <td class="lb-td-num">${_lbFmt(r.sweetSpotPct, 1)}%</td>
+        <td class="lb-td-num">${_lbFmt(r.avgAngle, 1)}\u00b0</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 6: Sprint Speed ── */
+async function renderLbSpeed(el) {
+  if (!_lbCache.hasOwnProperty('speed')) {
+    el.innerHTML = '<div class="lb-loading">Fetching Statcast sprint speed data\u2026</div>'
+    const team = APP_TEAMS[_currentTeamKey]
+    const [teamData, allData] = await Promise.all([
+      fetchStatcastSprintSpeed(team.id),
+      fetchStatcastSprintSpeedAll(),
+    ])
+    _lbCache.speed = teamData
+    _lbCache.speedAll = allData
+  }
+
+  const data = _lbCache.speed
+  if (!data || data.length === 0) {
+    // Fallback to MLB API speed metrics
+    const hitters = _advData.hitters || []
+    let rows = hitters.filter(h => h.pa >= 20).map(h => ({
+      name: h.name, spd: h.spd || 0, sb: h.sb || 0,
+      baseRunning: h.baseRunning || 0, war: h.war || 0,
+    }))
+    rows = _lbSortRows(rows, 'spd')
+    const cols = [
+      { key: 'name', label: 'Player' },
+      { key: 'spd', label: 'Speed Score' },
+      { key: 'sb', label: 'SB' },
+      { key: 'baseRunning', label: 'BsR' },
+      { key: 'war', label: 'WAR' },
+    ]
+    el.innerHTML = `
+      <h3 class="lb-section-title">Speed Leaders</h3>
+      <div class="lb-fallback-msg">Statcast sprint speed data unavailable \u2014 showing speed metrics from MLB API. <a href="https://baseballsavant.mlb.com/leaderboard/sprint_speed" target="_blank">View on Baseball Savant \u2192</a></div>
+      <div class="lb-table-wrap"><table class="lb-table">
+        <thead><tr>${_lbTh(cols)}</tr></thead>
+        <tbody>${rows.map((r, i) => `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num ${_lbCellClass(r.spd, 5, 7, 2)}">${_lbFmt(r.spd, 1)}</td>
+          <td class="lb-td-num">${r.sb}</td>
+          <td class="lb-td-num ${_lbCellClass(r.baseRunning, 1, 3, -2)}">${_lbFmt(r.baseRunning, 1)}</td>
+          <td class="lb-td-num">${_lbFmt(r.war, 1)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`
+    return
+  }
+
+  // Compute percentile from all MLB data
+  const allSpeeds = (_lbCache.speedAll || []).sort((a, b) => a - b)
+  function pctile(speed) {
+    if (!allSpeeds.length) return 50
+    const idx = allSpeeds.filter(s => s <= speed).length
+    return Math.round((idx / allSpeeds.length) * 100)
+  }
+
+  // Add SB from roster data
+  const hitterMap = {}; (_advData.hitters || []).forEach(h => hitterMap[h.id] = h)
+  let rows = data.map(d => {
+    const h = hitterMap[d.playerId] || {}
+    return {
+      name: d.name, sprintSpeed: d.sprintSpeed, hpTo1b: d.hpTo1b,
+      competitiveRuns: d.competitiveRuns, bolts: d.bolts,
+      sb: h.sb || 0, percentile: pctile(d.sprintSpeed),
+    }
+  })
+  rows = _lbSortRows(rows, 'sprintSpeed')
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'sprintSpeed', label: 'Sprint Speed' },
+    { key: 'hpTo1b', label: 'HP to 1B' },
+    { key: 'competitiveRuns', label: 'Comp. Runs' },
+    { key: 'bolts', label: 'Bolts' },
+    { key: 'sb', label: 'SB' },
+  ]
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Sprint Speed Leaders</h3>
+    <p class="lb-section-desc">Statcast sprint speed data \u2014 90th percentile of a player's fastest runs</p>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}<th class="lb-th-num">MLB Pctile</th></tr></thead>
+      <tbody>${rows.map((r, i) => {
+        const pColor = r.percentile >= 80 ? '#4caf50' : r.percentile >= 50 ? '#ff9800' : '#f44336'
+        return `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num ${_lbCellClass(r.sprintSpeed, 28, 30, 26)}">${_lbFmt(r.sprintSpeed, 1)} ft/s</td>
+          <td class="lb-td-num">${_lbFmt(r.hpTo1b, 2)}s</td>
+          <td class="lb-td-num">${r.competitiveRuns}</td>
+          <td class="lb-td-num">${r.bolts}</td>
+          <td class="lb-td-num">${r.sb}</td>
+          <td class="lb-td-num">
+            <div class="lb-percentile-bar"><div class="lb-percentile-fill" style="width:${r.percentile}%; background:${pColor}"></div></div>
+            <span class="lb-percentile-label">${r.percentile}th</span>
+          </td>
+        </tr>`
+      }).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 7: $/WAR ── */
+function renderLbValue(el) {
+  const contractData = typeof CONTRACTS !== 'undefined' ? CONTRACTS[_currentTeamKey] : null
+  if (!contractData?.players) {
+    el.innerHTML = '<div class="lb-loading">No contract data available for this team.</div>'
+    return
+  }
+
+  const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
+  const seen = new Set()
+  const unique = allPlayers.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true })
+
+  let rows = unique.map(p => {
+    const c = contractData.players.find(cp => cp.id === p.id)
+    if (!c || !c.aav) return null
+    const aav = c.aav
+    const dollarPerWar = p.war > 0 ? aav / p.war : null
+    const yrsRemaining = c.end ? c.end - new Date().getFullYear() + 1 : 0
+    return {
+      name: p.name, id: p.id, aav, war: p.war || 0,
+      dollarPerWar, yrsRemaining, totalVal: c.total || 0,
+    }
+  }).filter(Boolean)
+
+  rows = _lbSortRows(rows, 'dollarPerWar')
+  // Default sort: lowest $/WAR first (best value)
+  if (!_lbSortCol) rows.sort((a, b) => {
+    if (a.dollarPerWar == null) return 1
+    if (b.dollarPerWar == null) return -1
+    return a.dollarPerWar - b.dollarPerWar
+  })
+
+  // Find best value and most overpaid
+  const valued = rows.filter(r => r.dollarPerWar != null && r.dollarPerWar > 0)
+  const bestValue = valued[0]
+  const overpaid = [...valued].sort((a, b) => b.dollarPerWar - a.dollarPerWar)[0]
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'aav', label: 'AAV ($M)' },
+    { key: 'war', label: 'WAR' },
+    { key: 'dollarPerWar', label: '$/WAR ($M)' },
+    { key: 'yrsRemaining', label: 'Yrs Left' },
+    { key: 'totalVal', label: 'Total ($M)' },
+  ]
+
+  const highlightHtml = (bestValue || overpaid) ? `
+    <div class="lb-highlight-row">
+      ${bestValue ? `<div class="lb-highlight-card lb-highlight-good">
+        <span class="lb-badge-value">Best Value</span>
+        <div class="lb-highlight-name">${bestValue.name}</div>
+        <div class="lb-highlight-stat">$${bestValue.dollarPerWar.toFixed(1)}M/WAR</div>
+        <div class="lb-highlight-detail">${bestValue.war.toFixed(1)} WAR \u00b7 $${bestValue.aav}M AAV</div>
+      </div>` : ''}
+      ${overpaid ? `<div class="lb-highlight-card lb-highlight-bad">
+        <span class="lb-badge-overpaid">Most Overpaid</span>
+        <div class="lb-highlight-name">${overpaid.name}</div>
+        <div class="lb-highlight-stat">$${overpaid.dollarPerWar ? overpaid.dollarPerWar.toFixed(1) : '\u221e'}M/WAR</div>
+        <div class="lb-highlight-detail">${overpaid.war.toFixed(1)} WAR \u00b7 $${overpaid.aav}M AAV</div>
+      </div>` : ''}
+    </div>` : ''
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">$ per WAR Leaderboard</h3>
+    <p class="lb-section-desc">Contract efficiency \u2014 lower $/WAR = better value</p>
+    ${highlightHtml}
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${rows.map((r, i) => {
+        const dpw = r.dollarPerWar
+        const cls = dpw != null ? (dpw < 5 ? 'lb-cell-elite' : dpw < 10 ? 'lb-cell-good' : dpw > 15 ? 'lb-cell-bad' : '') : ''
+        return `<tr>
+          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
+          <td class="lb-td-num">$${r.aav.toFixed(1)}M</td>
+          <td class="lb-td-num">${_lbFmt(r.war, 1)}</td>
+          <td class="lb-td-num ${cls}">${dpw != null ? `$${dpw.toFixed(1)}M` : '\u2014'}</td>
+          <td class="lb-td-num">${r.yrsRemaining}</td>
+          <td class="lb-td-num">$${r.totalVal}M</td>
+        </tr>`
+      }).join('')}</tbody>
+    </table></div>`
+}
+
+/* ── Tab 8: Underrated (xStats vs Real) ── */
+function renderLbUnderrated(el) {
+  if (_advData.isSpring) {
+    el.innerHTML = '<div class="lb-loading">Expected statistics are not available during Spring Training.</div>'
+    return
+  }
+
+  const hitters = (_advData.hitters || []).filter(h => h.pa >= 50 && h.xAvg > 0)
+  let rows = hitters.map(h => {
+    const baDiff = h.xAvg - h.avg
+    const slgDiff = h.xSlg - h.slg
+    const wobaDiff = (h.xWoba || 0) - (h.woba || 0)
+    const regression = baDiff > 0.020 && slgDiff > 0.030
+    return {
+      name: h.name, id: h.id,
+      ba: h.avg, xBa: h.xAvg, baDiff,
+      slg: h.slg, xSlg: h.xSlg, slgDiff,
+      woba: h.woba || 0, xWoba: h.xWoba || 0, wobaDiff,
+      babip: h.babip, iso: h.iso, regression,
+    }
+  })
+
+  rows = _lbSortRows(rows, 'baDiff')
+
+  const cols = [
+    { key: 'name', label: 'Player' },
+    { key: 'ba', label: 'BA' },
+    { key: 'xBa', label: 'xBA' },
+    { key: 'baDiff', label: 'BA Diff' },
+    { key: 'slg', label: 'SLG' },
+    { key: 'xSlg', label: 'xSLG' },
+    { key: 'slgDiff', label: 'SLG Diff' },
+    { key: 'woba', label: 'wOBA' },
+    { key: 'xWoba', label: 'xwOBA' },
+    { key: 'wobaDiff', label: 'wOBA Diff' },
+    { key: 'babip', label: 'BABIP' },
+  ]
+
+  el.innerHTML = `
+    <h3 class="lb-section-title">Most Underrated (xStats vs Real)</h3>
+    <p class="lb-section-desc">Players whose expected stats exceed actual stats \u2014 due for positive regression (min 50 PA)</p>
+    <div class="lb-table-wrap"><table class="lb-table">
+      <thead><tr>${_lbTh(cols)}</tr></thead>
+      <tbody>${rows.map((r, i) => {
+        const diffCls = v => v > 0.020 ? 'lb-cell-good' : v < -0.020 ? 'lb-cell-bad' : ''
+        const fmtDiff = v => (v > 0 ? '+' : '') + _lbFmt(v)
+        return `<tr>
+          <td class="lb-td-name">
+            <span class="lb-rank">${i + 1}</span>${r.name}
+            ${r.regression ? '<span class="lb-badge-regression">Regression Candidate</span>' : ''}
+          </td>
+          <td class="lb-td-num">${_lbFmt(r.ba)}</td>
+          <td class="lb-td-num">${_lbFmt(r.xBa)}</td>
+          <td class="lb-td-num ${diffCls(r.baDiff)}">${fmtDiff(r.baDiff)}</td>
+          <td class="lb-td-num">${_lbFmt(r.slg)}</td>
+          <td class="lb-td-num">${_lbFmt(r.xSlg)}</td>
+          <td class="lb-td-num ${diffCls(r.slgDiff)}">${fmtDiff(r.slgDiff)}</td>
+          <td class="lb-td-num">${_lbFmt(r.woba)}</td>
+          <td class="lb-td-num">${_lbFmt(r.xWoba)}</td>
+          <td class="lb-td-num ${diffCls(r.wobaDiff)}">${fmtDiff(r.wobaDiff)}</td>
+          <td class="lb-td-num">${_lbFmt(r.babip)}</td>
+        </tr>`
+      }).join('')}</tbody>
+    </table></div>`
 }
 
 /* Always start on home */

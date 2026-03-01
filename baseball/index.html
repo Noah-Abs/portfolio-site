@@ -266,6 +266,29 @@
     </div>
   </div>
 
+  <!-- Custom Leaderboards View -->
+  <div class="view-section" id="view-leaderboards">
+    <div class="lb-wrap">
+      <div class="lb-header">
+        <h2 class="lb-page-title">Custom Leaderboards</h2>
+        <p class="lb-page-sub" id="lb-page-sub"></p>
+      </div>
+      <div class="lb-tabs" id="lb-tabs">
+        <button class="lb-tab active" data-tab="clutch" onclick="switchLbTab('clutch')">Clutch</button>
+        <button class="lb-tab" data-tab="risp" onclick="switchLbTab('risp')">RISP</button>
+        <button class="lb-tab" data-tab="pressure" onclick="switchLbTab('pressure')">Pressure</button>
+        <button class="lb-tab" data-tab="improved" onclick="switchLbTab('improved')">Most Improved</button>
+        <button class="lb-tab" data-tab="exitvelo" onclick="switchLbTab('exitvelo')">Exit Velo</button>
+        <button class="lb-tab" data-tab="speed" onclick="switchLbTab('speed')">Speed</button>
+        <button class="lb-tab" data-tab="value" onclick="switchLbTab('value')">$/WAR</button>
+        <button class="lb-tab" data-tab="underrated" onclick="switchLbTab('underrated')">Underrated</button>
+      </div>
+      <div class="lb-content" id="lb-content">
+        <div class="lb-loading">Select a leaderboard tab above</div>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /main-content -->
 
   <!-- Right navigation panel (desktop only) -->
@@ -282,6 +305,10 @@
     <button class="rn-item" data-view="advanced" onclick="switchView('advanced')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h7"/><polyline points="9 22 12 17 15 22"/><line x1="12" y1="17" x2="12" y2="12"/><circle cx="18" cy="18" r="3"/><path d="M18 15v3h3"/></svg>
       Advanced
+    </button>
+    <button class="rn-item" data-view="leaderboards" onclick="switchView('leaderboards')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21V11M16 21V7M12 21V3"/></svg>
+      Leaderboards
     </button>
     <button class="rn-item" data-view="news" onclick="switchView('news')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2V9"/><path d="M10 6h8M10 10h8M10 14h4"/></svg>
@@ -480,6 +507,12 @@
             <path d="M18 15v3h3"/>
           </svg>
           <span>Advanced</span>
+        </button>
+        <button class="mob-more-item" onclick="closeMoreSheet(); switchView('leaderboards')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
+            <path d="M8 21V11M16 21V7M12 21V3"/>
+          </svg>
+          <span>Leaderboards</span>
         </button>
         <button class="mob-more-item" onclick="closeMoreSheet(); switchView('news')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="26" height="26">
