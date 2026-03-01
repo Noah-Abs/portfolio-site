@@ -15,7 +15,7 @@ const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 function renderTeam(key) {
   const t = APP_TEAMS[key]
   if (!t) return
-  if (_currentTeamKey !== key) { _advData = null; _advLoaded = false; _lbLoaded = false; _lbCache = {}; _advGameType = null }
+  if (_currentTeamKey !== key) { _advData = null; _advDataOriginal = null; _advLoaded = false; _lbLoaded = false; _lbCache = {}; _advGameType = null }
   _currentTeamKey = key
   document.body.dataset.team = key
   localStorage.setItem('selectedTeam', key)
@@ -1669,6 +1669,7 @@ async function sendAiMessage() {
    ══════════════════════════════════════════════ */
 
 let _advData = null   // { hitters, pitchers, overview }
+let _advDataOriginal = null // backup of original stats before filter mutations
 let _advLoaded = false
 let _advTab = 'overview'
 let _advSortCol = 'war'
@@ -1698,6 +1699,7 @@ async function loadAdvancedStats() {
     const label = isSpring ? `${SEASON} Spring Training` : `${SEASON} Season`
     document.getElementById('adv-page-sub').textContent = `${team.name} · ${label}`
     _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview, isSpring }
+    _advDataOriginal = { hitters: roster.hitters.map(h => ({...h})), pitchers: roster.pitchers.map(p => ({...p})) }
     _advLoaded = true
     _renderAdvTab()
   } catch (e) {
@@ -1804,31 +1806,36 @@ function renderAdvOverview(el) {
 function renderAdvHitting(el) {
   const rows = _advData.hitters.sort((a, b) => {
     if (_advSortCol === 'name') return _advSortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-    return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
+    const av = a[_advSortCol] ?? 0, bv = b[_advSortCol] ?? 0
+    return _advSortAsc ? av - bv : bv - av
   })
 
   const isSpring = _advData.isSpring
+  const _n = v => v == null ? 0 : v
+  const _f3 = v => v == null ? '—' : parseFloat(v).toFixed(3)
+  const _f2 = v => v == null ? '—' : parseFloat(v).toFixed(2)
+  const _f1 = v => v == null ? '—' : parseFloat(v).toFixed(1)
   // Sabermetrics (WAR, wRC+, wOBA, xAVG, xSLG) not available in spring training
   const cols = [
-    { key: 'name', label: 'Player', fmt: v => v },
-    { key: 'pa', label: 'PA', fmt: v => v },
+    { key: 'name', label: 'Player', fmt: v => v || '—' },
+    { key: 'pa', label: 'PA', fmt: v => _n(v) },
     ...(!isSpring ? [
-      { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
-      { key: 'wrc', label: 'wRC+', fmt: v => Math.round(v) },
-      { key: 'woba', label: 'wOBA', fmt: v => v.toFixed(3) },
+      { key: 'war', label: 'WAR', fmt: _f1 },
+      { key: 'wrc', label: 'wRC+', fmt: v => v == null ? '—' : Math.round(v) },
+      { key: 'woba', label: 'wOBA', fmt: _f3 },
     ] : []),
-    { key: 'ops', label: 'OPS', fmt: v => v.toFixed(3) },
-    { key: 'avg', label: 'AVG', fmt: v => v.toFixed(3) },
-    { key: 'slg', label: 'SLG', fmt: v => v.toFixed(3) },
-    { key: 'iso', label: 'ISO', fmt: v => v.toFixed(3) },
-    { key: 'babip', label: 'BABIP', fmt: v => v.toFixed(3) },
-    { key: 'kPct', label: 'K%', fmt: v => (v * 100).toFixed(1) + '%' },
-    { key: 'bbPct', label: 'BB%', fmt: v => (v * 100).toFixed(1) + '%' },
-    { key: 'hr', label: 'HR', fmt: v => v },
-    { key: 'sb', label: 'SB', fmt: v => v },
+    { key: 'ops', label: 'OPS', fmt: _f3 },
+    { key: 'avg', label: 'AVG', fmt: _f3 },
+    { key: 'slg', label: 'SLG', fmt: _f3 },
+    { key: 'iso', label: 'ISO', fmt: _f3 },
+    { key: 'babip', label: 'BABIP', fmt: _f3 },
+    { key: 'kPct', label: 'K%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
+    { key: 'bbPct', label: 'BB%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
+    { key: 'hr', label: 'HR', fmt: v => _n(v) },
+    { key: 'sb', label: 'SB', fmt: v => _n(v) },
     ...(!isSpring ? [
-      { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
-      { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+      { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? parseFloat(v).toFixed(3) : '—' },
+      { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? parseFloat(v).toFixed(3) : '—' },
     ] : []),
   ]
 
@@ -1851,13 +1858,13 @@ function renderAdvHitting(el) {
         <tbody>
           ${rows.map(r => `<tr>
             ${cols.map(c => {
-              const v = r[c.key]
+              const v = r[c.key] ?? 0
               const cls = c.key === 'name' ? 'adv-td-name' : 'adv-td-num'
               let color = ''
-              if (c.key === 'war') color = v >= 4 ? ' adv-cell-elite' : v >= 2 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
-              if (c.key === 'wrc') color = v >= 130 ? ' adv-cell-elite' : v >= 100 ? ' adv-cell-good' : v < 80 ? ' adv-cell-bad' : ''
-              if (c.key === 'woba') color = v >= .370 ? ' adv-cell-elite' : v >= .320 ? ' adv-cell-good' : v < .290 ? ' adv-cell-bad' : ''
-              return `<td class="${cls}${color}">${c.fmt(v)}</td>`
+              if (c.key === 'war' && v != null) color = v >= 4 ? ' adv-cell-elite' : v >= 2 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
+              if (c.key === 'wrc' && v != null) color = v >= 130 ? ' adv-cell-elite' : v >= 100 ? ' adv-cell-good' : v < 80 ? ' adv-cell-bad' : ''
+              if (c.key === 'woba' && v != null) color = v >= .370 ? ' adv-cell-elite' : v >= .320 ? ' adv-cell-good' : v < .290 ? ' adv-cell-bad' : ''
+              return `<td class="${cls}${color}">${c.fmt(r[c.key])}</td>`
             }).join('')}
           </tr>`).join('')}
         </tbody>
@@ -1875,6 +1882,11 @@ function advSort(col) {
 async function setAdvFilter(f) {
   _advFilter = f
   if (f === 'all') {
+    // Restore original stats
+    if (_advDataOriginal) {
+      _advData.hitters = _advDataOriginal.hitters.map(h => ({...h}))
+      _advData.pitchers = _advDataOriginal.pitchers.map(p => ({...p}))
+    }
     _renderAdvTab()
     return
   }
@@ -1929,31 +1941,35 @@ async function setAdvFilter(f) {
 function renderAdvPitching(el) {
   const rows = _advData.pitchers.sort((a, b) => {
     if (_advSortCol === 'name' || _advSortCol === 'wl') {
-      const av = String(a[_advSortCol]), bv = String(b[_advSortCol])
+      const av = String(a[_advSortCol] ?? ''), bv = String(b[_advSortCol] ?? '')
       return _advSortAsc ? av.localeCompare(bv) : bv.localeCompare(av)
     }
-    return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
+    const av = a[_advSortCol] ?? 0, bv = b[_advSortCol] ?? 0
+    return _advSortAsc ? av - bv : bv - av
   })
 
   const isSpring = _advData.isSpring
+  const _f3 = v => v == null ? '—' : parseFloat(v).toFixed(3)
+  const _f2 = v => v == null ? '—' : parseFloat(v).toFixed(2)
+  const _f1 = v => v == null ? '—' : parseFloat(v).toFixed(1)
   const cols = [
-    { key: 'name', label: 'Player', fmt: v => v },
-    { key: 'ip', label: 'IP', fmt: v => v.toFixed(1) },
+    { key: 'name', label: 'Player', fmt: v => v || '—' },
+    { key: 'ip', label: 'IP', fmt: _f1 },
     ...(!isSpring ? [
-      { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+      { key: 'war', label: 'WAR', fmt: _f1 },
     ] : []),
-    { key: 'era', label: 'ERA', fmt: v => v.toFixed(2) },
+    { key: 'era', label: 'ERA', fmt: _f2 },
     ...(!isSpring ? [
-      { key: 'fip', label: 'FIP', fmt: v => v.toFixed(2) },
-      { key: 'xfip', label: 'xFIP', fmt: v => v.toFixed(2) },
+      { key: 'fip', label: 'FIP', fmt: _f2 },
+      { key: 'xfip', label: 'xFIP', fmt: _f2 },
     ] : []),
-    { key: 'whip', label: 'WHIP', fmt: v => v.toFixed(2) },
-    { key: 'k9', label: 'K/9', fmt: v => v.toFixed(1) },
-    { key: 'bb9', label: 'BB/9', fmt: v => v.toFixed(1) },
-    { key: 'kbbPct', label: 'K-BB%', fmt: v => (v * 100).toFixed(1) + '%' },
-    { key: 'babip', label: 'BABIP', fmt: v => v.toFixed(3) },
-    { key: 'hr9', label: 'HR/9', fmt: v => v.toFixed(2) },
-    { key: 'wl', label: 'W-L', fmt: v => v },
+    { key: 'whip', label: 'WHIP', fmt: _f2 },
+    { key: 'k9', label: 'K/9', fmt: _f1 },
+    { key: 'bb9', label: 'BB/9', fmt: _f1 },
+    { key: 'kbbPct', label: 'K-BB%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
+    { key: 'babip', label: 'BABIP', fmt: _f3 },
+    { key: 'hr9', label: 'HR/9', fmt: _f2 },
+    { key: 'wl', label: 'W-L', fmt: v => v || '—' },
   ]
 
   el.innerHTML = `
@@ -1975,13 +1991,13 @@ function renderAdvPitching(el) {
         <tbody>
           ${rows.map(r => `<tr>
             ${cols.map(c => {
-              const v = r[c.key]
+              const v = r[c.key] ?? 0
               const cls = c.key === 'name' ? 'adv-td-name' : 'adv-td-num'
               let color = ''
-              if (c.key === 'war') color = v >= 3 ? ' adv-cell-elite' : v >= 1.5 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
-              if (c.key === 'era') color = v <= 2.50 ? ' adv-cell-elite' : v <= 3.50 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
-              if (c.key === 'fip') color = v <= 3.00 ? ' adv-cell-elite' : v <= 3.80 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
-              return `<td class="${cls}${color}">${c.fmt(v)}</td>`
+              if (c.key === 'war' && v != null) color = v >= 3 ? ' adv-cell-elite' : v >= 1.5 ? ' adv-cell-good' : v < 0 ? ' adv-cell-bad' : ''
+              if (c.key === 'era' && v != null) color = v <= 2.50 ? ' adv-cell-elite' : v <= 3.50 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
+              if (c.key === 'fip' && v != null) color = v <= 3.00 ? ' adv-cell-elite' : v <= 3.80 ? ' adv-cell-good' : v > 5.00 ? ' adv-cell-bad' : ''
+              return `<td class="${cls}${color}">${c.fmt(r[c.key])}</td>`
             }).join('')}
           </tr>`).join('')}
         </tbody>
@@ -1995,8 +2011,8 @@ async function renderAdvCharts(el) {
   el.innerHTML = '<div class="adv-loading">Loading chart data\u2026</div>'
 
   // Get top 5 hitters by WAR for rolling OPS
-  const topHitters = [..._advData.hitters].sort((a, b) => b.war - a.war).slice(0, 5)
-  const topPitchers = [..._advData.pitchers].sort((a, b) => b.war - a.war).slice(0, 5)
+  const topHitters = [..._advData.hitters].sort((a, b) => (b.war || 0) - (a.war || 0)).slice(0, 5)
+  const topPitchers = [..._advData.pitchers].sort((a, b) => (b.war || 0) - (a.war || 0)).slice(0, 5)
 
   // Fetch game logs
   const [hitLogs, pitLogs] = await Promise.all([
@@ -2178,7 +2194,7 @@ async function renderAdvValue(el) {
             }
             return `<tr>
               <td class="adv-td-name">${p.name}</td>
-              <td class="adv-td-num">${p.war.toFixed(1)}</td>
+              <td class="adv-td-num">${(p.war || 0).toFixed(1)}</td>
               <td class="adv-td-num">${fmtMoney(p.aav)}</td>
               <td class="adv-td-num${color}">${p.dollarPerWar !== null ? fmtMoney(p.dollarPerWar) : '—'}</td>
             </tr>`
@@ -2430,19 +2446,22 @@ function _lbPct(v) {
 
 /* ── Tab 1: Clutch Hitters ── */
 async function renderLbClutch(el) {
+  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
   const team = APP_TEAMS[_currentTeamKey]
   if (!_lbCache.risp || !_lbCache.lc) {
     el.innerHTML = '<div class="lb-loading">Loading clutch data\u2026</div>'
-    const [risp, lc] = await Promise.all([
-      fetchRosterSituational(team.id, 'risp', 'hitting'),
-      fetchRosterSituational(team.id, 'lc', 'hitting'),
-    ])
-    _lbCache.risp = risp
-    _lbCache.lc = lc
+    try {
+      const [risp, lc] = await Promise.all([
+        fetchRosterSituational(team.id, 'risp', 'hitting'),
+        fetchRosterSituational(team.id, 'lc', 'hitting'),
+      ])
+      _lbCache.risp = risp || []
+      _lbCache.lc = lc || []
+    } catch (e) { el.innerHTML = '<div class="lb-loading">Error loading clutch data.</div>'; return }
   }
 
-  const rispMap = {}; _lbCache.risp.forEach(p => rispMap[p.id] = p)
-  const lcMap = {}; _lbCache.lc.forEach(p => lcMap[p.id] = p)
+  const rispMap = {}; (_lbCache.risp || []).forEach(p => rispMap[p.id] = p)
+  const lcMap = {}; (_lbCache.lc || []).forEach(p => lcMap[p.id] = p)
   const baseHitters = _advData.hitters || []
 
   let rows = baseHitters.map(h => {
@@ -2491,10 +2510,11 @@ async function renderLbRisp(el) {
   const team = APP_TEAMS[_currentTeamKey]
   if (!_lbCache.risp) {
     el.innerHTML = '<div class="lb-loading">Loading RISP data\u2026</div>'
-    _lbCache.risp = await fetchRosterSituational(team.id, 'risp', 'hitting')
+    try { _lbCache.risp = await fetchRosterSituational(team.id, 'risp', 'hitting') || [] }
+    catch (e) { el.innerHTML = '<div class="lb-loading">Error loading RISP data.</div>'; return }
   }
 
-  let rows = _lbCache.risp.filter(p => p.pa >= 5).map(p => ({
+  let rows = (_lbCache.risp || []).filter(p => p.pa >= 5).map(p => ({
     ...p,
     rispAvg: p.avg, rispOps: p.ops, rispObp: p.obp, rispSlg: p.slg,
     rispRbi: p.rbi, rispKPct: p.kPct, rispBbPct: p.bbPct, rispPa: p.pa,
@@ -2537,14 +2557,16 @@ async function renderLbPressure(el) {
   const team = APP_TEAMS[_currentTeamKey]
   const isHitting = _lbSubFilter === 'hitting'
 
-  if (isHitting && !_lbCache.lc) {
-    el.innerHTML = '<div class="lb-loading">Loading Late & Close data\u2026</div>'
-    _lbCache.lc = await fetchRosterSituational(team.id, 'lc', 'hitting')
-  }
-  if (!isHitting && !_lbCache.lcPit) {
-    el.innerHTML = '<div class="lb-loading">Loading Late & Close pitching data\u2026</div>'
-    _lbCache.lcPit = await fetchRosterSituational(team.id, 'lc', 'pitching')
-  }
+  try {
+    if (isHitting && !_lbCache.lc) {
+      el.innerHTML = '<div class="lb-loading">Loading Late & Close data\u2026</div>'
+      _lbCache.lc = await fetchRosterSituational(team.id, 'lc', 'hitting') || []
+    }
+    if (!isHitting && !_lbCache.lcPit) {
+      el.innerHTML = '<div class="lb-loading">Loading Late & Close pitching data\u2026</div>'
+      _lbCache.lcPit = await fetchRosterSituational(team.id, 'lc', 'pitching') || []
+    }
+  } catch (e) { el.innerHTML = '<div class="lb-loading">Error loading pressure data.</div>'; return }
 
   const toggleHtml = `
     <div class="lb-toggle-bar">
@@ -2622,13 +2644,15 @@ async function renderLbPressure(el) {
 
 /* ── Tab 4: Most Improved ── */
 async function renderLbImproved(el) {
+  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
   const team = APP_TEAMS[_currentTeamKey]
   if (!_lbCache.prevSeason) {
     el.innerHTML = '<div class="lb-loading">Loading previous season data\u2026</div>'
-    _lbCache.prevSeason = await fetchPreviousSeasonRoster(team.id)
+    try { _lbCache.prevSeason = await fetchPreviousSeasonRoster(team.id) }
+    catch (e) { el.innerHTML = '<div class="lb-loading">Error loading previous season data.</div>'; return }
   }
 
-  const prev = _lbCache.prevSeason
+  const prev = _lbCache.prevSeason || {}
   const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
   let rows = []
 
@@ -2709,13 +2733,14 @@ async function renderLbExitVelo(el) {
   if (!_lbCache.hasOwnProperty('exitVelo')) {
     el.innerHTML = '<div class="lb-loading">Fetching Statcast exit velocity data\u2026</div>'
     const team = APP_TEAMS[_currentTeamKey]
-    _lbCache.exitVelo = await fetchStatcastExitVelo(team.id)
+    try { _lbCache.exitVelo = await fetchStatcastExitVelo(team.id) }
+    catch (e) { _lbCache.exitVelo = null }
   }
 
   const data = _lbCache.exitVelo
   if (!data || data.length === 0) {
     // Fallback to power stats from MLB API
-    const hitters = _advData.hitters || []
+    const hitters = (_advData?.hitters) || []
     let rows = hitters.filter(h => h.pa >= 20).map(h => ({
       name: h.name, iso: h.iso, hr: h.hr, xSlg: h.xSlg, slg: h.slg, babip: h.babip,
     }))
@@ -2820,18 +2845,20 @@ async function renderLbSpeed(el) {
   if (!_lbCache.hasOwnProperty('speed')) {
     el.innerHTML = '<div class="lb-loading">Fetching Statcast sprint speed data\u2026</div>'
     const team = APP_TEAMS[_currentTeamKey]
-    const [teamData, allData] = await Promise.all([
-      fetchStatcastSprintSpeed(team.id),
-      fetchStatcastSprintSpeedAll(),
-    ])
-    _lbCache.speed = teamData
+    try {
+      const [teamData, allData] = await Promise.all([
+        fetchStatcastSprintSpeed(team.id),
+        fetchStatcastSprintSpeedAll(),
+      ])
+      _lbCache.speed = teamData
     _lbCache.speedAll = allData
+    } catch (e) { _lbCache.speed = null; _lbCache.speedAll = null }
   }
 
   const data = _lbCache.speed
   if (!data || data.length === 0) {
     // Fallback to MLB API speed metrics
-    const hitters = _advData.hitters || []
+    const hitters = (_advData?.hitters) || []
     let rows = hitters.filter(h => h.pa >= 20).map(h => ({
       name: h.name, spd: h.spd || 0, sb: h.sb || 0,
       baseRunning: h.baseRunning || 0, war: h.war || 0,
@@ -2869,7 +2896,7 @@ async function renderLbSpeed(el) {
   }
 
   // Add SB from roster data
-  const hitterMap = {}; (_advData.hitters || []).forEach(h => hitterMap[h.id] = h)
+  const hitterMap = {}; (_advData?.hitters || []).forEach(h => hitterMap[h.id] = h)
   let rows = data.map(d => {
     const h = hitterMap[d.playerId] || {}
     return {
@@ -2920,6 +2947,7 @@ function renderLbValue(el) {
     return
   }
 
+  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
   const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
   const seen = new Set()
   const unique = allPlayers.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true })
@@ -2997,12 +3025,13 @@ function renderLbValue(el) {
 
 /* ── Tab 8: Underrated (xStats vs Real) ── */
 function renderLbUnderrated(el) {
+  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
   if (_advData.isSpring) {
     el.innerHTML = '<div class="lb-loading">Expected statistics are not available during Spring Training.</div>'
     return
   }
 
-  const hitters = (_advData.hitters || []).filter(h => h.pa >= 50 && h.xAvg > 0)
+  const hitters = (_advData.hitters || []).filter(h => h.pa >= 50 && (h.xAvg || 0) > 0)
   let rows = hitters.map(h => {
     const baDiff = h.xAvg - h.avg
     const slgDiff = h.xSlg - h.slg

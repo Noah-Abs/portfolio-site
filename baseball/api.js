@@ -717,7 +717,7 @@ async function fetchRosterSituational(teamId, sitCode, group) {
 
 async function fetchPreviousSeasonRoster(teamId) {
   const prevSeason = SEASON - 1
-  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${SEASON}&hydrate=person(stats(group=[hitting,pitching],type=[season,sabermetrics],season=${prevSeason}))`
+  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${prevSeason}&hydrate=person(stats(group=[hitting,pitching],type=[season,sabermetrics],season=${prevSeason}))`
   const res = await fetch(url)
   const data = await res.json()
   const roster = data.roster || []
