@@ -755,15 +755,23 @@ function _parseCSV(text) {
 }
 
 async function _fetchWithCORSFallback(url) {
+  // Try direct fetch first
   try {
     const res = await fetch(url)
     if (res.ok) { const t = await res.text(); if (t && !t.startsWith('<!')) return t }
   } catch {}
-  try {
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-    const res = await fetch(proxy)
-    if (res.ok) { const t = await res.text(); if (t && !t.startsWith('<!')) return t }
-  } catch {}
+  // CORS proxy chain — try multiple proxies
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  ]
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy)
+      if (res.ok) { const t = await res.text(); if (t && !t.startsWith('<!')) return t }
+    } catch {}
+  }
   return null
 }
 

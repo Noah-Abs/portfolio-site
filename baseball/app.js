@@ -868,6 +868,7 @@ function switchView(view) {
   if (view === 'settings') renderSettingsTeams()
   if (view === 'advanced') loadAdvancedStats()
   if (view === 'leaderboards') loadLeaderboards()
+  if (view !== 'leaderboards') _stopLbAutoRefresh()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
   })
@@ -1721,7 +1722,6 @@ function _renderAdvTab() {
     case 'hitting':   renderAdvHitting(el); break
     case 'pitching':  renderAdvPitching(el); break
     case 'charts':    renderAdvCharts(el); break
-    case 'value':     renderAdvValue(el); break
   }
 }
 
@@ -2152,59 +2152,6 @@ async function renderAdvCharts(el) {
   `
 }
 
-/* ── Value Tab ── */
-async function renderAdvValue(el) {
-  const contractData = typeof CONTRACTS !== 'undefined' ? CONTRACTS[_currentTeamKey] : null
-
-  const players = [..._advData.hitters, ..._advData.pitchers]
-  // Deduplicate by id
-  const seen = new Set()
-  const unique = players.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true })
-
-  // Match with contract data
-  const valued = unique.map(p => {
-    let aav = 0
-    if (contractData?.players) {
-      const match = contractData.players.find(c => c.id === p.id)
-      if (match) aav = match.aav || 0
-    }
-    const dollarPerWar = p.war > 0 && aav > 0 ? aav / p.war : null
-    return { ...p, aav, dollarPerWar }
-  }).filter(p => p.aav > 0 && p.war !== undefined)
-    .sort((a, b) => (a.dollarPerWar || Infinity) - (b.dollarPerWar || Infinity))
-
-  const fmtMoney = v => `$${v.toFixed(1)}M`
-
-  el.innerHTML = `
-    <div class="adv-section-title">Contract Value Efficiency</div>
-    <p class="adv-value-sub">Sorted by $ per WAR — lower is better value</p>
-    <div class="adv-table-wrap">
-      <table class="adv-table">
-        <thead><tr>
-          <th class="adv-th-name">Player</th>
-          <th class="adv-th-num">WAR</th>
-          <th class="adv-th-num">AAV</th>
-          <th class="adv-th-num">$/WAR</th>
-        </tr></thead>
-        <tbody>
-          ${valued.map(p => {
-            let color = ''
-            if (p.dollarPerWar !== null) {
-              color = p.dollarPerWar < 5e6 ? ' adv-cell-elite' : p.dollarPerWar < 10e6 ? ' adv-cell-good' : p.dollarPerWar > 20e6 ? ' adv-cell-bad' : ''
-            }
-            return `<tr>
-              <td class="adv-td-name">${p.name}</td>
-              <td class="adv-td-num">${(p.war || 0).toFixed(1)}</td>
-              <td class="adv-td-num">${fmtMoney(p.aav)}</td>
-              <td class="adv-td-num${color}">${p.dollarPerWar !== null ? fmtMoney(p.dollarPerWar) : '—'}</td>
-            </tr>`
-          }).join('')}
-        </tbody>
-      </table>
-    </div>
-  `
-}
-
 /* ── Radar Chart (Player Overlay Integration) ── */
 function buildRadarChart(player, group) {
   const axes = group === 'pitching'
@@ -2274,6 +2221,7 @@ let _lbSortCol = null
 let _lbSortAsc = false
 let _lbSubFilter = 'hitting'
 let _lbCache = {} // { risp: [...], lc: [...], lcPit: [...], prevSeason: {...}, exitVelo: [...], speed: [...], speedAll: [...] }
+let _lbAutoRefreshTimer = null
 
 const LB_TOOLTIPS = {
   name: 'Player name',
@@ -2368,6 +2316,21 @@ async function loadLeaderboards() {
   } catch (e) {
     el.innerHTML = `<div class="lb-loading">Error loading leaderboards: ${e.message}</div>`
   }
+
+  // Auto-refresh Statcast data every 60 seconds
+  _stopLbAutoRefresh()
+  _lbAutoRefreshTimer = setInterval(() => {
+    if (_lbTab === 'exitvelo' || _lbTab === 'speed') {
+      delete _lbCache.exitVelo
+      delete _lbCache.speed
+      delete _lbCache.speedAll
+      _renderLbTab()
+    }
+  }, 60000)
+}
+
+function _stopLbAutoRefresh() {
+  if (_lbAutoRefreshTimer) { clearInterval(_lbAutoRefreshTimer); _lbAutoRefreshTimer = null }
 }
 
 function switchLbTab(tab) {
@@ -2755,7 +2718,7 @@ async function renderLbExitVelo(el) {
     ]
     el.innerHTML = `
       <h3 class="lb-section-title">Power Leaders</h3>
-      <div class="lb-fallback-msg">Statcast exit velocity data unavailable \u2014 showing power stats from MLB API. <a href="https://baseballsavant.mlb.com/leaderboard/statcast" target="_blank">View on Baseball Savant \u2192</a></div>
+      <div class="lb-fallback-msg">Statcast exit velocity data unavailable — showing power stats instead. <button class="lb-retry-btn" onclick="delete _lbCache.exitVelo; _renderLbTab()">Retry</button></div>
       <div class="lb-table-wrap"><table class="lb-table">
         <thead><tr>${_lbTh(cols)}</tr></thead>
         <tbody>${rows.map((r, i) => `<tr>
@@ -2873,7 +2836,7 @@ async function renderLbSpeed(el) {
     ]
     el.innerHTML = `
       <h3 class="lb-section-title">Speed Leaders</h3>
-      <div class="lb-fallback-msg">Statcast sprint speed data unavailable \u2014 showing speed metrics from MLB API. <a href="https://baseballsavant.mlb.com/leaderboard/sprint_speed" target="_blank">View on Baseball Savant \u2192</a></div>
+      <div class="lb-fallback-msg">Statcast sprint speed data unavailable — showing speed metrics instead. <button class="lb-retry-btn" onclick="delete _lbCache.speed; delete _lbCache.speedAll; _renderLbTab()">Retry</button></div>
       <div class="lb-table-wrap"><table class="lb-table">
         <thead><tr>${_lbTh(cols)}</tr></thead>
         <tbody>${rows.map((r, i) => `<tr>

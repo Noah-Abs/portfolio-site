@@ -125,7 +125,7 @@ body::after {
 .rn-badge { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; background: #e53; color: #fff; border-radius: 4px; padding: 1px 4px; }
 
 /* ── Main Content ── */
-.main-content { margin-left: var(--sb-width); margin-right: var(--rn-width); }
+.main-content { margin-left: var(--sb-width); margin-right: var(--rn-width); overflow-x: hidden; }
 body.no-left-sidebar .fixed-sidebar { display: none; }
 body.no-left-sidebar .main-content { margin-left: 0; }
 body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
@@ -882,9 +882,6 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .adv-legend-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.5); }
 .adv-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-/* Value Tab */
-.adv-value-sub { font-size: 0.78rem; color: rgba(255,255,255,0.35); margin-bottom: 1rem; }
-
 /* Radar Chart (Player Overlay) */
 .po-radar-wrap { display: flex; justify-content: center; padding: 0.5rem 0; }
 .po-radar-svg { width: 180px; height: 195px; }
@@ -966,6 +963,8 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .lb-fallback-msg { background: rgba(255,152,0,0.08); border: 1px solid rgba(255,152,0,0.15); border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem; line-height: 1.5; }
 .lb-fallback-msg a { color: #ffb74d; text-decoration: none; }
 .lb-fallback-msg a:hover { text-decoration: underline; }
+.lb-retry-btn { background: rgba(255,152,0,0.15); border: 1px solid rgba(255,152,0,0.3); color: #ffb74d; font-size: 0.72rem; font-weight: 600; padding: 0.3rem 0.75rem; border-radius: 6px; cursor: pointer; margin-left: 0.5rem; font-family: inherit; transition: background 0.15s; }
+.lb-retry-btn:hover { background: rgba(255,152,0,0.25); }
 
 /* Leaderboards Responsive */
 @media (max-width: 700px) {
