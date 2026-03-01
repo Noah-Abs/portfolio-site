@@ -15,7 +15,7 @@ const LOGO = 'https://www.mlbstatic.com/team-logos/team-cap-on-dark'
 function renderTeam(key) {
   const t = APP_TEAMS[key]
   if (!t) return
-  if (_currentTeamKey !== key) { _advData = null; _advDataOriginal = null; _advLoaded = false; _lbLoaded = false; _lbCache = {}; _advGameType = null }
+  if (_currentTeamKey !== key) { _advData = null; _advDataOriginal = null; _advLoaded = false; _vaLoaded = false; _vaFeeds = null; _vaData = null; _advGameType = null }
   _currentTeamKey = key
   document.body.dataset.team = key
   localStorage.setItem('selectedTeam', key)
@@ -854,7 +854,7 @@ function switchView(view) {
   /* always start on home - no view persistence */
   closePanel()
   document.body.classList.toggle('no-left-sidebar', view !== 'home')
-  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings', 'advanced', 'leaderboards']
+  const allViews = ['home', 'hub', 'depth', 'contracts', 'news', 'breakdown', 'prospects', 'statsai', 'settings', 'advanced', 'analytics']
   allViews.forEach(v => {
     const el = document.getElementById(`view-${v}`)
     if (el) el.classList.toggle('active', v === view)
@@ -867,8 +867,7 @@ function switchView(view) {
   if (view === 'prospects') loadProspects()
   if (view === 'settings') renderSettingsTeams()
   if (view === 'advanced') loadAdvancedStats()
-  if (view === 'leaderboards') loadLeaderboards()
-  if (view !== 'leaderboards') _stopLbAutoRefresh()
+  if (view === 'analytics') loadVisualAnalytics()
   document.querySelectorAll('.rn-item[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.view === view)
   })
@@ -2232,846 +2231,610 @@ function buildRadarChart(player, group) {
 }
 
 /* ══════════════════════════════════════════════
-   Custom Leaderboards
+   Visual Analytics
    ══════════════════════════════════════════════ */
 
-let _lbData = null
-let _lbLoaded = false
-let _lbTab = 'clutch'
-let _lbSortCol = null
-let _lbSortAsc = false
-let _lbSubFilter = 'hitting'
-let _lbCache = {} // { risp: [...], lc: [...], lcPit: [...], prevSeason: {...}, exitVelo: [...], speed: [...], speedAll: [...] }
-let _lbAutoRefreshTimer = null
+let _vaLoaded = false
+let _vaTab = 'spray'
+let _vaFeeds = null
+let _vaData = null
+let _vaPlayerFilter = null
+let _vaGameCount = 10
 
-const LB_TOOLTIPS = {
-  name: 'Player name',
-  rispAvg: 'Batting average with runners in scoring position',
-  rispOps: 'OPS with runners in scoring position',
-  rispObp: 'On-base percentage with RISP',
-  rispSlg: 'Slugging percentage with RISP',
-  rispRbi: 'RBI in at-bats with RISP',
-  rispKPct: 'Strikeout rate with RISP',
-  rispBbPct: 'Walk rate with RISP',
-  rispPa: 'Plate appearances with RISP',
-  lcAvg: 'Batting average in Late & Close situations',
-  lcOps: 'OPS in Late & Close situations',
-  lcObp: 'On-base pct in Late & Close',
-  lcHr: 'Home runs in Late & Close',
-  lcRbi: 'RBI in Late & Close',
-  lcKPct: 'Strikeout rate in Late & Close',
-  lcEra: 'ERA in Late & Close situations',
-  lcWhip: 'WHIP in Late & Close',
-  lcK: 'Strikeouts in Late & Close',
-  lcBb: 'Walks in Late & Close',
-  lcIp: 'Innings pitched in Late & Close',
-  lcAvgAgainst: 'Opponent batting avg in Late & Close',
-  wRaa: 'Weighted Runs Above Average — offensive value in runs',
-  rbi: 'Runs Batted In',
-  curWar: 'Current season WAR',
-  prevWar: 'Previous season WAR',
-  warDiff: 'WAR change year-over-year',
-  curOps: 'Current season OPS',
-  prevOps: 'Previous season OPS',
-  opsDiff: 'OPS change year-over-year',
-  curEra: 'Current season ERA',
-  prevEra: 'Previous season ERA',
-  eraDiff: 'ERA change year-over-year',
-  age: 'Player age',
-  avgEV: 'Average exit velocity (mph)',
-  maxEV: 'Maximum exit velocity (mph)',
-  hardHitPct: 'Percentage of batted balls 95+ mph',
-  barrelPct: 'Barrel rate — optimal exit velo + launch angle',
-  barrelPA: 'Barrels per plate appearance',
-  sweetSpotPct: 'Launch angle sweet spot percentage',
-  avgAngle: 'Average launch angle (degrees)',
-  sprintSpeed: 'Sprint speed (ft/sec) — 90th percentile of runs',
-  hpTo1b: 'Home plate to first base time (seconds)',
-  competitiveRuns: 'Number of competitive (max-effort) runs',
-  bolts: 'Runs of 30+ ft/sec',
-  sb: 'Stolen bases',
-  aav: 'Average Annual Value ($M)',
-  war: 'Wins Above Replacement',
-  dollarPerWar: 'Cost per WAR ($ millions)',
-  yrsRemaining: 'Contract years remaining',
-  totalVal: 'Total contract value ($M)',
-  ba: 'Batting average', xBa: 'Expected batting average (Statcast)',
-  baDiff: 'xBA minus BA — positive = unlucky',
-  slg: 'Slugging percentage', xSlg: 'Expected slugging (Statcast)',
-  slgDiff: 'xSLG minus SLG — positive = unlucky',
-  woba: 'Weighted On-Base Average', xWoba: 'Expected wOBA (Statcast)',
-  wobaDiff: 'xwOBA minus wOBA — positive = unlucky',
-  babip: 'Batting Average on Balls In Play',
-  iso: 'Isolated Power (SLG - AVG)',
-}
-
-async function loadLeaderboards() {
+async function loadVisualAnalytics() {
   const team = APP_TEAMS[_currentTeamKey]
   if (!team) return
+  if (_vaLoaded) { _renderVaTab(); return }
 
-  if (_lbLoaded) { _renderLbTab(); return }
+  const el = document.getElementById('va-content')
+  el.innerHTML = '<div class="va-loading">Loading play-by-play data\u2026</div>'
 
-  const el = document.getElementById('lb-content')
-  el.innerHTML = '<div class="lb-loading">Loading leaderboards\u2026</div>'
+  const isSpring = (_advGameType || await _detectGameType()) === 'S'
+  const label = isSpring ? `${SEASON} Spring Training` : `${SEASON} Season`
+  document.getElementById('va-page-sub').textContent = `${team.name} \u00b7 ${label}`
 
   try {
-    // Reuse advanced stats data if available, otherwise fetch
-    if (!_advData) {
-      const [roster, overview] = await Promise.all([
-        fetchAdvancedRoster(team.id),
-        fetchAdvancedTeamOverview(team.id),
-      ])
-      const isSpring = _advGameType === 'S'
-      _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview, isSpring }
-      _advLoaded = true
+    _vaGameCount = isSpring ? 5 : 10
+    _vaFeeds = await fetchRecentGameFeeds(team.id, _vaGameCount)
+    if (!_vaFeeds || _vaFeeds.length === 0) {
+      el.innerHTML = '<div class="va-loading">No completed games with play-by-play data available yet.</div>'
+      return
     }
-
-    const isSpring = _advData.isSpring
-    const label = isSpring ? `${SEASON} Spring Training` : `${SEASON} Season`
-    document.getElementById('lb-page-sub').textContent = `${team.name} \u00b7 ${label}`
-    _lbLoaded = true
-    _lbTab = 'clutch'
-    _lbSortCol = null
-    document.querySelectorAll('.lb-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'clutch'))
-    _renderLbTab()
+    _vaData = extractPlayByPlayData(_vaFeeds, team.id)
+    _vaLoaded = true
+    _vaTab = 'spray'
+    document.querySelectorAll('.va-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === 'spray'))
+    _renderVaTab()
   } catch (e) {
-    el.innerHTML = `<div class="lb-loading">Error loading leaderboards: ${e.message}</div>`
-  }
-
-  // Auto-refresh Statcast data every 60 seconds
-  _stopLbAutoRefresh()
-  _lbAutoRefreshTimer = setInterval(() => {
-    if (_lbTab === 'exitvelo' || _lbTab === 'speed') {
-      delete _lbCache.exitVelo
-      delete _lbCache.speed
-      delete _lbCache.speedAll
-      _renderLbTab()
-    }
-  }, 60000)
-}
-
-function _stopLbAutoRefresh() {
-  if (_lbAutoRefreshTimer) { clearInterval(_lbAutoRefreshTimer); _lbAutoRefreshTimer = null }
-}
-
-function switchLbTab(tab) {
-  _lbTab = tab
-  _lbSortCol = null
-  _lbSortAsc = false
-  _lbSubFilter = 'hitting'
-  document.querySelectorAll('.lb-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
-  _renderLbTab()
-}
-
-function _renderLbTab() {
-  const el = document.getElementById('lb-content')
-  if (!_lbData && !_advData) return
-  switch (_lbTab) {
-    case 'clutch':     renderLbClutch(el); break
-    case 'risp':       renderLbRisp(el); break
-    case 'pressure':   renderLbPressure(el); break
-    case 'improved':   renderLbImproved(el); break
-    case 'exitvelo':   renderLbExitVelo(el); break
-    case 'speed':      renderLbSpeed(el); break
-    case 'value':      renderLbValue(el); break
-    case 'underrated': renderLbUnderrated(el); break
+    el.innerHTML = `<div class="va-loading">Error loading analytics: ${e.message}</div>`
   }
 }
 
-function lbSort(col) {
-  if (_lbSortCol === col) _lbSortAsc = !_lbSortAsc
-  else { _lbSortCol = col; _lbSortAsc = col === 'name' }
-  _renderLbTab()
+function switchVaTab(tab) {
+  _vaTab = tab
+  _vaPlayerFilter = null
+  document.querySelectorAll('.va-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab))
+  _renderVaTab()
 }
 
-function _lbTh(cols) {
-  return cols.map(c => {
-    const arrow = _lbSortCol === c.key ? (_lbSortAsc ? ' \u2191' : ' \u2193') : ''
-    const tip = LB_TOOLTIPS[c.key] ? ` data-tooltip="${LB_TOOLTIPS[c.key]}"` : ''
-    const cls = c.key === 'name' ? 'lb-th-name' : 'lb-th-num'
-    return `<th class="${cls}" onclick="lbSort('${c.key}')"${tip}>${c.label}${arrow}</th>`
+function _renderVaTab() {
+  const el = document.getElementById('va-content')
+  if (!_vaData && _vaTab !== 'ops' && _vaTab !== 'era' && _vaTab !== 'rematrix') {
+    el.innerHTML = '<div class="va-loading">Loading data\u2026</div>'
+    return
+  }
+  switch (_vaTab) {
+    case 'spray':    renderVaSpray(el); break
+    case 'heatmap':  renderVaHeatmap(el); break
+    case 'ops':      renderVaRollingOps(el); break
+    case 'era':      renderVaRollingEra(el); break
+    case 'velocity': renderVaVelocity(el); break
+    case 'whiff':    renderVaWhiff(el); break
+    case 'wpa':      renderVaWpa(el); break
+    case 'rematrix': renderVaRunExpectancy(el); break
+  }
+}
+
+/* ── Player Toggle Helper ── */
+function _vaPlayerToggle(playerList, label) {
+  const opts = [`<option value="">Team-wide (${label || 'All'})</option>`]
+  for (const p of playerList) {
+    opts.push(`<option value="${p.id}" ${_vaPlayerFilter == p.id ? 'selected' : ''}>${p.name}</option>`)
+  }
+  return `<div class="va-filter-bar"><select class="va-player-select" onchange="_vaPlayerFilter=this.value||null; _renderVaTab()">${opts.join('')}</select></div>`
+}
+
+function _getVaBatterList() {
+  const seen = new Map()
+  for (const b of (_vaData?.battedBalls || [])) {
+    if (b.isMyBatter && !seen.has(b.batterId)) seen.set(b.batterId, b.batterName)
+  }
+  for (const p of (_vaData?.pitches || [])) {
+    if (p.isMyBatter && !seen.has(p.batterId)) seen.set(p.batterId, p.batterName)
+  }
+  return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function _getVaPitcherList() {
+  const seen = new Map()
+  for (const p of (_vaData?.pitches || [])) {
+    if (p.isMyPitcher && !seen.has(p.pitcherId)) seen.set(p.pitcherId, p.pitcherName)
+  }
+  return [...seen.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+const VA_CHART_COLORS = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8']
+
+/* ── 1. Spray Chart ── */
+function renderVaSpray(el) {
+  const balls = _vaData.battedBalls.filter(b => _vaPlayerFilter ? b.batterId == _vaPlayerFilter : b.isMyBatter)
+
+  const eventColors = {
+    'Single': '#81c784', 'Double': '#ffb74d', 'Triple': '#ff8a65',
+    'Home Run': '#ef5350', 'Sac Fly': '#4fc3f7',
+    'Flyout': 'rgba(255,255,255,0.18)', 'Pop Out': 'rgba(255,255,255,0.12)',
+    'Groundout': 'rgba(255,255,255,0.15)', 'Lineout': 'rgba(255,255,255,0.22)',
+    'Field Error': '#ce93d8', 'Forceout': 'rgba(255,255,255,0.12)',
+    'Grounded Into DP': 'rgba(255,255,255,0.1)', 'Double Play': 'rgba(255,255,255,0.1)',
+    'Fielders Choice': 'rgba(255,255,255,0.12)',
+  }
+
+  let svg = `<svg class="va-chart-svg va-spray-svg" viewBox="0 0 250 250">`
+  // Field shape
+  svg += `<path d="M125,220 L30,130 Q125,15 220,130 Z" fill="rgba(76,175,80,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>`
+  svg += `<path d="M125,220 L85,180 L125,140 L165,180 Z" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>` // infield diamond
+  svg += `<circle cx="125" cy="220" r="3" fill="rgba(255,255,255,0.25)"/>` // home plate
+
+  for (const b of balls) {
+    const color = eventColors[b.event] || 'rgba(255,255,255,0.12)'
+    const r = b.launchSpeed ? Math.max(2, Math.min(5.5, b.launchSpeed / 28)) : 3
+    svg += `<circle cx="${b.coordX}" cy="${b.coordY}" r="${r}" fill="${color}" opacity="0.75"><title>${b.event || 'Out'}: ${b.launchSpeed ? b.launchSpeed.toFixed(0) + ' mph' : '?'}, ${b.launchAngle != null ? b.launchAngle.toFixed(0) + '\u00b0' : '?'}</title></circle>`
+  }
+  svg += '</svg>'
+
+  const legendItems = ['Single', 'Double', 'Triple', 'Home Run', 'Out'].map(name => {
+    const c = name === 'Out' ? 'rgba(255,255,255,0.18)' : eventColors[name]
+    return `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${c}"></span>${name}</span>`
   }).join('')
-}
-
-function _lbSortRows(rows, defaultCol) {
-  const col = _lbSortCol || defaultCol
-  const asc = _lbSortCol ? _lbSortAsc : (col === 'name')
-  return [...rows].sort((a, b) => {
-    if (col === 'name') return asc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
-    const av = a[col] ?? 0, bv = b[col] ?? 0
-    return asc ? av - bv : bv - av
-  })
-}
-
-function _lbCellClass(val, goodThresh, eliteThresh, badThresh, invert) {
-  if (val == null || isNaN(val)) return ''
-  if (invert) {
-    if (val <= eliteThresh) return 'lb-cell-elite'
-    if (val <= goodThresh) return 'lb-cell-good'
-    if (val >= badThresh) return 'lb-cell-bad'
-  } else {
-    if (val >= eliteThresh) return 'lb-cell-elite'
-    if (val >= goodThresh) return 'lb-cell-good'
-    if (val <= badThresh) return 'lb-cell-bad'
-  }
-  return ''
-}
-
-function _lbFmt(v, dec = 3) {
-  if (v == null || isNaN(v)) return '\u2014'
-  if (dec === 3) return v === 0 ? '.000' : parseFloat(v).toFixed(3).replace(/^0/, '')
-  return parseFloat(v).toFixed(dec)
-}
-
-function _lbPct(v) {
-  if (v == null || isNaN(v)) return '\u2014'
-  return (v * 100).toFixed(1) + '%'
-}
-
-/* ── Tab 1: Clutch Hitters ── */
-async function renderLbClutch(el) {
-  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
-  const team = APP_TEAMS[_currentTeamKey]
-  if (!_lbCache.risp || !_lbCache.lc) {
-    el.innerHTML = '<div class="lb-loading">Loading clutch data\u2026</div>'
-    try {
-      const [risp, lc] = await Promise.all([
-        fetchRosterSituational(team.id, 'risp', 'hitting'),
-        fetchRosterSituational(team.id, 'lc', 'hitting'),
-      ])
-      _lbCache.risp = risp || []
-      _lbCache.lc = lc || []
-    } catch (e) { el.innerHTML = '<div class="lb-loading">Error loading clutch data.</div>'; return }
-  }
-
-  const rispMap = {}; (_lbCache.risp || []).forEach(p => rispMap[p.id] = p)
-  const lcMap = {}; (_lbCache.lc || []).forEach(p => lcMap[p.id] = p)
-  const baseHitters = _advData.hitters || []
-
-  let rows = baseHitters.map(h => {
-    const r = rispMap[h.id] || {}
-    const l = lcMap[h.id] || {}
-    return {
-      name: h.name, id: h.id,
-      rispAvg: r.avg || 0, rispOps: r.ops || 0,
-      lcAvg: l.avg || 0, lcOps: l.ops || 0,
-      rbi: r.rbi || 0, wRaa: h.wRaa || 0,
-    }
-  }).filter(r => r.rispOps > 0 || r.lcOps > 0)
-
-  rows = _lbSortRows(rows, 'rispOps')
-  const top10 = rows.slice(0, 10)
-
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'rispAvg', label: 'RISP AVG' },
-    { key: 'rispOps', label: 'RISP OPS' },
-    { key: 'lcAvg', label: 'LC AVG' },
-    { key: 'lcOps', label: 'LC OPS' },
-    { key: 'rbi', label: 'RBI' },
-    { key: 'wRaa', label: 'wRAA' },
-  ]
 
   el.innerHTML = `
-    <h3 class="lb-section-title">Top 10 Clutch Hitters</h3>
-    <p class="lb-section-desc">RISP & Late/Close performance combined with overall run production</p>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${top10.map((r, i) => `<tr>
-        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispAvg, .280, .320, .200)}">${_lbFmt(r.rispAvg)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispOps, .800, .900, .600)}">${_lbFmt(r.rispOps)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.lcAvg, .280, .320, .200)}">${_lbFmt(r.lcAvg)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.lcOps, .800, .900, .600)}">${_lbFmt(r.lcOps)}</td>
-        <td class="lb-td-num">${r.rbi}</td>
-        <td class="lb-td-num ${_lbCellClass(r.wRaa, 10, 25, -5)}">${_lbFmt(r.wRaa, 1)}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`
-}
-
-/* ── Tab 2: RISP Hitters ── */
-async function renderLbRisp(el) {
-  const team = APP_TEAMS[_currentTeamKey]
-  if (!_lbCache.risp) {
-    el.innerHTML = '<div class="lb-loading">Loading RISP data\u2026</div>'
-    try { _lbCache.risp = await fetchRosterSituational(team.id, 'risp', 'hitting') || [] }
-    catch (e) { el.innerHTML = '<div class="lb-loading">Error loading RISP data.</div>'; return }
-  }
-
-  let rows = (_lbCache.risp || []).filter(p => p.pa >= 5).map(p => ({
-    ...p,
-    rispAvg: p.avg, rispOps: p.ops, rispObp: p.obp, rispSlg: p.slg,
-    rispRbi: p.rbi, rispKPct: p.kPct, rispBbPct: p.bbPct, rispPa: p.pa,
-  }))
-  rows = _lbSortRows(rows, 'rispAvg')
-
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'rispAvg', label: 'AVG' },
-    { key: 'rispOps', label: 'OPS' },
-    { key: 'rispObp', label: 'OBP' },
-    { key: 'rispSlg', label: 'SLG' },
-    { key: 'rispRbi', label: 'RBI' },
-    { key: 'rispKPct', label: 'K%' },
-    { key: 'rispBbPct', label: 'BB%' },
-    { key: 'rispPa', label: 'PA' },
-  ]
-
-  el.innerHTML = `
-    <h3 class="lb-section-title">Best Hitters with RISP</h3>
-    <p class="lb-section-desc">Batting stats with runners in scoring position (min 5 PA)</p>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${rows.map((r, i) => `<tr>
-        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispAvg, .280, .320, .200)}">${_lbFmt(r.rispAvg)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispOps, .800, .900, .600)}">${_lbFmt(r.rispOps)}</td>
-        <td class="lb-td-num">${_lbFmt(r.rispObp)}</td>
-        <td class="lb-td-num">${_lbFmt(r.rispSlg)}</td>
-        <td class="lb-td-num">${r.rispRbi}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispKPct, .18, .12, .28, true)}">${_lbPct(r.rispKPct)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.rispBbPct, .10, .14, .04)}">${_lbPct(r.rispBbPct)}</td>
-        <td class="lb-td-num">${r.rispPa}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`
-}
-
-/* ── Tab 3: Pressure Performers ── */
-async function renderLbPressure(el) {
-  const team = APP_TEAMS[_currentTeamKey]
-  const isHitting = _lbSubFilter === 'hitting'
-
-  try {
-    if (isHitting && !_lbCache.lc) {
-      el.innerHTML = '<div class="lb-loading">Loading Late & Close data\u2026</div>'
-      _lbCache.lc = await fetchRosterSituational(team.id, 'lc', 'hitting') || []
-    }
-    if (!isHitting && !_lbCache.lcPit) {
-      el.innerHTML = '<div class="lb-loading">Loading Late & Close pitching data\u2026</div>'
-      _lbCache.lcPit = await fetchRosterSituational(team.id, 'lc', 'pitching') || []
-    }
-  } catch (e) { el.innerHTML = '<div class="lb-loading">Error loading pressure data.</div>'; return }
-
-  const toggleHtml = `
-    <div class="lb-toggle-bar">
-      <button class="lb-toggle-pill ${isHitting ? 'active' : ''}" onclick="_lbSubFilter='hitting'; _lbSortCol=null; _renderLbTab()">Hitters</button>
-      <button class="lb-toggle-pill ${!isHitting ? 'active' : ''}" onclick="_lbSubFilter='pitching'; _lbSortCol=null; _renderLbTab()">Pitchers</button>
+    ${_vaPlayerToggle(_getVaBatterList(), 'Batters')}
+    <div class="va-chart-section">
+      <div class="adv-section-title">Spray Chart (Last ${_vaGameCount} Games)</div>
+      <div class="adv-chart-legend">${legendItems}</div>
+      <div class="adv-chart-wrap">${balls.length > 0 ? svg : '<div class="va-loading">No batted ball data available.</div>'}</div>
+      <div class="va-chart-meta">${balls.length} batted balls</div>
     </div>`
-
-  if (isHitting) {
-    let rows = (_lbCache.lc || []).filter(p => p.pa >= 3).map(p => ({
-      name: p.name, id: p.id,
-      lcAvg: p.avg, lcOps: p.ops, lcObp: p.obp,
-      lcHr: p.hr, lcRbi: p.rbi, lcKPct: p.kPct,
-    }))
-    rows = _lbSortRows(rows, 'lcOps')
-    const cols = [
-      { key: 'name', label: 'Player' },
-      { key: 'lcAvg', label: 'AVG' },
-      { key: 'lcOps', label: 'OPS' },
-      { key: 'lcObp', label: 'OBP' },
-      { key: 'lcHr', label: 'HR' },
-      { key: 'lcRbi', label: 'RBI' },
-      { key: 'lcKPct', label: 'K%' },
-    ]
-    el.innerHTML = `
-      <h3 class="lb-section-title">High Leverage Performers</h3>
-      <p class="lb-section-desc">Late & Close situations (7th inning or later, tie or within 1 run)</p>
-      ${toggleHtml}
-      <div class="lb-table-wrap"><table class="lb-table">
-        <thead><tr>${_lbTh(cols)}</tr></thead>
-        <tbody>${rows.map((r, i) => `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcAvg, .280, .320, .200)}">${_lbFmt(r.lcAvg)}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcOps, .800, .900, .600)}">${_lbFmt(r.lcOps)}</td>
-          <td class="lb-td-num">${_lbFmt(r.lcObp)}</td>
-          <td class="lb-td-num">${r.lcHr}</td>
-          <td class="lb-td-num">${r.lcRbi}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcKPct, .18, .12, .28, true)}">${_lbPct(r.lcKPct)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-  } else {
-    let rows = (_lbCache.lcPit || []).filter(p => p.ip > 0).map(p => ({
-      name: p.name, id: p.id,
-      lcEra: p.era, lcAvgAgainst: p.avg, lcWhip: p.whip,
-      lcK: p.k, lcBb: p.bb, lcIp: p.ip,
-    }))
-    rows = _lbSortRows(rows, 'lcEra')
-    if (!_lbSortCol) rows.sort((a, b) => a.lcEra - b.lcEra) // default asc for ERA
-    const cols = [
-      { key: 'name', label: 'Player' },
-      { key: 'lcEra', label: 'ERA' },
-      { key: 'lcAvgAgainst', label: 'AVG Against' },
-      { key: 'lcWhip', label: 'WHIP' },
-      { key: 'lcK', label: 'K' },
-      { key: 'lcBb', label: 'BB' },
-      { key: 'lcIp', label: 'IP' },
-    ]
-    el.innerHTML = `
-      <h3 class="lb-section-title">High Leverage Performers</h3>
-      <p class="lb-section-desc">Late & Close situations — pitching performance under pressure</p>
-      ${toggleHtml}
-      <div class="lb-table-wrap"><table class="lb-table">
-        <thead><tr>${_lbTh(cols)}</tr></thead>
-        <tbody>${rows.map((r, i) => `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcEra, 3.50, 2.50, 5.00, true)}">${_lbFmt(r.lcEra, 2)}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcAvgAgainst, .230, .200, .280, true)}">${_lbFmt(r.lcAvgAgainst)}</td>
-          <td class="lb-td-num ${_lbCellClass(r.lcWhip, 1.20, 1.00, 1.50, true)}">${_lbFmt(r.lcWhip, 2)}</td>
-          <td class="lb-td-num">${r.lcK}</td>
-          <td class="lb-td-num">${r.lcBb}</td>
-          <td class="lb-td-num">${_lbFmt(r.lcIp, 1)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-  }
 }
 
-/* ── Tab 4: Most Improved ── */
-async function renderLbImproved(el) {
-  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
-  const team = APP_TEAMS[_currentTeamKey]
-  if (!_lbCache.prevSeason) {
-    el.innerHTML = '<div class="lb-loading">Loading previous season data\u2026</div>'
-    try { _lbCache.prevSeason = await fetchPreviousSeasonRoster(team.id) }
-    catch (e) { el.innerHTML = '<div class="lb-loading">Error loading previous season data.</div>'; return }
+/* ── 2. Pitch Heat Map ── */
+function renderVaHeatmap(el) {
+  const allPitches = _vaData.pitches.filter(p => _vaPlayerFilter ? (p.pitcherId == _vaPlayerFilter || p.batterId == _vaPlayerFilter) : p.isMyPitcher)
+
+  const zoneLeft = -1.8, zoneRight = 1.8, zoneBot = 0.8, zoneTop = 4.2
+  const GRID = 7
+  const cellW = (zoneRight - zoneLeft) / GRID
+  const cellH = (zoneTop - zoneBot) / GRID
+  const grid = Array.from({ length: GRID }, () => Array(GRID).fill(0))
+
+  for (const p of allPitches) {
+    const col = Math.floor((p.pX - zoneLeft) / cellW)
+    const row = Math.floor((zoneTop - p.pZ) / cellH)
+    if (col >= 0 && col < GRID && row >= 0 && row < GRID) grid[row][col]++
+  }
+  const maxCount = Math.max(1, ...grid.flat())
+
+  const W = 340, H = 380, PAD = 50
+  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD
+
+  let svg = `<svg class="va-chart-svg" viewBox="0 0 ${W} ${H}" style="max-width:400px;margin:0 auto">`
+  // Strike zone outline (inner box)
+  const szInL = szL + (szR - szL) * ((-0.83 - zoneLeft) / (zoneRight - zoneLeft))
+  const szInR = szL + (szR - szL) * ((0.83 - zoneLeft) / (zoneRight - zoneLeft))
+  const szInT = szT + (szB - szT) * ((zoneTop - 3.5) / (zoneTop - zoneBot))
+  const szInB = szT + (szB - szT) * ((zoneTop - 1.5) / (zoneTop - zoneBot))
+  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4"/>`
+
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID; c++) {
+      const intensity = grid[r][c] / maxCount
+      if (intensity < 0.02) continue
+      const x = szL + (c / GRID) * (szR - szL)
+      const y = szT + (r / GRID) * (szB - szT)
+      const w = (szR - szL) / GRID
+      const h = (szB - szT) / GRID
+      const red = Math.round(40 + intensity * 200)
+      const green = Math.round(60 * (1 - intensity * 0.7))
+      const blue = Math.round(180 * (1 - intensity) + 30)
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.12 + intensity * 0.55})" rx="3"><title>${grid[r][c]} pitches</title></rect>`
+    }
   }
 
-  const prev = _lbCache.prevSeason || {}
-  const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
-  let rows = []
+  // Home plate
+  svg += `<path d="M${W / 2 - 10},${szB + 20} L${W / 2 - 6},${szB + 15} L${W / 2 + 6},${szB + 15} L${W / 2 + 10},${szB + 20} L${W / 2},${szB + 26} Z" fill="rgba(255,255,255,0.15)"/>`
+  svg += `<text x="${W / 2}" y="${H - 4}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle" font-family="Inter">Catcher's Perspective</text>`
+  svg += '</svg>'
 
-  for (const p of allPlayers) {
-    const old = prev[p.id]
-    if (!old || old.g < 10) continue
-    const isHitter = _advData.hitters?.some(h => h.id === p.id)
-    const curWar = p.war || 0
-    const prevWar = old.war || 0
-    const warDiff = curWar - prevWar
-    rows.push({
-      name: p.name, id: p.id,
-      curWar, prevWar, warDiff,
-      curOps: isHitter ? (p.ops || 0) : null,
-      prevOps: isHitter ? (old.ops || 0) : null,
-      opsDiff: isHitter ? ((p.ops || 0) - (old.ops || 0)) : null,
-      curEra: !isHitter ? (p.era || 0) : null,
-      prevEra: !isHitter ? (old.era || 0) : null,
-      eraDiff: !isHitter ? ((p.era || 0) - (old.era || 0)) : null,
-      age: old.age || 0,
+  el.innerHTML = `
+    ${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}
+    <div class="va-chart-section">
+      <div class="adv-section-title">Pitch Location Heat Map (Last ${_vaGameCount} Games)</div>
+      <div class="adv-chart-wrap">${allPitches.length > 0 ? svg : '<div class="va-loading">No pitch data available.</div>'}</div>
+      <div class="va-chart-meta">${allPitches.length} pitches mapped</div>
+    </div>`
+}
+
+/* ── 3. Rolling OPS ── */
+async function renderVaRollingOps(el) {
+  el.innerHTML = '<div class="va-loading">Loading game logs\u2026</div>'
+  try {
+    if (!_advData) {
+      const team = APP_TEAMS[_currentTeamKey]
+      const roster = await fetchAdvancedRoster(team.id)
+      _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview: roster.overview, isSpring: (_advGameType || await _detectGameType()) === 'S' }
+    }
+    const topHitters = [..._advData.hitters].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.pa || 0) - (a.pa || 0)).slice(0, 5)
+    const hitLogs = await Promise.all(topHitters.map(async p => {
+      try { if (!_advGameLogCache[`${p.id}_hit`]) _advGameLogCache[`${p.id}_hit`] = await fetchPlayerGameLog(p.id, 'hitting') } catch { _advGameLogCache[`${p.id}_hit`] = [] }
+      return { name: p.name, logs: _advGameLogCache[`${p.id}_hit`] || [] }
+    }))
+
+    const opsWindow = _advData.isSpring ? 5 : 15
+    function rollingOps(logs) {
+      if (!logs || logs.length < opsWindow) return []
+      const pts = []
+      for (let i = opsWindow - 1; i < logs.length; i++) {
+        let ab = 0, h = 0, bb = 0, hbp = 0, sf = 0, tb = 0, pa = 0
+        for (let j = i - opsWindow + 1; j <= i; j++) {
+          const s = logs[j]?.stat; if (!s) continue
+          ab += +s.atBats || 0; h += +s.hits || 0; bb += +s.baseOnBalls || 0
+          hbp += +s.hitByPitch || 0; sf += +s.sacFlies || 0; tb += +s.totalBases || 0; pa += +s.plateAppearances || 0
+        }
+        const obp = pa > 0 ? (h + bb + hbp) / pa : 0
+        const slg = ab > 0 ? tb / ab : 0
+        pts.push(obp + slg)
+      }
+      return pts
+    }
+
+    const W = 700, H = 200, PAD = 40
+    let maxPts = 0
+    const opsData = hitLogs.map(h => { const pts = rollingOps(h.logs); maxPts = Math.max(maxPts, pts.length); return { name: h.name, pts } })
+    let opsSvg = ''
+    if (maxPts > 1) {
+      let maxOps = 0, minOps = 2
+      opsData.forEach(d => d.pts.forEach(v => { maxOps = Math.max(maxOps, v); minOps = Math.min(minOps, v) }))
+      const range = Math.max(maxOps - minOps, 0.1)
+      opsSvg = `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD + (H - PAD * 2) * i / 4, val = (maxOps - range * i / 4).toFixed(3)
+        opsSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)"/>`
+        opsSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+      }
+      opsData.forEach((d, ci) => {
+        if (d.pts.length < 2) return
+        const path = d.pts.map((v, i) => {
+          const x = PAD + (W - PAD - 10) * i / Math.max(maxPts - 1, 1)
+          const y = PAD + (H - PAD * 2) * (1 - (v - minOps) / range)
+          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+        }).join(' ')
+        opsSvg += `<path d="${path}" fill="none" stroke="${VA_CHART_COLORS[ci]}" stroke-width="2" opacity="0.85"/>`
+      })
+      opsSvg += `</svg>`
+    }
+    const legend = opsData.map((d, i) => `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${VA_CHART_COLORS[i]}"></span>${d.name.split(' ').pop()}</span>`).join('')
+    el.innerHTML = `<div class="va-chart-section">
+      <div class="adv-section-title">Rolling ${opsWindow}-Game OPS (Top 5 by WAR)</div>
+      <div class="adv-chart-legend">${legend}</div>
+      <div class="adv-chart-wrap">${opsSvg || '<div class="va-loading">Not enough games yet for rolling chart</div>'}</div>
+    </div>`
+  } catch (e) { el.innerHTML = `<div class="va-loading">Error: ${e.message}</div>` }
+}
+
+/* ── 4. Rolling ERA ── */
+async function renderVaRollingEra(el) {
+  el.innerHTML = '<div class="va-loading">Loading game logs\u2026</div>'
+  try {
+    if (!_advData) {
+      const team = APP_TEAMS[_currentTeamKey]
+      const roster = await fetchAdvancedRoster(team.id)
+      _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview: roster.overview, isSpring: (_advGameType || await _detectGameType()) === 'S' }
+    }
+    const topPitchers = [..._advData.pitchers].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.ip || 0) - (a.ip || 0)).slice(0, 5)
+    const pitLogs = await Promise.all(topPitchers.map(async p => {
+      try { if (!_advGameLogCache[`${p.id}_pit`]) _advGameLogCache[`${p.id}_pit`] = await fetchPlayerGameLog(p.id, 'pitching') } catch { _advGameLogCache[`${p.id}_pit`] = [] }
+      return { name: p.name, logs: _advGameLogCache[`${p.id}_pit`] || [] }
+    }))
+
+    const eraWindow = _advData.isSpring ? 3 : 5
+    function rollingEra(logs) {
+      if (!logs || logs.length < eraWindow) return []
+      const pts = []
+      for (let i = eraWindow - 1; i < logs.length; i++) {
+        let ip = 0, er = 0
+        for (let j = i - eraWindow + 1; j <= i; j++) {
+          const s = logs[j]?.stat; if (!s) continue
+          ip += parseFloat(s.inningsPitched) || 0; er += +s.earnedRuns || 0
+        }
+        pts.push(ip > 0 ? (er / ip) * 9 : 0)
+      }
+      return pts
+    }
+
+    const W = 700, H = 200, PAD = 40
+    let maxEraPts = 0
+    const eraData = pitLogs.map(p => { const pts = rollingEra(p.logs); maxEraPts = Math.max(maxEraPts, pts.length); return { name: p.name, pts } })
+    let eraSvg = ''
+    if (maxEraPts > 1) {
+      let maxEra = 0, minEra = 20
+      eraData.forEach(d => d.pts.forEach(v => { maxEra = Math.max(maxEra, v); minEra = Math.min(minEra, v) }))
+      minEra = Math.max(0, minEra - 0.5); maxEra += 0.5
+      const range = Math.max(maxEra - minEra, 0.5)
+      eraSvg = `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD + (H - PAD * 2) * i / 4, val = (maxEra - range * i / 4).toFixed(2)
+        eraSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)"/>`
+        eraSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+      }
+      eraData.forEach((d, ci) => {
+        if (d.pts.length < 2) return
+        const path = d.pts.map((v, i) => {
+          const x = PAD + (W - PAD - 10) * i / Math.max(maxEraPts - 1, 1)
+          const y = PAD + (H - PAD * 2) * ((v - minEra) / range)
+          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+        }).join(' ')
+        eraSvg += `<path d="${path}" fill="none" stroke="${VA_CHART_COLORS[ci]}" stroke-width="2" opacity="0.85"/>`
+      })
+      eraSvg += `</svg>`
+    }
+    const legend = eraData.map((d, i) => `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${VA_CHART_COLORS[i]}"></span>${d.name.split(' ').pop()}</span>`).join('')
+    el.innerHTML = `<div class="va-chart-section">
+      <div class="adv-section-title">Rolling ${eraWindow}-Start ERA (Top 5 by WAR)</div>
+      <div class="adv-chart-legend">${legend}</div>
+      <div class="adv-chart-wrap">${eraSvg || '<div class="va-loading">Not enough starts yet for rolling chart</div>'}</div>
+    </div>`
+  } catch (e) { el.innerHTML = `<div class="va-loading">Error: ${e.message}</div>` }
+}
+
+/* ── 5. Velocity Trends ── */
+function renderVaVelocity(el) {
+  const pitches = _vaData.pitches.filter(p => _vaPlayerFilter ? p.pitcherId == _vaPlayerFilter : p.isMyPitcher).filter(p => p.startSpeed)
+
+  // Group by pitch type, compute per-game average velocity
+  const byTypeGame = {}
+  for (const p of pitches) {
+    const key = p.pitchType
+    if (!byTypeGame[key]) byTypeGame[key] = {}
+    if (!byTypeGame[key][p.gamePk]) byTypeGame[key][p.gamePk] = { total: 0, count: 0 }
+    byTypeGame[key][p.gamePk].total += p.startSpeed
+    byTypeGame[key][p.gamePk].count++
+  }
+
+  const gameOrder = [...new Set(pitches.map(p => p.gamePk))]
+  const types = Object.entries(byTypeGame).sort((a, b) => Object.keys(b[1]).length - Object.keys(a[1]).length).slice(0, 6)
+
+  if (types.length === 0) {
+    el.innerHTML = `${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}<div class="va-loading">No velocity data available.</div>`
+    return
+  }
+
+  let allVelos = []
+  const lineData = types.map(([type, games]) => {
+    const pts = gameOrder.map(gk => games[gk] ? games[gk].total / games[gk].count : null)
+    pts.forEach(v => { if (v) allVelos.push(v) })
+    return { type, pts }
+  })
+
+  const maxV = Math.max(...allVelos) + 2, minV = Math.min(...allVelos) - 2
+  const W = 700, H = 220, PAD = 45
+
+  let svg = `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD + (H - PAD * 2) * i / 4
+    const val = (maxV - (maxV - minV) * i / 4).toFixed(0)
+    svg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)"/>`
+    svg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+  }
+  // Game labels on x-axis
+  gameOrder.forEach((_, i) => {
+    const x = PAD + (W - PAD - 10) * i / Math.max(gameOrder.length - 1, 1)
+    svg += `<text x="${x}" y="${H + 12}" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="middle" font-family="Inter">G${i + 1}</text>`
+  })
+
+  lineData.forEach(({ type, pts }) => {
+    const color = PITCH_COLORS[type] || '#90a4ae'
+    let path = ''
+    pts.forEach((v, i) => {
+      if (v == null) return
+      const x = PAD + (W - PAD - 10) * i / Math.max(gameOrder.length - 1, 1)
+      const y = PAD + (H - PAD * 2) * (1 - (v - minV) / (maxV - minV))
+      path += `${path === '' ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
     })
-  }
-
-  rows = _lbSortRows(rows, 'warDiff')
-
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'curWar', label: `${SEASON} WAR` },
-    { key: 'prevWar', label: `${SEASON - 1} WAR` },
-    { key: 'warDiff', label: 'WAR \u0394' },
-    { key: 'curOps', label: `${SEASON} OPS` },
-    { key: 'prevOps', label: `${SEASON - 1} OPS` },
-    { key: 'curEra', label: `${SEASON} ERA` },
-    { key: 'prevEra', label: `${SEASON - 1} ERA` },
-    { key: 'age', label: 'Age' },
-  ]
-
-  // Bar chart for top 10
-  const top10 = rows.slice(0, 10)
-  const maxAbs = Math.max(...top10.map(r => Math.abs(r.warDiff)), 1)
-  const W = 700, H = Math.max(200, top10.length * 32 + 40), PAD = 120
-  let barSvg = `<svg viewBox="0 0 ${W} ${H}" class="lb-bar-svg">`
-  barSvg += `<line x1="${PAD + (W - PAD - 20) / 2}" y1="10" x2="${PAD + (W - PAD - 20) / 2}" y2="${H - 10}" stroke="rgba(255,255,255,0.15)" stroke-dasharray="4"/>`
-  top10.forEach((r, i) => {
-    const y = 20 + i * 30
-    const barW = (Math.abs(r.warDiff) / maxAbs) * ((W - PAD - 20) / 2 - 10)
-    const cx = PAD + (W - PAD - 20) / 2
-    const x = r.warDiff >= 0 ? cx : cx - barW
-    const color = r.warDiff >= 0 ? 'rgba(76,175,80,0.7)' : 'rgba(244,67,54,0.7)'
-    barSvg += `<text x="${PAD - 6}" y="${y + 13}" fill="rgba(255,255,255,0.5)" font-size="10" text-anchor="end" font-family="Inter">${r.name.split(' ').pop()}</text>`
-    barSvg += `<rect x="${x}" y="${y}" width="${barW}" height="20" rx="3" fill="${color}"/>`
-    barSvg += `<text x="${r.warDiff >= 0 ? x + barW + 5 : x - 5}" y="${y + 14}" fill="rgba(255,255,255,0.6)" font-size="10" text-anchor="${r.warDiff >= 0 ? 'start' : 'end'}" font-family="Inter">${r.warDiff > 0 ? '+' : ''}${r.warDiff.toFixed(1)}</text>`
+    if (path) svg += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" opacity="0.8"/>`
+    // Add dots at each game point
+    pts.forEach((v, i) => {
+      if (v == null) return
+      const x = PAD + (W - PAD - 10) * i / Math.max(gameOrder.length - 1, 1)
+      const y = PAD + (H - PAD * 2) * (1 - (v - minV) / (maxV - minV))
+      svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${color}" opacity="0.9"><title>${type}: ${v.toFixed(1)} mph</title></circle>`
+    })
   })
-  barSvg += '</svg>'
+  svg += '</svg>'
+
+  const legend = lineData.map(d => {
+    const c = PITCH_COLORS[d.type] || '#90a4ae'
+    return `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${c}"></span>${d.type}</span>`
+  }).join('')
 
   el.innerHTML = `
-    <h3 class="lb-section-title">Most Improved (WAR Jump)</h3>
-    <p class="lb-section-desc">Year-over-year WAR change — ${SEASON - 1} vs ${SEASON}</p>
-    <div class="lb-bar-chart">${barSvg}</div>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${rows.map((r, i) => `<tr>
-        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-        <td class="lb-td-num">${_lbFmt(r.curWar, 1)}</td>
-        <td class="lb-td-num">${_lbFmt(r.prevWar, 1)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.warDiff, 1.0, 2.0, -1.0)}">${r.warDiff > 0 ? '+' : ''}${_lbFmt(r.warDiff, 1)}</td>
-        <td class="lb-td-num">${r.curOps != null ? _lbFmt(r.curOps) : '\u2014'}</td>
-        <td class="lb-td-num">${r.prevOps != null ? _lbFmt(r.prevOps) : '\u2014'}</td>
-        <td class="lb-td-num">${r.curEra != null ? _lbFmt(r.curEra, 2) : '\u2014'}</td>
-        <td class="lb-td-num">${r.prevEra != null ? _lbFmt(r.prevEra, 2) : '\u2014'}</td>
-        <td class="lb-td-num">${r.age || '\u2014'}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`
+    ${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}
+    <div class="va-chart-section">
+      <div class="adv-section-title">Pitch Velocity Trends (Last ${_vaGameCount} Games)</div>
+      <div class="va-chart-desc">Average velocity per game by pitch type</div>
+      <div class="adv-chart-legend">${legend}</div>
+      <div class="adv-chart-wrap">${svg}</div>
+    </div>`
 }
 
-/* ── Tab 5: Exit Velocity ── */
-async function renderLbExitVelo(el) {
-  if (!_lbCache.hasOwnProperty('exitVelo')) {
-    el.innerHTML = '<div class="lb-loading">Fetching Statcast exit velocity data\u2026</div>'
-    const team = APP_TEAMS[_currentTeamKey]
-    try { _lbCache.exitVelo = await fetchStatcastExitVelo(team.id) }
-    catch (e) { _lbCache.exitVelo = null }
-  }
+/* ── 6. Whiff Map ── */
+function renderVaWhiff(el) {
+  const allPitches = _vaData.pitches.filter(p => _vaPlayerFilter ? p.pitcherId == _vaPlayerFilter : p.isMyPitcher)
 
-  const data = _lbCache.exitVelo
-  if (!data || data.length === 0) {
-    // Fallback to power stats from MLB API
-    const hitters = (_advData?.hitters) || []
-    let rows = hitters.filter(h => h.pa >= 20).map(h => ({
-      name: h.name, iso: h.iso, hr: h.hr, xSlg: h.xSlg, slg: h.slg, babip: h.babip,
-    }))
-    rows = _lbSortRows(rows, 'iso')
-    const cols = [
-      { key: 'name', label: 'Player' },
-      { key: 'iso', label: 'ISO' },
-      { key: 'hr', label: 'HR' },
-      { key: 'slg', label: 'SLG' },
-      { key: 'xSlg', label: 'xSLG' },
-      { key: 'babip', label: 'BABIP' },
-    ]
-    el.innerHTML = `
-      <h3 class="lb-section-title">Power Leaders</h3>
-      <div class="lb-fallback-msg">Statcast exit velocity data unavailable — showing power stats instead. <button class="lb-retry-btn" onclick="delete _lbCache.exitVelo; _renderLbTab()">Retry</button></div>
-      <div class="lb-table-wrap"><table class="lb-table">
-        <thead><tr>${_lbTh(cols)}</tr></thead>
-        <tbody>${rows.map((r, i) => `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num ${_lbCellClass(r.iso, .180, .250, .100)}">${_lbFmt(r.iso)}</td>
-          <td class="lb-td-num">${r.hr}</td>
-          <td class="lb-td-num">${_lbFmt(r.slg)}</td>
-          <td class="lb-td-num">${_lbFmt(r.xSlg)}</td>
-          <td class="lb-td-num">${_lbFmt(r.babip)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    return
-  }
+  const zoneLeft = -1.8, zoneRight = 1.8, zoneBot = 0.8, zoneTop = 4.2
+  const GRID = 5
+  const cellW = (zoneRight - zoneLeft) / GRID
+  const cellH = (zoneTop - zoneBot) / GRID
+  const swings = Array.from({ length: GRID }, () => Array(GRID).fill(0))
+  const whiffs = Array.from({ length: GRID }, () => Array(GRID).fill(0))
 
-  let rows = data.map(d => ({
-    name: d.name, avgEV: d.avgEV, maxEV: d.maxEV,
-    hardHitPct: d.hardHitPct, barrelPct: d.barrelPct,
-    barrelPA: d.barrelPA, sweetSpotPct: d.sweetSpotPct, avgAngle: d.avgAngle,
-  }))
-  rows = _lbSortRows(rows, 'avgEV')
-
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'avgEV', label: 'Avg EV' },
-    { key: 'maxEV', label: 'Max EV' },
-    { key: 'hardHitPct', label: 'Hard Hit%' },
-    { key: 'barrelPct', label: 'Barrel%' },
-    { key: 'barrelPA', label: 'Brl/PA' },
-    { key: 'sweetSpotPct', label: 'Sweet Spot%' },
-    { key: 'avgAngle', label: 'Avg LA' },
-  ]
-
-  // Scatter plot: X=avgEV, Y=avgAngle, size=barrelPct
-  const SPAD = 50, SW = 650, SH = 300
-  const evMin = Math.min(...data.map(d => d.avgEV)) - 1
-  const evMax = Math.max(...data.map(d => d.avgEV)) + 1
-  const laMin = Math.min(...data.map(d => d.avgAngle)) - 2
-  const laMax = Math.max(...data.map(d => d.avgAngle)) + 2
-  const chartColors = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8', '#4dd0e1', '#fff176', '#a1887f', '#90a4ae', '#f48fb1']
-  let scatter = `<svg viewBox="0 0 ${SW} ${SH}" class="lb-scatter-svg">`
-  // Grid
-  for (let i = 0; i <= 4; i++) {
-    const y = SPAD + (SH - SPAD * 2) * i / 4
-    scatter += `<line x1="${SPAD}" y1="${y}" x2="${SW - 20}" y2="${y}" stroke="rgba(255,255,255,0.06)"/>`
-    const lv = laMax - (laMax - laMin) * i / 4
-    scatter += `<text x="${SPAD - 5}" y="${y + 3}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="end">${lv.toFixed(0)}\u00b0</text>`
-  }
-  for (let i = 0; i <= 4; i++) {
-    const x = SPAD + (SW - SPAD - 20) * i / 4
-    scatter += `<line x1="${x}" y1="${SPAD}" x2="${x}" y2="${SH - SPAD}" stroke="rgba(255,255,255,0.06)"/>`
-    const ev = evMin + (evMax - evMin) * i / 4
-    scatter += `<text x="${x}" y="${SH - SPAD + 15}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">${ev.toFixed(0)}</text>`
-  }
-  scatter += `<text x="${SW / 2}" y="${SH - 5}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Avg Exit Velocity (mph)</text>`
-  scatter += `<text x="12" y="${SH / 2}" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle" transform="rotate(-90,12,${SH / 2})">Launch Angle (\u00b0)</text>`
-  // Dots
-  data.forEach((d, ci) => {
-    const x = SPAD + ((d.avgEV - evMin) / (evMax - evMin)) * (SW - SPAD - 20)
-    const y = SPAD + ((laMax - d.avgAngle) / (laMax - laMin)) * (SH - SPAD * 2)
-    const r = Math.max(4, Math.min(14, (d.barrelPct || 1) * 1.5))
-    const color = chartColors[ci % chartColors.length]
-    scatter += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${color}" opacity="0.7"><title>${d.name}: ${d.avgEV} mph, ${d.avgAngle}\u00b0, ${d.barrelPct}% barrel</title></circle>`
-  })
-  scatter += '</svg>'
-
-  el.innerHTML = `
-    <h3 class="lb-section-title">Exit Velocity Leaders</h3>
-    <p class="lb-section-desc">Statcast batted ball data \u2014 powered by Baseball Savant</p>
-    <div class="lb-scatter-wrap">${scatter}</div>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${rows.map((r, i) => `<tr>
-        <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-        <td class="lb-td-num ${_lbCellClass(r.avgEV, 90, 93, 86)}">${_lbFmt(r.avgEV, 1)}</td>
-        <td class="lb-td-num">${_lbFmt(r.maxEV, 1)}</td>
-        <td class="lb-td-num ${_lbCellClass(r.hardHitPct, 40, 50, 30)}">${_lbFmt(r.hardHitPct, 1)}%</td>
-        <td class="lb-td-num ${_lbCellClass(r.barrelPct, 8, 12, 4)}">${_lbFmt(r.barrelPct, 1)}%</td>
-        <td class="lb-td-num">${_lbFmt(r.barrelPA, 1)}%</td>
-        <td class="lb-td-num">${_lbFmt(r.sweetSpotPct, 1)}%</td>
-        <td class="lb-td-num">${_lbFmt(r.avgAngle, 1)}\u00b0</td>
-      </tr>`).join('')}</tbody>
-    </table></div>`
-}
-
-/* ── Tab 6: Sprint Speed ── */
-async function renderLbSpeed(el) {
-  if (!_lbCache.hasOwnProperty('speed')) {
-    el.innerHTML = '<div class="lb-loading">Fetching Statcast sprint speed data\u2026</div>'
-    const team = APP_TEAMS[_currentTeamKey]
-    try {
-      const [teamData, allData] = await Promise.all([
-        fetchStatcastSprintSpeed(team.id),
-        fetchStatcastSprintSpeedAll(),
-      ])
-      _lbCache.speed = teamData
-    _lbCache.speedAll = allData
-    } catch (e) { _lbCache.speed = null; _lbCache.speedAll = null }
-  }
-
-  const data = _lbCache.speed
-  if (!data || data.length === 0) {
-    // Fallback to MLB API speed metrics
-    const hitters = (_advData?.hitters) || []
-    let rows = hitters.filter(h => h.pa >= 20).map(h => ({
-      name: h.name, spd: h.spd || 0, sb: h.sb || 0,
-      baseRunning: h.baseRunning || 0, war: h.war || 0,
-    }))
-    rows = _lbSortRows(rows, 'spd')
-    const cols = [
-      { key: 'name', label: 'Player' },
-      { key: 'spd', label: 'Speed Score' },
-      { key: 'sb', label: 'SB' },
-      { key: 'baseRunning', label: 'BsR' },
-      { key: 'war', label: 'WAR' },
-    ]
-    el.innerHTML = `
-      <h3 class="lb-section-title">Speed Leaders</h3>
-      <div class="lb-fallback-msg">Statcast sprint speed data unavailable — showing speed metrics instead. <button class="lb-retry-btn" onclick="delete _lbCache.speed; delete _lbCache.speedAll; _renderLbTab()">Retry</button></div>
-      <div class="lb-table-wrap"><table class="lb-table">
-        <thead><tr>${_lbTh(cols)}</tr></thead>
-        <tbody>${rows.map((r, i) => `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num ${_lbCellClass(r.spd, 5, 7, 2)}">${_lbFmt(r.spd, 1)}</td>
-          <td class="lb-td-num">${r.sb}</td>
-          <td class="lb-td-num ${_lbCellClass(r.baseRunning, 1, 3, -2)}">${_lbFmt(r.baseRunning, 1)}</td>
-          <td class="lb-td-num">${_lbFmt(r.war, 1)}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    return
-  }
-
-  // Compute percentile from all MLB data
-  const allSpeeds = (_lbCache.speedAll || []).sort((a, b) => a - b)
-  function pctile(speed) {
-    if (!allSpeeds.length) return 50
-    const idx = allSpeeds.filter(s => s <= speed).length
-    return Math.round((idx / allSpeeds.length) * 100)
-  }
-
-  // Add SB from roster data
-  const hitterMap = {}; (_advData?.hitters || []).forEach(h => hitterMap[h.id] = h)
-  let rows = data.map(d => {
-    const h = hitterMap[d.playerId] || {}
-    return {
-      name: d.name, sprintSpeed: d.sprintSpeed, hpTo1b: d.hpTo1b,
-      competitiveRuns: d.competitiveRuns, bolts: d.bolts,
-      sb: h.sb || 0, percentile: pctile(d.sprintSpeed),
+  for (const p of allPitches) {
+    const isSwing = p.isSwingingStrike || p.isInPlay
+    if (!isSwing) continue
+    const col = Math.floor((p.pX - zoneLeft) / cellW)
+    const row = Math.floor((zoneTop - p.pZ) / cellH)
+    if (col >= 0 && col < GRID && row >= 0 && row < GRID) {
+      swings[row][col]++
+      if (p.isSwingingStrike) whiffs[row][col]++
     }
-  })
-  rows = _lbSortRows(rows, 'sprintSpeed')
+  }
 
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'sprintSpeed', label: 'Sprint Speed' },
-    { key: 'hpTo1b', label: 'HP to 1B' },
-    { key: 'competitiveRuns', label: 'Comp. Runs' },
-    { key: 'bolts', label: 'Bolts' },
-    { key: 'sb', label: 'SB' },
-  ]
+  const W = 340, H = 380, PAD = 50
+  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD
+  const szInL = szL + (szR - szL) * ((-0.83 - zoneLeft) / (zoneRight - zoneLeft))
+  const szInR = szL + (szR - szL) * ((0.83 - zoneLeft) / (zoneRight - zoneLeft))
+  const szInT = szT + (szB - szT) * ((zoneTop - 3.5) / (zoneTop - zoneBot))
+  const szInB = szT + (szB - szT) * ((zoneTop - 1.5) / (zoneTop - zoneBot))
+
+  let svg = `<svg class="va-chart-svg" viewBox="0 0 ${W} ${H}" style="max-width:400px;margin:0 auto">`
+  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="4"/>`
+
+  for (let r = 0; r < GRID; r++) {
+    for (let c = 0; c < GRID; c++) {
+      if (swings[r][c] < 2) continue
+      const rate = whiffs[r][c] / swings[r][c]
+      const x = szL + (c / GRID) * (szR - szL)
+      const y = szT + (r / GRID) * (szB - szT)
+      const w = (szR - szL) / GRID
+      const h = (szB - szT) / GRID
+      const red = Math.round(50 + rate * 200)
+      const green = Math.round(180 * (1 - rate))
+      const blue = Math.round(60 * (1 - rate))
+      svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(${red},${green},${blue},${0.2 + rate * 0.5})" rx="3"/>`
+      svg += `<text x="${x + w / 2}" y="${y + h / 2 + 4}" fill="rgba(255,255,255,${0.4 + rate * 0.4})" font-size="10" font-weight="700" text-anchor="middle" font-family="Inter">${(rate * 100).toFixed(0)}%</text>`
+    }
+  }
+  svg += `<text x="${W / 2}" y="${H - 4}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle" font-family="Inter">Whiff Rate by Zone \u00b7 Catcher's View</text>`
+  svg += '</svg>'
+
+  const totalSwings = swings.flat().reduce((a, b) => a + b, 0)
+  const totalWhiffs = whiffs.flat().reduce((a, b) => a + b, 0)
+  const overallRate = totalSwings > 0 ? ((totalWhiffs / totalSwings) * 100).toFixed(1) : '0.0'
 
   el.innerHTML = `
-    <h3 class="lb-section-title">Sprint Speed Leaders</h3>
-    <p class="lb-section-desc">Statcast sprint speed data \u2014 90th percentile of a player's fastest runs</p>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}<th class="lb-th-num">MLB Pctile</th></tr></thead>
-      <tbody>${rows.map((r, i) => {
-        const pColor = r.percentile >= 80 ? '#4caf50' : r.percentile >= 50 ? '#ff9800' : '#f44336'
-        return `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num ${_lbCellClass(r.sprintSpeed, 28, 30, 26)}">${_lbFmt(r.sprintSpeed, 1)} ft/s</td>
-          <td class="lb-td-num">${_lbFmt(r.hpTo1b, 2)}s</td>
-          <td class="lb-td-num">${r.competitiveRuns}</td>
-          <td class="lb-td-num">${r.bolts}</td>
-          <td class="lb-td-num">${r.sb}</td>
-          <td class="lb-td-num">
-            <div class="lb-percentile-bar"><div class="lb-percentile-fill" style="width:${r.percentile}%; background:${pColor}"></div></div>
-            <span class="lb-percentile-label">${r.percentile}th</span>
-          </td>
-        </tr>`
-      }).join('')}</tbody>
-    </table></div>`
+    ${_vaPlayerToggle(_getVaPitcherList(), 'Pitchers')}
+    <div class="va-chart-section">
+      <div class="adv-section-title">Strike Zone Whiff Map (Last ${_vaGameCount} Games)</div>
+      <div class="va-chart-desc">Swing-and-miss rate per zone. Red = high whiff rate, green = low. Min 2 swings per zone.</div>
+      <div class="adv-chart-wrap">${totalSwings > 0 ? svg : '<div class="va-loading">No swing data available.</div>'}</div>
+      <div class="va-chart-meta">Overall whiff rate: ${overallRate}% (${totalWhiffs}/${totalSwings} swings)</div>
+    </div>`
 }
 
-/* ── Tab 7: $/WAR ── */
-function renderLbValue(el) {
-  const contractData = typeof CONTRACTS !== 'undefined' ? CONTRACTS[_currentTeamKey] : null
-  if (!contractData?.players) {
-    el.innerHTML = '<div class="lb-loading">No contract data available for this team.</div>'
+/* ── 7. WPA Chart ── */
+function renderVaWpa(el) {
+  if (!_vaFeeds || _vaFeeds.length === 0) {
+    el.innerHTML = '<div class="va-loading">No game data available.</div>'
     return
   }
 
-  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
-  const allPlayers = [...(_advData.hitters || []), ...(_advData.pitchers || [])]
-  const seen = new Set()
-  const unique = allPlayers.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true })
+  const team = APP_TEAMS[_currentTeamKey]
+  const games = _vaFeeds.slice(0, 5)
+  let html = ''
 
-  let rows = unique.map(p => {
-    const c = contractData.players.find(cp => cp.id === p.id)
-    if (!c || !c.aav) return null
-    const aav = c.aav
-    const dollarPerWar = p.war > 0 ? aav / p.war : null
-    const yrsRemaining = c.end ? c.end - new Date().getFullYear() + 1 : 0
-    return {
-      name: p.name, id: p.id, aav, war: p.war || 0,
-      dollarPerWar, yrsRemaining, totalVal: c.total || 0,
+  for (const feed of games) {
+    if (!feed) continue
+    const gd = feed.gameData, ld = feed.liveData
+    if (!ld?.plays?.allPlays) continue
+    const isHome = gd?.teams?.home?.id === team.id
+    const homeAbbr = gd?.teams?.home?.abbreviation || 'HOME'
+    const awayAbbr = gd?.teams?.away?.abbreviation || 'AWAY'
+    const gameDate = gd?.datetime?.dateTime ? new Date(gd.datetime.dateTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''
+
+    // Collect score progression for WPA-like chart
+    const points = [{ inning: 0, homeScore: 0, awayScore: 0 }]
+    for (const play of ld.plays.allPlays) {
+      if (!play.about?.isComplete) continue
+      const hs = play.result?.homeScore ?? points[points.length - 1].homeScore
+      const as = play.result?.awayScore ?? points[points.length - 1].awayScore
+      if (hs !== points[points.length - 1].homeScore || as !== points[points.length - 1].awayScore) {
+        points.push({ inning: play.about?.inning || 0, half: play.about?.halfInning, homeScore: hs, awayScore: as, desc: play.result?.description || '' })
+      }
     }
-  }).filter(Boolean)
 
-  rows = _lbSortRows(rows, 'dollarPerWar')
-  // Default sort: lowest $/WAR first (best value)
-  if (!_lbSortCol) rows.sort((a, b) => {
-    if (a.dollarPerWar == null) return 1
-    if (b.dollarPerWar == null) return -1
-    return a.dollarPerWar - b.dollarPerWar
-  })
+    const finalHome = points[points.length - 1].homeScore
+    const finalAway = points[points.length - 1].awayScore
+    const CW = 600, CH = 140, CL = 40, CR = CW - 20, CT = 20, CB = CH - 20
+    const maxRuns = Math.max(finalHome, finalAway, ...points.map(p => Math.max(p.homeScore, p.awayScore)), 3) + 1
 
-  // Find best value and most overpaid
-  const valued = rows.filter(r => r.dollarPerWar != null && r.dollarPerWar > 0)
-  const bestValue = valued[0]
-  const overpaid = [...valued].sort((a, b) => b.dollarPerWar - a.dollarPerWar)[0]
+    let wpaSvg = `<svg class="adv-chart-svg" viewBox="0 0 ${CW} ${CH + 20}">`
+    // Grid
+    for (let i = 0; i <= maxRuns; i++) {
+      const y = CB - (i / maxRuns) * (CB - CT)
+      wpaSvg += `<line x1="${CL}" y1="${y}" x2="${CR}" y2="${y}" stroke="rgba(255,255,255,0.05)"/>`
+      wpaSvg += `<text x="${CL - 4}" y="${y + 3}" fill="rgba(255,255,255,0.2)" font-size="8" text-anchor="end" font-family="Inter">${i}</text>`
+    }
 
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'aav', label: 'AAV ($M)' },
-    { key: 'war', label: 'WAR' },
-    { key: 'dollarPerWar', label: '$/WAR ($M)' },
-    { key: 'yrsRemaining', label: 'Yrs Left' },
-    { key: 'totalVal', label: 'Total ($M)' },
-  ]
+    // Home and away score lines
+    const homePath = points.map((p, i) => {
+      const x = CL + (CR - CL) * i / Math.max(points.length - 1, 1)
+      const y = CB - (p.homeScore / maxRuns) * (CB - CT)
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
+    const awayPath = points.map((p, i) => {
+      const x = CL + (CR - CL) * i / Math.max(points.length - 1, 1)
+      const y = CB - (p.awayScore / maxRuns) * (CB - CT)
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
 
-  const highlightHtml = (bestValue || overpaid) ? `
-    <div class="lb-highlight-row">
-      ${bestValue ? `<div class="lb-highlight-card lb-highlight-good">
-        <span class="lb-badge-value">Best Value</span>
-        <div class="lb-highlight-name">${bestValue.name}</div>
-        <div class="lb-highlight-stat">$${bestValue.dollarPerWar.toFixed(1)}M/WAR</div>
-        <div class="lb-highlight-detail">${bestValue.war.toFixed(1)} WAR \u00b7 $${bestValue.aav}M AAV</div>
-      </div>` : ''}
-      ${overpaid ? `<div class="lb-highlight-card lb-highlight-bad">
-        <span class="lb-badge-overpaid">Most Overpaid</span>
-        <div class="lb-highlight-name">${overpaid.name}</div>
-        <div class="lb-highlight-stat">$${overpaid.dollarPerWar ? overpaid.dollarPerWar.toFixed(1) : '\u221e'}M/WAR</div>
-        <div class="lb-highlight-detail">${overpaid.war.toFixed(1)} WAR \u00b7 $${overpaid.aav}M AAV</div>
-      </div>` : ''}
-    </div>` : ''
+    wpaSvg += `<path d="${homePath}" fill="none" stroke="#4fc3f7" stroke-width="2.5" opacity="0.9"/>`
+    wpaSvg += `<path d="${awayPath}" fill="none" stroke="#e57373" stroke-width="2.5" opacity="0.9"/>`
 
-  el.innerHTML = `
-    <h3 class="lb-section-title">$ per WAR Leaderboard</h3>
-    <p class="lb-section-desc">Contract efficiency \u2014 lower $/WAR = better value</p>
-    ${highlightHtml}
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${rows.map((r, i) => {
-        const dpw = r.dollarPerWar
-        const cls = dpw != null ? (dpw < 5 ? 'lb-cell-elite' : dpw < 10 ? 'lb-cell-good' : dpw > 15 ? 'lb-cell-bad' : '') : ''
-        return `<tr>
-          <td class="lb-td-name"><span class="lb-rank">${i + 1}</span>${r.name}</td>
-          <td class="lb-td-num">$${r.aav.toFixed(1)}M</td>
-          <td class="lb-td-num">${_lbFmt(r.war, 1)}</td>
-          <td class="lb-td-num ${cls}">${dpw != null ? `$${dpw.toFixed(1)}M` : '\u2014'}</td>
-          <td class="lb-td-num">${r.yrsRemaining}</td>
-          <td class="lb-td-num">$${r.totalVal}M</td>
-        </tr>`
-      }).join('')}</tbody>
-    </table></div>`
-}
+    // Scoring play dots
+    points.forEach((p, i) => {
+      if (i === 0) return
+      const x = CL + (CR - CL) * i / Math.max(points.length - 1, 1)
+      const yH = CB - (p.homeScore / maxRuns) * (CB - CT)
+      const yA = CB - (p.awayScore / maxRuns) * (CB - CT)
+      wpaSvg += `<circle cx="${x.toFixed(1)}" cy="${yH.toFixed(1)}" r="3" fill="#4fc3f7"><title>${p.desc}</title></circle>`
+      wpaSvg += `<circle cx="${x.toFixed(1)}" cy="${yA.toFixed(1)}" r="3" fill="#e57373"><title>${p.desc}</title></circle>`
+    })
+    wpaSvg += '</svg>'
 
-/* ── Tab 8: Underrated (xStats vs Real) ── */
-function renderLbUnderrated(el) {
-  if (!_advData) { el.innerHTML = '<div class="lb-loading">No data available.</div>'; return }
-  if (_advData.isSpring) {
-    el.innerHTML = '<div class="lb-loading">Expected statistics are not available during Spring Training.</div>'
-    return
+    const legend = `<div class="adv-chart-legend"><span class="adv-legend-item"><span class="adv-legend-dot" style="background:#4fc3f7"></span>${homeAbbr} (Home)</span><span class="adv-legend-item"><span class="adv-legend-dot" style="background:#e57373"></span>${awayAbbr} (Away)</span></div>`
+
+    const winner = finalHome > finalAway ? homeAbbr : awayAbbr
+    html += `<div class="va-wpa-game">
+      <div class="va-wpa-game-label">${gameDate} \u2014 ${awayAbbr} ${finalAway}, ${homeAbbr} ${finalHome} (${isHome ? (finalHome > finalAway ? 'W' : 'L') : (finalAway > finalHome ? 'W' : 'L')})</div>
+      ${legend}
+      <div class="adv-chart-wrap">${wpaSvg}</div>
+    </div>`
   }
 
-  const hitters = (_advData.hitters || []).filter(h => h.pa >= 50 && (h.xAvg || 0) > 0)
-  let rows = hitters.map(h => {
-    const baDiff = h.xAvg - h.avg
-    const slgDiff = h.xSlg - h.slg
-    const wobaDiff = (h.xWoba || 0) - (h.woba || 0)
-    const regression = baDiff > 0.020 && slgDiff > 0.030
-    return {
-      name: h.name, id: h.id,
-      ba: h.avg, xBa: h.xAvg, baDiff,
-      slg: h.slg, xSlg: h.xSlg, slgDiff,
-      woba: h.woba || 0, xWoba: h.xWoba || 0, wobaDiff,
-      babip: h.babip, iso: h.iso, regression,
-    }
+  el.innerHTML = `<div class="va-chart-section">
+    <div class="adv-section-title">Score Progression (Last ${games.length} Games)</div>
+    <div class="va-chart-desc">Run scoring over time per game. Blue = home team, red = away.</div>
+    ${html || '<div class="va-loading">No game data available.</div>'}
+  </div>`
+}
+
+/* ── 8. Run Expectancy Matrix ── */
+function renderVaRunExpectancy(el) {
+  const RE24 = {
+    '---': [0.481, 0.254, 0.098],
+    '1--': [0.859, 0.509, 0.224],
+    '-2-': [1.100, 0.664, 0.319],
+    '12-': [1.437, 0.884, 0.429],
+    '--3': [1.350, 0.950, 0.353],
+    '1-3': [1.784, 1.130, 0.478],
+    '-23': [1.964, 1.376, 0.580],
+    '123': [2.282, 1.520, 0.752],
+  }
+  const baseLabels = ['Bases Empty', '1B', '2B', '1B 2B', '3B', '1B 3B', '2B 3B', 'Loaded']
+  const baseKeys = ['---', '1--', '-2-', '12-', '--3', '1-3', '-23', '123']
+
+  const W = 460, H = 380, PAD = 90
+  const cellW = (W - PAD - 20) / 3
+  const cellH = (H - PAD - 20) / 8
+  const maxVal = 2.3
+
+  let svg = `<svg class="va-chart-svg" viewBox="0 0 ${W} ${H}" style="max-width:520px;margin:0 auto">`
+  ;['0 Outs', '1 Out', '2 Outs'].forEach((label, c) => {
+    svg += `<text x="${PAD + c * cellW + cellW / 2}" y="${PAD - 12}" fill="rgba(255,255,255,0.5)" font-size="11" font-weight="700" text-anchor="middle" font-family="Inter">${label}</text>`
   })
 
-  rows = _lbSortRows(rows, 'baDiff')
+  baseKeys.forEach((key, r) => {
+    svg += `<text x="${PAD - 8}" y="${PAD + r * cellH + cellH / 2 + 4}" fill="rgba(255,255,255,0.5)" font-size="9.5" font-weight="600" text-anchor="end" font-family="Inter">${baseLabels[r]}</text>`
+    RE24[key].forEach((val, c) => {
+      const intensity = val / maxVal
+      const x = PAD + c * cellW, y = PAD + r * cellH
+      const red = Math.round(30 + intensity * 190)
+      const green = Math.round(70 * (1 - intensity * 0.6))
+      const blue = Math.round(200 * (1 - intensity) + 30)
+      svg += `<rect x="${x + 2}" y="${y + 2}" width="${cellW - 4}" height="${cellH - 4}" fill="rgba(${red},${green},${blue},0.45)" rx="6"/>`
+      svg += `<text x="${x + cellW / 2}" y="${y + cellH / 2 + 5}" fill="#fff" font-size="13" font-weight="800" text-anchor="middle" font-family="Inter">${val.toFixed(3)}</text>`
+    })
+  })
+  svg += '</svg>'
 
-  const cols = [
-    { key: 'name', label: 'Player' },
-    { key: 'ba', label: 'BA' },
-    { key: 'xBa', label: 'xBA' },
-    { key: 'baDiff', label: 'BA Diff' },
-    { key: 'slg', label: 'SLG' },
-    { key: 'xSlg', label: 'xSLG' },
-    { key: 'slgDiff', label: 'SLG Diff' },
-    { key: 'woba', label: 'wOBA' },
-    { key: 'xWoba', label: 'xwOBA' },
-    { key: 'wobaDiff', label: 'wOBA Diff' },
-    { key: 'babip', label: 'BABIP' },
-  ]
-
-  el.innerHTML = `
-    <h3 class="lb-section-title">Most Underrated (xStats vs Real)</h3>
-    <p class="lb-section-desc">Players whose expected stats exceed actual stats \u2014 due for positive regression (min 50 PA)</p>
-    <div class="lb-table-wrap"><table class="lb-table">
-      <thead><tr>${_lbTh(cols)}</tr></thead>
-      <tbody>${rows.map((r, i) => {
-        const diffCls = v => v > 0.020 ? 'lb-cell-good' : v < -0.020 ? 'lb-cell-bad' : ''
-        const fmtDiff = v => (v > 0 ? '+' : '') + _lbFmt(v)
-        return `<tr>
-          <td class="lb-td-name">
-            <span class="lb-rank">${i + 1}</span>${r.name}
-            ${r.regression ? '<span class="lb-badge-regression">Regression Candidate</span>' : ''}
-          </td>
-          <td class="lb-td-num">${_lbFmt(r.ba)}</td>
-          <td class="lb-td-num">${_lbFmt(r.xBa)}</td>
-          <td class="lb-td-num ${diffCls(r.baDiff)}">${fmtDiff(r.baDiff)}</td>
-          <td class="lb-td-num">${_lbFmt(r.slg)}</td>
-          <td class="lb-td-num">${_lbFmt(r.xSlg)}</td>
-          <td class="lb-td-num ${diffCls(r.slgDiff)}">${fmtDiff(r.slgDiff)}</td>
-          <td class="lb-td-num">${_lbFmt(r.woba)}</td>
-          <td class="lb-td-num">${_lbFmt(r.xWoba)}</td>
-          <td class="lb-td-num ${diffCls(r.wobaDiff)}">${fmtDiff(r.wobaDiff)}</td>
-          <td class="lb-td-num">${_lbFmt(r.babip)}</td>
-        </tr>`
-      }).join('')}</tbody>
-    </table></div>`
+  el.innerHTML = `<div class="va-chart-section">
+    <div class="adv-section-title">Run Expectancy Matrix (RE24)</div>
+    <div class="va-chart-desc">Expected runs scored from each base/out state based on MLB historical averages. Higher values (red) indicate more advantageous situations.</div>
+    <div class="adv-chart-wrap">${svg}</div>
+  </div>`
 }
+
+/* ── End Visual Analytics ── */
+const _VA_PLACEHOLDER = null // marker for end of VA block
+
 
 /* Always start on home */

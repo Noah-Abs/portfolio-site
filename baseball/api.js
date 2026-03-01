@@ -723,140 +723,98 @@ async function fetchPlayerGameLog(playerId, group) {
   return data.stats?.[0]?.splits || []
 }
 
-/* ── Custom Leaderboards API ── */
+/* ── Visual Analytics API ── */
 
-const SAVANT_TEAM_ABBREV = { 119: 'LAD', 108: 'LAA', 109: 'AZ', 110: 'BAL', 111: 'BOS', 112: 'CHC', 113: 'CIN', 114: 'CLE', 115: 'COL', 116: 'DET', 117: 'HOU', 118: 'KC', 120: 'WSH', 121: 'NYM', 133: 'OAK', 134: 'PIT', 135: 'SD', 136: 'SEA', 137: 'SF', 138: 'STL', 139: 'TB', 140: 'TEX', 141: 'TOR', 142: 'MIN', 143: 'PHI', 144: 'ATL', 145: 'CWS', 146: 'MIA', 147: 'NYY', 158: 'MIL' }
+const _gameFeedCache = {}
 
-async function fetchRosterSituational(teamId, sitCode, group) {
-  const gt = await _detectGameType()
-  const gtParam = gt === 'S' ? ',gameType=S' : ''
-  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${SEASON}&hydrate=person(stats(group=[${group}],type=[statSplits],season=${SEASON},sitCodes=${sitCode}${gtParam}))`
+async function fetchRecentGameFeeds(teamId, count = 10) {
+  const url = `https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=S,R,F,D,L,W,E&startDate=${SEASON}-02-01&endDate=${SEASON}-11-10`
   const res = await fetch(url)
   const data = await res.json()
-  const roster = data.roster || []
-  const players = []
-  for (const entry of roster) {
-    const p = entry.person
-    if (!p || !p.stats) continue
-    const splitGroup = p.stats.find(s => s.type?.displayName === 'statSplits' && s.group?.displayName === group)
-    if (!splitGroup) continue
-    const split = splitGroup.splits?.find(sp => sp.split?.code === sitCode)
-    if (!split || !split.stat) continue
-    const s = split.stat
-    players.push({
-      id: p.id, name: p.fullName, pos: entry.position?.abbreviation || '',
-      avg: +s.avg || 0, obp: +s.obp || 0, slg: +s.slg || 0,
-      ops: +s.ops || 0, rbi: +s.rbi || 0, hr: +s.homeRuns || 0,
-      k: +s.strikeOuts || 0, bb: +s.baseOnBalls || 0,
-      pa: +s.plateAppearances || 0, ab: +s.atBats || 0,
-      h: +s.hits || 0, ip: parseFloat(s.inningsPitched) || 0,
-      era: +s.era || 0, whip: +s.whip || 0,
-      kPct: (+s.plateAppearances > 0) ? +s.strikeOuts / +s.plateAppearances : 0,
-      bbPct: (+s.plateAppearances > 0) ? +s.baseOnBalls / +s.plateAppearances : 0,
-    })
+  const completedPks = []
+  for (const d of [...(data.dates || [])].reverse()) {
+    for (const g of [...d.games].reverse()) {
+      if (g.status.abstractGameState === 'Final') {
+        completedPks.push(g.gamePk)
+        if (completedPks.length >= count) break
+      }
+    }
+    if (completedPks.length >= count) break
   }
-  return players
+  const feeds = []
+  for (let i = 0; i < completedPks.length; i += 3) {
+    const batch = completedPks.slice(i, i + 3)
+    const results = await Promise.all(batch.map(async pk => {
+      if (_gameFeedCache[pk]) return _gameFeedCache[pk]
+      try {
+        const feed = await fetchLiveGameFeed(pk)
+        _gameFeedCache[pk] = feed
+        return feed
+      } catch { return null }
+    }))
+    feeds.push(...results.filter(Boolean))
+  }
+  return feeds
 }
 
-async function fetchPreviousSeasonRoster(teamId) {
-  const prevSeason = SEASON - 1
-  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${prevSeason}&hydrate=person(stats(group=[hitting,pitching],type=[season,sabermetrics],season=${prevSeason}))`
-  const res = await fetch(url)
-  const data = await res.json()
-  const roster = data.roster || []
-  const players = {}
-  for (const entry of roster) {
-    const p = entry.person
-    if (!p || !p.stats) continue
-    const seasonHit = p.stats.find(s => s.type?.displayName === 'season' && s.group?.displayName === 'hitting')
-    const seasonPit = p.stats.find(s => s.type?.displayName === 'season' && s.group?.displayName === 'pitching')
-    const saberHit  = p.stats.find(s => s.type?.displayName === 'sabermetrics' && s.group?.displayName === 'hitting')
-    const saberPit  = p.stats.find(s => s.type?.displayName === 'sabermetrics' && s.group?.displayName === 'pitching')
-    const _s = (g) => g?.splits?.[0]?.stat || {}
-    const sh = _s(seasonHit), sp = _s(seasonPit), sbh = _s(saberHit), sbp = _s(saberPit)
-    players[p.id] = {
-      name: p.fullName, age: p.currentAge || 0,
-      war: +sbh.war || +sbp.war || 0,
-      ops: +sh.ops || 0, era: +sp.era || 0,
-      ip: parseFloat(sp.inningsPitched) || 0,
-      g: +sh.gamesPlayed || +sp.gamesPlayed || 0,
+function extractPlayByPlayData(feeds, teamId) {
+  const pitches = []
+  const battedBalls = []
+  const gameInfo = []
+
+  for (const feed of feeds) {
+    if (!feed) continue
+    const gd = feed.gameData, ld = feed.liveData
+    if (!ld?.plays?.allPlays) continue
+    const isHome = gd?.teams?.home?.id === teamId
+    const mySide = isHome ? 'home' : 'away'
+    const gamePk = gd?.game?.pk
+    const gameDate = gd?.datetime?.dateTime
+
+    gameInfo.push({ gamePk, gameDate, isHome })
+
+    for (const play of ld.plays.allPlays) {
+      const batterId = play.matchup?.batter?.id
+      const pitcherId = play.matchup?.pitcher?.id
+      const batterName = play.matchup?.batter?.fullName || ''
+      const pitcherName = play.matchup?.pitcher?.fullName || ''
+      const batterSide = play.about?.halfInning === 'top' ? 'away' : 'home'
+      const isMyBatter = batterSide === mySide
+      const isMyPitcher = batterSide !== mySide
+
+      for (const evt of (play.playEvents || [])) {
+        if (!evt.isPitch) continue
+        const pd = evt.pitchData
+        const details = evt.details
+        if (pd?.coordinates?.pX != null && pd?.coordinates?.pZ != null) {
+          pitches.push({
+            pX: pd.coordinates.pX, pZ: pd.coordinates.pZ,
+            startSpeed: pd.startSpeed || null,
+            pitchType: details?.type?.description || 'Unknown',
+            callDesc: details?.call?.description || '',
+            isSwingingStrike: details?.isStrike && (details?.call?.code === 'S' || details?.call?.code === 'W'),
+            isInPlay: details?.isInPlay || false,
+            isBall: details?.isBall || false,
+            batterId, pitcherId, batterName, pitcherName,
+            isMyBatter, isMyPitcher, gamePk
+          })
+        }
+      }
+
+      if (play.hitData?.coordinates?.coordX != null) {
+        battedBalls.push({
+          coordX: play.hitData.coordinates.coordX,
+          coordY: play.hitData.coordinates.coordY,
+          launchSpeed: play.hitData.launchSpeed,
+          launchAngle: play.hitData.launchAngle,
+          totalDistance: play.hitData.totalDistance,
+          event: play.result?.event || '',
+          description: play.result?.description || '',
+          batterId, batterName,
+          isMyBatter, gamePk
+        })
+      }
     }
   }
-  return players
-}
-
-function _parseCSV(text) {
-  const lines = text.trim().split('\n')
-  if (lines.length < 2) return []
-  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
-  return lines.slice(1).map(line => {
-    const vals = line.split(',').map(v => v.trim().replace(/"/g, ''))
-    const obj = {}
-    headers.forEach((h, i) => obj[h] = vals[i] || '')
-    return obj
-  })
-}
-
-async function _fetchWithCORSFallback(url) {
-  // Try direct fetch first
-  try {
-    const res = await fetch(url)
-    if (res.ok) { const t = await res.text(); if (t && !t.startsWith('<!')) return t }
-  } catch {}
-  // CORS proxy chain — try multiple proxies
-  const proxies = [
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  ]
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy)
-      if (res.ok) { const t = await res.text(); if (t && !t.startsWith('<!')) return t }
-    } catch {}
-  }
-  return null
-}
-
-async function fetchStatcastExitVelo(teamId) {
-  const abbrev = SAVANT_TEAM_ABBREV[teamId] || 'LAD'
-  const url = `https://baseballsavant.mlb.com/leaderboard/statcast?type=batter&year=${SEASON}&position=&team=${abbrev}&min=q&csv=true`
-  const csv = await _fetchWithCORSFallback(url)
-  if (!csv) return null
-  return _parseCSV(csv).map(r => ({
-    name: `${r.first_name} ${r.last_name}`.trim(),
-    playerId: +r.player_id || 0,
-    avgEV: +r.avg_hit_speed || 0,
-    maxEV: +r.max_hit_speed || 0,
-    hardHitPct: +r.ev95percent || 0,
-    barrelPct: +r.brl_percent || 0,
-    barrels: +r.barrels || 0,
-    barrelPA: +r.brl_pa || 0,
-    avgAngle: +r.avg_hit_angle || 0,
-    sweetSpotPct: +r.anglesweetspotpercent || 0,
-    attempts: +r.attempts || 0,
-  }))
-}
-
-async function fetchStatcastSprintSpeed(teamId) {
-  const abbrev = SAVANT_TEAM_ABBREV[teamId] || 'LAD'
-  const url = `https://baseballsavant.mlb.com/leaderboard/sprint_speed?min_opp=1&position=&team=${abbrev}&year=${SEASON}&csv=true`
-  const csv = await _fetchWithCORSFallback(url)
-  if (!csv) return null
-  return _parseCSV(csv).map(r => ({
-    name: `${r.first_name} ${r.last_name}`.trim(),
-    playerId: +r.player_id || 0,
-    sprintSpeed: +r.sprint_speed || 0,
-    hpTo1b: +r.hp_to_1b || 0,
-    competitiveRuns: +r.competitive_runs || 0,
-    bolts: +r.bolts || 0,
-    position: r.position || '',
-  }))
-}
-
-async function fetchStatcastSprintSpeedAll() {
-  const url = `https://baseballsavant.mlb.com/leaderboard/sprint_speed?min_opp=1&position=&team=&year=${SEASON}&csv=true`
-  const csv = await _fetchWithCORSFallback(url)
-  if (!csv) return null
-  return _parseCSV(csv).map(r => +r.sprint_speed || 0).filter(v => v > 0)
+  return { pitches, battedBalls, gameInfo }
 }
