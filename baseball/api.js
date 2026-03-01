@@ -487,6 +487,23 @@ function timeAgo(iso) {
    ADVANCED STATS API FUNCTIONS
    ══════════════════════════════════════════════ */
 
+// Detect if we're in spring training (no regular season data yet)
+let _advGameType = null // null = auto-detect, 'S' = spring, 'R' = regular
+async function _detectGameType() {
+  if (_advGameType) return _advGameType
+  try {
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${SEASON}&sportId=1`)
+    const data = await res.json()
+    const splits = data.stats?.[0]?.splits || []
+    const any = splits.find(s => (+s.stat?.gamesPlayed || 0) > 5)
+    // If some teams have played >5 regular season games, use regular season
+    _advGameType = any ? 'R' : 'S'
+  } catch {
+    _advGameType = 'S'
+  }
+  return _advGameType
+}
+
 function _mlbRank(allTeams, statKey, teamId, asc = false) {
   const sorted = [...allTeams].sort((a, b) =>
     asc ? parseFloat(a.stat[statKey]) - parseFloat(b.stat[statKey])
@@ -497,7 +514,11 @@ function _mlbRank(allTeams, statKey, teamId, asc = false) {
 }
 
 async function fetchAdvancedRoster(teamId) {
-  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${SEASON}&hydrate=person(stats(group=[hitting,pitching],type=[season,sabermetrics,seasonAdvanced,expectedStatistics],season=${SEASON}))`
+  const gt = await _detectGameType()
+  const gtParam = gt === 'S' ? ',gameType=S' : ''
+  // Sabermetrics & expectedStatistics not available for spring training
+  const types = gt === 'S' ? 'season,seasonAdvanced' : 'season,sabermetrics,seasonAdvanced,expectedStatistics'
+  const url = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster?rosterType=40Man&season=${SEASON}&hydrate=person(stats(group=[hitting,pitching],type=[${types}],season=${SEASON}${gtParam}))`
   const res = await fetch(url)
   const data = await res.json()
   const roster = data.roster || []
@@ -570,10 +591,12 @@ async function fetchAdvancedRoster(teamId) {
 }
 
 async function fetchAdvancedTeamOverview(teamId) {
+  const gt = await _detectGameType()
+  const gtParam = gt === 'S' ? '&gameType=S' : ''
   // Fetch all 30 teams' hitting + pitching stats for MLB ranking
   const [hitRes, pitRes] = await Promise.all([
-    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${SEASON}&sportId=1`).then(r => r.json()),
-    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=${SEASON}&sportId=1`).then(r => r.json()),
+    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=hitting&season=${SEASON}&sportId=1${gtParam}`).then(r => r.json()),
+    fetch(`https://statsapi.mlb.com/api/v1/teams/stats?stats=season&group=pitching&season=${SEASON}&sportId=1${gtParam}`).then(r => r.json()),
   ])
 
   const hitSplits = hitRes.stats?.[0]?.splits || []
@@ -634,7 +657,9 @@ async function fetchAdvancedTeamOverview(teamId) {
 }
 
 async function fetchPlayerSplits(playerId, group) {
-  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=statSplits&group=${group}&season=${SEASON}&sitCodes=vl,vr,h,a`
+  const gt = _advGameType || 'R'
+  const gtParam = gt === 'S' ? '&gameType=S' : ''
+  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=statSplits&group=${group}&season=${SEASON}&sitCodes=vl,vr,h,a${gtParam}`
   const res = await fetch(url)
   const data = await res.json()
   const splits = data.stats?.[0]?.splits || []
@@ -647,7 +672,9 @@ async function fetchPlayerSplits(playerId, group) {
 }
 
 async function fetchPlayerGameLog(playerId, group) {
-  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=${group}&season=${SEASON}`
+  const gt = _advGameType || 'R'
+  const gtParam = gt === 'S' ? '&gameType=S' : ''
+  const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=${group}&season=${SEASON}${gtParam}`
   const res = await fetch(url)
   const data = await res.json()
   return data.stats?.[0]?.splits || []

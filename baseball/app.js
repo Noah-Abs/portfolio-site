@@ -1678,7 +1678,6 @@ let _advGameLogCache = {}
 async function loadAdvancedStats() {
   const team = APP_TEAMS[_currentTeamKey]
   if (!team) return
-  document.getElementById('adv-page-sub').textContent = `${team.name} · ${SEASON} Season`
 
   if (_advLoaded) {
     _renderAdvTab()
@@ -1693,7 +1692,10 @@ async function loadAdvancedStats() {
       fetchAdvancedRoster(team.id),
       fetchAdvancedTeamOverview(team.id),
     ])
-    _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview }
+    const isSpring = _advGameType === 'S'
+    const label = isSpring ? `${SEASON} Spring Training` : `${SEASON} Season`
+    document.getElementById('adv-page-sub').textContent = `${team.name} · ${label}`
+    _advData = { hitters: roster.hitters, pitchers: roster.pitchers, overview, isSpring }
     _advLoaded = true
     _renderAdvTab()
   } catch (e) {
@@ -1803,12 +1805,16 @@ function renderAdvHitting(el) {
     return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
   })
 
+  const isSpring = _advData.isSpring
+  // Sabermetrics (WAR, wRC+, wOBA, xAVG, xSLG) not available in spring training
   const cols = [
     { key: 'name', label: 'Player', fmt: v => v },
     { key: 'pa', label: 'PA', fmt: v => v },
-    { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
-    { key: 'wrc', label: 'wRC+', fmt: v => Math.round(v) },
-    { key: 'woba', label: 'wOBA', fmt: v => v.toFixed(3) },
+    ...(!isSpring ? [
+      { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+      { key: 'wrc', label: 'wRC+', fmt: v => Math.round(v) },
+      { key: 'woba', label: 'wOBA', fmt: v => v.toFixed(3) },
+    ] : []),
     { key: 'ops', label: 'OPS', fmt: v => v.toFixed(3) },
     { key: 'avg', label: 'AVG', fmt: v => v.toFixed(3) },
     { key: 'slg', label: 'SLG', fmt: v => v.toFixed(3) },
@@ -1818,8 +1824,10 @@ function renderAdvHitting(el) {
     { key: 'bbPct', label: 'BB%', fmt: v => (v * 100).toFixed(1) + '%' },
     { key: 'hr', label: 'HR', fmt: v => v },
     { key: 'sb', label: 'SB', fmt: v => v },
-    { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
-    { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+    ...(!isSpring ? [
+      { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+      { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? v.toFixed(3) : '—' },
+    ] : []),
   ]
 
   el.innerHTML = `
@@ -1925,13 +1933,18 @@ function renderAdvPitching(el) {
     return _advSortAsc ? a[_advSortCol] - b[_advSortCol] : b[_advSortCol] - a[_advSortCol]
   })
 
+  const isSpring = _advData.isSpring
   const cols = [
     { key: 'name', label: 'Player', fmt: v => v },
     { key: 'ip', label: 'IP', fmt: v => v.toFixed(1) },
-    { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+    ...(!isSpring ? [
+      { key: 'war', label: 'WAR', fmt: v => v.toFixed(1) },
+    ] : []),
     { key: 'era', label: 'ERA', fmt: v => v.toFixed(2) },
-    { key: 'fip', label: 'FIP', fmt: v => v.toFixed(2) },
-    { key: 'xfip', label: 'xFIP', fmt: v => v.toFixed(2) },
+    ...(!isSpring ? [
+      { key: 'fip', label: 'FIP', fmt: v => v.toFixed(2) },
+      { key: 'xfip', label: 'xFIP', fmt: v => v.toFixed(2) },
+    ] : []),
     { key: 'whip', label: 'WHIP', fmt: v => v.toFixed(2) },
     { key: 'k9', label: 'K/9', fmt: v => v.toFixed(1) },
     { key: 'bb9', label: 'BB/9', fmt: v => v.toFixed(1) },
