@@ -1811,17 +1811,18 @@ function renderAdvHitting(el) {
   })
 
   const isSpring = _advData.isSpring
-  const _n = v => v == null ? 0 : v
-  const _f3 = v => v == null ? '—' : parseFloat(v).toFixed(3)
-  const _f2 = v => v == null ? '—' : parseFloat(v).toFixed(2)
-  const _f1 = v => v == null ? '—' : parseFloat(v).toFixed(1)
+  const _n = v => (v == null || isNaN(v)) ? 0 : v
+  const _f3 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(3) }
+  const _f2 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(2) }
+  const _f1 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(1) }
+  const _pct = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : (n * 100).toFixed(1) + '%' }
   // Sabermetrics (WAR, wRC+, wOBA, xAVG, xSLG) not available in spring training
   const cols = [
     { key: 'name', label: 'Player', fmt: v => v || '—' },
     { key: 'pa', label: 'PA', fmt: v => _n(v) },
     ...(!isSpring ? [
       { key: 'war', label: 'WAR', fmt: _f1 },
-      { key: 'wrc', label: 'wRC+', fmt: v => v == null ? '—' : Math.round(v) },
+      { key: 'wrc', label: 'wRC+', fmt: v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : Math.round(n) } },
       { key: 'woba', label: 'wOBA', fmt: _f3 },
     ] : []),
     { key: 'ops', label: 'OPS', fmt: _f3 },
@@ -1829,13 +1830,13 @@ function renderAdvHitting(el) {
     { key: 'slg', label: 'SLG', fmt: _f3 },
     { key: 'iso', label: 'ISO', fmt: _f3 },
     { key: 'babip', label: 'BABIP', fmt: _f3 },
-    { key: 'kPct', label: 'K%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
-    { key: 'bbPct', label: 'BB%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
+    { key: 'kPct', label: 'K%', fmt: _pct },
+    { key: 'bbPct', label: 'BB%', fmt: _pct },
     { key: 'hr', label: 'HR', fmt: v => _n(v) },
     { key: 'sb', label: 'SB', fmt: v => _n(v) },
     ...(!isSpring ? [
-      { key: 'xAvg', label: 'xAVG', fmt: v => v > 0 ? parseFloat(v).toFixed(3) : '—' },
-      { key: 'xSlg', label: 'xSLG', fmt: v => v > 0 ? parseFloat(v).toFixed(3) : '—' },
+      { key: 'xAvg', label: 'xAVG', fmt: v => { const n = parseFloat(v); return (n > 0 && !isNaN(n)) ? n.toFixed(3) : '—' } },
+      { key: 'xSlg', label: 'xSLG', fmt: v => { const n = parseFloat(v); return (n > 0 && !isNaN(n)) ? n.toFixed(3) : '—' } },
     ] : []),
   ]
 
@@ -1949,9 +1950,10 @@ function renderAdvPitching(el) {
   })
 
   const isSpring = _advData.isSpring
-  const _f3 = v => v == null ? '—' : parseFloat(v).toFixed(3)
-  const _f2 = v => v == null ? '—' : parseFloat(v).toFixed(2)
-  const _f1 = v => v == null ? '—' : parseFloat(v).toFixed(1)
+  const _f3 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(3) }
+  const _f2 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(2) }
+  const _f1 = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : n.toFixed(1) }
+  const _pct = v => { const n = parseFloat(v); return (v == null || isNaN(n)) ? '—' : (n * 100).toFixed(1) + '%' }
   const cols = [
     { key: 'name', label: 'Player', fmt: v => v || '—' },
     { key: 'ip', label: 'IP', fmt: _f1 },
@@ -1966,7 +1968,7 @@ function renderAdvPitching(el) {
     { key: 'whip', label: 'WHIP', fmt: _f2 },
     { key: 'k9', label: 'K/9', fmt: _f1 },
     { key: 'bb9', label: 'BB/9', fmt: _f1 },
-    { key: 'kbbPct', label: 'K-BB%', fmt: v => v == null ? '—' : (v * 100).toFixed(1) + '%' },
+    { key: 'kbbPct', label: 'K-BB%', fmt: _pct },
     { key: 'babip', label: 'BABIP', fmt: _f3 },
     { key: 'hr9', label: 'HR/9', fmt: _f2 },
     { key: 'wl', label: 'W-L', fmt: v => v || '—' },
@@ -2010,146 +2012,165 @@ function renderAdvPitching(el) {
 async function renderAdvCharts(el) {
   el.innerHTML = '<div class="adv-loading">Loading chart data\u2026</div>'
 
-  // Get top 5 hitters by WAR for rolling OPS
-  const topHitters = [..._advData.hitters].sort((a, b) => (b.war || 0) - (a.war || 0)).slice(0, 5)
-  const topPitchers = [..._advData.pitchers].sort((a, b) => (b.war || 0) - (a.war || 0)).slice(0, 5)
+  try {
+    // Get top 5 hitters by WAR (or PA for spring) for rolling OPS
+    const topHitters = [..._advData.hitters].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.pa || 0) - (a.pa || 0)).slice(0, 5)
+    const topPitchers = [..._advData.pitchers].sort((a, b) => (b.war || 0) - (a.war || 0) || (b.ip || 0) - (a.ip || 0)).slice(0, 5)
 
-  // Fetch game logs
-  const [hitLogs, pitLogs] = await Promise.all([
-    Promise.all(topHitters.map(async p => {
-      if (!_advGameLogCache[`${p.id}_hit`]) _advGameLogCache[`${p.id}_hit`] = await fetchPlayerGameLog(p.id, 'hitting')
-      return { name: p.name, logs: _advGameLogCache[`${p.id}_hit`] }
-    })),
-    Promise.all(topPitchers.map(async p => {
-      if (!_advGameLogCache[`${p.id}_pit`]) _advGameLogCache[`${p.id}_pit`] = await fetchPlayerGameLog(p.id, 'pitching')
-      return { name: p.name, logs: _advGameLogCache[`${p.id}_pit`] }
-    })),
-  ])
+    if (topHitters.length === 0 && topPitchers.length === 0) {
+      el.innerHTML = '<div class="adv-loading">No player data available for charts.</div>'
+      return
+    }
 
-  const chartColors = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8']
+    // Fetch game logs
+    const [hitLogs, pitLogs] = await Promise.all([
+      Promise.all(topHitters.map(async p => {
+        try {
+          if (!_advGameLogCache[`${p.id}_hit`]) _advGameLogCache[`${p.id}_hit`] = await fetchPlayerGameLog(p.id, 'hitting')
+        } catch { _advGameLogCache[`${p.id}_hit`] = [] }
+        return { name: p.name, logs: _advGameLogCache[`${p.id}_hit`] || [] }
+      })),
+      Promise.all(topPitchers.map(async p => {
+        try {
+          if (!_advGameLogCache[`${p.id}_pit`]) _advGameLogCache[`${p.id}_pit`] = await fetchPlayerGameLog(p.id, 'pitching')
+        } catch { _advGameLogCache[`${p.id}_pit`] = [] }
+        return { name: p.name, logs: _advGameLogCache[`${p.id}_pit`] || [] }
+      })),
+    ])
 
-  // Rolling 15-game OPS chart
-  function rollingOps(logs, window = 15) {
-    const pts = []
-    for (let i = window - 1; i < logs.length; i++) {
-      let ab = 0, h = 0, bb = 0, hbp = 0, sf = 0, tb = 0, pa = 0
-      for (let j = i - window + 1; j <= i; j++) {
-        const s = logs[j].stat
-        ab += +s.atBats || 0; h += +s.hits || 0; bb += +s.baseOnBalls || 0
-        hbp += +s.hitByPitch || 0; sf += +s.sacFlies || 0; tb += +s.totalBases || 0
-        pa += +s.plateAppearances || 0
+    const chartColors = ['#4fc3f7', '#81c784', '#ffb74d', '#e57373', '#ba68c8']
+
+    // Rolling OPS chart — use smaller window for spring training
+    const opsWindow = _advData.isSpring ? 5 : 15
+    function rollingOps(logs, window = opsWindow) {
+      if (!logs || logs.length < window) return []
+      const pts = []
+      for (let i = window - 1; i < logs.length; i++) {
+        let ab = 0, h = 0, bb = 0, hbp = 0, sf = 0, tb = 0, pa = 0
+        for (let j = i - window + 1; j <= i; j++) {
+          const s = logs[j]?.stat
+          if (!s) continue
+          ab += +s.atBats || 0; h += +s.hits || 0; bb += +s.baseOnBalls || 0
+          hbp += +s.hitByPitch || 0; sf += +s.sacFlies || 0; tb += +s.totalBases || 0
+          pa += +s.plateAppearances || 0
+        }
+        const obp = pa > 0 ? (h + bb + hbp) / pa : 0
+        const slg = ab > 0 ? tb / ab : 0
+        pts.push(obp + slg)
       }
-      const obp = pa > 0 ? (h + bb + hbp) / pa : 0
-      const slg = ab > 0 ? tb / ab : 0
-      pts.push(obp + slg)
-    }
-    return pts
-  }
-
-  // Build OPS SVG
-  const W = 700, H = 200, PAD = 40
-  let opsSvg = ''
-  let maxPts = 0
-  const opsData = hitLogs.map(h => {
-    const pts = rollingOps(h.logs)
-    maxPts = Math.max(maxPts, pts.length)
-    return { name: h.name, pts }
-  })
-
-  if (maxPts > 0) {
-    let maxOps = 0, minOps = 2
-    opsData.forEach(d => d.pts.forEach(v => { maxOps = Math.max(maxOps, v); minOps = Math.min(minOps, v) }))
-    const range = Math.max(maxOps - minOps, 0.1)
-
-    // Grid lines
-    opsSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
-    for (let i = 0; i <= 4; i++) {
-      const y = PAD + (H - PAD * 2) * i / 4
-      const val = (maxOps - range * i / 4).toFixed(3)
-      opsSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
-      opsSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+      return pts
     }
 
-    // Lines
-    opsData.forEach((d, ci) => {
-      if (d.pts.length < 2) return
-      const path = d.pts.map((v, i) => {
-        const x = PAD + (W - PAD - 10) * i / (maxPts - 1)
-        const y = PAD + (H - PAD * 2) * (1 - (v - minOps) / range)
-        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-      }).join(' ')
-      opsSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+    // Build OPS SVG
+    const W = 700, H = 200, PAD = 40
+    let opsSvg = ''
+    let maxPts = 0
+    const opsData = hitLogs.map(h => {
+      const pts = rollingOps(h.logs)
+      maxPts = Math.max(maxPts, pts.length)
+      return { name: h.name, pts }
     })
-    opsSvg += `</svg>`
-  }
 
-  // Rolling ERA chart for pitchers
-  function rollingEra(logs, window = 5) {
-    const pts = []
-    for (let i = window - 1; i < logs.length; i++) {
-      let ip = 0, er = 0
-      for (let j = i - window + 1; j <= i; j++) {
-        const s = logs[j].stat
-        ip += parseFloat(s.inningsPitched) || 0
-        er += +s.earnedRuns || 0
+    if (maxPts > 1) {
+      let maxOps = 0, minOps = 2
+      opsData.forEach(d => d.pts.forEach(v => { maxOps = Math.max(maxOps, v); minOps = Math.min(minOps, v) }))
+      const range = Math.max(maxOps - minOps, 0.1)
+
+      opsSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD + (H - PAD * 2) * i / 4
+        const val = (maxOps - range * i / 4).toFixed(3)
+        opsSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
+        opsSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
       }
-      pts.push(ip > 0 ? (er / ip) * 9 : 0)
+      opsData.forEach((d, ci) => {
+        if (d.pts.length < 2) return
+        const path = d.pts.map((v, i) => {
+          const x = PAD + (W - PAD - 10) * i / Math.max(maxPts - 1, 1)
+          const y = PAD + (H - PAD * 2) * (1 - (v - minOps) / range)
+          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+        }).join(' ')
+        opsSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+      })
+      opsSvg += `</svg>`
     }
-    return pts
-  }
 
-  let eraSvg = ''
-  let maxEraPts = 0
-  const eraData = pitLogs.map(p => {
-    const pts = rollingEra(p.logs)
-    maxEraPts = Math.max(maxEraPts, pts.length)
-    return { name: p.name, pts }
-  })
-
-  if (maxEraPts > 0) {
-    let maxEra = 0, minEra = 20
-    eraData.forEach(d => d.pts.forEach(v => { maxEra = Math.max(maxEra, v); minEra = Math.min(minEra, v) }))
-    minEra = Math.max(0, minEra - 0.5)
-    maxEra += 0.5
-    const range = Math.max(maxEra - minEra, 0.5)
-
-    eraSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
-    for (let i = 0; i <= 4; i++) {
-      const y = PAD + (H - PAD * 2) * i / 4
-      const val = (maxEra - range * i / 4).toFixed(2)
-      eraSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
-      eraSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+    // Rolling ERA chart for pitchers
+    const eraWindow = _advData.isSpring ? 3 : 5
+    function rollingEra(logs, window = eraWindow) {
+      if (!logs || logs.length < window) return []
+      const pts = []
+      for (let i = window - 1; i < logs.length; i++) {
+        let ip = 0, er = 0
+        for (let j = i - window + 1; j <= i; j++) {
+          const s = logs[j]?.stat
+          if (!s) continue
+          ip += parseFloat(s.inningsPitched) || 0
+          er += +s.earnedRuns || 0
+        }
+        pts.push(ip > 0 ? (er / ip) * 9 : 0)
+      }
+      return pts
     }
-    eraData.forEach((d, ci) => {
-      if (d.pts.length < 2) return
-      const path = d.pts.map((v, i) => {
-        const x = PAD + (W - PAD - 10) * i / (maxEraPts - 1)
-        const y = PAD + (H - PAD * 2) * ((v - minEra) / range)
-        return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-      }).join(' ')
-      eraSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+
+    let eraSvg = ''
+    let maxEraPts = 0
+    const eraData = pitLogs.map(p => {
+      const pts = rollingEra(p.logs)
+      maxEraPts = Math.max(maxEraPts, pts.length)
+      return { name: p.name, pts }
     })
-    eraSvg += `</svg>`
-  }
 
-  function legendHtml(data) {
-    return `<div class="adv-chart-legend">${data.map((d, i) =>
-      `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${chartColors[i]}"></span>${d.name.split(' ').pop()}</span>`
-    ).join('')}</div>`
-  }
+    if (maxEraPts > 1) {
+      let maxEra = 0, minEra = 20
+      eraData.forEach(d => d.pts.forEach(v => { maxEra = Math.max(maxEra, v); minEra = Math.min(minEra, v) }))
+      minEra = Math.max(0, minEra - 0.5)
+      maxEra += 0.5
+      const range = Math.max(maxEra - minEra, 0.5)
 
-  el.innerHTML = `
-    <div class="adv-chart-section">
-      <div class="adv-section-title">Rolling 15-Game OPS (Top 5 by WAR)</div>
-      ${legendHtml(opsData)}
-      <div class="adv-chart-wrap">${opsSvg || '<div class="adv-loading">No data available</div>'}</div>
-    </div>
-    <div class="adv-chart-section">
-      <div class="adv-section-title">Rolling 5-Start ERA (Top 5 by WAR)</div>
-      ${legendHtml(eraData)}
-      <div class="adv-chart-wrap">${eraSvg || '<div class="adv-loading">No data available</div>'}</div>
-    </div>
-  `
+      eraSvg += `<svg class="adv-chart-svg" viewBox="0 0 ${W} ${H + 20}">`
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD + (H - PAD * 2) * i / 4
+        const val = (maxEra - range * i / 4).toFixed(2)
+        eraSvg += `<line x1="${PAD}" y1="${y}" x2="${W - 10}" y2="${y}" stroke="rgba(255,255,255,0.06)" />`
+        eraSvg += `<text x="${PAD - 4}" y="${y + 3}" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="end" font-family="Inter">${val}</text>`
+      }
+      eraData.forEach((d, ci) => {
+        if (d.pts.length < 2) return
+        const path = d.pts.map((v, i) => {
+          const x = PAD + (W - PAD - 10) * i / Math.max(maxEraPts - 1, 1)
+          const y = PAD + (H - PAD * 2) * ((v - minEra) / range)
+          return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+        }).join(' ')
+        eraSvg += `<path d="${path}" fill="none" stroke="${chartColors[ci]}" stroke-width="2" opacity="0.85"/>`
+      })
+      eraSvg += `</svg>`
+    }
+
+    function legendHtml(data) {
+      return `<div class="adv-chart-legend">${data.map((d, i) =>
+        `<span class="adv-legend-item"><span class="adv-legend-dot" style="background:${chartColors[i]}"></span>${d.name.split(' ').pop()}</span>`
+      ).join('')}</div>`
+    }
+
+    const opsLabel = _advData.isSpring ? `Rolling ${opsWindow}-Game OPS` : 'Rolling 15-Game OPS (Top 5 by WAR)'
+    const eraLabel = _advData.isSpring ? `Rolling ${eraWindow}-Start ERA` : 'Rolling 5-Start ERA (Top 5 by WAR)'
+
+    el.innerHTML = `
+      <div class="adv-chart-section">
+        <div class="adv-section-title">${opsLabel}</div>
+        ${legendHtml(opsData)}
+        <div class="adv-chart-wrap">${opsSvg || '<div class="adv-loading">Not enough games yet for rolling chart</div>'}</div>
+      </div>
+      <div class="adv-chart-section">
+        <div class="adv-section-title">${eraLabel}</div>
+        ${legendHtml(eraData)}
+        <div class="adv-chart-wrap">${eraSvg || '<div class="adv-loading">Not enough games yet for rolling chart</div>'}</div>
+      </div>
+    `
+  } catch (e) {
+    el.innerHTML = `<div class="adv-loading">Error loading charts: ${e.message}</div>`
+  }
 }
 
 /* ── Radar Chart (Player Overlay Integration) ── */

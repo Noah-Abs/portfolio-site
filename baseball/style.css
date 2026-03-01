@@ -857,22 +857,22 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .adv-filter-pill.active { background: var(--team-header2, rgba(0,61,165,0.3)); border-color: rgba(255,255,255,0.15); color: #fff; }
 
 /* Shared table base (used by both Advanced Stats and Leaderboards) */
-.adv-table-wrap, .lb-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; }
+.adv-table-wrap, .lb-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(10,13,20,0.6); }
 .adv-table, .lb-table { width: 100%; border-collapse: collapse; }
 .adv-table { min-width: 800px; }
 .adv-table thead, .lb-table thead { position: sticky; top: 0; z-index: 2; }
-.adv-table th, .lb-table th { padding: 0.65rem 0.6rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.4); background: #0e1218; border-bottom: 1px solid rgba(255,255,255,0.08); cursor: pointer; white-space: nowrap; transition: color 0.12s; user-select: none; }
-.adv-table th:hover, .lb-table th:hover { color: rgba(255,255,255,0.75); }
-.adv-th-name, .lb-th-name { text-align: left; min-width: 130px; position: sticky; left: 0; z-index: 3; background: #0e1218; }
+.adv-table th, .lb-table th { padding: 0.7rem 0.75rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.55); background: #0e1218; border-bottom: 2px solid rgba(255,255,255,0.1); cursor: pointer; white-space: nowrap; transition: color 0.12s; user-select: none; }
+.adv-table th:hover, .lb-table th:hover { color: rgba(255,255,255,0.85); }
+.adv-th-name, .lb-th-name { text-align: left; min-width: 140px; position: sticky; left: 0; z-index: 3; background: #0e1218; }
 .adv-th-num, .lb-th-num { text-align: right; }
-.adv-table td, .lb-table td { padding: 0.55rem 0.6rem; font-size: 0.8rem; color: rgba(255,255,255,0.7); border-bottom: 1px solid rgba(255,255,255,0.04); }
-.adv-td-name, .lb-td-name { font-weight: 600; color: #fff; white-space: nowrap; text-align: left; position: sticky; left: 0; background: #0a0d14; z-index: 1; }
-.adv-td-num, .lb-td-num { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.8rem; letter-spacing: 0.01em; }
-.adv-table tbody tr:hover td, .lb-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
-.adv-table tbody tr:hover .adv-td-name, .lb-table tbody tr:hover .lb-td-name { background: #11151d; }
-.adv-cell-elite, .lb-cell-elite { color: #66bb6a !important; }
+.adv-table td, .lb-table td { padding: 0.6rem 0.75rem; font-size: 0.85rem; color: rgba(255,255,255,0.82); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.adv-td-name, .lb-td-name { font-weight: 600; color: #fff; white-space: nowrap; text-align: left; position: sticky; left: 0; background: #0a0d14; z-index: 1; font-size: 0.85rem; }
+.adv-td-num, .lb-td-num { text-align: right; font-variant-numeric: tabular-nums; font-size: 0.85rem; letter-spacing: 0.01em; }
+.adv-table tbody tr:hover td, .lb-table tbody tr:hover td { background: rgba(255,255,255,0.035); }
+.adv-table tbody tr:hover .adv-td-name, .lb-table tbody tr:hover .lb-td-name { background: #12161f; }
+.adv-cell-elite, .lb-cell-elite { color: #4caf50 !important; font-weight: 700; }
 .adv-cell-good, .lb-cell-good { color: #81c784 !important; }
-.adv-cell-bad, .lb-cell-bad { color: #ef5350 !important; }
+.adv-cell-bad, .lb-cell-bad { color: #f44336 !important; font-weight: 600; }
 
 /* Charts */
 .adv-chart-section { margin-bottom: 2rem; }
@@ -907,17 +907,17 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .lb-page-sub { color: rgba(255,255,255,0.35); font-size: 0.8rem; margin-top: 0.3rem; }
 .lb-tabs { display: flex; gap: 0.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem; margin-bottom: 1.25rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .lb-tabs::-webkit-scrollbar { display: none; }
-.lb-tab { background: none; border: 1px solid transparent; color: rgba(255,255,255,0.4); font-size: 0.75rem; font-weight: 600; padding: 0.5rem 0.85rem; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: inherit; }
-.lb-tab:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.04); }
-.lb-tab.active { color: #fff; background: var(--team-header2, rgba(255,255,255,0.1)); border-color: rgba(255,255,255,0.1); }
-.lb-loading { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,0.3); font-size: 0.82rem; }
-.lb-section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
-.lb-section-desc { font-size: 0.75rem; color: rgba(255,255,255,0.35); margin-bottom: 1rem; line-height: 1.5; }
+.lb-tab { background: none; border: 1px solid transparent; color: rgba(255,255,255,0.45); font-size: 0.78rem; font-weight: 600; padding: 0.55rem 0.95rem; border-radius: 8px; cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: inherit; }
+.lb-tab:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.05); }
+.lb-tab.active { color: #fff; background: var(--team-header2, rgba(255,255,255,0.12)); border-color: rgba(255,255,255,0.12); }
+.lb-loading { text-align: center; padding: 3rem 1rem; color: rgba(255,255,255,0.35); font-size: 0.85rem; }
+.lb-section-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.3rem; }
+.lb-section-desc { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-bottom: 1rem; line-height: 1.5; }
 
 /* LB-specific table overrides (base styles shared above with .adv-table) */
 .lb-table { min-width: 600px; }
 .lb-table-wrap { margin-top: 0.75rem; }
-.lb-rank { display: inline-block; width: 1.5rem; text-align: center; font-size: 0.68rem; font-weight: 700; color: rgba(255,255,255,0.25); margin-right: 0.4rem; }
+.lb-rank { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; text-align: center; font-size: 0.65rem; font-weight: 800; color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.06); border-radius: 5px; margin-right: 0.5rem; flex-shrink: 0; }
 
 /* Toggle bar (hitter/pitcher) */
 .lb-toggle-bar { display: flex; gap: 0.35rem; margin-bottom: 1rem; }
@@ -955,9 +955,9 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .lb-scatter-svg { width: 100%; max-width: 700px; height: auto; }
 
 /* Percentile bar (Speed) */
-.lb-percentile-bar { display: inline-block; width: 60px; height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; vertical-align: middle; margin-right: 0.35rem; overflow: hidden; }
+.lb-percentile-bar { display: inline-block; width: 70px; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; vertical-align: middle; margin-right: 0.4rem; overflow: hidden; }
 .lb-percentile-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
-.lb-percentile-label { font-size: 0.68rem; color: rgba(255,255,255,0.45); }
+.lb-percentile-label { font-size: 0.72rem; font-weight: 600; color: rgba(255,255,255,0.6); }
 
 /* Fallback message */
 .lb-fallback-msg { background: rgba(255,152,0,0.08); border: 1px solid rgba(255,152,0,0.15); border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-bottom: 1rem; line-height: 1.5; }

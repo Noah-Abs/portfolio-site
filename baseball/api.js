@@ -13,7 +13,50 @@ function _nlRank(splits, statKey, teamId, asc = false) {
 }
 
 async function fetchTeamStats(teamId) {
-  // Try current season first; if no data yet (preseason), fall back to previous year
+  const gt = await _detectGameType()
+
+  // Spring training: fetch spring training record from schedule
+  if (gt === 'S') {
+    try {
+      const [schedRes, batRes, pitRes] = await Promise.all([
+        fetch(`https://statsapi.mlb.com/api/v1/schedule?teamId=${teamId}&season=${SEASON}&sportId=1&gameType=S&startDate=${SEASON}-02-01&endDate=${SEASON}-04-01`),
+        fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=hitting&season=${SEASON}&gameType=S`),
+        fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=pitching&season=${SEASON}&gameType=S`),
+      ])
+      const [sched, bat, pit] = await Promise.all([schedRes.json(), batRes.json(), pitRes.json()])
+
+      // Calculate W-L from finished spring games
+      let wins = 0, losses = 0, ties = 0
+      for (const d of (sched.dates || [])) {
+        for (const g of (d.games || [])) {
+          if (g.status?.abstractGameState !== 'Final') continue
+          const isHome = g.teams.home.team.id === teamId
+          const myScore = isHome ? g.teams.home.score : g.teams.away.score
+          const oppScore = isHome ? g.teams.away.score : g.teams.home.score
+          if (myScore > oppScore) wins++
+          else if (myScore < oppScore) losses++
+          else ties++
+        }
+      }
+
+      const db = bat.stats?.[0]?.splits?.[0]?.stat
+      const dp = pit.stats?.[0]?.splits?.[0]?.stat
+      const gp = wins + losses + ties
+      const pct = gp > 0 ? (wins / gp).toFixed(3).replace('0.', '.') : '.000'
+
+      return [
+        { val: `${wins}-${losses}${ties > 0 ? `-${ties}` : ''}`, lbl: 'ST Record' },
+        { val: pct, lbl: 'ST Win %' },
+        { val: db?.avg || '.000', lbl: 'ST AVG' },
+        { val: parseInt(db?.hits || 0).toLocaleString(), lbl: 'ST Hits' },
+        { val: db?.homeRuns || '0', lbl: 'ST HR' },
+        { val: dp?.era || '0.00', lbl: 'ST ERA' },
+        { val: parseInt(dp?.strikeOuts || 0).toLocaleString(), lbl: 'ST K' },
+      ]
+    } catch {}
+  }
+
+  // Regular season
   let season = SEASON
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
