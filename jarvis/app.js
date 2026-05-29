@@ -805,6 +805,71 @@ function statTable(season, career, keys) {
 function field(lbl, val) {
   return `<div class="ds-field"><span class="ds-lbl">${lbl}</span><span class="ds-val">${escapeHtml(String(val || '—'))}</span></div>`;
 }
+
+/* Full-breakdown stat label map (camelCase API key → display label) */
+const STAT_DISPLAY = {
+  // hitting
+  gamesPlayed: 'G', plateAppearances: 'PA', atBats: 'AB', runs: 'R', hits: 'H',
+  doubles: '2B', triples: '3B', homeRuns: 'HR', rbi: 'RBI', totalBases: 'TB',
+  baseOnBalls: 'BB', strikeOuts: 'SO', intentionalWalks: 'IBB', hitByPitch: 'HBP',
+  stolenBases: 'SB', caughtStealing: 'CS', stolenBasePercentage: 'SB%',
+  avg: 'AVG', obp: 'OBP', slg: 'SLG', ops: 'OPS', babip: 'BABIP',
+  atBatsPerHomeRun: 'AB/HR', groundIntoDoublePlay: 'GIDP',
+  sacFlies: 'SF', sacBunts: 'SH', leftOnBase: 'LOB',
+  groundOuts: 'GO', airOuts: 'AO', groundOutsToAirouts: 'GO/AO',
+  numberOfPitches: 'P', catchersInterference: 'CI',
+  // pitching
+  gamesStarted: 'GS', wins: 'W', losses: 'L', saves: 'SV', saveOpportunities: 'SVO',
+  holds: 'HLD', blownSaves: 'BS', inningsPitched: 'IP', battersFaced: 'BF',
+  era: 'ERA', whip: 'WHIP', earnedRuns: 'ER',
+  strikeoutWalkRatio: 'K/BB', strikeoutsPer9Inn: 'K/9', walksPer9Inn: 'BB/9',
+  hitsPer9Inn: 'H/9', homeRunsPer9: 'HR/9', runsScoredPer9: 'R/9',
+  completeGames: 'CG', shutouts: 'SHO', hitBatsmen: 'HBP', wildPitches: 'WP',
+  balks: 'BK', pickoffs: 'PO', gamesPitched: 'GP', gamesFinished: 'GF',
+  winPercentage: 'W%', pitchesPerInning: 'P/IP', strikePercentage: 'STR%',
+  strikes: 'STR', outs: 'OUTS',
+  inheritedRunners: 'IR', inheritedRunnersScored: 'IRS',
+};
+
+const HIT_GROUPS = {
+  'TRIPLE SLASH': ['avg', 'obp', 'slg', 'ops'],
+  'COUNTING': ['gamesPlayed', 'plateAppearances', 'atBats', 'runs', 'hits', 'rbi'],
+  'EXTRA-BASE': ['doubles', 'triples', 'homeRuns', 'totalBases'],
+  'PLATE DISCIPLINE': ['baseOnBalls', 'strikeOuts', 'intentionalWalks', 'hitByPitch'],
+  'BASES': ['stolenBases', 'caughtStealing', 'stolenBasePercentage'],
+  'BATTED BALL': ['babip', 'groundOuts', 'airOuts', 'groundOutsToAirouts'],
+  'SITUATIONAL': ['atBatsPerHomeRun', 'groundIntoDoublePlay', 'sacFlies', 'sacBunts', 'leftOnBase'],
+};
+
+const PIT_GROUPS = {
+  'TOP-LINE': ['era', 'whip', 'wins', 'losses', 'saves', 'holds', 'blownSaves'],
+  'WORKLOAD': ['gamesPlayed', 'gamesStarted', 'inningsPitched', 'battersFaced', 'completeGames', 'shutouts'],
+  'STRIKEOUTS / WALKS': ['strikeOuts', 'baseOnBalls', 'intentionalWalks', 'strikeoutWalkRatio'],
+  'RATES /9': ['strikeoutsPer9Inn', 'walksPer9Inn', 'hitsPer9Inn', 'homeRunsPer9', 'runsScoredPer9'],
+  'AGAINST': ['avg', 'hits', 'homeRuns', 'earnedRuns', 'runs'],
+  'CONTROL': ['hitBatsmen', 'wildPitches', 'balks', 'pickoffs'],
+  'PITCH MIX': ['numberOfPitches', 'strikes', 'strikePercentage', 'pitchesPerInning'],
+  'INHERITED': ['inheritedRunners', 'inheritedRunnersScored', 'gamesFinished'],
+};
+
+function fullBreakdown(stat, groups) {
+  if (!stat) return '<div class="ds-empty">— no data on file —</div>';
+  let html = '<div class="ds-fullbreak">';
+  for (const [groupName, keys] of Object.entries(groups)) {
+    const pills = [];
+    for (const k of keys) {
+      let v = stat[k];
+      if (v == null || v === '' || v === '-.--') continue;
+      if (typeof v === 'string' && v.startsWith('0.') && /[OPS|AVG|SLG|OBP|BABIP|K%|BB%]/.test(STAT_DISPLAY[k] || '')) v = v.replace(/^0/, '');
+      pills.push(`<div class="ds-pill"><span class="dp-lbl">${STAT_DISPLAY[k] || k}</span><span class="dp-val">${escapeHtml(String(v))}</span></div>`);
+    }
+    if (!pills.length) continue;
+    html += `<div class="ds-group"><div class="ds-group-title">${groupName}</div><div class="ds-pills">${pills.join('')}</div></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
 function attachDossier(turnEl, d) {
   const card = document.createElement('div');
   card.className = 'dossier';
@@ -836,16 +901,34 @@ function attachDossier(turnEl, d) {
       </div>
     </div>
   `;
-  if (isPitcher || d.pitching_season || d.pitching_career) {
-    html += `<div class="ds-section"><div class="ds-section-title">// PITCHING</div>` +
+  const hasHit = d.hitting_season || d.hitting_career;
+  const hasPit = isPitcher || d.pitching_season || d.pitching_career;
+
+  if (hasPit) {
+    html += `<div class="ds-section">
+      <div class="ds-section-title">// PITCHING &mdash; SEASON vs CAREER</div>` +
       statTable(d.pitching_season, d.pitching_career, ['G','GS','W','L','SV','IP','SO','BB','ER','ERA','WHIP']) +
       `</div>`;
+    if (d.pitching_season) {
+      html += `<div class="ds-section">
+        <div class="ds-section-title">// ${SEASON} PITCHING &mdash; FULL BREAKDOWN</div>` +
+        fullBreakdown(d.pitching_season, PIT_GROUPS) +
+        `</div>`;
+    }
   }
-  if (!isPitcher || d.hitting_season || d.hitting_career) {
-    html += `<div class="ds-section"><div class="ds-section-title">// HITTING</div>` +
+  if (hasHit && !isPitcher || (isPitcher && d.hitting_season)) {
+    html += `<div class="ds-section">
+      <div class="ds-section-title">// HITTING &mdash; SEASON vs CAREER</div>` +
       statTable(d.hitting_season, d.hitting_career, ['G','AB','R','H','HR','RBI','BB','SO','SB','AVG','OBP','SLG','OPS']) +
       `</div>`;
+    if (d.hitting_season) {
+      html += `<div class="ds-section">
+        <div class="ds-section-title">// ${SEASON} HITTING &mdash; FULL BREAKDOWN</div>` +
+        fullBreakdown(d.hitting_season, HIT_GROUPS) +
+        `</div>`;
+    }
   }
+
   card.innerHTML = html;
   turnEl.appendChild(card);
 }
