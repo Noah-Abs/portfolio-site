@@ -2,7 +2,7 @@ const STORAGE_KEY = 'jarvis_anthropic_key';
 const MODE_KEY = 'jarvis_baseball_mode';
 const MODEL = 'claude-sonnet-4-6';
 
-const SYS_GENERAL = `You are J.A.R.V.I.S., the AI butler from Iron Man. You address the user as "sir". Be witty, dry, deferential, and concise — one or two sentences unless asked for detail. Stay in character. Never break the persona, never mention being an AI made by Anthropic. You are JARVIS.`;
+const SYS_GENERAL = `You are J.A.R.V.I.S., the AI butler from Iron Man. You address the user as "sir". Be witty, dry, deferential, and concise — one or two sentences unless asked for detail. Stay in character. Never break the persona, never mention being an AI made by Anthropic. You are JARVIS. If sir asks a question that would require live MLB data (player stats, scores, standings, leaderboards), note in passing that you have a dedicated baseball-analyst mode he may engage via the BASEBALL toggle in the top-right of the HUD.`;
 
 const SYS_BASEBALL = `You are J.A.R.V.I.S., the AI butler from Iron Man, now serving as sir's personal baseball analyst. You address the user as "sir". You have direct access to the live MLB Stats API via tools. Use the tools to answer baseball questions with real, current data — never invent stats. When a player or team is involved, call the corresponding lookup tool first so the user can see their picture. Be witty and concise (2-4 sentences for an analysis), in JARVIS's deferential British tone. Stay in character.`;
 
@@ -80,6 +80,7 @@ function toggleMode() {
   state.baseballMode = !state.baseballMode;
   localStorage.setItem(MODE_KEY, state.baseballMode ? '1' : '0');
   applyMode();
+  console.log(`[jarvis] baseball mode ${state.baseballMode ? 'ENGAGED' : 'DISENGAGED'}`);
   pushLog(state.baseballMode ? 'BASEBALL MODE engaged. MLB feed online.' : 'BASEBALL MODE disengaged.', 'ok');
 }
 els.modeSwitch.addEventListener('click', toggleMode);
@@ -369,6 +370,18 @@ async function getAllTeams() {
   return teamCache;
 }
 
+let playerCache = null;
+async function getAllPlayers() {
+  if (playerCache) return playerCache;
+  console.log('[mlb] fetching full active player list...');
+  const r = await fetch(`${STATS}/sports/1/players?season=${SEASON}`);
+  if (!r.ok) throw new Error(`Player list fetch failed: ${r.status}`);
+  const j = await r.json();
+  playerCache = j.people || [];
+  console.log(`[mlb] cached ${playerCache.length} players`);
+  return playerCache;
+}
+
 function matchTeam(query, teams) {
   const q = query.toLowerCase().trim();
   return teams.find(t =>
@@ -383,31 +396,39 @@ function matchTeam(query, teams) {
   );
 }
 
+function scorePlayer(p, query) {
+  const fn = (p.fullName || '').toLowerCase();
+  const ln = (p.lastName || '').toLowerCase();
+  const fnt = (p.firstName || '').toLowerCase();
+  const q = query.toLowerCase().trim();
+  const tokens = q.split(/\s+/).filter(Boolean);
+  if (fn === q) return 100;
+  if (ln === q) return 80;
+  if (fn.startsWith(q)) return 70;
+  if (tokens.length > 1 && tokens.every(t => fn.includes(t))) return 60;
+  if (fn.includes(q)) return 40;
+  if (ln.includes(q) || fnt.includes(q)) return 20;
+  return 0;
+}
+
 const mlb = {
   async search_player({ name }) {
-    const r = await fetch(`${STATS}/people/search?names=${encodeURIComponent(name)}&sportId=1`);
-    if (!r.ok) {
-      const r2 = await fetch(`https://statsapi.mlb.com/api/v1/sports/1/players?season=${SEASON}`);
-      const j2 = await r2.json();
-      const q = name.toLowerCase();
-      const matches = (j2.people || []).filter(p => (p.fullName || '').toLowerCase().includes(q)).slice(0, 5);
-      return { players: matches.map(p => ({
-        id: p.id, fullName: p.fullName,
+    const players = await getAllPlayers();
+    const scored = players
+      .map(p => ({ p, score: scorePlayer(p, name) }))
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+    return {
+      players: scored.map(({ p }) => ({
+        id: p.id,
+        fullName: p.fullName,
         primaryPosition: p.primaryPosition?.abbreviation,
         currentTeam: p.currentTeam?.name,
+        birthDate: p.birthDate,
         headshot: headshot(p.id),
-      })) };
-    }
-    const j = await r.json();
-    const players = (j.people || []).slice(0, 5).map(p => ({
-      id: p.id,
-      fullName: p.fullName,
-      primaryPosition: p.primaryPosition?.abbreviation,
-      currentTeam: p.currentTeam?.name,
-      birthDate: p.birthDate,
-      headshot: headshot(p.id),
-    }));
-    return { players };
+      })),
+    };
   },
 
   async player_stats({ player_id, season, group }) {
@@ -579,8 +600,16 @@ const baseballTools = [
 
 /* Execute a tool call and return { result, cards } */
 async function runTool(name, input) {
+  console.log(`[tool] ${name}`, input);
   if (!mlb[name]) return { result: { error: `Unknown tool: ${name}` }, cards: [] };
-  const result = await mlb[name](input);
+  let result;
+  try {
+    result = await mlb[name](input);
+    console.log(`[tool] ${name} →`, result);
+  } catch (e) {
+    console.error(`[tool] ${name} FAILED`, e);
+    return { result: { error: e.message }, cards: [] };
+  }
   const cards = [];
   if (name === 'search_player' && result.players) {
     for (const p of result.players.slice(0, 4)) {
@@ -622,6 +651,8 @@ async function callJarvis(userText) {
 
   state.queries++;
   updateReadouts();
+
+  console.log(`[jarvis] sending — mode=${state.baseballMode ? 'BASEBALL' : 'GENERAL'} text="${userText}"`);
 
   try {
     if (state.baseballMode) {
@@ -733,6 +764,7 @@ async function runWithTools(apiKey, jarvisTurn, jarvisText) {
     if (!res.ok) { await handleApiError(res, jarvisText); break; }
 
     const data = await res.json();
+    console.log(`[jarvis] iter ${iterations} response`, data);
     if (data.usage) {
       state.tokens += (data.usage.output_tokens || 0);
       updateReadouts();
