@@ -240,12 +240,30 @@ function buildGamesHTML(games) {
     const awayWin = g.away.score != null && g.home.score != null && g.away.score > g.home.score;
     const homeWin = g.away.score != null && g.home.score != null && g.home.score > g.away.score;
     html += `<div class="game ${cls}">
-      <div class="g-side ${awayWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.away.abbr)}</span><span class="g-score">${g.away.score ?? '-'}</span></div>
-      <div class="g-side ${homeWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.home.abbr)}</span><span class="g-score">${g.home.score ?? '-'}</span></div>
+      <div class="g-side ${awayWin ? 'won' : ''}" data-team-id="${g.away.id || ''}" title="Click for franchise file"><span class="g-team">${escapeHtml(g.away.abbr)}</span><span class="g-score">${g.away.score ?? '-'}</span></div>
+      <div class="g-side ${homeWin ? 'won' : ''}" data-team-id="${g.home.id || ''}" title="Click for franchise file"><span class="g-team">${escapeHtml(g.home.abbr)}</span><span class="g-score">${g.home.score ?? '-'}</span></div>
       <div class="g-status">${escapeHtml(status)}</div>
     </div>`;
   }
   return html;
+}
+
+function wireScoreboardClicks(panel) {
+  panel.addEventListener('click', async (e) => {
+    const side = e.target.closest('.g-side[data-team-id]');
+    if (!side) return;
+    const teamId = parseInt(side.dataset.teamId);
+    if (!teamId) return;
+    side.classList.add('loading');
+    try {
+      const teams = await getAllTeams();
+      const team = teams.find(t => t.id === teamId);
+      if (!team) return;
+      const result = await mlb.team_dossier({ name: team.name });
+      if (result?.team_dossier) floatTeamDossier(result.team_dossier);
+    } catch (err) { console.warn('[scoreboard→team]', err); }
+    side.classList.remove('loading');
+  });
 }
 
 async function refreshScoreboard() {
@@ -268,8 +286,8 @@ async function refreshScoreboard() {
           inning: g.linescore?.currentInningOrdinal,
           half: g.linescore?.inningHalf,
           time: g.gameDate,
-          home: { abbr: homeT?.abbreviation || homeT?.teamCode?.toUpperCase() || '???', score: g.teams.home.score },
-          away: { abbr: awayT?.abbreviation || awayT?.teamCode?.toUpperCase() || '???', score: g.teams.away.score },
+          home: { id: g.teams.home.team.id, abbr: homeT?.abbreviation || homeT?.teamCode?.toUpperCase() || '???', score: g.teams.home.score },
+          away: { id: g.teams.away.team.id, abbr: awayT?.abbreviation || awayT?.teamCode?.toUpperCase() || '???', score: g.teams.away.score },
         });
       }
     }
@@ -322,6 +340,120 @@ async function floatDossier(d) {
     margin: '0',
   });
   addCloseBtn(dossier);
+}
+
+function attachTeamDossier(turnEl, t) {
+  const card = document.createElement('div');
+  card.className = 'dossier team-dossier';
+  card.setAttribute('data-team-id', t.id);
+
+  let html = `
+    <div class="ds-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="ds-flag">FRANCHISE</span>
+      <span class="ds-title">${escapeHtml((t.name || '').toUpperCase())}</span>
+      <span class="ds-id">// MLB-${t.id}</span>
+    </div>
+    <div class="ds-bio">
+      <div class="ds-img-wrap">
+        <img class="ds-img logo" src="${t.logo}" alt="${escapeHtml(t.name || '')}" onerror="this.style.opacity=0.2">
+      </div>
+      <div class="ds-fields">
+        <div class="ds-name">${escapeHtml(t.name)}</div>
+        <div class="ds-alias">${escapeHtml(t.abbreviation || '')}${t.clubName ? ' · ' + escapeHtml(t.clubName) : ''}</div>
+        <div class="ds-grid">
+          ${field('LEAGUE', t.league)}
+          ${field('DIVISION', t.division)}
+          ${field('CITY', t.location)}
+          ${field('VENUE', t.venue)}
+          ${field('FOUNDED', t.firstYearOfPlay)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (t.record) {
+    html += `<div class="ds-section">
+      <div class="ds-section-title">// ${SEASON} RECORD</div>
+      <div class="ds-fullbreak"><div class="ds-group"><div class="ds-pills">
+        <div class="ds-pill"><span class="dp-lbl">W</span><span class="dp-val">${escapeHtml(String(t.record.wins))}</span></div>
+        <div class="ds-pill"><span class="dp-lbl">L</span><span class="dp-val">${escapeHtml(String(t.record.losses))}</span></div>
+        <div class="ds-pill"><span class="dp-lbl">PCT</span><span class="dp-val">${escapeHtml(String(t.record.pct))}</span></div>
+        <div class="ds-pill"><span class="dp-lbl">DIV</span><span class="dp-val">#${escapeHtml(String(t.record.divRank))}</span></div>
+        ${t.record.gb != null ? `<div class="ds-pill"><span class="dp-lbl">GB</span><span class="dp-val">${escapeHtml(String(t.record.gb))}</span></div>` : ''}
+        ${t.record.streak ? `<div class="ds-pill"><span class="dp-lbl">STRK</span><span class="dp-val">${escapeHtml(t.record.streak)}</span></div>` : ''}
+        ${t.record.runDiff != null ? `<div class="ds-pill"><span class="dp-lbl">RUN DIFF</span><span class="dp-val">${escapeHtml(String(t.record.runDiff))}</span></div>` : ''}
+        ${t.record.last10 ? `<div class="ds-pill"><span class="dp-lbl">L10</span><span class="dp-val">${t.record.last10.wins}-${t.record.last10.losses}</span></div>` : ''}
+        ${t.record.home ? `<div class="ds-pill"><span class="dp-lbl">HOME</span><span class="dp-val">${t.record.home.wins}-${t.record.home.losses}</span></div>` : ''}
+        ${t.record.away ? `<div class="ds-pill"><span class="dp-lbl">AWAY</span><span class="dp-val">${t.record.away.wins}-${t.record.away.losses}</span></div>` : ''}
+      </div></div></div>
+    </div>`;
+  }
+  if (t.hitting) {
+    html += `<div class="ds-section"><div class="ds-section-title">// TEAM HITTING &mdash; ${SEASON}</div>` +
+      fullBreakdown(t.hitting, HIT_GROUPS) + `</div>`;
+  }
+  if (t.pitching) {
+    html += `<div class="ds-section"><div class="ds-section-title">// TEAM PITCHING &mdash; ${SEASON}</div>` +
+      fullBreakdown(t.pitching, PIT_GROUPS) + `</div>`;
+  }
+  if (t.roster?.length) {
+    html += `<div class="ds-section"><div class="ds-section-title">// ROSTER &mdash; ${t.roster.length} ACTIVE</div>
+      <div class="td-roster" title="Double-click any player for dossier">`;
+    for (const p of t.roster) {
+      html += `<div class="td-player" data-player-id="${p.id}">
+        <img class="td-pimg" src="${p.headshot}" alt="${escapeHtml(p.name)}" onerror="this.style.opacity=0.2">
+        <div class="td-pmeta">
+          <div class="td-pname">${escapeHtml(p.name)}</div>
+          <div class="td-ppos">${escapeHtml(p.position || '')}${p.jersey ? ' · #' + escapeHtml(p.jersey) : ''}</div>
+        </div>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+
+  card.innerHTML = html;
+  turnEl.appendChild(card);
+
+  const handle = card.querySelector('.ds-head');
+  if (handle) makeDraggable(card, handle);
+
+  card.addEventListener('dblclick', async (e) => {
+    const player = e.target.closest('.td-player');
+    if (!player) return;
+    const id = parseInt(player.dataset.playerId);
+    if (!id) return;
+    e.stopPropagation();
+    player.classList.add('loading');
+    try {
+      const r = await mlb.player_dossier({ player_id: id });
+      if (r.dossier) floatDossier(r.dossier);
+    } catch (err) { console.warn('[team→player]', err); }
+    player.classList.remove('loading');
+  });
+}
+
+function floatTeamDossier(t) {
+  const existing = document.querySelector(`.team-dossier[data-team-id="${t.id}"]`);
+  if (existing) { existing.style.zIndex = String(++floatTopZ); return; }
+  const temp = document.createElement('div');
+  document.body.appendChild(temp);
+  attachTeamDossier(temp, t);
+  const card = temp.querySelector('.team-dossier');
+  if (!card) { temp.remove(); return; }
+  document.body.appendChild(card);
+  temp.remove();
+  card.classList.add('floating');
+  Object.assign(card.style, {
+    position: 'fixed',
+    left: Math.max(40, (window.innerWidth - 700) / 2) + 'px',
+    top: '60px',
+    width: '680px',
+    maxWidth: 'calc(100vw - 40px)',
+    zIndex: String(++floatTopZ),
+    margin: '0',
+  });
+  addCloseBtn(card);
 }
 
 function openLeaderboard(opts) {
@@ -407,6 +539,7 @@ function openScoreboard() {
   scoreboardEl = panel;
   const handle = panel.querySelector('.sb-head');
   if (handle) makeDraggable(panel, handle);
+  wireScoreboardClicks(panel);
   refreshScoreboard();
 }
 
@@ -904,6 +1037,61 @@ const mlb = {
     };
   },
 
+  async team_dossier({ name }) {
+    const teams = await getAllTeams();
+    const t = matchTeam(name, teams);
+    if (!t) return { error: `No team matched "${name}".` };
+    const [rosterRes, standingsRes, statsRes] = await Promise.all([
+      fetch(`${STATS}/teams/${t.id}/roster?rosterType=active&season=${SEASON}`).then(r => r.json()).catch(() => ({})),
+      fetch(`${STATS}/standings?leagueId=${t.league?.id}&season=${SEASON}&standingsTypes=regularSeason`).then(r => r.json()).catch(() => ({})),
+      fetch(`${STATS}/teams/${t.id}/stats?stats=season&group=hitting,pitching&season=${SEASON}`).then(r => r.json()).catch(() => ({})),
+    ]);
+    let record = null;
+    for (const div of (standingsRes.records || [])) {
+      const r = div.teamRecords?.find(tr => tr.team.id === t.id);
+      if (r) { record = r; break; }
+    }
+    const findStat = (g) => statsRes.stats?.find(s => s.group?.displayName === g)?.splits?.[0]?.stat;
+    return {
+      team_dossier: {
+        id: t.id,
+        name: t.name,
+        abbreviation: t.abbreviation,
+        teamCode: t.teamCode,
+        shortName: t.shortName,
+        clubName: t.clubName,
+        division: t.division?.name,
+        league: t.league?.name,
+        venue: t.venue?.name,
+        location: t.locationName,
+        firstYearOfPlay: t.firstYearOfPlay,
+        logo: teamLogo(t.id),
+        record: record ? {
+          wins: record.wins,
+          losses: record.losses,
+          pct: record.winningPercentage,
+          gb: record.gamesBack === '-' ? '0.0' : record.gamesBack,
+          streak: record.streak?.streakCode,
+          divRank: record.divisionRank,
+          wcRank: record.wildCardRank,
+          runDiff: record.runDifferential,
+          last10: record.records?.splitRecords?.find(s => s.type === 'lastTen'),
+          home: record.records?.splitRecords?.find(s => s.type === 'home'),
+          away: record.records?.splitRecords?.find(s => s.type === 'away'),
+        } : null,
+        hitting: findStat('hitting'),
+        pitching: findStat('pitching'),
+        roster: (rosterRes.roster || []).map(p => ({
+          id: p.person.id,
+          name: p.person.fullName,
+          position: p.position?.abbreviation,
+          jersey: p.jerseyNumber,
+          headshot: headshot(p.person.id),
+        })),
+      },
+    };
+  },
+
   async team_info({ team_name }) {
     const teams = await getAllTeams();
     const t = matchTeam(team_name, teams);
@@ -1033,6 +1221,11 @@ const mlb = {
 };
 
 const baseballTools = [
+  { name: 'team_dossier',
+    description: 'Open a floating, draggable FRANCHISE FILE panel for an MLB team: logo, division, venue, record (W-L, pct, division rank, GB, streak, run diff, last 10, home/away splits), full team hitting + pitching breakdowns, and the active roster. Sir can double-click any roster player to open their dossier. ALWAYS use this when sir asks for an overview of a team ("show me the Dodgers", "tell me about the Yankees", just a team name). Do NOT re-list bio fields in your text — just acknowledge briefly.',
+    input_schema: { type: 'object', properties: {
+      name: { type: 'string', description: 'Team name (e.g. "Dodgers", "Yankees", "NYY")' },
+    }, required: ['name'] } },
   { name: 'show_scoreboard',
     description: 'Open a floating, draggable LIVE SCOREBOARD panel that shows every MLB game today with current scores and inning. The UI handles the data — just call the tool, then briefly acknowledge ("Right away, sir."). Use whenever sir asks to see, open, or pull up scores, games, or the scoreboard.',
     input_schema: { type: 'object', properties: {} } },
@@ -1094,6 +1287,13 @@ async function runTool(name, input) {
     return { result: { ok: true, message: 'Scoreboard panel opened on screen.' }, cards: [], dossier: null };
   }
   if (!mlb[name]) return { result: { error: `Unknown tool: ${name}` }, cards: [] };
+  if (name === 'team_dossier') {
+    try {
+      const result = await mlb.team_dossier(input);
+      if (result?.team_dossier) floatTeamDossier(result.team_dossier);
+      return { result, cards: [], dossier: null };
+    } catch (e) { return { result: { error: e.message }, cards: [], dossier: null }; }
+  }
   let result;
   try {
     result = await mlb[name](input);
@@ -1787,6 +1987,120 @@ async function handleApiError(res, jarvisText) {
 }
 
 /* ---------- Send ---------- */
+const STAT_ALIAS_MAP = {
+  'war': { stat: 'ops', group: 'hitting', note: 'WAR is not provided by the league API, sir — substituting OPS.' },
+  'wins above replacement': { stat: 'ops', group: 'hitting', note: 'WAR is not on file via the league API, sir — substituting OPS.' },
+  'overall': { stat: 'ops', group: 'hitting' },
+  'best player': { stat: 'ops', group: 'hitting' },
+  'hr': { stat: 'homeRuns', group: 'hitting' },
+  'hrs': { stat: 'homeRuns', group: 'hitting' },
+  'home run': { stat: 'homeRuns', group: 'hitting' },
+  'home runs': { stat: 'homeRuns', group: 'hitting' },
+  'homers': { stat: 'homeRuns', group: 'hitting' },
+  'homeruns': { stat: 'homeRuns', group: 'hitting' },
+  'rbi': { stat: 'rbi', group: 'hitting' },
+  'rbis': { stat: 'rbi', group: 'hitting' },
+  'runs batted in': { stat: 'rbi', group: 'hitting' },
+  'runs': { stat: 'runs', group: 'hitting' },
+  'hits': { stat: 'hits', group: 'hitting' },
+  'avg': { stat: 'battingAverage', group: 'hitting' },
+  'average': { stat: 'battingAverage', group: 'hitting' },
+  'batting average': { stat: 'battingAverage', group: 'hitting' },
+  'obp': { stat: 'onBasePercentage', group: 'hitting' },
+  'on base': { stat: 'onBasePercentage', group: 'hitting' },
+  'on-base': { stat: 'onBasePercentage', group: 'hitting' },
+  'slg': { stat: 'sluggingPercentage', group: 'hitting' },
+  'slugging': { stat: 'sluggingPercentage', group: 'hitting' },
+  'ops': { stat: 'ops', group: 'hitting' },
+  'sb': { stat: 'stolenBases', group: 'hitting' },
+  'steals': { stat: 'stolenBases', group: 'hitting' },
+  'stolen bases': { stat: 'stolenBases', group: 'hitting' },
+  'era': { stat: 'era', group: 'pitching' },
+  'earned run average': { stat: 'era', group: 'pitching' },
+  'whip': { stat: 'whip', group: 'pitching' },
+  'wins': { stat: 'wins', group: 'pitching' },
+  'saves': { stat: 'saves', group: 'pitching' },
+  'sv': { stat: 'saves', group: 'pitching' },
+  'k': { stat: 'strikeouts', group: 'pitching' },
+  'ks': { stat: 'strikeouts', group: 'pitching' },
+  'strikeouts': { stat: 'strikeouts', group: 'pitching' },
+  'strike outs': { stat: 'strikeouts', group: 'pitching' },
+  'k/9': { stat: 'strikeoutsPer9Inn', group: 'pitching' },
+};
+
+function detectLeaderboardQuery(text) {
+  const lower = text.toLowerCase().trim();
+  const isLeaderQuery =
+    /\b(leaders?|leaderboard|leading|top\s+\d+|best|who\s+leads?)\b/.test(lower) ||
+    /^(top|best)\s+/.test(lower);
+  if (!isLeaderQuery) return null;
+
+  let bestAlias = null;
+  let bestEntry = null;
+  for (const [alias, entry] of Object.entries(STAT_ALIAS_MAP)) {
+    const re = new RegExp(`\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (re.test(lower)) {
+      if (!bestAlias || alias.length > bestAlias.length) {
+        bestAlias = alias;
+        bestEntry = entry;
+      }
+    }
+  }
+
+  if (!bestEntry) {
+    bestAlias = '(default)';
+    bestEntry = { stat: 'ops', group: 'hitting' };
+  }
+
+  let league = null;
+  let division = null;
+  const divM = /\b(al|nl|american|national)\s+(east|central|west)\b/i.exec(lower);
+  if (divM) {
+    const lg = /al|american/i.test(divM[1]) ? 'AL' : 'NL';
+    const dir = divM[2].charAt(0).toUpperCase() + divM[2].slice(1).toLowerCase();
+    division = `${lg} ${dir}`;
+  } else if (/\bal\b/.test(lower) || /american league/.test(lower)) {
+    league = 'AL';
+  } else if (/\bnl\b/.test(lower) || /national league/.test(lower)) {
+    league = 'NL';
+  }
+
+  let limit = 10;
+  const lm = /\btop\s+(\d+)/i.exec(lower);
+  if (lm) limit = Math.min(50, Math.max(3, parseInt(lm[1])));
+
+  return {
+    stat: bestEntry.stat,
+    group: bestEntry.group,
+    league, division, limit,
+    note: bestEntry.note || null,
+    alias: bestAlias,
+  };
+}
+
+const TEAM_KEYWORDS = [
+  'yankees','red sox','blue jays','orioles','rays',
+  'white sox','guardians','indians','tigers','royals','twins',
+  'astros','rangers','athletics','mariners','angels',
+  'braves','mets','phillies','marlins','nationals',
+  'cubs','cardinals','brewers','reds','pirates',
+  'dodgers','giants','padres','rockies','diamondbacks','d-backs','dbacks',
+];
+
+function detectTeamQuery(text) {
+  const lower = text.toLowerCase().trim();
+  if (/\bleader|leaderboard|top \d|scores|score|standings\b/.test(lower)) return null;
+  for (const tn of TEAM_KEYWORDS) {
+    const re = new RegExp(`\\b${tn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (re.test(lower)) {
+      const askPattern = /^(show|tell|give|pull up|open|look up|info|about|the)\b/.test(lower);
+      const bareName = lower === tn || lower === 'the ' + tn || lower === tn + '?';
+      if (askPattern || bareName) return { name: tn };
+    }
+  }
+  return null;
+}
+
 function detectQuickCommand(text) {
   const t = text.toLowerCase().trim();
   if (/\b(show|open|display|bring up|pull up|gimme|give me)\b[^.?!]*\b(scores?|scoreboard|games?|matchups?)\b/.test(t) ||
@@ -1804,20 +2118,46 @@ function send() {
 
   const cmd = detectQuickCommand(text);
   if (cmd === 'scoreboard') {
-    appendTurn('user', text);
-    const t = appendTurn('jarvis', '');
-    t.querySelector('.text').textContent = 'Pulling up the scoreboard, sir.';
-    speak('Pulling up the scoreboard, sir.');
-    state.history.push({ role: 'user', content: text });
-    state.history.push({ role: 'assistant', content: 'Pulling up the scoreboard, sir.' });
-    saveHistory();
-    state.queries++;
-    updateReadouts();
+    quickReply(text, 'Pulling up the scoreboard, sir.');
     openScoreboard();
     return;
   }
 
+  const lb = detectLeaderboardQuery(text);
+  if (lb) {
+    let ack = 'Here you are, sir.';
+    if (lb.note) ack = lb.note;
+    quickReply(text, ack);
+    mlb.show_leaderboard({ stat: lb.stat, group: lb.group, league: lb.league, division: lb.division, limit: lb.limit }).catch(err => {
+      console.warn('[leaderboard] failed', err);
+      openLeaderboard({ title: 'ERROR', subtitle: lb.alias.toUpperCase(), leaders: [] });
+    });
+    return;
+  }
+
+  const tm = detectTeamQuery(text);
+  if (tm) {
+    quickReply(text, `Bringing up the ${tm.name}, sir.`);
+    mlb.team_dossier({ name: tm.name }).then(result => {
+      if (result?.team_dossier) floatTeamDossier(result.team_dossier);
+      else console.warn('[team] no dossier returned', result);
+    }).catch(err => console.warn('[team] failed', err));
+    return;
+  }
+
   callJarvis(text);
+}
+
+function quickReply(userText, jarvisText) {
+  appendTurn('user', userText);
+  const t = appendTurn('jarvis', '');
+  t.querySelector('.text').textContent = jarvisText;
+  speak(jarvisText);
+  state.history.push({ role: 'user', content: userText });
+  state.history.push({ role: 'assistant', content: jarvisText });
+  saveHistory();
+  state.queries++;
+  updateReadouts();
 }
 els.sendBtn.addEventListener('click', send);
 els.textInput.addEventListener('keydown', (e) => {
@@ -1825,189 +2165,126 @@ els.textInput.addEventListener('keydown', (e) => {
 });
 
 /* =====================================================
- *  Draw mode — annotation boxes anywhere on screen
+ *  Highlight + Ask — select text anywhere, ask Jarvis about it
  * ===================================================== */
-const ANNOTATIONS_KEY = 'jarvis_annotations';
-let drawMode = false;
-let drawStart = null;
-let drawPreview = null;
+const ASK_MODE_KEY = 'jarvis_ask_mode';
+let askEnabled = localStorage.getItem(ASK_MODE_KEY) !== '0';
+let askPop = null;
+let lastSelectedText = '';
 
-function setDrawMode(on) {
-  drawMode = on;
-  document.body.classList.toggle('draw-mode', drawMode);
-  const btn = document.getElementById('drawToggle');
-  if (btn) btn.classList.toggle('active', drawMode);
-  pushLog(drawMode ? 'DRAW LAYER engaged. Tap and drag to annotate.' : 'DRAW LAYER disengaged.', 'ok');
+function syncAskBtn() {
+  const btn = document.getElementById('askToggle');
+  if (btn) btn.classList.toggle('active', askEnabled);
+  if (btn) btn.title = askEnabled
+    ? 'Ask-on-highlight is ON — select any text and a popover appears. Click to disable.'
+    : 'Ask-on-highlight is OFF. Click to enable.';
+}
+
+function hideAskPop() {
+  if (askPop) { askPop.remove(); askPop = null; }
+}
+
+function setAskMode(on) {
+  askEnabled = on;
+  localStorage.setItem(ASK_MODE_KEY, on ? '1' : '0');
+  syncAskBtn();
+  if (!on) hideAskPop();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const drawBtn = document.getElementById('drawToggle');
-  if (drawBtn) drawBtn.addEventListener('click', () => setDrawMode(!drawMode));
+  const askBtn = document.getElementById('askToggle');
+  if (askBtn) askBtn.addEventListener('click', () => setAskMode(!askEnabled));
+  syncAskBtn();
 });
 
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (drawMode) setDrawMode(false);
-    if (drawPreview) { drawPreview.remove(); drawPreview = null; drawStart = null; }
-  }
-});
+const ASK_SKIP_SELECTOR = 'input, textarea, [contenteditable="true"], .ask-pop, .popover, .ab-body';
 
-const NO_DRAW_SELECTOR = '.no-draw, button, input, select, textarea, a, .turn, .widget, .input-bar, .topbar, .annotation-box, .dossier, .history-panel, .popover, .transcript, .panel-head';
+function showAskPop(rect, text) {
+  hideAskPop();
+  askPop = document.createElement('div');
+  askPop.className = 'ask-pop';
+  askPop.innerHTML = `
+    <button class="ask-quick" title="Ask Jarvis about the selected text">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5" stroke-linecap="round"></path></svg>
+      <span>ASK JARVIS</span>
+    </button>
+  `;
+  document.body.appendChild(askPop);
+  const popW = askPop.offsetWidth;
+  const popH = askPop.offsetHeight;
+  let x = rect.left + rect.width / 2 - popW / 2;
+  let y = rect.top - popH - 10;
+  if (y < 8) y = rect.bottom + 10;
+  x = Math.max(8, Math.min(window.innerWidth - popW - 8, x));
+  askPop.style.left = x + 'px';
+  askPop.style.top = y + 'px';
+  askPop.style.zIndex = String(++floatTopZ);
+
+  askPop.querySelector('.ask-quick').addEventListener('click', (e) => {
+    e.stopPropagation();
+    expandAsk(text);
+  });
+}
+
+function expandAsk(selectedText) {
+  if (!askPop) return;
+  askPop.classList.add('expanded');
+  askPop.innerHTML = `
+    <div class="ask-head">
+      <span class="ask-icon">&#128270;</span>
+      <span class="ask-snippet">"${escapeHtml(selectedText.length > 60 ? selectedText.slice(0, 60) + '...' : selectedText)}"</span>
+      <button class="ask-close" title="Close">&times;</button>
+    </div>
+    <div class="ask-input-row">
+      <input type="text" class="ask-input" placeholder="What about this, sir?">
+      <button class="ask-send" title="Send">&#9654;</button>
+    </div>
+  `;
+  const input = askPop.querySelector('.ask-input');
+  const send = askPop.querySelector('.ask-send');
+  const close = askPop.querySelector('.ask-close');
+  input.focus();
+  const submit = () => {
+    const q = input.value.trim();
+    const prompt = q
+      ? `Regarding "${selectedText}" — ${q}`
+      : `Tell me about: "${selectedText}"`;
+    hideAskPop();
+    els.textInput.value = prompt;
+    send();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    else if (e.key === 'Escape') hideAskPop();
+  });
+  send.addEventListener('click', submit);
+  close.addEventListener('click', hideAskPop);
+}
+
+document.addEventListener('selectionchange', () => {
+  if (!askEnabled) return;
+  const sel = window.getSelection();
+  const text = sel?.toString().trim();
+  if (!text || text.length < 2 || text.length > 600) { hideAskPop(); return; }
+  const range = sel.rangeCount ? sel.getRangeAt(0) : null;
+  if (!range) { hideAskPop(); return; }
+  let node = range.commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentElement;
+  if (!node || node.closest(ASK_SKIP_SELECTOR)) { hideAskPop(); return; }
+  const rect = range.getBoundingClientRect();
+  if (!rect.width || !rect.height) { hideAskPop(); return; }
+  lastSelectedText = text;
+  showAskPop(rect, text);
+});
 
 document.addEventListener('pointerdown', (e) => {
-  if (!drawMode) return;
-  if (e.target.closest && e.target.closest(NO_DRAW_SELECTOR)) return;
-  if (e.button !== undefined && e.button !== 0) return;
-  e.preventDefault();
-  drawStart = { x: e.clientX, y: e.clientY };
-  drawPreview = document.createElement('div');
-  drawPreview.className = 'draw-preview';
-  document.body.appendChild(drawPreview);
-  Object.assign(drawPreview.style, { left: e.clientX + 'px', top: e.clientY + 'px', width: '0px', height: '0px' });
+  if (askPop && !askPop.contains(e.target)) hideAskPop();
 });
-document.addEventListener('pointermove', (e) => {
-  if (!drawStart || !drawPreview) return;
-  const x = Math.min(drawStart.x, e.clientX);
-  const y = Math.min(drawStart.y, e.clientY);
-  const w = Math.abs(e.clientX - drawStart.x);
-  const h = Math.abs(e.clientY - drawStart.y);
-  Object.assign(drawPreview.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
-});
-document.addEventListener('pointerup', (e) => {
-  if (!drawStart) return;
-  const start = drawStart;
-  drawStart = null;
-  if (drawPreview) { drawPreview.remove(); drawPreview = null; }
-  const x = Math.min(start.x, e.clientX);
-  const y = Math.min(start.y, e.clientY);
-  const w = Math.abs(e.clientX - start.x);
-  const h = Math.abs(e.clientY - start.y);
-  if (w < 36 || h < 36) return;
-  createAnnotationBox({ x, y, w, h, label: 'NOTE', body: '' });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideAskPop();
 });
 
-function dragInPlace(el, handle, onEnd) {
-  let sx = 0, sy = 0, ex = 0, ey = 0, dragging = false;
-  handle.addEventListener('pointerdown', (e) => {
-    if (e.target.closest('button, input, [contenteditable], .ab-resize')) return;
-    if (e.button !== undefined && e.button !== 0) return;
-    e.preventDefault();
-    try { handle.setPointerCapture(e.pointerId); } catch (err) {}
-    dragging = true;
-    sx = e.clientX; sy = e.clientY;
-    ex = parseFloat(el.style.left) || 0;
-    ey = parseFloat(el.style.top) || 0;
-    el.style.zIndex = String(++floatTopZ);
-    el.classList.add('dragging');
-  });
-  handle.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    let nx = ex + e.clientX - sx;
-    let ny = ey + e.clientY - sy;
-    nx = Math.max(0, Math.min(window.innerWidth - 40, nx));
-    ny = Math.max(0, Math.min(window.innerHeight - 30, ny));
-    el.style.left = nx + 'px';
-    el.style.top = ny + 'px';
-  });
-  const stop = (e) => {
-    if (!dragging) return;
-    dragging = false;
-    try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
-    el.classList.remove('dragging');
-    onEnd && onEnd();
-  };
-  handle.addEventListener('pointerup', stop);
-  handle.addEventListener('pointercancel', stop);
-}
-
-function createAnnotationBox(opts) {
-  const box = document.createElement('div');
-  box.className = 'annotation-box';
-  Object.assign(box.style, {
-    left: opts.x + 'px',
-    top: opts.y + 'px',
-    width: Math.max(120, opts.w) + 'px',
-    height: Math.max(80, opts.h) + 'px',
-    zIndex: String(++floatTopZ),
-  });
-  box.innerHTML = `
-    <div class="ab-head">
-      <span class="ab-grip">&#8942;&#8942;</span>
-      <input class="ab-label" value="${escapeHtml(opts.label || 'NOTE')}" maxlength="48">
-      <button class="ab-close" title="Delete">&times;</button>
-    </div>
-    <div class="ab-body" contenteditable="true" spellcheck="false">${escapeHtml(opts.body || '')}</div>
-    <div class="ab-resize" title="Resize"></div>
-  `;
-  document.body.appendChild(box);
-
-  const head = box.querySelector('.ab-head');
-  dragInPlace(box, head, saveAnnotations);
-
-  const resize = box.querySelector('.ab-resize');
-  let rsx = 0, rsy = 0, rw = 0, rh = 0, resizing = false;
-  resize.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try { resize.setPointerCapture(e.pointerId); } catch (err) {}
-    resizing = true;
-    rsx = e.clientX; rsy = e.clientY;
-    rw = box.offsetWidth; rh = box.offsetHeight;
-    box.style.zIndex = String(++floatTopZ);
-  });
-  resize.addEventListener('pointermove', (e) => {
-    if (!resizing) return;
-    box.style.width = Math.max(120, rw + (e.clientX - rsx)) + 'px';
-    box.style.height = Math.max(80, rh + (e.clientY - rsy)) + 'px';
-  });
-  const stopResize = (e) => {
-    if (!resizing) return;
-    resizing = false;
-    try { resize.releasePointerCapture(e.pointerId); } catch (err) {}
-    saveAnnotations();
-  };
-  resize.addEventListener('pointerup', stopResize);
-  resize.addEventListener('pointercancel', stopResize);
-
-  box.querySelector('.ab-close').addEventListener('click', () => {
-    box.remove();
-    saveAnnotations();
-  });
-
-  box.querySelector('.ab-label').addEventListener('input', saveAnnotations);
-  box.querySelector('.ab-body').addEventListener('input', saveAnnotations);
-
-  box.addEventListener('mousedown', () => { box.style.zIndex = String(++floatTopZ); });
-
-  saveAnnotations();
-  return box;
-}
-
-function saveAnnotations() {
-  const boxes = document.querySelectorAll('.annotation-box');
-  const data = [];
-  for (const b of boxes) {
-    data.push({
-      x: parseFloat(b.style.left) || 0,
-      y: parseFloat(b.style.top) || 0,
-      w: parseFloat(b.style.width) || 160,
-      h: parseFloat(b.style.height) || 100,
-      label: b.querySelector('.ab-label')?.value || '',
-      body: b.querySelector('.ab-body')?.innerText || '',
-    });
-  }
-  try { localStorage.setItem(ANNOTATIONS_KEY, JSON.stringify(data)); } catch (e) {}
-}
-
-function restoreAnnotations() {
-  try {
-    const raw = localStorage.getItem(ANNOTATIONS_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data)) return;
-    for (const a of data) createAnnotationBox(a);
-  } catch (e) { console.warn('[annotations] restore failed', e); }
-}
+function restoreAnnotations() { /* draw mode removed */ }
 
 /* ---------- Init ---------- */
 function restoreTranscript() {
