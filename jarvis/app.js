@@ -1597,6 +1597,191 @@ els.textInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
 });
 
+/* =====================================================
+ *  Draw mode — annotation boxes anywhere on screen
+ * ===================================================== */
+const ANNOTATIONS_KEY = 'jarvis_annotations';
+let drawMode = false;
+let drawStart = null;
+let drawPreview = null;
+
+function setDrawMode(on) {
+  drawMode = on;
+  document.body.classList.toggle('draw-mode', drawMode);
+  const btn = document.getElementById('drawToggle');
+  if (btn) btn.classList.toggle('active', drawMode);
+  pushLog(drawMode ? 'DRAW LAYER engaged. Tap and drag to annotate.' : 'DRAW LAYER disengaged.', 'ok');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const drawBtn = document.getElementById('drawToggle');
+  if (drawBtn) drawBtn.addEventListener('click', () => setDrawMode(!drawMode));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (drawMode) setDrawMode(false);
+    if (drawPreview) { drawPreview.remove(); drawPreview = null; drawStart = null; }
+  }
+});
+
+const NO_DRAW_SELECTOR = '.no-draw, button, input, select, textarea, a, .turn, .widget, .input-bar, .topbar, .annotation-box, .dossier, .history-panel, .popover, .transcript, .panel-head';
+
+document.addEventListener('pointerdown', (e) => {
+  if (!drawMode) return;
+  if (e.target.closest && e.target.closest(NO_DRAW_SELECTOR)) return;
+  if (e.button !== undefined && e.button !== 0) return;
+  e.preventDefault();
+  drawStart = { x: e.clientX, y: e.clientY };
+  drawPreview = document.createElement('div');
+  drawPreview.className = 'draw-preview';
+  document.body.appendChild(drawPreview);
+  Object.assign(drawPreview.style, { left: e.clientX + 'px', top: e.clientY + 'px', width: '0px', height: '0px' });
+});
+document.addEventListener('pointermove', (e) => {
+  if (!drawStart || !drawPreview) return;
+  const x = Math.min(drawStart.x, e.clientX);
+  const y = Math.min(drawStart.y, e.clientY);
+  const w = Math.abs(e.clientX - drawStart.x);
+  const h = Math.abs(e.clientY - drawStart.y);
+  Object.assign(drawPreview.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+});
+document.addEventListener('pointerup', (e) => {
+  if (!drawStart) return;
+  const start = drawStart;
+  drawStart = null;
+  if (drawPreview) { drawPreview.remove(); drawPreview = null; }
+  const x = Math.min(start.x, e.clientX);
+  const y = Math.min(start.y, e.clientY);
+  const w = Math.abs(e.clientX - start.x);
+  const h = Math.abs(e.clientY - start.y);
+  if (w < 36 || h < 36) return;
+  createAnnotationBox({ x, y, w, h, label: 'NOTE', body: '' });
+});
+
+function dragInPlace(el, handle, onEnd) {
+  let sx = 0, sy = 0, ex = 0, ey = 0, dragging = false;
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button, input, [contenteditable], .ab-resize')) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    ex = parseFloat(el.style.left) || 0;
+    ey = parseFloat(el.style.top) || 0;
+    el.style.zIndex = String(++floatTopZ);
+    el.classList.add('dragging');
+  });
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    let nx = ex + e.clientX - sx;
+    let ny = ey + e.clientY - sy;
+    nx = Math.max(0, Math.min(window.innerWidth - 40, nx));
+    ny = Math.max(0, Math.min(window.innerHeight - 30, ny));
+    el.style.left = nx + 'px';
+    el.style.top = ny + 'px';
+  });
+  const stop = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+    el.classList.remove('dragging');
+    onEnd && onEnd();
+  };
+  handle.addEventListener('pointerup', stop);
+  handle.addEventListener('pointercancel', stop);
+}
+
+function createAnnotationBox(opts) {
+  const box = document.createElement('div');
+  box.className = 'annotation-box';
+  Object.assign(box.style, {
+    left: opts.x + 'px',
+    top: opts.y + 'px',
+    width: Math.max(120, opts.w) + 'px',
+    height: Math.max(80, opts.h) + 'px',
+    zIndex: String(++floatTopZ),
+  });
+  box.innerHTML = `
+    <div class="ab-head">
+      <span class="ab-grip">&#8942;&#8942;</span>
+      <input class="ab-label" value="${escapeHtml(opts.label || 'NOTE')}" maxlength="48">
+      <button class="ab-close" title="Delete">&times;</button>
+    </div>
+    <div class="ab-body" contenteditable="true" spellcheck="false">${escapeHtml(opts.body || '')}</div>
+    <div class="ab-resize" title="Resize"></div>
+  `;
+  document.body.appendChild(box);
+
+  const head = box.querySelector('.ab-head');
+  dragInPlace(box, head, saveAnnotations);
+
+  const resize = box.querySelector('.ab-resize');
+  let rsx = 0, rsy = 0, rw = 0, rh = 0, resizing = false;
+  resize.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try { resize.setPointerCapture(e.pointerId); } catch (err) {}
+    resizing = true;
+    rsx = e.clientX; rsy = e.clientY;
+    rw = box.offsetWidth; rh = box.offsetHeight;
+    box.style.zIndex = String(++floatTopZ);
+  });
+  resize.addEventListener('pointermove', (e) => {
+    if (!resizing) return;
+    box.style.width = Math.max(120, rw + (e.clientX - rsx)) + 'px';
+    box.style.height = Math.max(80, rh + (e.clientY - rsy)) + 'px';
+  });
+  const stopResize = (e) => {
+    if (!resizing) return;
+    resizing = false;
+    try { resize.releasePointerCapture(e.pointerId); } catch (err) {}
+    saveAnnotations();
+  };
+  resize.addEventListener('pointerup', stopResize);
+  resize.addEventListener('pointercancel', stopResize);
+
+  box.querySelector('.ab-close').addEventListener('click', () => {
+    box.remove();
+    saveAnnotations();
+  });
+
+  box.querySelector('.ab-label').addEventListener('input', saveAnnotations);
+  box.querySelector('.ab-body').addEventListener('input', saveAnnotations);
+
+  box.addEventListener('mousedown', () => { box.style.zIndex = String(++floatTopZ); });
+
+  saveAnnotations();
+  return box;
+}
+
+function saveAnnotations() {
+  const boxes = document.querySelectorAll('.annotation-box');
+  const data = [];
+  for (const b of boxes) {
+    data.push({
+      x: parseFloat(b.style.left) || 0,
+      y: parseFloat(b.style.top) || 0,
+      w: parseFloat(b.style.width) || 160,
+      h: parseFloat(b.style.height) || 100,
+      label: b.querySelector('.ab-label')?.value || '',
+      body: b.querySelector('.ab-body')?.innerText || '',
+    });
+  }
+  try { localStorage.setItem(ANNOTATIONS_KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+function restoreAnnotations() {
+  try {
+    const raw = localStorage.getItem(ANNOTATIONS_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return;
+    for (const a of data) createAnnotationBox(a);
+  } catch (e) { console.warn('[annotations] restore failed', e); }
+}
+
 /* ---------- Init ---------- */
 function restoreTranscript() {
   const persisted = loadHistory();
@@ -1622,6 +1807,7 @@ function restoreTranscript() {
 
 function init() {
   restoreTranscript();
+  restoreAnnotations();
   fetchGames();
   if (!localStorage.getItem(STORAGE_KEY)) {
     setStatus('STANDBY');

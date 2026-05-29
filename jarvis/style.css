@@ -805,6 +805,12 @@ body.bb .suggestion:hover { border-color: var(--amber); color: var(--amber); box
 .icon-btn:hover { border-color: var(--cyan); box-shadow: var(--glow); }
 .icon-btn:active { transform: scale(0.95); }
 .icon-btn .ic-x { display: none; }
+.icon-btn.active {
+  background: rgba(0, 229, 255, 0.18);
+  border-color: var(--cyan);
+  box-shadow: var(--glow);
+  color: var(--cyan-bright);
+}
 .icon-btn.muted {
   color: var(--red);
   border-color: rgba(255, 84, 104, 0.5);
@@ -812,6 +818,144 @@ body.bb .suggestion:hover { border-color: var(--amber); color: var(--amber); box
 }
 .icon-btn.muted .ic-waves { display: none; }
 .icon-btn.muted .ic-x { display: block; }
+
+/* ===== Draw mode / annotation boxes ===== */
+body.draw-mode { cursor: crosshair; }
+body.draw-mode .stage,
+body.draw-mode .frame,
+body.draw-mode .crosshair,
+body.draw-mode .reactor,
+body.draw-mode .vignette,
+body.draw-mode .grid-overlay { cursor: crosshair; }
+body.draw-mode .turn,
+body.draw-mode .widget,
+body.draw-mode .topbar,
+body.draw-mode .input-bar,
+body.draw-mode .popover,
+body.draw-mode .dossier,
+body.draw-mode .annotation-box,
+body.draw-mode .history-panel,
+body.draw-mode button,
+body.draw-mode input,
+body.draw-mode select,
+body.draw-mode textarea,
+body.draw-mode [contenteditable] { cursor: auto; }
+
+.draw-preview {
+  position: fixed;
+  pointer-events: none;
+  border: 1px dashed var(--cyan);
+  background: rgba(0, 229, 255, 0.07);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3), inset 0 0 12px rgba(0, 229, 255, 0.15);
+  z-index: 70;
+}
+.draw-preview::before, .draw-preview::after,
+.draw-preview > i:first-child::before, .draw-preview > i:first-child::after {
+  /* corner ticks could go here later */
+}
+
+.annotation-box {
+  position: fixed;
+  background: linear-gradient(180deg, rgba(0, 30, 60, 0.5) 0%, rgba(0, 14, 30, 0.5) 100%);
+  border: 1px solid var(--cyan);
+  border-radius: 3px;
+  box-shadow: var(--glow), inset 0 0 30px rgba(0, 50, 100, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  z-index: 65;
+  min-width: 120px;
+  min-height: 80px;
+  animation: turn-in 0.18s ease-out;
+}
+.annotation-box.dragging { opacity: 0.92; box-shadow: var(--glow-strong); transition: none; }
+
+.ab-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 8px;
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.12) 0%, rgba(0, 30, 60, 0.4) 100%);
+  border-bottom: 1px solid var(--panel-edge);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+}
+.annotation-box.dragging .ab-head { cursor: grabbing; }
+.ab-grip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: -2px;
+  color: var(--cyan-dim);
+  opacity: 0.7;
+}
+.ab-head:hover .ab-grip { color: var(--cyan); opacity: 1; }
+.ab-label {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--cyan-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  min-width: 0;
+  padding: 2px 4px;
+}
+.ab-label:focus { background: rgba(0, 229, 255, 0.08); border-radius: 2px; }
+.ab-close {
+  width: 18px; height: 18px;
+  background: transparent;
+  border: 1px solid rgba(255, 84, 104, 0.4);
+  color: rgba(255, 130, 145, 0.9);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-sans);
+  padding: 0;
+  flex-shrink: 0;
+}
+.ab-close:hover { color: #fff; border-color: var(--red); background: rgba(255, 84, 104, 0.3); }
+.ab-body {
+  flex: 1;
+  padding: 8px 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--cyan-bright);
+  outline: none;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-dim) transparent;
+}
+.ab-body::-webkit-scrollbar { width: 4px; }
+.ab-body::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 2px; }
+.ab-body:empty::before {
+  content: 'Type to annotate...';
+  color: var(--cyan-dim);
+  font-style: italic;
+  opacity: 0.7;
+  font-size: 12px;
+}
+.ab-resize {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 14px; height: 14px;
+  cursor: nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 0, transparent 60%, var(--cyan) 60%, var(--cyan) 70%, transparent 70%, transparent 80%, var(--cyan) 80%, var(--cyan) 90%, transparent 90%);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.annotation-box:hover .ab-resize { opacity: 1; }
 
 /* ===== Full-history archive panel ===== */
 .history-panel {
