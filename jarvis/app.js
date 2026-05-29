@@ -13,7 +13,8 @@ WHEN TO USE WHICH TOOL:
 - When sir says just a player's name, asks "who is X", "tell me about X", "give me an overview of X", or "show me X" — use player_dossier. The UI renders the bio + stats as a personnel-file card automatically; you only need to add a brief 2-3 sentence JARVIS-style commentary on the player's notable trait or current form. Do NOT re-list the bio fields in your text.
 - For specific stat questions (e.g. "what's his AVG"), use player_stats.
 - For teams, use team_info.
-- For "who leads in X", use stat_leaders. The UI renders leader cards automatically.
+- For ANY "leaders", "leaderboard", "best in X", "top N", "who leads", or "X leaders for [league/division]" question — use show_leaderboard. The UI opens a draggable rank panel. DO NOT list the players in your text — just briefly acknowledge ("Here you are, sir."). The panel supports filters by league (AL, NL) and division (e.g. "NL West"). Note: WAR is not in the MLB API — for WAR/best-overall queries, fall back to OPS (hitters) or ERA (pitchers) and briefly mention this.
+- For "show me scores"/"open the scoreboard" — use show_scoreboard.
 
 Be witty and concise, in JARVIS's deferential British tone. Stay in character.`;
 
@@ -283,6 +284,100 @@ async function refreshScoreboard() {
     if (scoreboardTimer) clearTimeout(scoreboardTimer);
     scoreboardTimer = setTimeout(refreshScoreboard, 60000);
   }
+}
+
+/* ---------- Leaderboard panel ---------- */
+function matchDivisionTeams(teams, query) {
+  const q = (query || '').toLowerCase().trim();
+  if (!q) return null;
+  const direction = ['east', 'central', 'west'].find(x => q.includes(x));
+  if (!direction) return null;
+  const wantNL = /\bnl\b|national/.test(q);
+  const wantAL = /\bal\b|american/.test(q);
+  return teams.filter(t => {
+    const d = (t.division?.name || '').toLowerCase();
+    if (!d.includes(direction)) return false;
+    if (wantNL && !d.includes('national')) return false;
+    if (wantAL && !d.includes('american')) return false;
+    return true;
+  });
+}
+
+async function floatDossier(d) {
+  const temp = document.createElement('div');
+  document.body.appendChild(temp);
+  attachDossier(temp, d);
+  const dossier = temp.querySelector('.dossier');
+  if (!dossier) { temp.remove(); return; }
+  document.body.appendChild(dossier);
+  temp.remove();
+  dossier.classList.add('floating');
+  Object.assign(dossier.style, {
+    position: 'fixed',
+    left: Math.max(40, (window.innerWidth - 660) / 2) + 'px',
+    top: '60px',
+    width: '640px',
+    maxWidth: 'calc(100vw - 40px)',
+    zIndex: String(++floatTopZ),
+    margin: '0',
+  });
+  addCloseBtn(dossier);
+}
+
+function openLeaderboard(opts) {
+  const panel = document.createElement('div');
+  panel.className = 'leaderboard-panel';
+  let rowsHtml = '';
+  if (!opts.leaders.length) {
+    rowsHtml = '<div class="games-loading">No data on file, sir.</div>';
+  } else {
+    for (const l of opts.leaders) {
+      rowsHtml += `<div class="lb-row" data-player-id="${l.playerId}" title="Double-click for full dossier">
+        <span class="lb-rank">${l.rank}</span>
+        <img class="lb-img" src="${l.headshot}" alt="${escapeHtml(l.name || '')}" onerror="this.style.opacity=0.2">
+        <div class="lb-info">
+          <div class="lb-name">${escapeHtml(l.name || '')}</div>
+          <div class="lb-team">${escapeHtml(l.teamAbbr || l.team || '—')}</div>
+        </div>
+        <span class="lb-value">${escapeHtml(String(l.value ?? '—'))}</span>
+      </div>`;
+    }
+  }
+  panel.innerHTML = `
+    <div class="lb-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="lb-flag">RANK</span>
+      <span class="lb-title">${escapeHtml(opts.title || 'LEADERBOARD')}</span>
+      <span class="lb-meta">${escapeHtml(opts.subtitle || '')}</span>
+    </div>
+    <div class="lb-body">${rowsHtml}</div>
+  `;
+  document.body.appendChild(panel);
+  const W = 340;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = 'calc(100vh - 160px)';
+  panel.style.left = Math.max(20, window.innerWidth - W - 60) + 'px';
+  panel.style.top = '90px';
+  panel.style.zIndex = String(++floatTopZ);
+
+  const handle = panel.querySelector('.lb-head');
+  if (handle) makeDraggable(panel, handle);
+
+  panel.addEventListener('dblclick', async (e) => {
+    const row = e.target.closest('.lb-row');
+    if (!row) return;
+    const id = parseInt(row.dataset.playerId);
+    if (!id) return;
+    e.stopPropagation();
+    row.classList.add('loading');
+    try {
+      const result = await mlb.player_dossier({ player_id: id });
+      if (result.dossier) floatDossier(result.dossier);
+    } catch (err) {
+      console.warn('[leaderboard→dossier]', err);
+    }
+    row.classList.remove('loading');
+  });
 }
 
 function openScoreboard() {
@@ -884,26 +979,56 @@ const mlb = {
     return { standings: out };
   },
 
-  async stat_leaders({ stat, group, season, limit }) {
+  async show_leaderboard({ stat, group, season, league, division, limit }) {
     const s = season || String(SEASON);
     const g = group || 'hitting';
-    const n = limit || 10;
-    const r = await fetch(`${STATS}/stats/leaders?leaderCategories=${encodeURIComponent(stat)}&season=${s}&statGroup=${g}&limit=${n}&sportId=1`);
+    const n = Math.min(50, limit || 10);
+    const fetchN = division ? Math.max(60, n * 6) : n;
+
+    let url = `${STATS}/stats/leaders?leaderCategories=${encodeURIComponent(stat)}&season=${s}&statGroup=${g}&limit=${fetchN}&sportId=1`;
+    if (league === 'AL') url += '&leagueId=103';
+    else if (league === 'NL') url += '&leagueId=104';
+
+    const r = await fetch(url);
+    if (!r.ok) return { error: `MLB API ${r.status}` };
     const j = await r.json();
     const cat = j.leagueLeaders?.[0];
-    if (!cat) return { error: `No leaderboard found for "${stat}".` };
-    return {
-      stat: cat.statGroup + '.' + cat.leaderCategory,
-      season: s,
-      leaders: (cat.leaders || []).map(l => ({
-        rank: l.rank,
-        playerId: l.person?.id,
-        name: l.person?.fullName,
-        team: l.team?.name,
-        value: l.value,
-        headshot: headshot(l.person?.id),
-      })),
-    };
+    if (!cat) return { error: `No leaderboard available for "${stat}".` };
+
+    const teams = await getAllTeams();
+    const teamById = Object.fromEntries(teams.map(t => [t.id, t]));
+
+    let leaders = (cat.leaders || []).map(l => ({
+      rank: l.rank,
+      playerId: l.person?.id,
+      name: l.person?.fullName,
+      teamId: l.team?.id,
+      team: l.team?.name,
+      teamAbbr: teamById[l.team?.id]?.abbreviation || null,
+      value: l.value,
+      headshot: headshot(l.person?.id),
+    }));
+
+    let scopeLabel = league || 'MLB';
+    if (division) {
+      const divTeams = matchDivisionTeams(teams, division);
+      if (divTeams && divTeams.length) {
+        const divIds = new Set(divTeams.map(t => t.id));
+        leaders = leaders.filter(l => divIds.has(l.teamId));
+        leaders.forEach((l, i) => l.rank = i + 1);
+        scopeLabel = division.toUpperCase();
+      }
+    }
+
+    leaders = leaders.slice(0, n);
+
+    openLeaderboard({
+      title: `${(STAT_DISPLAY[stat] || stat).toUpperCase()} — ${scopeLabel}`,
+      subtitle: `${s} ${g.toUpperCase()}`,
+      leaders,
+    });
+
+    return { ok: true, opened: true, count: leaders.length, scope: scopeLabel, stat };
   },
 };
 
@@ -949,12 +1074,14 @@ const baseballTools = [
     input_schema: { type: 'object', properties: {
       league: { type: 'string', enum: ['AL', 'NL', 'all'], description: 'League filter' },
     } } },
-  { name: 'stat_leaders',
-    description: 'Leaderboard for a stat in a season. Stat names use MLB Stats API conventions: homeRuns, battingAverage, rbi, hits, stolenBases, onBasePercentage, sluggingPercentage, ops, era, wins, strikeOuts, saves, whip.',
+  { name: 'show_leaderboard',
+    description: 'Open a floating, draggable LEADERBOARD panel showing top players for a stat (rank, headshot, name, team, value). Sir can double-click any row to open that player\'s full dossier. ALWAYS use this for any "leaders" / "leaderboard" / "best in X" question — never list leaders in prose. Supports optional league (AL/NL) and division ("NL West", "AL East") filters. After calling, briefly acknowledge ("Here you are, sir."). IMPORTANT: WAR is NOT available via MLB Stats API — if sir asks for WAR leaders or "best overall", use OPS for hitters or ERA for pitchers as proxy and mention this briefly.',
     input_schema: { type: 'object', properties: {
-      stat: { type: 'string', description: 'Stat name (camelCase)' },
-      group: { type: 'string', enum: ['hitting', 'pitching'], description: 'Stats group' },
-      season: { type: 'string', description: 'Year' },
+      stat: { type: 'string', description: 'Stat name (camelCase): homeRuns, battingAverage, rbi, hits, stolenBases, onBasePercentage, sluggingPercentage, ops, era, wins, strikeOuts, saves, whip.' },
+      group: { type: 'string', enum: ['hitting', 'pitching'], description: 'Stat group' },
+      season: { type: 'string', description: 'Year (defaults to current)' },
+      league: { type: 'string', enum: ['AL', 'NL'], description: 'Optional league filter' },
+      division: { type: 'string', description: 'Optional division: "NL West", "AL East", etc.' },
       limit: { type: 'integer', description: 'Top N (default 10)' },
     }, required: ['stat', 'group'] } },
 ];
@@ -989,11 +1116,8 @@ async function runTool(name, input) {
     cards.push({ img: result.player.headshot, name: result.player.name, sub: [result.player.team, result.player.position].filter(Boolean).join(' · ') });
   } else if (name === 'team_info' && result.team) {
     cards.push({ img: result.team.logo, logo: true, name: result.team.name, sub: result.team.division || result.team.league || '' });
-  } else if (name === 'stat_leaders' && result.leaders) {
-    for (const l of result.leaders.slice(0, 4)) {
-      cards.push({ img: l.headshot, name: l.name, sub: `${l.team || ''} · ${l.value}` });
-    }
   }
+  // show_leaderboard renders its own panel; no inline cards
   return { result, cards, dossier };
 }
 
