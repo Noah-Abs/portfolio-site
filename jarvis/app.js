@@ -771,6 +771,83 @@ async function runTool(name, input) {
   return { result, cards, dossier };
 }
 
+/* ---------- Draggable / detachable cards ---------- */
+let floatTopZ = 80;
+function makeDraggable(el, handle) {
+  let startX = 0, startY = 0, elX = 0, elY = 0;
+  let dragging = false, detached = false;
+  handle.style.cursor = 'grab';
+  handle.style.touchAction = 'none';
+
+  function bringFront() { el.style.zIndex = String(++floatTopZ); }
+
+  function ensureDetached() {
+    if (detached) return;
+    const rect = el.getBoundingClientRect();
+    el.style.position = 'fixed';
+    el.style.left = rect.left + 'px';
+    el.style.top = rect.top + 'px';
+    el.style.width = rect.width + 'px';
+    el.style.margin = '0';
+    document.body.appendChild(el);
+    el.classList.add('floating');
+    addCloseBtn(el);
+    detached = true;
+  }
+
+  function onDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest('.float-close')) return;
+    e.preventDefault();
+    try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+    dragging = true;
+    ensureDetached();
+    bringFront();
+    elX = parseFloat(el.style.left) || 0;
+    elY = parseFloat(el.style.top) || 0;
+    startX = e.clientX;
+    startY = e.clientY;
+    el.classList.add('dragging');
+    handle.style.cursor = 'grabbing';
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const rect = el.getBoundingClientRect();
+    let nx = elX + dx, ny = elY + dy;
+    nx = Math.max(-rect.width + 80, Math.min(window.innerWidth - 80, nx));
+    ny = Math.max(0, Math.min(window.innerHeight - 36, ny));
+    el.style.left = nx + 'px';
+    el.style.top = ny + 'px';
+  }
+
+  function onUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+    el.classList.remove('dragging');
+    handle.style.cursor = 'grab';
+  }
+
+  handle.addEventListener('pointerdown', onDown);
+  handle.addEventListener('pointermove', onMove);
+  handle.addEventListener('pointerup', onUp);
+  handle.addEventListener('pointercancel', onUp);
+  el.addEventListener('mousedown', () => { if (detached) bringFront(); });
+}
+
+function addCloseBtn(el) {
+  if (el.querySelector('.float-close')) return;
+  const btn = document.createElement('button');
+  btn.className = 'float-close';
+  btn.title = 'Dismiss';
+  btn.innerHTML = '&times;';
+  btn.addEventListener('click', (e) => { e.stopPropagation(); el.remove(); });
+  el.appendChild(btn);
+}
+
 /* Dossier renderer (personnel-file card) */
 const STAT_LABELS = {
   G: 'gamesPlayed', AB: 'atBats', R: 'runs', H: 'hits', '2B': 'doubles', '3B': 'triples',
@@ -876,6 +953,7 @@ function attachDossier(turnEl, d) {
   const isPitcher = d.position === 'P' || d.position === 'SP' || d.position === 'RP';
   let html = `
     <div class="ds-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
       <span class="ds-flag">CLASSIFIED</span>
       <span class="ds-title">PERSONNEL FILE</span>
       <span class="ds-id">// MLB-${d.id}</span>
@@ -931,6 +1009,8 @@ function attachDossier(turnEl, d) {
 
   card.innerHTML = html;
   turnEl.appendChild(card);
+  const handle = card.querySelector('.ds-head');
+  if (handle) makeDraggable(card, handle);
 }
 
 /* =====================================================

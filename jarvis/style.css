@@ -705,8 +705,46 @@ body.bb .status-dot.online { background: var(--amber); color: var(--amber); }
 .icon-btn.muted .ic-waves { display: none; }
 .icon-btn.muted .ic-x { display: block; }
 
+/* Floating / detached dossier */
+.dossier.floating {
+  max-width: 720px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: var(--glow-strong), 0 24px 60px rgba(0, 0, 0, 0.75);
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-dim) transparent;
+}
+.dossier.floating::-webkit-scrollbar { width: 5px; }
+.dossier.floating::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
+.dossier.dragging { opacity: 0.94; transition: none; }
+.float-close {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  background: rgba(255, 84, 104, 0.18);
+  border: 1px solid rgba(255, 84, 104, 0.5);
+  color: #ff8a98;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  padding: 0;
+}
+.float-close:hover {
+  background: rgba(255, 84, 104, 0.4);
+  color: #fff;
+  border-color: var(--red);
+  box-shadow: 0 0 8px rgba(255, 84, 104, 0.6);
+}
+
 /* Personnel-file dossier */
 .dossier {
+  position: relative;
   margin: 14px 0 4px 0;
   background:
     repeating-linear-gradient(180deg, transparent 0, transparent 2px, rgba(0, 229, 255, 0.025) 2px, rgba(0, 229, 255, 0.025) 3px),
@@ -721,11 +759,22 @@ body.bb .status-dot.online { background: var(--amber); color: var(--amber); }
 .ds-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 8px 14px;
   background: linear-gradient(90deg, rgba(255, 184, 74, 0.15) 0%, rgba(0, 229, 255, 0.05) 100%);
   border-bottom: 1px solid var(--panel-edge);
+  user-select: none;
+  -webkit-user-select: none;
 }
+.ds-grip {
+  font-family: var(--font-mono);
+  color: var(--cyan-dim);
+  font-size: 12px;
+  letter-spacing: -2px;
+  opacity: 0.7;
+  cursor: grab;
+}
+.ds-head:hover .ds-grip { color: var(--cyan); opacity: 1; }
 .ds-flag {
   background: var(--amber);
   color: #20140a;
