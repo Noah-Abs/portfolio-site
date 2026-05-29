@@ -210,43 +210,112 @@ function loadHistory() {
   } catch (e) { return []; }
 }
 
-/* ---------- Empty-state suggestion chips ---------- */
-const SUGGESTIONS_GENERAL = [
-  'Good evening, Jarvis',
-  'Run a system diagnostic',
-  'What is the weather in Malibu?',
-  'Tell me a joke',
-];
-const SUGGESTIONS_BASEBALL = [
-  'Aaron Judge',
-  'Shohei Ohtani',
-  'Today\'s schedule',
-  'AL HR leaders',
-  'NL standings',
-  'Yankees roster',
-];
-function renderSuggestions() {
-  if (state.history.length) return;
-  const existing = els.transcript.querySelector('.suggestions');
-  if (existing) existing.remove();
-  const wrap = document.createElement('div');
-  wrap.className = 'suggestions';
-  const list = state.baseballMode ? SUGGESTIONS_BASEBALL : SUGGESTIONS_GENERAL;
-  for (const s of list) {
-    const chip = document.createElement('button');
-    chip.className = 'suggestion';
-    chip.textContent = s;
-    chip.addEventListener('click', () => {
-      els.textInput.value = s;
-      send();
-    });
-    wrap.appendChild(chip);
+function renderSuggestions() {}
+
+/* ---------- Live MLB games — on-demand scoreboard panel ---------- */
+let scoreboardEl = null;
+let scoreboardTimer = null;
+
+function buildGamesHTML(games) {
+  if (!games.length) return '<div class="games-loading">No games today, sir.</div>';
+  games.sort((a, b) => {
+    const rank = (g) => g.state === 'Live' ? 0 : g.state === 'Preview' ? 1 : 2;
+    return rank(a) - rank(b);
+  });
+  let html = '';
+  for (const g of games) {
+    let status = '', cls = '';
+    if (g.state === 'Live') {
+      status = `${(g.half || '').slice(0,3).toUpperCase()} ${g.inning || ''}`.trim();
+      cls = 'live';
+    } else if (g.state === 'Final') {
+      status = 'FIN';
+      cls = 'final';
+    } else if (g.state === 'Preview') {
+      const t = new Date(g.time);
+      status = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      cls = 'preview';
+    }
+    const awayWin = g.away.score != null && g.home.score != null && g.away.score > g.home.score;
+    const homeWin = g.away.score != null && g.home.score != null && g.home.score > g.away.score;
+    html += `<div class="game ${cls}">
+      <div class="g-side ${awayWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.away.abbr)}</span><span class="g-score">${g.away.score ?? '-'}</span></div>
+      <div class="g-side ${homeWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.home.abbr)}</span><span class="g-score">${g.home.score ?? '-'}</span></div>
+      <div class="g-status">${escapeHtml(status)}</div>
+    </div>`;
   }
-  els.transcript.appendChild(wrap);
+  return html;
 }
 
-/* ---------- Live MLB games widget ---------- */
-let gamesTimer = null;
+async function refreshScoreboard() {
+  if (!scoreboardEl || !document.body.contains(scoreboardEl)) return;
+  const body = scoreboardEl.querySelector('.scoreboard-body');
+  if (!body) return;
+  try {
+    const teams = await getAllTeams();
+    const teamById = Object.fromEntries(teams.map(t => [t.id, t]));
+    const d = new Date().toISOString().slice(0, 10);
+    const r = await fetch(`${STATS}/schedule?sportId=1&date=${d}&hydrate=linescore,team`);
+    const j = await r.json();
+    const games = [];
+    for (const day of (j.dates || [])) {
+      for (const g of (day.games || [])) {
+        const homeT = teamById[g.teams.home.team.id];
+        const awayT = teamById[g.teams.away.team.id];
+        games.push({
+          state: g.status?.abstractGameState,
+          inning: g.linescore?.currentInningOrdinal,
+          half: g.linescore?.inningHalf,
+          time: g.gameDate,
+          home: { abbr: homeT?.abbreviation || homeT?.teamCode?.toUpperCase() || '???', score: g.teams.home.score },
+          away: { abbr: awayT?.abbreviation || awayT?.teamCode?.toUpperCase() || '???', score: g.teams.away.score },
+        });
+      }
+    }
+    const anyLive = games.some(g => g.state === 'Live');
+    const meta = scoreboardEl.querySelector('.sb-meta');
+    if (meta) meta.textContent = anyLive ? `${games.filter(g=>g.state==='Live').length} LIVE` : `${games.length} GAMES`;
+    body.innerHTML = buildGamesHTML(games);
+    if (scoreboardTimer) clearTimeout(scoreboardTimer);
+    scoreboardTimer = setTimeout(refreshScoreboard, anyLive ? 30000 : 180000);
+  } catch (e) {
+    console.warn('[scoreboard] fetch failed', e);
+    if (scoreboardTimer) clearTimeout(scoreboardTimer);
+    scoreboardTimer = setTimeout(refreshScoreboard, 60000);
+  }
+}
+
+function openScoreboard() {
+  if (scoreboardEl && document.body.contains(scoreboardEl)) {
+    scoreboardEl.style.zIndex = String(++floatTopZ);
+    refreshScoreboard();
+    return;
+  }
+  const panel = document.createElement('div');
+  panel.className = 'scoreboard-panel';
+  panel.innerHTML = `
+    <div class="sb-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="sb-flag">LIVE</span>
+      <span class="sb-title">MLB SCOREBOARD</span>
+      <span class="sb-meta">&mdash;</span>
+    </div>
+    <div class="scoreboard-body"><div class="games-loading">Polling feed...</div></div>
+  `;
+  document.body.appendChild(panel);
+  const W = 300;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = 'calc(100vh - 160px)';
+  panel.style.left = Math.max(20, window.innerWidth - W - 40) + 'px';
+  panel.style.top = '96px';
+  panel.style.zIndex = String(++floatTopZ);
+  scoreboardEl = panel;
+  const handle = panel.querySelector('.sb-head');
+  if (handle) makeDraggable(panel, handle);
+  refreshScoreboard();
+}
+
+/* ---------- Legacy fetcher kept as a no-op (sidebars removed) ---------- */
 async function fetchGames() {
   const body = document.getElementById('gamesBody');
   const led = document.getElementById('liveLed');
@@ -839,6 +908,9 @@ const mlb = {
 };
 
 const baseballTools = [
+  { name: 'show_scoreboard',
+    description: 'Open a floating, draggable LIVE SCOREBOARD panel that shows every MLB game today with current scores and inning. The UI handles the data — just call the tool, then briefly acknowledge ("Right away, sir."). Use whenever sir asks to see, open, or pull up scores, games, or the scoreboard.',
+    input_schema: { type: 'object', properties: {} } },
   { name: 'player_dossier',
     description: 'Build a comprehensive personnel-file dossier for a player: bio (height, weight, age, bats/throws, debut, origin) plus current-season and career stats for hitting/pitching as applicable. Use this whenever sir asks for an overview of a player ("tell me about X", "who is X", "show me X", or just a bare name). Returns a "dossier" object — the UI renders it as a personnel file automatically, so do not repeat the bio fields in your response. Add a short, JARVIS-style summary (2-3 sentences) about the player\'s notable trait or current form.',
     input_schema: { type: 'object', properties: {
@@ -890,6 +962,10 @@ const baseballTools = [
 /* Execute a tool call and return { result, cards } */
 async function runTool(name, input) {
   console.log(`[tool] ${name}`, input);
+  if (name === 'show_scoreboard') {
+    openScoreboard();
+    return { result: { ok: true, message: 'Scoreboard panel opened on screen.' }, cards: [], dossier: null };
+  }
   if (!mlb[name]) return { result: { error: `Unknown tool: ${name}` }, cards: [] };
   let result;
   try {
@@ -901,7 +977,9 @@ async function runTool(name, input) {
   }
   const cards = [];
   let dossier = null;
-  if (name === 'player_dossier' && result.dossier) {
+  if (name === 'show_scoreboard') {
+    openScoreboard();
+  } else if (name === 'player_dossier' && result.dossier) {
     dossier = result.dossier;
   } else if (name === 'search_player' && result.players) {
     for (const p of result.players.slice(0, 4)) {
@@ -1585,11 +1663,36 @@ async function handleApiError(res, jarvisText) {
 }
 
 /* ---------- Send ---------- */
+function detectQuickCommand(text) {
+  const t = text.toLowerCase().trim();
+  if (/\b(show|open|display|bring up|pull up|gimme|give me)\b[^.?!]*\b(scores?|scoreboard|games?|matchups?)\b/.test(t) ||
+      /^(scoreboard|scores)\s*\.?$/.test(t)) {
+    return 'scoreboard';
+  }
+  return null;
+}
+
 function send() {
   if (state.busy) return;
   const text = els.textInput.value.trim();
   if (!text) return;
   els.textInput.value = '';
+
+  const cmd = detectQuickCommand(text);
+  if (cmd === 'scoreboard') {
+    appendTurn('user', text);
+    const t = appendTurn('jarvis', '');
+    t.querySelector('.text').textContent = 'Pulling up the scoreboard, sir.';
+    speak('Pulling up the scoreboard, sir.');
+    state.history.push({ role: 'user', content: text });
+    state.history.push({ role: 'assistant', content: 'Pulling up the scoreboard, sir.' });
+    saveHistory();
+    state.queries++;
+    updateReadouts();
+    openScoreboard();
+    return;
+  }
+
   callJarvis(text);
 }
 els.sendBtn.addEventListener('click', send);
@@ -1808,7 +1911,6 @@ function restoreTranscript() {
 function init() {
   restoreTranscript();
   restoreAnnotations();
-  fetchGames();
   if (!localStorage.getItem(STORAGE_KEY)) {
     setStatus('STANDBY');
     setTimeout(openSettings, 500);

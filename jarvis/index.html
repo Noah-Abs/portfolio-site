@@ -76,12 +76,16 @@
           <span id="status">STANDBY</span>
         </span>
       </div>
+      <div class="telem">
+        <span class="telem-label">SYS.TIME</span>
+        <span class="telem-val mono" id="clock">--:--:--</span>
+      </div>
     </div>
   </header>
 
   <div class="layout">
 
-    <aside class="side left">
+    <aside class="side left" hidden>
       <div class="widget" id="logWidget">
         <div class="w-head">
           <span class="w-title">// SYSTEM.LOG</span>
@@ -166,7 +170,7 @@
       </section>
     </main>
 
-    <aside class="side right">
+    <aside class="side right" hidden>
       <div class="widget big-clock">
         <div class="clock-time" id="clock">--:--:--</div>
         <div class="clock-date" id="clockDate">--- -- ----</div>
