@@ -4,13 +4,17 @@ const SYSTEM_PROMPT = `You are J.A.R.V.I.S., the AI butler from Iron Man. You ad
 
 const els = {
   settingsBtn: document.getElementById('settingsBtn'),
-  settingsModal: document.getElementById('settingsModal'),
+  settingsPanel: document.getElementById('settingsPanel'),
   apiKey: document.getElementById('apiKey'),
   saveKey: document.getElementById('saveKey'),
   clearKey: document.getElementById('clearKey'),
   closeModal: document.getElementById('closeModal'),
   status: document.getElementById('status'),
+  statusDot: document.getElementById('statusDot'),
+  clock: document.getElementById('clock'),
   transcript: document.getElementById('transcript'),
+  transcriptPanel: document.getElementById('transcriptPanel'),
+  clearChat: document.getElementById('clearChat'),
   textInput: document.getElementById('textInput'),
   sendBtn: document.getElementById('sendBtn'),
   micBtn: document.getElementById('micBtn'),
@@ -23,11 +27,19 @@ const state = {
   recognizing: false,
 };
 
-function setStatus(text) {
+function setStatus(text, kind) {
   els.status.textContent = text;
+  els.statusDot.classList.remove('online', 'listening', 'thinking', 'error');
+  if (kind) els.statusDot.classList.add(kind);
+}
+
+function clearPlaceholder() {
+  const ph = els.transcript.querySelector('.placeholder');
+  if (ph) ph.remove();
 }
 
 function appendTurn(role, text) {
+  clearPlaceholder();
   const turn = document.createElement('div');
   turn.className = `turn ${role}`;
   const label = role === 'user' ? 'SIR' : 'JARVIS';
@@ -35,23 +47,30 @@ function appendTurn(role, text) {
   turn.querySelector('.text').textContent = text;
   els.transcript.appendChild(turn);
   els.transcript.scrollTop = els.transcript.scrollHeight;
-  return turn.querySelector('.text');
+  return turn;
 }
 
 function openSettings() {
   els.apiKey.value = localStorage.getItem(STORAGE_KEY) || '';
-  els.settingsModal.classList.add('open');
-  setTimeout(() => els.apiKey.focus(), 50);
+  els.settingsPanel.classList.add('open');
+  setTimeout(() => els.apiKey.focus(), 80);
 }
 function closeSettings() {
-  els.settingsModal.classList.remove('open');
+  els.settingsPanel.classList.remove('open');
 }
 
-els.settingsBtn.addEventListener('click', openSettings);
-els.closeModal.addEventListener('click', closeSettings);
-els.settingsModal.addEventListener('click', (e) => {
-  if (e.target === els.settingsModal) closeSettings();
+els.settingsBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (els.settingsPanel.classList.contains('open')) closeSettings();
+  else openSettings();
 });
+els.closeModal.addEventListener('click', closeSettings);
+document.addEventListener('click', (e) => {
+  if (!els.settingsPanel.classList.contains('open')) return;
+  if (els.settingsPanel.contains(e.target) || els.settingsBtn.contains(e.target)) return;
+  closeSettings();
+});
+
 els.saveKey.addEventListener('click', () => {
   const key = els.apiKey.value.trim();
   if (!key.startsWith('sk-ant-')) {
@@ -60,13 +79,26 @@ els.saveKey.addEventListener('click', () => {
   }
   localStorage.setItem(STORAGE_KEY, key);
   closeSettings();
-  setStatus('ONLINE');
+  setStatus('ONLINE', 'online');
 });
 els.clearKey.addEventListener('click', () => {
   localStorage.removeItem(STORAGE_KEY);
   els.apiKey.value = '';
   setStatus('STANDBY');
 });
+
+els.clearChat.addEventListener('click', () => {
+  state.history = [];
+  els.transcript.innerHTML = '<div class="placeholder">Awaiting instruction, sir.</div>';
+});
+
+function tickClock() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  els.clock.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+tickClock();
+setInterval(tickClock, 1000);
 
 let voice = null;
 function pickVoice() {
@@ -111,19 +143,19 @@ if (SpeechRecognition) {
       else interim += t;
     }
     if (interim) els.textInput.value = interim;
-    if (final) {
-      els.textInput.value = final.trim();
-    }
+    if (final) els.textInput.value = final.trim();
   };
   recognition.onerror = (e) => {
     console.warn('Speech recognition error:', e.error);
-    stopRecognition();
+    state.recognizing = false;
+    els.micBtn.classList.remove('recording');
+    setStatus('ONLINE', 'online');
   };
   recognition.onend = () => {
     if (state.recognizing) {
       state.recognizing = false;
       els.micBtn.classList.remove('recording');
-      setStatus('ONLINE');
+      setStatus('ONLINE', 'online');
       const text = els.textInput.value.trim();
       if (text) send();
     }
@@ -140,8 +172,8 @@ function startRecognition() {
     recognition.start();
     state.recognizing = true;
     els.micBtn.classList.add('recording');
-    setStatus('LISTENING');
-  } catch (e) {/* already started */}
+    setStatus('LISTENING', 'listening');
+  } catch (e) {/* already running */}
 }
 function stopRecognition() {
   if (!recognition || !state.recognizing) return;
@@ -162,12 +194,15 @@ async function callJarvis(userText) {
   }
 
   state.busy = true;
+  els.sendBtn.disabled = true;
   state.history.push({ role: 'user', content: userText });
   if (state.history.length > 20) state.history = state.history.slice(-20);
 
   appendTurn('user', userText);
-  const jarvisEl = appendTurn('jarvis', '');
-  setStatus('PROCESSING');
+  const jarvisTurn = appendTurn('jarvis', '');
+  jarvisTurn.classList.add('streaming');
+  const jarvisText = jarvisTurn.querySelector('.text');
+  setStatus('PROCESSING', 'thinking');
   els.reactor.classList.add('thinking');
 
   let assistantText = '';
@@ -198,14 +233,16 @@ async function callJarvis(userText) {
       let errMsg = `Error ${res.status}`;
       try { errMsg = JSON.parse(errBody).error?.message || errMsg; } catch (e) {}
       if (res.status === 401) {
-        jarvisEl.textContent = `Sir, my credentials appear to be invalid.`;
+        jarvisText.textContent = `Sir, my credentials appear to be invalid.`;
         speak('Sir, my credentials appear to be invalid.');
         state.history.pop();
+        setStatus('AUTH ERROR', 'error');
         openSettings();
       } else {
-        jarvisEl.textContent = `Apologies, sir — ${errMsg}`;
+        jarvisText.textContent = `Apologies, sir — ${errMsg}`;
         speak('Apologies, sir. A momentary lapse.');
         state.history.pop();
+        setStatus('ERROR', 'error');
       }
       return;
     }
@@ -230,7 +267,7 @@ async function callJarvis(userText) {
           if (data.type === 'content_block_delta' && data.delta?.type === 'text_delta') {
             const chunk = data.delta.text;
             assistantText += chunk;
-            jarvisEl.textContent = assistantText;
+            jarvisText.textContent = assistantText;
             els.transcript.scrollTop = els.transcript.scrollHeight;
 
             speakBuffer += chunk;
@@ -249,12 +286,17 @@ async function callJarvis(userText) {
     state.history.push({ role: 'assistant', content: assistantText });
   } catch (err) {
     console.error(err);
-    jarvisEl.textContent = `Apologies, sir — the connection appears unstable.`;
+    jarvisText.textContent = `Apologies, sir — the connection appears unstable.`;
     speak('Apologies, sir. The connection appears unstable.');
     state.history.pop();
+    setStatus('CONNECTION LOST', 'error');
   } finally {
     state.busy = false;
-    setStatus('ONLINE');
+    els.sendBtn.disabled = false;
+    jarvisTurn.classList.remove('streaming');
+    if (!els.statusDot.classList.contains('error')) {
+      setStatus('ONLINE', 'online');
+    }
     els.reactor.classList.remove('thinking');
   }
 }
@@ -278,9 +320,9 @@ els.textInput.addEventListener('keydown', (e) => {
 function init() {
   if (!localStorage.getItem(STORAGE_KEY)) {
     setStatus('STANDBY');
-    setTimeout(openSettings, 400);
+    setTimeout(openSettings, 500);
   } else {
-    setStatus('ONLINE');
+    setStatus('ONLINE', 'online');
   }
 }
 init();
