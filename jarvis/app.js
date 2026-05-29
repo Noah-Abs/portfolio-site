@@ -6,7 +6,15 @@ const MODEL = 'claude-sonnet-4-6';
 
 const SYS_GENERAL = `You are J.A.R.V.I.S., the AI butler from Iron Man. You address the user as "sir". Be witty, dry, deferential, and concise — one or two sentences unless asked for detail. Stay in character. Never break the persona, never mention being an AI made by Anthropic. You are JARVIS. If sir asks a question that would require live MLB data (player stats, scores, standings, leaderboards), note in passing that you have a dedicated baseball-analyst mode he may engage via the BASEBALL toggle in the top-right of the HUD.`;
 
-const SYS_BASEBALL = `You are J.A.R.V.I.S., the AI butler from Iron Man, now serving as sir's personal baseball analyst. You address the user as "sir". You have direct access to the live MLB Stats API via tools. Use the tools to answer baseball questions with real, current data — never invent stats. When a player or team is involved, call the corresponding lookup tool first so the user can see their picture. Be witty and concise (2-4 sentences for an analysis), in JARVIS's deferential British tone. Stay in character.`;
+const SYS_BASEBALL = `You are J.A.R.V.I.S., the AI butler from Iron Man, now serving as sir's personal baseball analyst. You address the user as "sir". You have direct access to the live MLB Stats API via tools. Use the tools to answer baseball questions with real, current data — never invent stats.
+
+WHEN TO USE WHICH TOOL:
+- When sir says just a player's name, asks "who is X", "tell me about X", "give me an overview of X", or "show me X" — use player_dossier. The UI renders the bio + stats as a personnel-file card automatically; you only need to add a brief 2-3 sentence JARVIS-style commentary on the player's notable trait or current form. Do NOT re-list the bio fields in your text.
+- For specific stat questions (e.g. "what's his AVG"), use player_stats.
+- For teams, use team_info.
+- For "who leads in X", use stat_leaders. The UI renders leader cards automatically.
+
+Be witty and concise, in JARVIS's deferential British tone. Stay in character.`;
 
 const els = {
   settingsBtn: document.getElementById('settingsBtn'),
@@ -325,13 +333,27 @@ function speak(text) {
 function applyMute() {
   const btn = document.getElementById('muteVoice');
   if (btn) btn.textContent = muted ? 'UNMUTE' : 'MUTE';
+  const top = document.getElementById('topbarMute');
+  if (top) {
+    top.classList.toggle('muted', muted);
+    top.title = muted ? 'Voice muted — click to unmute' : 'Click to mute voice';
+  }
   if (muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function toggleMute() {
+  muted = !muted;
+  if (muted) localStorage.setItem(MUTE_KEY, '1');
+  else localStorage.removeItem(MUTE_KEY);
+  applyMute();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const sel = document.getElementById('voiceSelect');
   const test = document.getElementById('testVoice');
   const mute = document.getElementById('muteVoice');
+  const topMute = document.getElementById('topbarMute');
+  if (topMute) topMute.addEventListener('click', toggleMute);
 
   if (sel) {
     sel.addEventListener('change', () => {
@@ -350,14 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   if (mute) {
-    mute.addEventListener('click', () => {
-      muted = !muted;
-      if (muted) localStorage.setItem(MUTE_KEY, '1');
-      else localStorage.removeItem(MUTE_KEY);
-      applyMute();
-    });
-    applyMute();
+    mute.addEventListener('click', toggleMute);
   }
+  applyMute();
 });
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -488,6 +505,48 @@ function scorePlayer(p, query) {
 }
 
 const mlb = {
+  async player_dossier({ name, player_id }) {
+    let id = player_id;
+    if (!id && name) {
+      const search = await this.search_player({ name });
+      if (!search.players?.length) return { error: `No player matched "${name}".` };
+      id = search.players[0].id;
+    }
+    if (!id) return { error: 'Provide name or player_id.' };
+    const r = await fetch(`${STATS}/people/${id}?hydrate=stats(group=[hitting,pitching],type=[season,career],season=${SEASON}),currentTeam`);
+    const j = await r.json();
+    const p = j.people?.[0];
+    if (!p) return { error: 'Player data unavailable.' };
+    const pick = (group, type) =>
+      p.stats?.find(s => s.group?.displayName === group && (s.type?.displayName === type || s.type?.displayName === type + ' ' || (type === 'season' && s.type?.displayName === 'statsSingleSeason')))?.splits?.[0]?.stat;
+    return {
+      dossier: {
+        id: p.id,
+        name: p.fullName,
+        nickName: p.nickName,
+        position: p.primaryPosition?.abbreviation,
+        positionName: p.primaryPosition?.name,
+        team: p.currentTeam?.name,
+        jersey: p.primaryNumber,
+        birthDate: p.birthDate,
+        age: p.currentAge,
+        birthCity: p.birthCity,
+        birthCountry: p.birthCountry,
+        height: p.height,
+        weight: p.weight,
+        bats: p.batSide?.code,
+        throws: p.pitchHand?.code,
+        mlbDebut: p.mlbDebutDate,
+        active: p.active,
+        headshot: headshot(p.id),
+        hitting_season: pick('hitting', 'statsSingleSeason'),
+        hitting_career: pick('hitting', 'career'),
+        pitching_season: pick('pitching', 'statsSingleSeason'),
+        pitching_career: pick('pitching', 'career'),
+      },
+    };
+  },
+
   async search_player({ name }) {
     const players = await getAllPlayers();
     const scored = players
@@ -632,6 +691,12 @@ const mlb = {
 };
 
 const baseballTools = [
+  { name: 'player_dossier',
+    description: 'Build a comprehensive personnel-file dossier for a player: bio (height, weight, age, bats/throws, debut, origin) plus current-season and career stats for hitting/pitching as applicable. Use this whenever sir asks for an overview of a player ("tell me about X", "who is X", "show me X", or just a bare name). Returns a "dossier" object — the UI renders it as a personnel file automatically, so do not repeat the bio fields in your response. Add a short, JARVIS-style summary (2-3 sentences) about the player\'s notable trait or current form.',
+    input_schema: { type: 'object', properties: {
+      name: { type: 'string', description: 'Player name; you can pass the user\'s phrase directly' },
+      player_id: { type: 'integer', description: 'Optional MLB player ID if known (skips name lookup)' },
+    } } },
   { name: 'search_player',
     description: 'Search for an MLB player by name. Returns up to 5 matches with player_id, position, team, and headshot URL.',
     input_schema: { type: 'object', properties: { name: { type: 'string', description: 'Player name, e.g. "Aaron Judge"' } }, required: ['name'] } },
@@ -687,7 +752,10 @@ async function runTool(name, input) {
     return { result: { error: e.message }, cards: [] };
   }
   const cards = [];
-  if (name === 'search_player' && result.players) {
+  let dossier = null;
+  if (name === 'player_dossier' && result.dossier) {
+    dossier = result.dossier;
+  } else if (name === 'search_player' && result.players) {
     for (const p of result.players.slice(0, 4)) {
       cards.push({ img: p.headshot, name: p.fullName, sub: [p.currentTeam, p.primaryPosition].filter(Boolean).join(' · ') });
     }
@@ -700,7 +768,86 @@ async function runTool(name, input) {
       cards.push({ img: l.headshot, name: l.name, sub: `${l.team || ''} · ${l.value}` });
     }
   }
-  return { result, cards };
+  return { result, cards, dossier };
+}
+
+/* Dossier renderer (personnel-file card) */
+const STAT_LABELS = {
+  G: 'gamesPlayed', AB: 'atBats', R: 'runs', H: 'hits', '2B': 'doubles', '3B': 'triples',
+  HR: 'homeRuns', RBI: 'rbi', BB: 'baseOnBalls', SO: 'strikeOuts', SB: 'stolenBases',
+  AVG: 'avg', OBP: 'obp', SLG: 'slg', OPS: 'ops',
+  W: 'wins', L: 'losses', GS: 'gamesStarted', SV: 'saves', IP: 'inningsPitched',
+  ER: 'earnedRuns', ERA: 'era', WHIP: 'whip', K: 'strikeOuts',
+};
+function getStat(obj, displayKey) {
+  if (!obj) return null;
+  const k = STAT_LABELS[displayKey];
+  return k && obj[k] != null ? obj[k] : null;
+}
+function statTable(season, career, keys) {
+  if (!season && !career) return '';
+  let html = '<table class="ds-stats"><thead><tr><th></th>';
+  for (const k of keys) html += `<th>${k}</th>`;
+  html += '</tr></thead><tbody>';
+  if (season) {
+    html += `<tr><td class="ds-row-lbl">${SEASON}</td>`;
+    for (const k of keys) { const v = getStat(season, k); html += `<td>${v == null ? '—' : escapeHtml(String(v))}</td>`; }
+    html += '</tr>';
+  }
+  if (career) {
+    html += '<tr><td class="ds-row-lbl">CAREER</td>';
+    for (const k of keys) { const v = getStat(career, k); html += `<td>${v == null ? '—' : escapeHtml(String(v))}</td>`; }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  return html;
+}
+function field(lbl, val) {
+  return `<div class="ds-field"><span class="ds-lbl">${lbl}</span><span class="ds-val">${escapeHtml(String(val || '—'))}</span></div>`;
+}
+function attachDossier(turnEl, d) {
+  const card = document.createElement('div');
+  card.className = 'dossier';
+  const isPitcher = d.position === 'P' || d.position === 'SP' || d.position === 'RP';
+  let html = `
+    <div class="ds-head">
+      <span class="ds-flag">CLASSIFIED</span>
+      <span class="ds-title">PERSONNEL FILE</span>
+      <span class="ds-id">// MLB-${d.id}</span>
+    </div>
+    <div class="ds-bio">
+      <div class="ds-img-wrap">
+        <img class="ds-img" src="${d.headshot}" alt="${escapeHtml(d.name)}" onerror="this.style.opacity=0.2">
+        <div class="ds-img-corner"></div>
+      </div>
+      <div class="ds-fields">
+        <div class="ds-name">${escapeHtml(d.name)}</div>
+        ${d.nickName ? `<div class="ds-alias">"${escapeHtml(d.nickName)}"</div>` : ''}
+        <div class="ds-grid">
+          ${field('POS', `${d.position || '—'}${d.positionName && d.positionName !== d.position ? ' · ' + d.positionName : ''}`)}
+          ${field('TEAM', d.team)}
+          ${field('JERSEY', d.jersey ? '#' + d.jersey : null)}
+          ${field('AGE', d.age ? `${d.age} (${d.birthDate || ''})` : null)}
+          ${field('ORIGIN', [d.birthCity, d.birthCountry].filter(Boolean).join(', '))}
+          ${field('HT / WT', `${d.height || '—'} / ${d.weight ? d.weight + ' lbs' : '—'}`)}
+          ${field('BATS / THROWS', `${d.bats || '—'} / ${d.throws || '—'}`)}
+          ${field('MLB DEBUT', d.mlbDebut)}
+        </div>
+      </div>
+    </div>
+  `;
+  if (isPitcher || d.pitching_season || d.pitching_career) {
+    html += `<div class="ds-section"><div class="ds-section-title">// PITCHING</div>` +
+      statTable(d.pitching_season, d.pitching_career, ['G','GS','W','L','SV','IP','SO','BB','ER','ERA','WHIP']) +
+      `</div>`;
+  }
+  if (!isPitcher || d.hitting_season || d.hitting_career) {
+    html += `<div class="ds-section"><div class="ds-section-title">// HITTING</div>` +
+      statTable(d.hitting_season, d.hitting_career, ['G','AB','R','H','HR','RBI','BB','SO','SB','AVG','OBP','SLG','OPS']) +
+      `</div>`;
+  }
+  card.innerHTML = html;
+  turnEl.appendChild(card);
 }
 
 /* =====================================================
@@ -926,6 +1073,7 @@ async function runStreaming(apiKey, jarvisTurn, jarvisText) {
 async function runWithTools(apiKey, jarvisTurn, jarvisText) {
   let messages = [...state.history];
   let allCards = [];
+  let allDossiers = [];
   let iterations = 0;
   jarvisText.textContent = 'Consulting league records...';
   els.procMlb.textContent = 'ACTIVE';
@@ -968,10 +1116,11 @@ async function runWithTools(apiKey, jarvisTurn, jarvisText) {
       const toolResults = [];
       for (const tu of toolUses) {
         pushLog(`tool: ${tu.name}(${Object.values(tu.input || {}).join(', ')})`, '');
-        let result, cards = [];
-        try { ({ result, cards } = await runTool(tu.name, tu.input)); }
+        let result, cards = [], dossier = null;
+        try { ({ result, cards, dossier } = await runTool(tu.name, tu.input)); }
         catch (e) { result = { error: e.message }; }
         allCards.push(...cards);
+        if (dossier) allDossiers.push(dossier);
         toolResults.push({ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result).slice(0, 12000) });
       }
       messages.push({ role: 'user', content: toolResults });
@@ -982,6 +1131,7 @@ async function runWithTools(apiKey, jarvisTurn, jarvisText) {
     const finalText = textBlocks.map(b => b.text).join('').trim();
     jarvisText.innerHTML = renderMarkdown(finalText);
     if (finalText) speak(stripMd(finalText));
+    for (const d of allDossiers) attachDossier(jarvisTurn, d);
     if (allCards.length) attachCards(jarvisTurn, allCards.slice(0, 8));
     state.history = messages;
     break;
