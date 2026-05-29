@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="hud">
+  <button class="settings-btn" id="settingsBtn" title="Settings">&#9881;</button>
+
+  <div class="reactor" id="reactor">
+    <div class="ring ring-outer"></div>
+    <div class="ring ring-mid"></div>
+    <div class="ring ring-inner"></div>
+    <div class="core"></div>
+  </div>
+
+  <div class="status" id="status">STANDBY</div>
+
+  <div class="transcript" id="transcript"></div>
+
+  <div class="input-bar">
+    <button class="mic-btn" id="micBtn" title="Hold to speak">&#127908;</button>
+    <input type="text" id="textInput" placeholder="Speak or type a command, sir..." autocomplete="off" spellcheck="false">
+    <button class="send-btn" id="sendBtn" title="Send">&#9654;</button>
+  </div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <h2>SYSTEM CONFIGURATION</h2>
+    <p>Sir, I require credentials to function. Please supply an Anthropic API key.</p>
+    <label for="apiKey">ANTHROPIC API KEY</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    <p class="hint">Stored locally in this browser only. Obtain a key at console.anthropic.com.</p>
+    <div class="modal-actions">
+      <button id="clearKey" class="danger">Clear</button>
+      <button id="closeModal">Close</button>
+      <button id="saveKey" class="primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
