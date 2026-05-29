@@ -1,5 +1,7 @@
 const STORAGE_KEY = 'jarvis_anthropic_key';
 const MODE_KEY = 'jarvis_baseball_mode';
+const VOICE_KEY = 'jarvis_voice_name';
+const MUTE_KEY = 'jarvis_muted';
 const MODEL = 'claude-sonnet-4-6';
 
 const SYS_GENERAL = `You are J.A.R.V.I.S., the AI butler from Iron Man. You address the user as "sir". Be witty, dry, deferential, and concise — one or two sentences unless asked for detail. Stay in character. Never break the persona, never mention being an AI made by Anthropic. You are JARVIS. If sir asks a question that would require live MLB data (player stats, scores, standings, leaderboards), note in passing that you have a dedicated baseball-analyst mode he may engage via the BASEBALL toggle in the top-right of the HUD.`;
@@ -264,25 +266,99 @@ function updateReadouts() {
 
 /* ---------- Speech synth + recog ---------- */
 let voice = null;
-function pickVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices.length) return;
-  voice =
-    voices.find(v => /en-GB/i.test(v.lang) && /daniel|oliver|arthur|male/i.test(v.name)) ||
-    voices.find(v => /en-GB/i.test(v.lang)) ||
-    voices.find(v => /en[-_]?US/i.test(v.lang) && /male|david|alex/i.test(v.name)) ||
-    voices.find(v => /^en/i.test(v.lang)) || voices[0];
+let allVoices = [];
+let muted = localStorage.getItem(MUTE_KEY) === '1';
+
+function rankVoice(v) {
+  const name = (v.name || '').toLowerCase();
+  const lang = (v.lang || '').toLowerCase();
+  if (!lang.startsWith('en')) return -1;
+  let score = 0;
+  if (/google/.test(name)) score += 60;
+  if (/natural|neural|premium|enhanced/.test(name)) score += 40;
+  if (/microsoft .+ online/.test(name)) score += 30;
+  if (/^(daniel|alex|samantha|karen|tom|aaron|nicky|jamie|fred|moira)$/.test(name)) score += 25;
+  if (/microsoft (george|ryan|liam|guy|jenny|aria)/.test(name)) score += 20;
+  if (/^en-GB/i.test(v.lang)) score += 10;
+  if (/(microsoft david|microsoft mark|microsoft zira|microsoft hazel)/.test(name)) score -= 30;
+  if (/espeak/.test(name)) score -= 50;
+  return score;
 }
-if ('speechSynthesis' in window) { pickVoice(); window.speechSynthesis.onvoiceschanged = pickVoice; }
+
+function loadVoices() {
+  allVoices = window.speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang || ''));
+  allVoices.sort((a, b) => rankVoice(b) - rankVoice(a));
+  if (!allVoices.length) return;
+
+  const saved = localStorage.getItem(VOICE_KEY);
+  voice = (saved && allVoices.find(v => v.name === saved)) || allVoices[0];
+
+  const sel = document.getElementById('voiceSelect');
+  if (sel) {
+    sel.innerHTML = '';
+    for (const v of allVoices) {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      if (voice && v.name === voice.name) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+}
+
+if ('speechSynthesis' in window) {
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 function speak(text) {
   const clean = text.trim();
-  if (!clean || !('speechSynthesis' in window)) return;
+  if (!clean || muted || !('speechSynthesis' in window)) return;
   const u = new SpeechSynthesisUtterance(clean);
   if (voice) u.voice = voice;
-  u.rate = 1.0; u.pitch = 0.92; u.volume = 1.0;
+  u.rate = 0.98;
+  u.pitch = 0.9;
+  u.volume = 1.0;
   window.speechSynthesis.speak(u);
 }
+
+function applyMute() {
+  const btn = document.getElementById('muteVoice');
+  if (btn) btn.textContent = muted ? 'UNMUTE' : 'MUTE';
+  if (muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('voiceSelect');
+  const test = document.getElementById('testVoice');
+  const mute = document.getElementById('muteVoice');
+
+  if (sel) {
+    sel.addEventListener('change', () => {
+      const picked = allVoices.find(v => v.name === sel.value);
+      if (picked) { voice = picked; localStorage.setItem(VOICE_KEY, picked.name); }
+    });
+  }
+  if (test) {
+    test.addEventListener('click', () => {
+      if (muted) { muted = false; localStorage.removeItem(MUTE_KEY); applyMute(); }
+      window.speechSynthesis?.cancel();
+      const u = new SpeechSynthesisUtterance('Good evening, sir. All systems are nominal.');
+      if (voice) u.voice = voice;
+      u.rate = 0.98; u.pitch = 0.9;
+      window.speechSynthesis.speak(u);
+    });
+  }
+  if (mute) {
+    mute.addEventListener('click', () => {
+      muted = !muted;
+      if (muted) localStorage.setItem(MUTE_KEY, '1');
+      else localStorage.removeItem(MUTE_KEY);
+      applyMute();
+    });
+    applyMute();
+  }
+});
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;

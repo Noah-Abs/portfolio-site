@@ -225,8 +225,17 @@
     <label for="apiKey">ANTHROPIC API KEY</label>
     <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
     <p class="hint">Stored locally in this browser only. Get a key at console.anthropic.com.</p>
+
+    <label for="voiceSelect">VOICE</label>
+    <select id="voiceSelect"></select>
+    <div class="voice-row">
+      <button id="testVoice" class="btn-ghost">TEST VOICE</button>
+      <button id="muteVoice" class="btn-ghost">MUTE</button>
+    </div>
+    <p class="hint" id="voiceHint">Pick a voice. "Google" voices generally sound the most natural.</p>
+
     <div class="popover-actions">
-      <button id="clearKey" class="btn-ghost danger">CLEAR</button>
+      <button id="clearKey" class="btn-ghost danger">CLEAR KEY</button>
       <button id="saveKey" class="btn-primary">SAVE</button>
     </div>
   </div>
