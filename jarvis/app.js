@@ -628,6 +628,117 @@ async function runTool(name, input) {
 }
 
 /* =====================================================
+ *  Markdown rendering — small, scoped to chat output
+ * ===================================================== */
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function inlineMd(s) {
+  return s
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function parseRow(line) {
+  const cells = line.split('|').map(c => c.trim());
+  if (cells.length && cells[0] === '') cells.shift();
+  if (cells.length && cells[cells.length - 1] === '') cells.pop();
+  return cells;
+}
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  const stripped = text.replace(/!\[[^\]]*\]\([^)]+\)/g, '');
+  const lines = stripped.split('\n');
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (line.includes('|') && i + 1 < lines.length && /^\s*\|?[\s\-:|]+\|?\s*$/.test(lines[i + 1]) && lines[i + 1].includes('-')) {
+      const header = parseRow(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+        rows.push(parseRow(lines[i]));
+        i++;
+      }
+      let html = '<table><thead><tr>';
+      for (const h of header) html += `<th>${inlineMd(escapeHtml(h))}</th>`;
+      html += '</tr></thead><tbody>';
+      for (const r of rows) {
+        html += '<tr>';
+        for (const c of r) html += `<td>${inlineMd(escapeHtml(c))}</td>`;
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      out.push(html);
+      continue;
+    }
+
+    const h = /^(#{1,6})\s+(.+)$/.exec(line);
+    if (h) {
+      const lvl = h[1].length;
+      out.push(`<h${lvl}>${inlineMd(escapeHtml(h[2]))}</h${lvl}>`);
+      i++; continue;
+    }
+
+    if (/^\s*[-*]\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*[-*]\s+/, ''));
+        i++;
+      }
+      out.push('<ul>' + items.map(it => `<li>${inlineMd(escapeHtml(it))}</li>`).join('') + '</ul>');
+      continue;
+    }
+
+    if (/^\s*\d+\.\s+/.test(line)) {
+      const items = [];
+      while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+        items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
+        i++;
+      }
+      out.push('<ol>' + items.map(it => `<li>${inlineMd(escapeHtml(it))}</li>`).join('') + '</ol>');
+      continue;
+    }
+
+    if (!line.trim()) { i++; continue; }
+
+    let para = line;
+    i++;
+    while (i < lines.length && lines[i].trim() &&
+           !lines[i].includes('|') &&
+           !/^\s*[-*]\s+/.test(lines[i]) &&
+           !/^\s*\d+\.\s+/.test(lines[i]) &&
+           !/^#/.test(lines[i])) {
+      para += ' ' + lines[i];
+      i++;
+    }
+    out.push(`<p>${inlineMd(escapeHtml(para))}</p>`);
+  }
+  return out.join('');
+}
+
+function stripMd(text) {
+  return text
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*\n]+)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\|/g, ',')
+    .replace(/-{3,}/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+}
+
+/* =====================================================
  *  Claude API call: streaming (general) and tool loop (baseball)
  * ===================================================== */
 async function callJarvis(userText) {
@@ -720,7 +831,7 @@ async function runStreaming(apiKey, jarvisTurn, jarvisText) {
           speakBuffer += chunk;
           let m;
           while ((m = speakBuffer.match(/^([\s\S]*?[.!?])(\s+|$)/))) {
-            const sentence = m[1].trim();
+            const sentence = stripMd(m[1].trim());
             if (sentence) speak(sentence);
             speakBuffer = speakBuffer.slice(m[0].length);
           }
@@ -731,7 +842,8 @@ async function runStreaming(apiKey, jarvisTurn, jarvisText) {
       } catch (e) {/* skip */}
     }
   }
-  if (speakBuffer.trim()) speak(speakBuffer.trim());
+  if (speakBuffer.trim()) speak(stripMd(speakBuffer.trim()));
+  jarvisText.innerHTML = renderMarkdown(assistantText);
   state.history.push({ role: 'assistant', content: assistantText });
 }
 
@@ -792,8 +904,8 @@ async function runWithTools(apiKey, jarvisTurn, jarvisText) {
     }
 
     const finalText = textBlocks.map(b => b.text).join('').trim();
-    jarvisText.textContent = finalText;
-    if (finalText) speak(finalText);
+    jarvisText.innerHTML = renderMarkdown(finalText);
+    if (finalText) speak(stripMd(finalText));
     if (allCards.length) attachCards(jarvisTurn, allCards.slice(0, 8));
     state.history = messages;
     break;
