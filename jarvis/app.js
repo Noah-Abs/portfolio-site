@@ -1173,15 +1173,37 @@ const mlb = {
     const n = Math.min(50, limit || 10);
     const fetchN = division ? Math.max(60, n * 6) : n;
 
-    let url = `${STATS}/stats/leaders?leaderCategories=${encodeURIComponent(stat)}&season=${s}&statGroup=${g}&limit=${fetchN}&sportId=1`;
-    if (league === 'AL') url += '&leagueId=103';
-    else if (league === 'NL') url += '&leagueId=104';
+    const ALT = {
+      era: 'earnedRunAverage', earnedRunAverage: 'era',
+      whip: 'walksAndHitsPerInningPitched', walksAndHitsPerInningPitched: 'whip',
+      strikeouts: 'strikeOuts', strikeOuts: 'strikeouts',
+      battingAverage: 'avg', avg: 'battingAverage',
+      onBasePercentage: 'obp', obp: 'onBasePercentage',
+      sluggingPercentage: 'slg', slg: 'sluggingPercentage',
+    };
 
-    const r = await fetch(url);
-    if (!r.ok) return { error: `MLB API ${r.status}` };
-    const j = await r.json();
-    const cat = j.leagueLeaders?.[0];
-    if (!cat) return { error: `No leaderboard available for "${stat}".` };
+    const tryStats = [stat];
+    if (ALT[stat]) tryStats.push(ALT[stat]);
+
+    let cat = null;
+    let usedStat = stat;
+    for (const tryStat of tryStats) {
+      let url = `${STATS}/stats/leaders?leaderCategories=${encodeURIComponent(tryStat)}&season=${s}&statGroup=${g}&limit=${fetchN}&sportId=1`;
+      if (league === 'AL') url += '&leagueId=103';
+      else if (league === 'NL') url += '&leagueId=104';
+      console.log(`[show_leaderboard] trying ${tryStat} → ${url}`);
+      try {
+        const r = await fetch(url);
+        if (!r.ok) continue;
+        const j = await r.json();
+        const c = j.leagueLeaders?.[0];
+        if (c && c.leaders?.length) { cat = c; usedStat = tryStat; break; }
+      } catch (e) { console.warn(`[show_leaderboard] ${tryStat} fetch failed`, e); }
+    }
+
+    if (!cat || !cat.leaders?.length) {
+      return { error: `Sir, "${stat}" is not a recognised leaderboard category on the official MLB Stats API. Try OPS, AVG, OBP, SLG, HR, RBI, hits, stolen bases (hitting) or ERA, WHIP, wins, saves, strikeouts, K/9 (pitching).` };
+    }
 
     const teams = await getAllTeams();
     const teamById = Object.fromEntries(teams.map(t => [t.id, t]));
@@ -1210,13 +1232,17 @@ const mlb = {
 
     leaders = leaders.slice(0, n);
 
+    if (!leaders.length) {
+      return { error: `Sir, no qualified players returned for ${usedStat} in ${scopeLabel}.` };
+    }
+
     openLeaderboard({
-      title: `${(STAT_DISPLAY[stat] || stat).toUpperCase()} — ${scopeLabel}`,
+      title: `${(STAT_DISPLAY[usedStat] || usedStat).toUpperCase()} — ${scopeLabel}`,
       subtitle: `${s} ${g.toUpperCase()}`,
       leaders,
     });
 
-    return { ok: true, opened: true, count: leaders.length, scope: scopeLabel, stat };
+    return { ok: true, opened: true, count: leaders.length, scope: scopeLabel, stat: usedStat };
   },
 };
 
@@ -1987,11 +2013,15 @@ async function handleApiError(res, jarvisText) {
 }
 
 /* ---------- Send ---------- */
+const UNSUPPORTED_STATS = [
+  'war', 'wins above replacement', 'fwar', 'bwar',
+  'wrc+', 'wrc plus', 'wrcp',
+  'drs', 'uzr', 'oaa',
+  'fip', 'xfip', 'siera',
+  'xwoba', 'x woba', 'xba', 'xslg', 'xera', 'barrel rate', 'barrel%',
+];
+
 const STAT_ALIAS_MAP = {
-  'war': { stat: 'ops', group: 'hitting', note: 'WAR is not provided by the league API, sir — substituting OPS.' },
-  'wins above replacement': { stat: 'ops', group: 'hitting', note: 'WAR is not on file via the league API, sir — substituting OPS.' },
-  'overall': { stat: 'ops', group: 'hitting' },
-  'best player': { stat: 'ops', group: 'hitting' },
   'hr': { stat: 'homeRuns', group: 'hitting' },
   'hrs': { stat: 'homeRuns', group: 'hitting' },
   'home run': { stat: 'homeRuns', group: 'hitting' },
@@ -2035,6 +2065,13 @@ function detectLeaderboardQuery(text) {
     /^(top|best)\s+/.test(lower);
   if (!isLeaderQuery) return null;
 
+  for (const u of UNSUPPORTED_STATS) {
+    const re = new RegExp(`\\b${u.replace(/[.*+?^${}()|[\]\\+]/g, '\\$&')}\\b`, 'i');
+    if (re.test(lower)) {
+      return { unsupported: u.toUpperCase() };
+    }
+  }
+
   let bestAlias = null;
   let bestEntry = null;
   for (const [alias, entry] of Object.entries(STAT_ALIAS_MAP)) {
@@ -2047,10 +2084,7 @@ function detectLeaderboardQuery(text) {
     }
   }
 
-  if (!bestEntry) {
-    bestAlias = '(default)';
-    bestEntry = { stat: 'ops', group: 'hitting' };
-  }
+  if (!bestEntry) return { unrecognizedStat: true };
 
   let league = null;
   let division = null;
@@ -2073,7 +2107,6 @@ function detectLeaderboardQuery(text) {
     stat: bestEntry.stat,
     group: bestEntry.group,
     league, division, limit,
-    note: bestEntry.note || null,
     alias: bestAlias,
   };
 }
@@ -2125,12 +2158,26 @@ function send() {
 
   const lb = detectLeaderboardQuery(text);
   if (lb) {
-    let ack = 'Here you are, sir.';
-    if (lb.note) ack = lb.note;
-    quickReply(text, ack);
-    mlb.show_leaderboard({ stat: lb.stat, group: lb.group, league: lb.league, division: lb.division, limit: lb.limit }).catch(err => {
+    if (lb.unsupported) {
+      quickReply(text, `Sir, ${lb.unsupported} is a Sabermetric stat calculated externally by Fangraphs and Baseball Reference — the official MLB Stats API does not provide it. I can show you OPS, AVG, OBP, SLG, HR, RBI, hits, or stolen bases for hitters; ERA, WHIP, wins, saves, strikeouts, or K/9 for pitchers.`);
+      return;
+    }
+    if (lb.unrecognizedStat) {
+      callJarvis(text);
+      return;
+    }
+    quickReply(text, 'Here you are, sir.');
+    mlb.show_leaderboard({ stat: lb.stat, group: lb.group, league: lb.league, division: lb.division, limit: lb.limit }).then(result => {
+      if (result?.error) {
+        const last = [...els.transcript.querySelectorAll('.turn.jarvis')].pop();
+        if (last) last.querySelector('.text').textContent = result.error;
+        if (state.history.length && state.history[state.history.length - 1].role === 'assistant') {
+          state.history[state.history.length - 1].content = result.error;
+          saveHistory();
+        }
+      }
+    }).catch(err => {
       console.warn('[leaderboard] failed', err);
-      openLeaderboard({ title: 'ERROR', subtitle: lb.alias.toUpperCase(), leaders: [] });
     });
     return;
   }
@@ -2162,126 +2209,6 @@ function quickReply(userText, jarvisText) {
 els.sendBtn.addEventListener('click', send);
 els.textInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-});
-
-/* =====================================================
- *  Highlight + Ask — select text anywhere, ask Jarvis about it
- * ===================================================== */
-const ASK_MODE_KEY = 'jarvis_ask_mode';
-let askEnabled = localStorage.getItem(ASK_MODE_KEY) !== '0';
-let askPop = null;
-let lastSelectedText = '';
-
-function syncAskBtn() {
-  const btn = document.getElementById('askToggle');
-  if (btn) btn.classList.toggle('active', askEnabled);
-  if (btn) btn.title = askEnabled
-    ? 'Ask-on-highlight is ON — select any text and a popover appears. Click to disable.'
-    : 'Ask-on-highlight is OFF. Click to enable.';
-}
-
-function hideAskPop() {
-  if (askPop) { askPop.remove(); askPop = null; }
-}
-
-function setAskMode(on) {
-  askEnabled = on;
-  localStorage.setItem(ASK_MODE_KEY, on ? '1' : '0');
-  syncAskBtn();
-  if (!on) hideAskPop();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const askBtn = document.getElementById('askToggle');
-  if (askBtn) askBtn.addEventListener('click', () => setAskMode(!askEnabled));
-  syncAskBtn();
-});
-
-const ASK_SKIP_SELECTOR = 'input, textarea, [contenteditable="true"], .ask-pop, .popover, .ab-body';
-
-function showAskPop(rect, text) {
-  hideAskPop();
-  askPop = document.createElement('div');
-  askPop.className = 'ask-pop';
-  askPop.innerHTML = `
-    <button class="ask-quick" title="Ask Jarvis about the selected text">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5" stroke-linecap="round"></path></svg>
-      <span>ASK JARVIS</span>
-    </button>
-  `;
-  document.body.appendChild(askPop);
-  const popW = askPop.offsetWidth;
-  const popH = askPop.offsetHeight;
-  let x = rect.left + rect.width / 2 - popW / 2;
-  let y = rect.top - popH - 10;
-  if (y < 8) y = rect.bottom + 10;
-  x = Math.max(8, Math.min(window.innerWidth - popW - 8, x));
-  askPop.style.left = x + 'px';
-  askPop.style.top = y + 'px';
-  askPop.style.zIndex = String(++floatTopZ);
-
-  askPop.querySelector('.ask-quick').addEventListener('click', (e) => {
-    e.stopPropagation();
-    expandAsk(text);
-  });
-}
-
-function expandAsk(selectedText) {
-  if (!askPop) return;
-  askPop.classList.add('expanded');
-  askPop.innerHTML = `
-    <div class="ask-head">
-      <span class="ask-icon">&#128270;</span>
-      <span class="ask-snippet">"${escapeHtml(selectedText.length > 60 ? selectedText.slice(0, 60) + '...' : selectedText)}"</span>
-      <button class="ask-close" title="Close">&times;</button>
-    </div>
-    <div class="ask-input-row">
-      <input type="text" class="ask-input" placeholder="What about this, sir?">
-      <button class="ask-send" title="Send">&#9654;</button>
-    </div>
-  `;
-  const input = askPop.querySelector('.ask-input');
-  const send = askPop.querySelector('.ask-send');
-  const close = askPop.querySelector('.ask-close');
-  input.focus();
-  const submit = () => {
-    const q = input.value.trim();
-    const prompt = q
-      ? `Regarding "${selectedText}" — ${q}`
-      : `Tell me about: "${selectedText}"`;
-    hideAskPop();
-    els.textInput.value = prompt;
-    send();
-  };
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); submit(); }
-    else if (e.key === 'Escape') hideAskPop();
-  });
-  send.addEventListener('click', submit);
-  close.addEventListener('click', hideAskPop);
-}
-
-document.addEventListener('selectionchange', () => {
-  if (!askEnabled) return;
-  const sel = window.getSelection();
-  const text = sel?.toString().trim();
-  if (!text || text.length < 2 || text.length > 600) { hideAskPop(); return; }
-  const range = sel.rangeCount ? sel.getRangeAt(0) : null;
-  if (!range) { hideAskPop(); return; }
-  let node = range.commonAncestorContainer;
-  if (node.nodeType === 3) node = node.parentElement;
-  if (!node || node.closest(ASK_SKIP_SELECTOR)) { hideAskPop(); return; }
-  const rect = range.getBoundingClientRect();
-  if (!rect.width || !rect.height) { hideAskPop(); return; }
-  lastSelectedText = text;
-  showAskPop(rect, text);
-});
-
-document.addEventListener('pointerdown', (e) => {
-  if (askPop && !askPop.contains(e.target)) hideAskPop();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') hideAskPop();
 });
 
 function restoreAnnotations() { /* draw mode removed */ }
