@@ -403,6 +403,114 @@ body.bb .status-dot.online { background: var(--amber); color: var(--amber); }
   filter: drop-shadow(0 0 4px var(--cyan));
 }
 
+/* Live MLB games widget */
+.games-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-dim) transparent;
+  padding: 6px 8px;
+}
+.games-body::-webkit-scrollbar { width: 4px; }
+.games-body::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 2px; }
+.games-loading {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--cyan-dim);
+  padding: 16px 8px;
+}
+.game {
+  display: grid;
+  grid-template-columns: 1fr 38px;
+  gap: 2px 8px;
+  padding: 5px 8px;
+  background: rgba(0, 30, 60, 0.35);
+  border: 1px solid var(--panel-edge);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  transition: all 0.15s;
+}
+.game:hover { border-color: var(--cyan); box-shadow: var(--glow-soft); }
+.game.live { border-color: rgba(255, 184, 74, 0.4); background: rgba(255, 184, 74, 0.06); }
+.game.final { opacity: 0.65; }
+.game .g-side {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+.game .g-side:first-child { grid-column: 1; grid-row: 1; }
+.game .g-side:nth-child(2) { grid-column: 1; grid-row: 2; }
+.game .g-status {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--cyan-dim);
+  white-space: nowrap;
+}
+.game.live .g-status {
+  color: var(--amber);
+  text-shadow: 0 0 6px rgba(255, 184, 74, 0.5);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+.game .g-team { color: var(--cyan-bright); font-weight: 500; letter-spacing: 1px; }
+.game .g-side.won .g-team { color: var(--amber); }
+.game .g-score { color: var(--cyan); font-family: var(--font-display); font-weight: 600; font-size: 13px; }
+.game .g-side.won .g-score { color: var(--amber); text-shadow: 0 0 8px rgba(255, 184, 74, 0.5); }
+.w-led.live { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+/* Reactor — speaking state */
+.reactor.speaking { opacity: 1; }
+.reactor.speaking .halo { animation-duration: 1.2s; }
+.reactor.speaking .r-core { animation-duration: 0.6s; }
+.reactor.speaking .r-mid { animation-duration: 14s; }
+.reactor.speaking .ring-mid::before,
+.reactor.speaking .ring-mid::after { box-shadow: 0 0 16px var(--cyan); }
+.reactor.speaking .orbit-dot.d1 { animation-duration: 1.5s; }
+.reactor.speaking .orbit-dot.d2 { animation-duration: 1s; }
+
+/* Suggestion chips on empty transcript */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 12px 20px 24px;
+  margin-top: -8px;
+}
+.suggestion {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 7px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.18s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.suggestion:hover {
+  border-color: var(--cyan);
+  color: var(--cyan-bright);
+  box-shadow: var(--glow-soft);
+  transform: translateY(-1px);
+}
+.suggestion:active { transform: translateY(0); }
+body.bb .suggestion:hover { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 10px rgba(255, 184, 74, 0.4); }
+
 .readout-body { display: flex; flex-direction: column; gap: 4px; }
 .ro {
   display: flex; justify-content: space-between;

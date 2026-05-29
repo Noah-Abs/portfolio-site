@@ -2,6 +2,7 @@ const STORAGE_KEY = 'jarvis_anthropic_key';
 const MODE_KEY = 'jarvis_baseball_mode';
 const VOICE_KEY = 'jarvis_voice_name';
 const MUTE_KEY = 'jarvis_muted';
+const HISTORY_KEY = 'jarvis_history';
 const MODEL = 'claude-sonnet-4-6';
 
 const SYS_GENERAL = `You are J.A.R.V.I.S., the AI butler from Iron Man. You address the user as "sir". Be witty, dry, deferential, and concise — one or two sentences unless asked for detail. Stay in character. Never break the persona, never mention being an AI made by Anthropic. You are JARVIS. If sir asks a question that would require live MLB data (player stats, scores, standings, leaderboards), note in passing that you have a dedicated baseball-analyst mode he may engage via the BASEBALL toggle in the top-right of the HUD.`;
@@ -92,6 +93,7 @@ function toggleMode() {
   applyMode();
   console.log(`[jarvis] baseball mode ${state.baseballMode ? 'ENGAGED' : 'DISENGAGED'}`);
   pushLog(state.baseballMode ? 'BASEBALL MODE engaged. MLB feed online.' : 'BASEBALL MODE disengaged.', 'ok');
+  if (!state.history.length) renderSuggestions();
 }
 els.modeSwitch.addEventListener('click', toggleMode);
 els.modeSwitch.addEventListener('keydown', (e) => {
@@ -102,6 +104,8 @@ els.modeSwitch.addEventListener('keydown', (e) => {
 function clearPlaceholder() {
   const ph = els.transcript.querySelector('.placeholder');
   if (ph) ph.remove();
+  const sug = els.transcript.querySelector('.suggestions');
+  if (sug) sug.remove();
 }
 
 function appendTurn(role, text) {
@@ -179,8 +183,141 @@ els.clearKey.addEventListener('click', () => {
 
 els.clearChat.addEventListener('click', () => {
   state.history = [];
+  saveHistory();
   els.transcript.innerHTML = '<div class="placeholder">Awaiting instruction, sir.</div>';
+  renderSuggestions();
 });
+
+/* ---------- Persistent history ---------- */
+function saveHistory() {
+  const simplified = [];
+  for (const turn of state.history) {
+    if (turn.role !== 'user' && turn.role !== 'assistant') continue;
+    let text = '';
+    if (typeof turn.content === 'string') text = turn.content;
+    else if (Array.isArray(turn.content)) text = turn.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    if (!text.trim()) continue;
+    simplified.push({ role: turn.role, content: text });
+  }
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(simplified.slice(-24))); } catch (e) {}
+}
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) { return []; }
+}
+
+/* ---------- Empty-state suggestion chips ---------- */
+const SUGGESTIONS_GENERAL = [
+  'Good evening, Jarvis',
+  'Run a system diagnostic',
+  'What is the weather in Malibu?',
+  'Tell me a joke',
+];
+const SUGGESTIONS_BASEBALL = [
+  'Aaron Judge',
+  'Shohei Ohtani',
+  'Today\'s schedule',
+  'AL HR leaders',
+  'NL standings',
+  'Yankees roster',
+];
+function renderSuggestions() {
+  if (state.history.length) return;
+  const existing = els.transcript.querySelector('.suggestions');
+  if (existing) existing.remove();
+  const wrap = document.createElement('div');
+  wrap.className = 'suggestions';
+  const list = state.baseballMode ? SUGGESTIONS_BASEBALL : SUGGESTIONS_GENERAL;
+  for (const s of list) {
+    const chip = document.createElement('button');
+    chip.className = 'suggestion';
+    chip.textContent = s;
+    chip.addEventListener('click', () => {
+      els.textInput.value = s;
+      send();
+    });
+    wrap.appendChild(chip);
+  }
+  els.transcript.appendChild(wrap);
+}
+
+/* ---------- Live MLB games widget ---------- */
+let gamesTimer = null;
+async function fetchGames() {
+  const body = document.getElementById('gamesBody');
+  const led = document.getElementById('liveLed');
+  if (!body) return;
+  try {
+    const teams = await getAllTeams();
+    const teamById = Object.fromEntries(teams.map(t => [t.id, t]));
+    const d = new Date().toISOString().slice(0, 10);
+    const r = await fetch(`${STATS}/schedule?sportId=1&date=${d}&hydrate=linescore,team`);
+    const j = await r.json();
+    const games = [];
+    for (const day of (j.dates || [])) {
+      for (const g of (day.games || [])) {
+        const homeT = teamById[g.teams.home.team.id];
+        const awayT = teamById[g.teams.away.team.id];
+        games.push({
+          gamePk: g.gamePk,
+          state: g.status?.abstractGameState,
+          detail: g.status?.detailedState,
+          inning: g.linescore?.currentInningOrdinal,
+          half: g.linescore?.inningHalf,
+          time: g.gameDate,
+          home: { id: homeT?.id, abbr: homeT?.abbreviation || homeT?.teamCode?.toUpperCase() || '???', score: g.teams.home.score },
+          away: { id: awayT?.id, abbr: awayT?.abbreviation || awayT?.teamCode?.toUpperCase() || '???', score: g.teams.away.score },
+        });
+      }
+    }
+    const anyLive = games.some(g => g.state === 'Live');
+    if (led) led.classList.toggle('live', anyLive);
+
+    if (!games.length) {
+      body.innerHTML = '<div class="games-loading">No games today, sir.</div>';
+    } else {
+      games.sort((a, b) => {
+        const rank = (g) => g.state === 'Live' ? 0 : g.state === 'Preview' ? 1 : 2;
+        return rank(a) - rank(b);
+      });
+      let html = '';
+      for (const g of games.slice(0, 14)) {
+        let status = '';
+        let cls = '';
+        if (g.state === 'Live') {
+          status = `${(g.half || '').slice(0,3).toUpperCase()} ${g.inning || ''}`.trim();
+          cls = 'live';
+        } else if (g.state === 'Final') {
+          status = 'FIN';
+          cls = 'final';
+        } else if (g.state === 'Preview') {
+          const t = new Date(g.time);
+          status = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          cls = 'preview';
+        }
+        const awayWin = g.away.score != null && g.home.score != null && g.away.score > g.home.score;
+        const homeWin = g.away.score != null && g.home.score != null && g.home.score > g.away.score;
+        html += `<div class="game ${cls}">
+          <div class="g-side ${awayWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.away.abbr)}</span><span class="g-score">${g.away.score ?? '-'}</span></div>
+          <div class="g-side ${homeWin ? 'won' : ''}"><span class="g-team">${escapeHtml(g.home.abbr)}</span><span class="g-score">${g.home.score ?? '-'}</span></div>
+          <div class="g-status">${escapeHtml(status)}</div>
+        </div>`;
+      }
+      body.innerHTML = html;
+    }
+    const interval = anyLive ? 30000 : 180000;
+    if (gamesTimer) clearTimeout(gamesTimer);
+    gamesTimer = setTimeout(fetchGames, interval);
+  } catch (e) {
+    console.warn('[games] fetch failed', e);
+    if (gamesTimer) clearTimeout(gamesTimer);
+    gamesTimer = setTimeout(fetchGames, 60000);
+  }
+}
 
 /* ---------- Clock + telemetry ---------- */
 const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -319,6 +456,7 @@ if ('speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = loadVoices;
 }
 
+let speakingCount = 0;
 function speak(text) {
   const clean = text.trim();
   if (!clean || muted || !('speechSynthesis' in window)) return;
@@ -327,6 +465,16 @@ function speak(text) {
   u.rate = 0.98;
   u.pitch = 0.9;
   u.volume = 1.0;
+  u.onstart = () => {
+    speakingCount++;
+    els.reactor?.classList.add('speaking');
+  };
+  const done = () => {
+    speakingCount = Math.max(0, speakingCount - 1);
+    if (!speakingCount) els.reactor?.classList.remove('speaking');
+  };
+  u.onend = done;
+  u.onerror = done;
   window.speechSynthesis.speak(u);
 }
 
@@ -1343,6 +1491,7 @@ async function runStreaming(apiKey, jarvisTurn, jarvisText) {
   if (speakBuffer.trim()) speak(stripMd(speakBuffer.trim()));
   jarvisText.innerHTML = renderMarkdown(assistantText);
   state.history.push({ role: 'assistant', content: assistantText });
+  saveHistory();
 }
 
 async function runWithTools(apiKey, jarvisTurn, jarvisText) {
@@ -1409,6 +1558,7 @@ async function runWithTools(apiKey, jarvisTurn, jarvisText) {
     for (const d of allDossiers) attachDossier(jarvisTurn, d);
     if (allCards.length) attachCards(jarvisTurn, allCards.slice(0, 8));
     state.history = messages;
+    saveHistory();
     break;
   }
 
@@ -1448,7 +1598,31 @@ els.textInput.addEventListener('keydown', (e) => {
 });
 
 /* ---------- Init ---------- */
+function restoreTranscript() {
+  const persisted = loadHistory();
+  if (!persisted.length) {
+    renderSuggestions();
+    return;
+  }
+  state.history = persisted;
+  els.transcript.innerHTML = '';
+  for (const t of persisted) {
+    const text = typeof t.content === 'string' ? t.content : '';
+    if (!text) continue;
+    if (t.role === 'user') {
+      appendTurn('user', text);
+    } else {
+      const turn = appendTurn('jarvis', '');
+      turn.querySelector('.text').innerHTML = renderMarkdown(text);
+    }
+  }
+  state.queries = persisted.filter(t => t.role === 'user').length;
+  updateReadouts();
+}
+
 function init() {
+  restoreTranscript();
+  fetchGames();
   if (!localStorage.getItem(STORAGE_KEY)) {
     setStatus('STANDBY');
     setTimeout(openSettings, 500);
