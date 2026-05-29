@@ -947,6 +947,111 @@ function fullBreakdown(stat, groups) {
   return html;
 }
 
+/* ---------- Full career archive (double-click dossier) ---------- */
+const PREFERRED_ORDER = {
+  hitting: ['gamesPlayed','plateAppearances','atBats','runs','hits','doubles','triples','homeRuns','rbi','baseOnBalls','intentionalWalks','hitByPitch','strikeOuts','stolenBases','caughtStealing','stolenBasePercentage','avg','obp','slg','ops','babip','groundIntoDoublePlay','sacFlies','sacBunts','totalBases','groundOuts','airOuts','groundOutsToAirouts','atBatsPerHomeRun','leftOnBase','numberOfPitches','catchersInterference'],
+  pitching: ['gamesPlayed','gamesStarted','wins','losses','winPercentage','saves','saveOpportunities','holds','blownSaves','completeGames','shutouts','inningsPitched','battersFaced','hits','runs','earnedRuns','homeRuns','baseOnBalls','intentionalWalks','strikeOuts','hitBatsmen','wildPitches','balks','pickoffs','era','whip','avg','strikeoutWalkRatio','strikeoutsPer9Inn','walksPer9Inn','hitsPer9Inn','homeRunsPer9','runsScoredPer9','strikePercentage','strikes','numberOfPitches','pitchesPerInning','gamesPitched','gamesFinished','inheritedRunners','inheritedRunnersScored'],
+  fielding: ['position','gamesPlayed','gamesStarted','innings','chances','assists','putOuts','errors','doublePlays','fielding','rangeFactorPerGame','rangeFactorPer9Inn','passedBall','catcherERA','throwingErrors','pickoffs'],
+};
+const FIELDING_LABELS = {
+  position: 'POS', innings: 'INN', chances: 'CH', assists: 'A', putOuts: 'PO',
+  errors: 'E', doublePlays: 'DP', fielding: 'FLD%',
+  rangeFactorPerGame: 'RF/G', rangeFactorPer9Inn: 'RF/9',
+  passedBall: 'PB', catcherERA: 'cERA', throwingErrors: 'TE',
+};
+
+function orderStatKeys(keys, group) {
+  const pref = PREFERRED_ORDER[group] || [];
+  const ordered = [];
+  const rest = new Set(keys);
+  for (const k of pref) {
+    if (rest.has(k)) { ordered.push(k); rest.delete(k); }
+  }
+  for (const k of [...rest].sort()) ordered.push(k);
+  return ordered;
+}
+
+function labelFor(key) {
+  return STAT_DISPLAY[key] || FIELDING_LABELS[key] || key;
+}
+
+function renderHistoryTables(statsArr) {
+  let html = '';
+  let any = false;
+  for (const s of statsArr || []) {
+    const group = s.group?.displayName?.toLowerCase() || '';
+    const splits = (s.splits || []).filter(sp => sp.stat);
+    if (!splits.length) continue;
+    any = true;
+    const keys = new Set();
+    for (const sp of splits) Object.keys(sp.stat || {}).forEach(k => keys.add(k));
+    const ordered = orderStatKeys([...keys], group);
+
+    html += `<div class="hp-section"><div class="hp-section-title">// ${group.toUpperCase()} &mdash; YEAR BY YEAR</div>`;
+    html += `<div class="hp-table-wrap"><table class="hp-table"><thead><tr>`;
+    html += `<th class="sticky-l">YEAR</th><th class="sticky-l">TEAM</th>`;
+    for (const k of ordered) html += `<th>${labelFor(k)}</th>`;
+    html += `</tr></thead><tbody>`;
+    for (const sp of splits) {
+      const teamAbbr = sp.team?.abbreviation || sp.team?.name || '—';
+      html += `<tr>`;
+      html += `<td class="hp-yr sticky-l">${escapeHtml(sp.season || '')}</td>`;
+      html += `<td class="hp-team sticky-l">${escapeHtml(teamAbbr)}</td>`;
+      for (const k of ordered) {
+        const v = sp.stat?.[k];
+        html += `<td>${v == null || v === '' ? '—' : escapeHtml(String(v))}</td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `</tbody></table></div></div>`;
+  }
+  if (!any) return '<div class="hp-err">No archive data on file for this individual, sir.</div>';
+  return html;
+}
+
+async function showHistory(d) {
+  if (document.querySelector(`[data-history-id="${d.id}"]`)) {
+    const existing = document.querySelector(`[data-history-id="${d.id}"]`);
+    existing.style.zIndex = String(++floatTopZ);
+    return;
+  }
+  const panel = document.createElement('div');
+  panel.className = 'history-panel';
+  panel.setAttribute('data-history-id', d.id);
+  panel.innerHTML = `
+    <div class="hp-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="ds-flag">ARCHIVE</span>
+      <span class="hp-title">${escapeHtml(d.name)} &mdash; FULL HISTORY</span>
+      <span class="ds-id">// MLB-${d.id}</span>
+    </div>
+    <div class="hp-body"><div class="hp-loading">Compiling archive, sir...</div></div>
+  `;
+  document.body.appendChild(panel);
+
+  const W = Math.min(window.innerWidth - 40, 1180);
+  const H = Math.min(window.innerHeight - 40, 800);
+  panel.style.width = W + 'px';
+  panel.style.height = H + 'px';
+  panel.style.left = Math.max(20, (window.innerWidth - W) / 2) + 'px';
+  panel.style.top = Math.max(20, (window.innerHeight - H) / 2) + 'px';
+  panel.style.zIndex = String(++floatTopZ);
+
+  const handle = panel.querySelector('.hp-head');
+  if (handle) makeDraggable(panel, handle);
+  addCloseBtn(panel);
+
+  try {
+    const r = await fetch(`${STATS}/people/${d.id}/stats?stats=yearByYear&group=hitting,pitching,fielding`);
+    if (!r.ok) throw new Error(`MLB API ${r.status}`);
+    const j = await r.json();
+    panel.querySelector('.hp-body').innerHTML = renderHistoryTables(j.stats || []);
+  } catch (e) {
+    console.error('[history] failed', e);
+    panel.querySelector('.hp-body').innerHTML = `<div class="hp-err">Archive unreachable: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
 function attachDossier(turnEl, d) {
   const card = document.createElement('div');
   card.className = 'dossier';
@@ -1011,6 +1116,13 @@ function attachDossier(turnEl, d) {
   turnEl.appendChild(card);
   const handle = card.querySelector('.ds-head');
   if (handle) makeDraggable(card, handle);
+
+  const bio = card.querySelector('.ds-bio');
+  if (bio) {
+    bio.title = 'Double-click for full archive (every season, every stat)';
+    bio.style.cursor = 'zoom-in';
+    bio.addEventListener('dblclick', (e) => { e.stopPropagation(); showHistory(d); });
+  }
 }
 
 /* =====================================================
