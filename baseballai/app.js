@@ -1783,17 +1783,24 @@ function stripMd(text) {
 /* =====================================================
  *  Team Builder — draft your own roster, get an AI projection
  * ===================================================== */
+const FIELDERS = ['C','1B','2B','3B','SS','OF','LF','CF','RF','DH'];
 const ROSTER_DEF = [
-  { section: 'LINEUP', slots: [
-    { code: 'C',  name: 'Catcher',           positions: ['C'] },
-    { code: '1B', name: 'First Base',        positions: ['1B'] },
-    { code: '2B', name: 'Second Base',       positions: ['2B'] },
-    { code: '3B', name: 'Third Base',        positions: ['3B'] },
-    { code: 'SS', name: 'Shortstop',         positions: ['SS'] },
-    { code: 'LF', name: 'Left Field',        positions: ['LF', 'OF'] },
-    { code: 'CF', name: 'Center Field',      positions: ['CF', 'OF'] },
-    { code: 'RF', name: 'Right Field',       positions: ['RF', 'OF'] },
-    { code: 'DH', name: 'Designated Hitter', positions: ['DH','1B','OF','LF','CF','RF','3B','C','TWP'] },
+  { section: 'STARTING LINEUP', slots: [
+    { code: 'C',   name: 'Catcher',           positions: ['C'] },
+    { code: '1B',  name: 'First Base',        positions: ['1B'] },
+    { code: '2B',  name: 'Second Base',       positions: ['2B'] },
+    { code: '3B',  name: 'Third Base',        positions: ['3B'] },
+    { code: 'SS',  name: 'Shortstop',         positions: ['SS'] },
+    { code: 'OF1', name: 'Outfield 1',        positions: ['OF','LF','CF','RF'] },
+    { code: 'OF2', name: 'Outfield 2',        positions: ['OF','LF','CF','RF'] },
+    { code: 'OF3', name: 'Outfield 3',        positions: ['OF','LF','CF','RF'] },
+    { code: 'DH',  name: 'Designated Hitter', positions: [...FIELDERS, 'TWP'] },
+  ]},
+  { section: 'BENCH', slots: [
+    { code: 'C2',  name: 'Backup Catcher', positions: ['C'] },
+    { code: 'BN1', name: 'Bench 1',        positions: FIELDERS },
+    { code: 'BN2', name: 'Bench 2',        positions: FIELDERS },
+    { code: 'BN3', name: 'Bench 3',        positions: FIELDERS },
   ]},
   { section: 'ROTATION', slots: [
     { code: 'SP1', name: 'Starter 1', positions: ['SP','P','TWP'] },
@@ -1807,78 +1814,138 @@ const ROSTER_DEF = [
     { code: 'SU',  name: 'Setup',      positions: ['RP','P'] },
     { code: 'RP1', name: 'Reliever 1', positions: ['RP','P'] },
     { code: 'RP2', name: 'Reliever 2', positions: ['RP','P'] },
+    { code: 'RP3', name: 'Reliever 3', positions: ['RP','P'] },
+    { code: 'RP4', name: 'Reliever 4', positions: ['RP','P'] },
+    { code: 'RP5', name: 'Reliever 5', positions: ['RP','P'] },
+    { code: 'RP6', name: 'Reliever 6', positions: ['RP','P'] },
   ]},
 ];
 
 const TEAM_KEY = 'baseballai_team';
 let team = { name: 'MY TEAM', picks: {} };
+
+const ALL_SLOT_CODES = ROSTER_DEF.flatMap(s => s.slots.map(sl => sl.code));
+const ALL_SLOT_SET = new Set(ALL_SLOT_CODES);
+const PITCHER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5','CL','SU','RP1','RP2','RP3','RP4','RP5','RP6']);
+const STARTER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5']);
+const CLOSER_SLOTS  = new Set(['CL']);
+const RELIEVER_SLOTS = new Set(['SU','RP1','RP2','RP3','RP4','RP5','RP6']);
+const MIN_PROJECT = 9;
+
 (function loadTeam() {
   try {
     const raw = localStorage.getItem(TEAM_KEY);
     if (raw) team = JSON.parse(raw);
-  } catch (e) {}
+    if (!team || typeof team !== 'object') team = { name: 'MY TEAM', picks: {} };
+    if (!team.name) team.name = 'MY TEAM';
+    if (!team.picks) team.picks = {};
+    const clean = {};
+    for (const [code, pick] of Object.entries(team.picks)) {
+      if (ALL_SLOT_SET.has(code) && pick && pick.id) clean[code] = pick;
+    }
+    team.picks = clean;
+  } catch (e) { team = { name: 'MY TEAM', picks: {} }; }
 })();
 function saveTeam() {
   try { localStorage.setItem(TEAM_KEY, JSON.stringify(team)); } catch (e) {}
 }
-
-const ALL_SLOT_CODES = ROSTER_DEF.flatMap(s => s.slots.map(sl => sl.code));
-const PITCHER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5','CL','SU','RP1','RP2']);
+function resetTeam() {
+  team = { name: 'MY TEAM', picks: {} };
+  saveTeam();
+}
 
 let topHittersCache = null;
-let topPitchersCache = null;
+let topStartersCache = null;
+let topClosersCache = null;
+let topRelieversCache = null;
+
+async function fetchLeaders(cat, group, limit) {
+  const r = await fetch(`${STATS}/stats/leaders?leaderCategories=${encodeURIComponent(cat)}&statGroup=${group}&limit=${limit}&season=${SEASON}&sportId=1`);
+  if (!r.ok) return [];
+  const j = await r.json();
+  return j.leagueLeaders?.[0]?.leaders || [];
+}
+
+function hydrateLeaders(leaders, allById, label) {
+  return leaders.map(l => {
+    const base = allById[l.person?.id] || {};
+    return {
+      ...base,
+      id: l.person?.id || base.id,
+      fullName: l.person?.fullName || base.fullName,
+      statValue: l.value,
+      statLabel: label,
+      rank: l.rank,
+    };
+  }).filter(p => p.id);
+}
 
 async function getTopHitters() {
   if (topHittersCache) return topHittersCache;
   try {
-    const r = await fetch(`${STATS}/stats/leaders?leaderCategories=ops&statGroup=hitting&limit=250&season=${SEASON}&sportId=1`);
-    const j = await r.json();
-    const leaders = j.leagueLeaders?.[0]?.leaders || [];
+    const leaders = await fetchLeaders('ops', 'hitting', 500);
     const all = await getAllPlayers();
     const allById = Object.fromEntries(all.map(p => [p.id, p]));
-    topHittersCache = leaders.map(l => {
-      const base = allById[l.person?.id] || {};
-      return {
-        ...base,
-        id: l.person?.id || base.id,
-        fullName: l.person?.fullName || base.fullName,
-        statValue: l.value,
-        statLabel: 'OPS',
-        rank: l.rank,
-      };
-    }).filter(p => p.id);
+    topHittersCache = hydrateLeaders(leaders, allById, 'OPS');
   } catch (e) { console.warn('[topHitters] failed', e); topHittersCache = []; }
   return topHittersCache;
 }
 
-async function getTopPitchers() {
-  if (topPitchersCache) return topPitchersCache;
+async function getTopStarters() {
+  if (topStartersCache) return topStartersCache;
   try {
-    const r = await fetch(`${STATS}/stats/leaders?leaderCategories=earnedRunAverage&statGroup=pitching&limit=200&season=${SEASON}&sportId=1`);
-    const j = await r.json();
-    const leaders = j.leagueLeaders?.[0]?.leaders || [];
+    const leaders = await fetchLeaders('earnedRunAverage', 'pitching', 300);
     const all = await getAllPlayers();
     const allById = Object.fromEntries(all.map(p => [p.id, p]));
-    topPitchersCache = leaders.map(l => {
-      const base = allById[l.person?.id] || {};
-      return {
-        ...base,
-        id: l.person?.id || base.id,
-        fullName: l.person?.fullName || base.fullName,
-        statValue: l.value,
-        statLabel: 'ERA',
-        rank: l.rank,
-      };
-    }).filter(p => p.id);
-  } catch (e) { console.warn('[topPitchers] failed', e); topPitchersCache = []; }
-  return topPitchersCache;
+    topStartersCache = hydrateLeaders(leaders, allById, 'ERA')
+      .filter(p => ['SP','P','TWP'].includes(p.primaryPosition?.abbreviation));
+  } catch (e) { console.warn('[topStarters] failed', e); topStartersCache = []; }
+  return topStartersCache;
+}
+
+async function getTopClosers() {
+  if (topClosersCache) return topClosersCache;
+  try {
+    const leaders = await fetchLeaders('saves', 'pitching', 100);
+    const all = await getAllPlayers();
+    const allById = Object.fromEntries(all.map(p => [p.id, p]));
+    topClosersCache = hydrateLeaders(leaders, allById, 'SV');
+  } catch (e) { console.warn('[topClosers] failed', e); topClosersCache = []; }
+  return topClosersCache;
+}
+
+async function getTopRelievers() {
+  if (topRelieversCache) return topRelieversCache;
+  try {
+    const [holds, saves, era] = await Promise.all([
+      fetchLeaders('holds', 'pitching', 150),
+      fetchLeaders('saves', 'pitching', 100),
+      fetchLeaders('earnedRunAverage', 'pitching', 300),
+    ]);
+    const all = await getAllPlayers();
+    const allById = Object.fromEntries(all.map(p => [p.id, p]));
+    const byId = new Map();
+    const merge = (arr, label) => {
+      for (const p of hydrateLeaders(arr, allById, label)) {
+        const pos = p.primaryPosition?.abbreviation;
+        if (!['RP','P'].includes(pos)) continue;
+        const existing = byId.get(p.id);
+        if (!existing) byId.set(p.id, p);
+        else if (label === 'HLD' || label === 'SV') existing.statLabel = label, existing.statValue = p.statValue;
+      }
+    };
+    merge(holds, 'HLD');
+    merge(saves, 'SV');
+    merge(era, 'ERA');
+    topRelieversCache = [...byId.values()];
+  } catch (e) { console.warn('[topRelievers] failed', e); topRelieversCache = []; }
+  return topRelieversCache;
 }
 
 function playerMatchesSlot(player, slot) {
   const pos = player.primaryPosition?.abbreviation;
   if (!pos) return false;
   if (slot.positions.includes(pos)) return true;
-  if (pos === 'TWP') return true;
   if (pos === 'OF' && slot.positions.some(p => ['LF','CF','RF','OF'].includes(p))) return true;
   if (['LF','CF','RF'].includes(pos) && slot.positions.includes('OF')) return true;
   return false;
@@ -1905,6 +1972,7 @@ function openTeamBuilder() {
       <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
       <span class="tb-flag">DRAFT</span>
       <input class="tb-name" maxlength="32" value="${escapeHtml(team.name)}" placeholder="Team name">
+      <button class="tb-reset" id="tbReset" title="Clear all picks">RESET</button>
       <button class="tb-analyze" id="tbAnalyze" title="Run season projection">PROJECT</button>
     </div>
     <div class="tb-body">
@@ -1957,6 +2025,11 @@ function openTeamBuilder() {
   }
 
   panel.querySelector('#tbAnalyze').addEventListener('click', analyzeTeam);
+  panel.querySelector('#tbReset').addEventListener('click', () => {
+    if (Object.keys(team.picks).length && !confirm('Clear all picks from your team?')) return;
+    resetTeam();
+    renderTeamSlots();
+  });
 
   renderTeamSlots();
 }
@@ -1989,8 +2062,11 @@ function renderTeamSlots() {
   const filled = Object.keys(team.picks).length;
   const analyzeBtn = panel.querySelector('#tbAnalyze');
   if (analyzeBtn) {
-    analyzeBtn.disabled = filled < 9;
+    analyzeBtn.disabled = filled < MIN_PROJECT;
     analyzeBtn.textContent = filled >= ALL_SLOT_CODES.length ? 'PROJECT' : `PROJECT (${filled}/${ALL_SLOT_CODES.length})`;
+    analyzeBtn.title = filled < MIN_PROJECT
+      ? `Fill at least ${MIN_PROJECT} slots to project (${MIN_PROJECT - filled} more needed).`
+      : 'Run season projection';
   }
 }
 
@@ -2014,7 +2090,7 @@ async function openPlayerPicker(slot) {
   `;
   document.body.appendChild(panel);
 
-  const W = 340;
+  const W = 360;
   panel.style.width = W + 'px';
   panel.style.maxHeight = '78vh';
   panel.style.left = '80px';
@@ -2025,25 +2101,34 @@ async function openPlayerPicker(slot) {
   if (handle) makeDraggable(panel, handle);
   addCloseBtn(panel);
 
-  const isPitcher = slot.positions.some(p => ['SP','RP','P','CL'].includes(p));
-  const ranked = isPitcher ? await getTopPitchers() : await getTopHitters();
-  const all = await getAllPlayers();
+  let ranked = [];
+  if (STARTER_SLOTS.has(slot.code)) ranked = await getTopStarters();
+  else if (CLOSER_SLOTS.has(slot.code)) ranked = await getTopClosers();
+  else if (RELIEVER_SLOTS.has(slot.code)) ranked = await getTopRelievers();
+  else ranked = await getTopHitters();
 
+  const all = await getAllPlayers();
   const rankedMatching = ranked.filter(p => playerMatchesSlot(p, slot));
   const allMatching = all.filter(p => playerMatchesSlot(p, slot));
 
   const body = panel.querySelector('.pp-body');
   const renderList = (query) => {
     body.innerHTML = '';
+    const draftedIds = new Set(Object.values(team.picks).filter(Boolean).map(p => p.id));
     const q = query?.toLowerCase().trim();
     let list;
     if (q) {
       list = allMatching
         .filter(p => (p.fullName || '').toLowerCase().includes(q))
-        .slice(0, 80);
-      if (!list.length) { body.innerHTML = '<div class="pp-loading">No matches.</div>'; return; }
+        .filter(p => !draftedIds.has(p.id))
+        .slice(0, 100);
     } else {
-      list = rankedMatching.length ? rankedMatching.slice(0, 60) : allMatching.slice(0, 60);
+      const pool = rankedMatching.length ? rankedMatching : allMatching;
+      list = pool.filter(p => !draftedIds.has(p.id)).slice(0, 80);
+    }
+    if (!list.length) {
+      body.innerHTML = `<div class="pp-loading">No ${q ? 'matches' : 'available players for this position'}.</div>`;
+      return;
     }
     let lastRank = 0;
     for (const p of list) {
@@ -2083,9 +2168,18 @@ async function openPlayerPicker(slot) {
 
 async function analyzeTeam() {
   const filled = Object.entries(team.picks);
-  if (filled.length < 9) return;
+  console.log(`[analyzeTeam] picks=${filled.length}`, team.picks);
+  if (filled.length < MIN_PROJECT) {
+    alert(`Need at least ${MIN_PROJECT} picks to project. You have ${filled.length}.`);
+    return;
+  }
   const apiKey = localStorage.getItem(STORAGE_KEY);
-  if (!apiKey) { openSettings(); return; }
+  if (!apiKey) {
+    console.log('[analyzeTeam] no API key, opening settings');
+    openSettings();
+    return;
+  }
+  console.log('[analyzeTeam] opening projection panel');
 
   openProjectionPanel(team.name, 'Pulling stats and running projection...');
 
@@ -2101,8 +2195,8 @@ async function analyzeTeam() {
   }));
 
   const lineup = statsResults.filter(r => !r.isPitcher);
-  const rotation = statsResults.filter(r => ['SP1','SP2','SP3','SP4','SP5'].includes(r.code));
-  const bullpen = statsResults.filter(r => ['CL','SU','RP1','RP2'].includes(r.code));
+  const rotation = statsResults.filter(r => STARTER_SLOTS.has(r.code));
+  const bullpen = statsResults.filter(r => CLOSER_SLOTS.has(r.code) || RELIEVER_SLOTS.has(r.code));
 
   const avgF = (arr, key) => {
     const vals = arr.map(x => parseFloat(x.stats[key])).filter(v => !isNaN(v));
