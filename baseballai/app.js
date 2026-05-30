@@ -2362,10 +2362,17 @@ let trade = { teamId: null, teamName: null, teamAbbr: null, in: [], out: [] };
   try {
     const raw = localStorage.getItem(TRADE_KEY);
     if (raw) trade = JSON.parse(raw);
-  } catch (e) {}
+    if (!trade || typeof trade !== 'object') trade = { teamId: null, teamName: null, teamAbbr: null, in: [], out: [] };
+    if (!Array.isArray(trade.in)) trade.in = [];
+    if (!Array.isArray(trade.out)) trade.out = [];
+  } catch (e) { trade = { teamId: null, teamName: null, teamAbbr: null, in: [], out: [] }; }
 })();
 function saveTrade() {
   try { localStorage.setItem(TRADE_KEY, JSON.stringify(trade)); } catch (e) {}
+}
+function resetTrade() {
+  trade = { teamId: null, teamName: null, teamAbbr: null, in: [], out: [] };
+  saveTrade();
 }
 
 function detectTradeQuery(text) {
@@ -2399,7 +2406,7 @@ async function openTradeBuilder() {
       <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
       <span class="tr-flag">TRADE</span>
       <span class="tr-title" id="trTitle">SELECT TEAM</span>
-      <button class="tr-analyze" id="trAnalyze" disabled>RATE</button>
+      <button class="tr-analyze" id="trAnalyze" title="Pick a focal team plus at least one player on each side, then click RATE">RATE</button>
     </div>
     <div class="tr-body" id="trBody"><div class="pp-loading">Loading...</div></div>
   `;
@@ -2428,7 +2435,6 @@ async function renderTradeBody() {
 
   if (!trade.teamId) {
     title.textContent = 'SELECT TEAM';
-    if (analyze) analyze.disabled = true;
     const teams = await getAllTeams();
     const sortedTeams = [...teams].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     body.innerHTML = `
@@ -2509,8 +2515,6 @@ async function renderTradeBody() {
   });
   body.querySelector('#trAddIn').addEventListener('click', () => openTradePlayerPicker('in'));
   body.querySelector('#trAddOut').addEventListener('click', () => openTradePlayerPicker('out'));
-
-  if (analyze) analyze.disabled = !(trade.in.length && trade.out.length);
 }
 
 function renderTradeColumns() {
@@ -2540,8 +2544,6 @@ function renderTradeColumns() {
         else trade.out.splice(idx, 1);
         saveTrade();
         renderTradeColumns();
-        const analyzeBtn = document.getElementById('trAnalyze');
-        if (analyzeBtn) analyzeBtn.disabled = !(trade.in.length && trade.out.length);
       });
       el.appendChild(row);
     });
@@ -2648,8 +2650,6 @@ async function openTradePlayerPicker(side) {
         saveTrade();
         picker.remove();
         renderTradeColumns();
-        const analyzeBtn = document.getElementById('trAnalyze');
-        if (analyzeBtn) analyzeBtn.disabled = !(trade.in.length && trade.out.length);
       });
       body.appendChild(row);
     }
@@ -2659,9 +2659,22 @@ async function openTradePlayerPicker(side) {
 }
 
 async function analyzeTrade() {
-  if (!trade.in.length || !trade.out.length) return;
+  console.log('[analyzeTrade] called', { teamId: trade.teamId, in: trade.in.length, out: trade.out.length });
+  if (!trade.teamId) {
+    alert('Pick a focal team first.');
+    return;
+  }
+  if (!trade.in.length || !trade.out.length) {
+    alert(`Add at least one player to each side. You have ${trade.in.length} IN and ${trade.out.length} OUT.`);
+    return;
+  }
   const apiKey = localStorage.getItem(STORAGE_KEY);
-  if (!apiKey) { openSettings(); return; }
+  if (!apiKey) {
+    console.log('[analyzeTrade] no API key, opening settings');
+    openSettings();
+    return;
+  }
+  console.log('[analyzeTrade] opening projection panel');
 
   openProjectionPanel(`${trade.teamAbbr} TRADE`, 'Pulling stats and evaluating trade...');
 
