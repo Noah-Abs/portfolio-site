@@ -495,17 +495,130 @@ body.bb .status-dot.online { background: var(--amber); color: var(--amber); }
   transition: all 0.15s;
 }
 .tb-reset:hover { color: #fff; border-color: var(--red); background: rgba(255, 84, 104, 0.2); }
+.tb-close {
+  background: transparent;
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan-dim);
+  font-size: 14px;
+  width: 24px; height: 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.tb-close:hover { color: var(--cyan-bright); border-color: var(--cyan); background: var(--cyan-faint); }
+
+/* Hide auto-added float-close so it doesn't overlap PROJECT */
+.team-builder-panel .float-close { display: none !important; }
+
+/* Expanded layout: roster left, projection right */
 .tb-body {
-  flex: 1;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
   padding: 10px 12px;
+}
+.tb-roster-col {
+  flex: 0 0 360px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--cyan-dim) transparent;
   min-height: 0;
 }
+.tb-roster-col::-webkit-scrollbar { width: 5px; }
+.tb-roster-col::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
+.tb-proj-col {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  min-width: 0;
+  border-left: 1px dashed var(--panel-edge);
+  padding-left: 12px;
+}
+.team-builder-panel.expanded .tb-proj-col { display: flex; }
+.tb-proj-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+  border-bottom: 1px dashed rgba(255, 184, 74, 0.25);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.tb-proj-flag {
+  background: var(--amber);
+  color: #20140a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 2px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.tb-proj-title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 2.5px;
+  color: var(--cyan-bright);
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tb-rerun {
+  background: transparent;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tb-rerun:hover { background: rgba(255, 184, 74, 0.18); box-shadow: 0 0 8px rgba(255, 184, 74, 0.5); }
+.tb-proj-close {
+  background: transparent;
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan-dim);
+  font-size: 14px;
+  width: 22px; height: 22px;
+  border-radius: 2px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+}
+.tb-proj-close:hover { color: var(--cyan); border-color: var(--cyan); }
+.tb-proj-content {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cyan-dim) transparent;
+  min-height: 0;
+  padding-right: 4px;
+}
+.tb-proj-content::-webkit-scrollbar { width: 5px; }
+.tb-proj-content::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
+/* Inherit the projection-body markdown styling */
+.tb-proj-content.pj-body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--cyan-bright);
+  padding: 0;
+}
+.tb-body { flex: 1; min-height: 0; }
 .tb-body::-webkit-scrollbar { width: 5px; }
 .tb-body::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
 .tb-section-title {

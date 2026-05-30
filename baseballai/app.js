@@ -1974,22 +1974,34 @@ function openTeamBuilder() {
       <input class="tb-name" maxlength="32" value="${escapeHtml(team.name)}" placeholder="Team name">
       <button class="tb-reset" id="tbReset" title="Clear all picks">RESET</button>
       <button class="tb-analyze" id="tbAnalyze" title="Run season projection">PROJECT</button>
+      <button class="tb-close" id="tbClose" title="Close panel">&times;</button>
     </div>
     <div class="tb-body">
-      ${ROSTER_DEF.map(sec => `
-        <div class="tb-section">
-          <div class="tb-section-title">// ${sec.section}</div>
-          <div class="tb-slots" data-section="${sec.section}">
-            ${sec.slots.map(slot => `
-              <div class="tb-slot" data-slot-code="${slot.code}">
-                <div class="tb-slot-code">${slot.code}</div>
-                <div class="tb-slot-content"><span class="tb-slot-empty">+ Click to draft ${slot.name}</span></div>
-                <button class="tb-slot-clear" title="Clear pick">&times;</button>
-              </div>
-            `).join('')}
+      <div class="tb-roster-col">
+        ${ROSTER_DEF.map(sec => `
+          <div class="tb-section">
+            <div class="tb-section-title">// ${sec.section}</div>
+            <div class="tb-slots" data-section="${sec.section}">
+              ${sec.slots.map(slot => `
+                <div class="tb-slot" data-slot-code="${slot.code}">
+                  <div class="tb-slot-code">${slot.code}</div>
+                  <div class="tb-slot-content"><span class="tb-slot-empty">+ Click to draft ${slot.name}</span></div>
+                  <button class="tb-slot-clear" title="Clear pick">&times;</button>
+                </div>
+              `).join('')}
+            </div>
           </div>
+        `).join('')}
+      </div>
+      <div class="tb-proj-col" id="tbProj">
+        <div class="tb-proj-head">
+          <span class="tb-proj-flag">PROJECTION</span>
+          <span class="tb-proj-title" id="tbProjTitle">162-GAME OUTLOOK</span>
+          <button class="tb-rerun" id="tbRerun" title="Re-run with current picks">RUN AGAIN</button>
+          <button class="tb-proj-close" id="tbProjClose" title="Hide projection">&times;</button>
         </div>
-      `).join('')}
+        <div class="tb-proj-content pj-body" id="tbProjContent"></div>
+      </div>
     </div>
   `;
   document.body.appendChild(panel);
@@ -2029,6 +2041,14 @@ function openTeamBuilder() {
     if (Object.keys(team.picks).length && !confirm('Clear all picks from your team?')) return;
     resetTeam();
     renderTeamSlots();
+  });
+  panel.querySelector('#tbClose').addEventListener('click', () => panel.remove());
+  panel.querySelector('#tbRerun').addEventListener('click', analyzeTeam);
+  panel.querySelector('#tbProjClose').addEventListener('click', () => {
+    panel.classList.remove('expanded');
+    panel.style.width = '380px';
+    const projCol = panel.querySelector('.tb-proj-col');
+    if (projCol) projCol.style.display = 'none';
   });
 
   renderTeamSlots();
@@ -2179,9 +2199,23 @@ async function analyzeTeam() {
     openSettings();
     return;
   }
-  console.log('[analyzeTeam] opening projection panel');
+  console.log('[analyzeTeam] expanding team builder and rendering projection inline');
 
-  openProjectionPanel(team.name, 'Pulling stats and running projection...');
+  const panel = document.getElementById('teamBuilderPanel');
+  const projCol = panel?.querySelector('.tb-proj-col');
+  const projTitle = panel?.querySelector('#tbProjTitle');
+  const projContent = panel?.querySelector('#tbProjContent');
+  if (panel) {
+    panel.classList.add('expanded');
+    panel.style.width = '880px';
+    const rect = panel.getBoundingClientRect();
+    if (rect.left + 880 > window.innerWidth - 20) {
+      panel.style.left = Math.max(20, window.innerWidth - 900) + 'px';
+    }
+  }
+  if (projCol) projCol.style.display = 'flex';
+  if (projTitle) projTitle.textContent = `${team.name.toUpperCase()} — 162-GAME OUTLOOK`;
+  if (projContent) projContent.innerHTML = '<div class="pj-loading">Pulling stats and running projection...</div>';
 
   const statsResults = await Promise.all(filled.map(async ([code, player]) => {
     const isPitcher = PITCHER_SLOTS.has(code);
@@ -2307,17 +2341,19 @@ Be analytical and confident. Don't apologize. Don't address me with any title.`;
         messages: [{ role: 'user', content: prompt }],
       }),
     });
+    const target = document.getElementById('tbProjContent');
     if (!res.ok) {
       const t = await res.text();
-      updateProjectionBody(`<div class="hp-err">Projection failed (${res.status}). ${escapeHtml(t.slice(0, 200))}</div>`);
+      if (target) target.innerHTML = `<div class="hp-err">Projection failed (${res.status}). ${escapeHtml(t.slice(0, 200))}</div>`;
       return;
     }
     const data = await res.json();
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
-    updateProjectionBody(renderMarkdown(text));
+    if (target) target.innerHTML = renderMarkdown(text);
   } catch (e) {
     console.warn('[projection] failed', e);
-    updateProjectionBody(`<div class="hp-err">Projection failed: ${escapeHtml(e.message)}</div>`);
+    const target = document.getElementById('tbProjContent');
+    if (target) target.innerHTML = `<div class="hp-err">Projection failed: ${escapeHtml(e.message)}</div>`;
   }
 }
 
