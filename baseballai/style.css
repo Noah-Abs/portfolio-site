@@ -541,7 +541,8 @@ body.bb .status-dot.online { background: var(--amber); color: var(--amber); }
   border-left: 1px dashed var(--panel-edge);
   padding-left: 12px;
 }
-.team-builder-panel.expanded .tb-proj-col { display: flex; }
+.team-builder-panel.expanded .tb-proj-col { display: flex !important; }
+.team-builder-panel.expanded { transition: width 0.2s ease; }
 .tb-proj-head {
   display: flex;
   align-items: center;

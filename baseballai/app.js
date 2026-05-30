@@ -1830,7 +1830,7 @@ const PITCHER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5','CL','SU','RP1','RP
 const STARTER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5']);
 const CLOSER_SLOTS  = new Set(['CL']);
 const RELIEVER_SLOTS = new Set(['SU','RP1','RP2','RP3','RP4','RP5','RP6']);
-const MIN_PROJECT = 9;
+const MIN_PROJECT = 1;
 
 (function loadTeam() {
   try {
@@ -2202,20 +2202,28 @@ async function analyzeTeam() {
   console.log('[analyzeTeam] expanding team builder and rendering projection inline');
 
   const panel = document.getElementById('teamBuilderPanel');
-  const projCol = panel?.querySelector('.tb-proj-col');
-  const projTitle = panel?.querySelector('#tbProjTitle');
-  const projContent = panel?.querySelector('#tbProjContent');
-  if (panel) {
-    panel.classList.add('expanded');
-    panel.style.width = '880px';
-    const rect = panel.getBoundingClientRect();
-    if (rect.left + 880 > window.innerWidth - 20) {
-      panel.style.left = Math.max(20, window.innerWidth - 900) + 'px';
-    }
+  if (!panel) {
+    console.warn('[analyzeTeam] no team builder panel found, reopening');
+    openTeamBuilder();
+    setTimeout(analyzeTeam, 250);
+    return;
   }
+  const projCol = panel.querySelector('.tb-proj-col');
+  const projTitle = panel.querySelector('#tbProjTitle');
+  const projContent = panel.querySelector('#tbProjContent');
+
+  panel.classList.add('expanded');
+  const W = Math.min(880, window.innerWidth - 40);
+  panel.style.width = W + 'px';
+  panel.style.left = Math.max(20, (window.innerWidth - W) / 2) + 'px';
+  panel.style.top = '40px';
+  panel.style.maxHeight = 'calc(100vh - 80px)';
+  panel.style.zIndex = String(++floatTopZ);
+
   if (projCol) projCol.style.display = 'flex';
-  if (projTitle) projTitle.textContent = `${team.name.toUpperCase()} — 162-GAME OUTLOOK`;
+  if (projTitle) projTitle.textContent = `${(team.name || 'MY TEAM').toUpperCase()} — 162-GAME OUTLOOK`;
   if (projContent) projContent.innerHTML = '<div class="pj-loading">Pulling stats and running projection...</div>';
+  console.log('[analyzeTeam] panel expanded', { width: W, projColDisplay: projCol?.style.display });
 
   const statsResults = await Promise.all(filled.map(async ([code, player]) => {
     const isPitcher = PITCHER_SLOTS.has(code);
