@@ -1781,6 +1781,485 @@ function stripMd(text) {
 }
 
 /* =====================================================
+ *  Team Builder — draft your own roster, get an AI projection
+ * ===================================================== */
+const ROSTER_DEF = [
+  { section: 'LINEUP', slots: [
+    { code: 'C',  name: 'Catcher',           positions: ['C'] },
+    { code: '1B', name: 'First Base',        positions: ['1B'] },
+    { code: '2B', name: 'Second Base',       positions: ['2B'] },
+    { code: '3B', name: 'Third Base',        positions: ['3B'] },
+    { code: 'SS', name: 'Shortstop',         positions: ['SS'] },
+    { code: 'LF', name: 'Left Field',        positions: ['LF', 'OF'] },
+    { code: 'CF', name: 'Center Field',      positions: ['CF', 'OF'] },
+    { code: 'RF', name: 'Right Field',       positions: ['RF', 'OF'] },
+    { code: 'DH', name: 'Designated Hitter', positions: ['DH','1B','OF','LF','CF','RF','3B','C','TWP'] },
+  ]},
+  { section: 'ROTATION', slots: [
+    { code: 'SP1', name: 'Starter 1', positions: ['SP','P','TWP'] },
+    { code: 'SP2', name: 'Starter 2', positions: ['SP','P','TWP'] },
+    { code: 'SP3', name: 'Starter 3', positions: ['SP','P','TWP'] },
+    { code: 'SP4', name: 'Starter 4', positions: ['SP','P','TWP'] },
+    { code: 'SP5', name: 'Starter 5', positions: ['SP','P','TWP'] },
+  ]},
+  { section: 'BULLPEN', slots: [
+    { code: 'CL',  name: 'Closer',     positions: ['RP','P','CL'] },
+    { code: 'SU',  name: 'Setup',      positions: ['RP','P'] },
+    { code: 'RP1', name: 'Reliever 1', positions: ['RP','P'] },
+    { code: 'RP2', name: 'Reliever 2', positions: ['RP','P'] },
+  ]},
+];
+
+const TEAM_KEY = 'baseballai_team';
+let team = { name: 'MY TEAM', picks: {} };
+(function loadTeam() {
+  try {
+    const raw = localStorage.getItem(TEAM_KEY);
+    if (raw) team = JSON.parse(raw);
+  } catch (e) {}
+})();
+function saveTeam() {
+  try { localStorage.setItem(TEAM_KEY, JSON.stringify(team)); } catch (e) {}
+}
+
+const ALL_SLOT_CODES = ROSTER_DEF.flatMap(s => s.slots.map(sl => sl.code));
+const PITCHER_SLOTS = new Set(['SP1','SP2','SP3','SP4','SP5','CL','SU','RP1','RP2']);
+
+let topHittersCache = null;
+let topPitchersCache = null;
+
+async function getTopHitters() {
+  if (topHittersCache) return topHittersCache;
+  try {
+    const r = await fetch(`${STATS}/stats/leaders?leaderCategories=ops&statGroup=hitting&limit=250&season=${SEASON}&sportId=1`);
+    const j = await r.json();
+    const leaders = j.leagueLeaders?.[0]?.leaders || [];
+    const all = await getAllPlayers();
+    const allById = Object.fromEntries(all.map(p => [p.id, p]));
+    topHittersCache = leaders.map(l => {
+      const base = allById[l.person?.id] || {};
+      return {
+        ...base,
+        id: l.person?.id || base.id,
+        fullName: l.person?.fullName || base.fullName,
+        statValue: l.value,
+        statLabel: 'OPS',
+        rank: l.rank,
+      };
+    }).filter(p => p.id);
+  } catch (e) { console.warn('[topHitters] failed', e); topHittersCache = []; }
+  return topHittersCache;
+}
+
+async function getTopPitchers() {
+  if (topPitchersCache) return topPitchersCache;
+  try {
+    const r = await fetch(`${STATS}/stats/leaders?leaderCategories=earnedRunAverage&statGroup=pitching&limit=200&season=${SEASON}&sportId=1`);
+    const j = await r.json();
+    const leaders = j.leagueLeaders?.[0]?.leaders || [];
+    const all = await getAllPlayers();
+    const allById = Object.fromEntries(all.map(p => [p.id, p]));
+    topPitchersCache = leaders.map(l => {
+      const base = allById[l.person?.id] || {};
+      return {
+        ...base,
+        id: l.person?.id || base.id,
+        fullName: l.person?.fullName || base.fullName,
+        statValue: l.value,
+        statLabel: 'ERA',
+        rank: l.rank,
+      };
+    }).filter(p => p.id);
+  } catch (e) { console.warn('[topPitchers] failed', e); topPitchersCache = []; }
+  return topPitchersCache;
+}
+
+function playerMatchesSlot(player, slot) {
+  const pos = player.primaryPosition?.abbreviation;
+  if (!pos) return false;
+  if (slot.positions.includes(pos)) return true;
+  if (pos === 'TWP') return true;
+  if (pos === 'OF' && slot.positions.some(p => ['LF','CF','RF','OF'].includes(p))) return true;
+  if (['LF','CF','RF'].includes(pos) && slot.positions.includes('OF')) return true;
+  return false;
+}
+
+function detectTeamBuilderQuery(text) {
+  const lower = text.toLowerCase().trim();
+  if (/\b(create|build|make|draft|design|start)\b[^.?!]{0,40}\b(team|roster|lineup|squad|club)\b/.test(lower)) return true;
+  if (/\b(my own|fantasy|custom)\b[^.?!]{0,20}\b(team|roster|lineup|squad)\b/.test(lower)) return true;
+  if (/\b(team builder|fantasy draft|draft mode)\b/.test(lower)) return true;
+  if (/^(team\s*builder|draft|builder)\s*\.?$/.test(lower)) return true;
+  return false;
+}
+
+function openTeamBuilder() {
+  const existing = document.getElementById('teamBuilderPanel');
+  if (existing) { existing.style.zIndex = String(++floatTopZ); return; }
+
+  const panel = document.createElement('div');
+  panel.id = 'teamBuilderPanel';
+  panel.className = 'team-builder-panel';
+  panel.innerHTML = `
+    <div class="tb-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="tb-flag">DRAFT</span>
+      <input class="tb-name" maxlength="32" value="${escapeHtml(team.name)}" placeholder="Team name">
+      <button class="tb-analyze" id="tbAnalyze" title="Run season projection">PROJECT</button>
+    </div>
+    <div class="tb-body">
+      ${ROSTER_DEF.map(sec => `
+        <div class="tb-section">
+          <div class="tb-section-title">// ${sec.section}</div>
+          <div class="tb-slots" data-section="${sec.section}">
+            ${sec.slots.map(slot => `
+              <div class="tb-slot" data-slot-code="${slot.code}">
+                <div class="tb-slot-code">${slot.code}</div>
+                <div class="tb-slot-content"><span class="tb-slot-empty">+ Click to draft ${slot.name}</span></div>
+                <button class="tb-slot-clear" title="Clear pick">&times;</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  const W = 380;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = 'calc(100vh - 80px)';
+  panel.style.left = Math.max(20, window.innerWidth - W - 60) + 'px';
+  panel.style.top = '60px';
+  panel.style.zIndex = String(++floatTopZ);
+
+  const handle = panel.querySelector('.tb-head');
+  if (handle) makeDraggable(panel, handle);
+
+  panel.querySelector('.tb-name').addEventListener('input', (e) => {
+    team.name = e.target.value || 'MY TEAM';
+    saveTeam();
+  });
+
+  for (const slotEl of panel.querySelectorAll('.tb-slot')) {
+    const code = slotEl.dataset.slotCode;
+    const slot = ROSTER_DEF.flatMap(s => s.slots).find(s => s.code === code);
+    slotEl.addEventListener('click', (e) => {
+      if (e.target.closest('.tb-slot-clear')) return;
+      openPlayerPicker(slot);
+    });
+    slotEl.querySelector('.tb-slot-clear').addEventListener('click', (e) => {
+      e.stopPropagation();
+      delete team.picks[code];
+      saveTeam();
+      renderTeamSlots();
+    });
+  }
+
+  panel.querySelector('#tbAnalyze').addEventListener('click', analyzeTeam);
+
+  renderTeamSlots();
+}
+
+function renderTeamSlots() {
+  const panel = document.getElementById('teamBuilderPanel');
+  if (!panel) return;
+  for (const slotEl of panel.querySelectorAll('.tb-slot')) {
+    const code = slotEl.dataset.slotCode;
+    const p = team.picks[code];
+    const content = slotEl.querySelector('.tb-slot-content');
+    const clearBtn = slotEl.querySelector('.tb-slot-clear');
+    if (p) {
+      slotEl.classList.add('filled');
+      content.innerHTML = `
+        <img class="tb-slot-img" src="${headshot(p.id)}" onerror="this.style.opacity=0.2">
+        <div class="tb-slot-meta">
+          <div class="tb-slot-name">${escapeHtml(p.fullName || '')}</div>
+          <div class="tb-slot-team">${escapeHtml(p.currentTeam?.name || '—')}${p.statValue ? ' · ' + escapeHtml(p.statLabel || '') + ' ' + escapeHtml(String(p.statValue)) : ''}</div>
+        </div>
+      `;
+      clearBtn.style.display = 'grid';
+    } else {
+      slotEl.classList.remove('filled');
+      const slotDef = ROSTER_DEF.flatMap(s => s.slots).find(s => s.code === code);
+      content.innerHTML = `<span class="tb-slot-empty">+ Click to draft ${escapeHtml(slotDef?.name || code)}</span>`;
+      clearBtn.style.display = 'none';
+    }
+  }
+  const filled = Object.keys(team.picks).length;
+  const analyzeBtn = panel.querySelector('#tbAnalyze');
+  if (analyzeBtn) {
+    analyzeBtn.disabled = filled < 9;
+    analyzeBtn.textContent = filled >= ALL_SLOT_CODES.length ? 'PROJECT' : `PROJECT (${filled}/${ALL_SLOT_CODES.length})`;
+  }
+}
+
+async function openPlayerPicker(slot) {
+  const existing = document.getElementById('playerPickerPanel');
+  if (existing) existing.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'playerPickerPanel';
+  panel.className = 'player-picker-panel';
+  panel.innerHTML = `
+    <div class="pp-folder-tab">${slot.code}</div>
+    <div class="pp-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="pp-title">DRAFT &mdash; ${escapeHtml(slot.name.toUpperCase())}</span>
+    </div>
+    <div class="pp-search-row">
+      <input class="pp-search" placeholder="Search by name...">
+    </div>
+    <div class="pp-body"><div class="pp-loading">Loading players...</div></div>
+  `;
+  document.body.appendChild(panel);
+
+  const W = 340;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = '78vh';
+  panel.style.left = '80px';
+  panel.style.top = '100px';
+  panel.style.zIndex = String(++floatTopZ);
+
+  const handle = panel.querySelector('.pp-head');
+  if (handle) makeDraggable(panel, handle);
+  addCloseBtn(panel);
+
+  const isPitcher = slot.positions.some(p => ['SP','RP','P','CL'].includes(p));
+  const ranked = isPitcher ? await getTopPitchers() : await getTopHitters();
+  const all = await getAllPlayers();
+
+  const rankedMatching = ranked.filter(p => playerMatchesSlot(p, slot));
+  const allMatching = all.filter(p => playerMatchesSlot(p, slot));
+
+  const body = panel.querySelector('.pp-body');
+  const renderList = (query) => {
+    body.innerHTML = '';
+    const q = query?.toLowerCase().trim();
+    let list;
+    if (q) {
+      list = allMatching
+        .filter(p => (p.fullName || '').toLowerCase().includes(q))
+        .slice(0, 80);
+      if (!list.length) { body.innerHTML = '<div class="pp-loading">No matches.</div>'; return; }
+    } else {
+      list = rankedMatching.length ? rankedMatching.slice(0, 60) : allMatching.slice(0, 60);
+    }
+    let lastRank = 0;
+    for (const p of list) {
+      const row = document.createElement('div');
+      row.className = 'pp-row';
+      const rank = p.rank || (++lastRank);
+      const stat = p.statValue ? `<span class="pp-stat">${escapeHtml(p.statLabel || '')} ${escapeHtml(String(p.statValue))}</span>` : '';
+      row.innerHTML = `
+        <span class="pp-rank">${rank}</span>
+        <img class="pp-img" src="${headshot(p.id)}" onerror="this.style.opacity=0.2">
+        <div class="pp-info">
+          <div class="pp-name">${escapeHtml(p.fullName)}</div>
+          <div class="pp-team">${escapeHtml(p.currentTeam?.name || '—')} &middot; ${escapeHtml(p.primaryPosition?.abbreviation || '')}</div>
+        </div>
+        ${stat}
+      `;
+      row.addEventListener('click', () => {
+        team.picks[slot.code] = {
+          id: p.id,
+          fullName: p.fullName,
+          currentTeam: p.currentTeam ? { id: p.currentTeam.id, name: p.currentTeam.name } : null,
+          primaryPosition: p.primaryPosition ? { abbreviation: p.primaryPosition.abbreviation, name: p.primaryPosition.name } : null,
+          statValue: p.statValue,
+          statLabel: p.statLabel,
+        };
+        saveTeam();
+        panel.remove();
+        renderTeamSlots();
+      });
+      body.appendChild(row);
+    }
+  };
+  renderList('');
+
+  panel.querySelector('.pp-search').addEventListener('input', (e) => renderList(e.target.value));
+}
+
+async function analyzeTeam() {
+  const filled = Object.entries(team.picks);
+  if (filled.length < 9) return;
+  const apiKey = localStorage.getItem(STORAGE_KEY);
+  if (!apiKey) { openSettings(); return; }
+
+  openProjectionPanel(team.name, 'Pulling stats and running projection...');
+
+  const statsResults = await Promise.all(filled.map(async ([code, player]) => {
+    const isPitcher = PITCHER_SLOTS.has(code);
+    const group = isPitcher ? 'pitching' : 'hitting';
+    try {
+      const r = await fetch(`${STATS}/people/${player.id}?hydrate=stats(group=${group},type=season,season=${SEASON})`);
+      const j = await r.json();
+      const p = j.people?.[0];
+      return { code, player, isPitcher, stats: p?.stats?.[0]?.splits?.[0]?.stat || {} };
+    } catch (e) { return { code, player, isPitcher, stats: {} }; }
+  }));
+
+  const lineup = statsResults.filter(r => !r.isPitcher);
+  const rotation = statsResults.filter(r => ['SP1','SP2','SP3','SP4','SP5'].includes(r.code));
+  const bullpen = statsResults.filter(r => ['CL','SU','RP1','RP2'].includes(r.code));
+
+  const avgF = (arr, key) => {
+    const vals = arr.map(x => parseFloat(x.stats[key])).filter(v => !isNaN(v));
+    return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3) : null;
+  };
+  const sumI = (arr, key) => arr.reduce((acc, x) => acc + (parseInt(x.stats[key]) || 0), 0);
+  const sumF = (arr, key) => arr.reduce((acc, x) => acc + (parseFloat(x.stats[key]) || 0), 0).toFixed(1);
+
+  const summary = {
+    lineup: lineup.length && {
+      n: lineup.length,
+      avg: avgF(lineup, 'avg'),
+      obp: avgF(lineup, 'obp'),
+      slg: avgF(lineup, 'slg'),
+      ops: avgF(lineup, 'ops'),
+      hr: sumI(lineup, 'homeRuns'),
+      rbi: sumI(lineup, 'rbi'),
+      r: sumI(lineup, 'runs'),
+      sb: sumI(lineup, 'stolenBases'),
+      so: sumI(lineup, 'strikeOuts'),
+      bb: sumI(lineup, 'baseOnBalls'),
+    },
+    rotation: rotation.length && {
+      n: rotation.length,
+      era: avgF(rotation, 'era'),
+      whip: avgF(rotation, 'whip'),
+      k9: avgF(rotation, 'strikeoutsPer9Inn'),
+      ip: sumF(rotation, 'inningsPitched'),
+      k: sumI(rotation, 'strikeOuts'),
+      w: sumI(rotation, 'wins'),
+      l: sumI(rotation, 'losses'),
+    },
+    bullpen: bullpen.length && {
+      n: bullpen.length,
+      era: avgF(bullpen, 'era'),
+      whip: avgF(bullpen, 'whip'),
+      sv: sumI(bullpen, 'saves'),
+      hld: sumI(bullpen, 'holds'),
+      k9: avgF(bullpen, 'strikeoutsPer9Inn'),
+    },
+  };
+
+  const rosterLines = filled.map(([code, p]) => {
+    const sr = statsResults.find(x => x.code === code);
+    if (!sr || !Object.keys(sr.stats).length) return `- ${code}: ${p.fullName} (${p.currentTeam?.name || '—'}) — no ${SEASON} stats yet`;
+    if (sr.isPitcher) {
+      return `- ${code}: ${p.fullName} (${p.currentTeam?.name || '—'}) — ERA ${sr.stats.era || '—'}, WHIP ${sr.stats.whip || '—'}, K/9 ${sr.stats.strikeoutsPer9Inn || '—'}, IP ${sr.stats.inningsPitched || '—'}`;
+    }
+    return `- ${code}: ${p.fullName} (${p.currentTeam?.name || '—'}) — ${sr.stats.avg || '—'}/${sr.stats.obp || '—'}/${sr.stats.slg || '—'}, ${sr.stats.homeRuns || 0} HR, ${sr.stats.rbi || 0} RBI`;
+  }).join('\n');
+
+  const aggLines = [
+    summary.lineup ? `- Lineup (${summary.lineup.n}): AVG ${summary.lineup.avg}, OBP ${summary.lineup.obp}, SLG ${summary.lineup.slg}, OPS ${summary.lineup.ops}; raw sums — ${summary.lineup.hr} HR, ${summary.lineup.rbi} RBI, ${summary.lineup.r} R, ${summary.lineup.sb} SB, ${summary.lineup.so} SO, ${summary.lineup.bb} BB` : '',
+    summary.rotation ? `- Rotation (${summary.rotation.n}): ERA ${summary.rotation.era}, WHIP ${summary.rotation.whip}, K/9 ${summary.rotation.k9}; raw sums — ${summary.rotation.ip} IP, ${summary.rotation.k} K, ${summary.rotation.w}-${summary.rotation.l}` : '',
+    summary.bullpen ? `- Bullpen (${summary.bullpen.n}): ERA ${summary.bullpen.era}, WHIP ${summary.bullpen.whip}, K/9 ${summary.bullpen.k9}; raw sums — ${summary.bullpen.sv} SV, ${summary.bullpen.hld} HLD` : '',
+  ].filter(Boolean).join('\n');
+
+  const prompt = `You are projecting the full ${SEASON} season for a hand-picked MLB roster called "${team.name}". Use the ${SEASON} stats provided to model an integrated team line and write a confident projection.
+
+ROSTER:
+${rosterLines}
+
+CURRENT ${SEASON} AGGREGATES:
+${aggLines}
+
+Return a clean MARKDOWN breakdown projecting a full 162-game season for this team. Use bold key numbers, a table where it fits, and these sections exactly:
+
+## Projected Record
+**W-L estimate** and a one-line rationale.
+
+## Run Differential
+Numeric estimate (e.g. +85).
+
+## Team Batting Line
+| AVG | OBP | SLG | OPS | HR | R | RBI | SB |
+Use a single-row table.
+
+## Team Pitching
+| ERA | WHIP | K | BB | SV |
+Use a single-row table (combine rotation + bullpen weighted).
+
+## Strengths
+2–3 bullets, specific.
+
+## Weaknesses
+2–3 bullets, specific.
+
+## Playoff Outlook
+One sentence — division winner / wild card / out.
+
+## Comparable Historical Team
+One sentence — name the closest analog.
+
+Be analytical and confident. Don't apologize. Don't address me with any title.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      updateProjectionBody(`<div class="hp-err">Projection failed (${res.status}). ${escapeHtml(t.slice(0, 200))}</div>`);
+      return;
+    }
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    updateProjectionBody(renderMarkdown(text));
+  } catch (e) {
+    console.warn('[projection] failed', e);
+    updateProjectionBody(`<div class="hp-err">Projection failed: ${escapeHtml(e.message)}</div>`);
+  }
+}
+
+function openProjectionPanel(teamName, placeholderText) {
+  const existing = document.getElementById('projectionPanel');
+  if (existing) existing.remove();
+  const panel = document.createElement('div');
+  panel.id = 'projectionPanel';
+  panel.className = 'projection-panel';
+  panel.innerHTML = `
+    <div class="pj-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="pj-flag">PROJECTION</span>
+      <span class="pj-title">${escapeHtml(teamName)} &mdash; 162-GAME OUTLOOK</span>
+    </div>
+    <div class="pj-body"><div class="pj-loading">${escapeHtml(placeholderText)}</div></div>
+  `;
+  document.body.appendChild(panel);
+  const W = 540;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = 'calc(100vh - 80px)';
+  panel.style.left = Math.max(20, (window.innerWidth - W) / 2) + 'px';
+  panel.style.top = '80px';
+  panel.style.zIndex = String(++floatTopZ);
+  const handle = panel.querySelector('.pj-head');
+  if (handle) makeDraggable(panel, handle);
+  addCloseBtn(panel);
+}
+
+function updateProjectionBody(html) {
+  const panel = document.getElementById('projectionPanel');
+  if (!panel) return;
+  panel.querySelector('.pj-body').innerHTML = html;
+}
+
+/* =====================================================
  *  Claude API call: streaming (general) and tool loop (baseball)
  * ===================================================== */
 async function callJarvis(userText) {
@@ -2117,6 +2596,12 @@ function send() {
   if (cmd === 'scoreboard') {
     quickReply(text, 'Pulling up the scoreboard.');
     openScoreboard();
+    return;
+  }
+
+  if (detectTeamBuilderQuery(text)) {
+    quickReply(text, 'Opening the team builder. Draft a roster, then hit PROJECT for a 162-game outlook.');
+    openTeamBuilder();
     return;
   }
 
