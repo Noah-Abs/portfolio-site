@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseball.AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="frame frame-tl"></div>
+<div class="frame frame-tr"></div>
+<div class="frame frame-bl"></div>
+<div class="frame frame-br"></div>
+
+<div class="vignette"></div>
+<div class="scanline"></div>
+<div class="grid-overlay"></div>
+
+<svg class="crosshair" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="0.5">
+  <circle cx="24" cy="24" r="20"></circle>
+  <circle cx="24" cy="24" r="14"></circle>
+  <circle cx="24" cy="24" r="2" fill="currentColor"></circle>
+  <line x1="0" y1="24" x2="14" y2="24"></line>
+  <line x1="34" y1="24" x2="48" y2="24"></line>
+  <line x1="24" y1="0" x2="24" y2="14"></line>
+  <line x1="24" y1="34" x2="24" y2="48"></line>
+</svg>
+
+<div class="hud">
+
+  <header class="topbar">
+    <div class="topbar-zone left">
+      <button class="settings-btn" id="settingsBtn" title="System Configuration" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+      <div class="brand">
+        <div class="brand-name">BASEBALL<span class="brand-dot">.</span>AI</div>
+        <div class="brand-sub">Live MLB Intelligence &middot; statsapi feed &middot; v1.0</div>
+      </div>
+    </div>
+
+    <div class="topbar-zone right">
+      <button class="icon-btn" id="topbarMute" title="Mute / unmute voice" aria-label="Mute voice">
+        <svg class="ic-speaker" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M11 5L6 9H2v6h4l5 4V5z" stroke-linejoin="round"></path>
+          <path class="ic-waves" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" stroke-linecap="round"></path>
+          <path class="ic-x" d="M22 9l-6 6m0-6l6 6" stroke-linecap="round"></path>
+        </svg>
+      </button>
+      <div class="telem">
+        <span class="telem-label">STATUS</span>
+        <span class="telem-val">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="status">STANDBY</span>
+        </span>
+      </div>
+      <div class="telem">
+        <span class="telem-label">SYS.TIME</span>
+        <span class="telem-val mono" id="clock">--:--:--</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="side left" hidden>
+      <div class="widget" id="logWidget">
+        <div class="w-head">
+          <span class="w-title">// SYSTEM.LOG</span>
+          <span class="w-led"></span>
+        </div>
+        <div class="w-body log-body" id="systemLog"></div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head">
+          <span class="w-title">// PROCESSES</span>
+        </div>
+        <div class="w-body proc-body">
+          <div class="proc"><span class="proc-name">jarvis.core</span><span class="proc-val">ACTIVE</span></div>
+          <div class="proc"><span class="proc-name">speech.recog</span><span class="proc-val" id="procSpeech">IDLE</span></div>
+          <div class="proc"><span class="proc-name">neural.link</span><span class="proc-val">SYNCED</span></div>
+          <div class="proc"><span class="proc-name">api.bridge</span><span class="proc-val" id="procApi">IDLE</span></div>
+          <div class="proc"><span class="proc-name">mlb.client</span><span class="proc-val" id="procMlb">STANDBY</span></div>
+          <div class="proc"><span class="proc-name">audio.synth</span><span class="proc-val">READY</span></div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head"><span class="w-title">// LOAD</span></div>
+        <div class="w-body">
+          <div class="bar-row"><span class="bar-lbl">CPU</span><div class="bar"><div class="bar-fill" id="cpuBar" style="width:32%"></div></div><span class="bar-val" id="cpuVal">32%</span></div>
+          <div class="bar-row"><span class="bar-lbl">MEM</span><div class="bar"><div class="bar-fill" id="memBar" style="width:48%"></div></div><span class="bar-val" id="memVal">48%</span></div>
+          <div class="bar-row"><span class="bar-lbl">NET</span><div class="bar"><div class="bar-fill" id="netBar" style="width:18%"></div></div><span class="bar-val" id="netVal">18%</span></div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head">
+          <span class="w-title">// MLB LIVE</span>
+          <span class="w-led" id="liveLed" title="Polling"></span>
+        </div>
+        <div class="w-body games-body" id="gamesBody">
+          <div class="games-loading">Polling feed...</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="reactor" id="reactor">
+        <div class="halo"></div>
+        <svg class="oval-rings" viewBox="0 0 400 540" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#e0f6ff" stop-opacity="1"/>
+              <stop offset="40%" stop-color="#00d4ff" stop-opacity="0.9"/>
+              <stop offset="100%" stop-color="#0066aa" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <ellipse cx="200" cy="270" rx="195" ry="265" fill="none" stroke="rgba(0,229,255,0.45)" stroke-width="1" stroke-dasharray="3 6" class="r-outer"/>
+          <ellipse cx="200" cy="270" rx="170" ry="235" fill="none" stroke="rgba(0,229,255,0.35)" stroke-width="0.5"/>
+          <ellipse cx="200" cy="270" rx="155" ry="215" fill="none" stroke="rgba(0,229,255,0.6)" stroke-width="1.5" class="r-mid" filter="url(#glow)"/>
+          <g class="r-ticks">
+            <!-- tick marks around mid ring -->
+          </g>
+          <ellipse cx="200" cy="270" rx="125" ry="185" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1" stroke-dasharray="2 4"/>
+          <ellipse cx="200" cy="270" rx="100" ry="155" fill="rgba(0,80,140,0.15)" stroke="rgba(0,229,255,0.8)" stroke-width="1" filter="url(#glow)"/>
+          <ellipse cx="200" cy="270" rx="75" ry="125" fill="url(#coreGrad)" class="r-core"/>
+        </svg>
+        <div class="orbit-row">
+          <div class="orbit-dot d1"></div>
+          <div class="orbit-dot d2"></div>
+        </div>
+      </div>
+
+      <section class="transcript-panel" id="transcriptPanel">
+        <div class="panel-head">
+          <span class="panel-label">// TRANSCRIPT</span>
+          <button id="clearChat" class="panel-btn" title="Clear conversation">CLEAR</button>
+        </div>
+        <div class="transcript" id="transcript">
+          <div class="placeholder">Player name, team, leaders, scores &mdash; ask anything.</div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="side right" hidden>
+      <div class="widget big-clock">
+        <div class="clock-time" id="clock">--:--:--</div>
+        <div class="clock-date" id="clockDate">--- -- ----</div>
+        <div class="clock-meta">
+          <span><span class="cm-lbl">LAT</span><span id="lat">+40.748</span></span>
+          <span><span class="cm-lbl">LON</span><span id="lon">-73.985</span></span>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head"><span class="w-title">// GLOBE</span></div>
+        <div class="w-body globe-body">
+          <svg class="globe" viewBox="0 0 120 120">
+            <defs>
+              <radialGradient id="gGrad" cx="40%" cy="35%" r="60%">
+                <stop offset="0%" stop-color="rgba(0,229,255,0.45)"/>
+                <stop offset="100%" stop-color="rgba(0,40,80,0.5)"/>
+              </radialGradient>
+            </defs>
+            <circle cx="60" cy="60" r="48" fill="url(#gGrad)" stroke="rgba(0,229,255,0.6)" stroke-width="1"/>
+            <ellipse cx="60" cy="60" rx="48" ry="18" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="0.5"/>
+            <ellipse cx="60" cy="60" rx="48" ry="34" fill="none" stroke="rgba(0,229,255,0.4)" stroke-width="0.5"/>
+            <ellipse cx="60" cy="60" rx="34" ry="48" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="0.5"/>
+            <ellipse cx="60" cy="60" rx="18" ry="48" fill="none" stroke="rgba(0,229,255,0.4)" stroke-width="0.5"/>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(0,229,255,0.8)" stroke-width="0.6"/>
+            <g class="globe-sweep">
+              <path d="M 60 12 A 48 48 0 0 1 108 60 L 60 60 Z" fill="rgba(0,229,255,0.18)" stroke="rgba(0,229,255,0.8)" stroke-width="0.6"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head"><span class="w-title">// AUDIO.WAVE</span></div>
+        <div class="w-body wave-body">
+          <svg class="wave-svg" viewBox="0 0 200 50" preserveAspectRatio="none">
+            <polyline id="wavePoly" points="" fill="none" stroke="rgba(0,229,255,0.9)" stroke-width="1.2" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="w-head"><span class="w-title">// READOUTS</span></div>
+        <div class="w-body readout-body">
+          <div class="ro"><span class="ro-lbl">SESSION</span><span class="ro-val mono" id="roSession">00:00:00</span></div>
+          <div class="ro"><span class="ro-lbl">QUERIES</span><span class="ro-val mono" id="roQueries">0</span></div>
+          <div class="ro"><span class="ro-lbl">TOKENS</span><span class="ro-val mono" id="roTokens">0</span></div>
+          <div class="ro"><span class="ro-lbl">MODE</span><span class="ro-val" id="roMode">GENERAL</span></div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="input-bar">
+    <button class="mic-btn" id="micBtn" title="Hold to speak" aria-label="Microphone">
+      <span class="wave">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </span>
+    </button>
+    <div class="input-wrap">
+      <span class="prompt-glyph">&gt;</span>
+      <input type="text" id="textInput" placeholder="e.g. 'Aaron Judge', 'Dodgers', 'AL HR leaders', 'show scores'" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="send-btn" id="sendBtn" title="Send">
+      <span class="send-text">SEND</span>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </footer>
+
+</div>
+
+<div class="popover" id="settingsPanel" role="dialog" aria-label="Settings">
+  <div class="popover-arrow"></div>
+  <div class="popover-head">
+    <span class="popover-title">SYSTEM CONFIG</span>
+    <button id="closeModal" class="popover-close" title="Close" aria-label="Close">×</button>
+  </div>
+  <div class="popover-body">
+    <label for="apiKey">ANTHROPIC API KEY</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+    <p class="hint">Stored locally in this browser only. Get a key at console.anthropic.com.</p>
+
+    <label for="voiceSelect">VOICE</label>
+    <select id="voiceSelect"></select>
+    <div class="voice-row">
+      <button id="testVoice" class="btn-ghost">TEST VOICE</button>
+      <button id="muteVoice" class="btn-ghost">MUTE</button>
+    </div>
+    <p class="hint" id="voiceHint">Pick a voice. "Google" voices generally sound the most natural.</p>
+
+    <div class="popover-actions">
+      <button id="clearKey" class="btn-ghost danger">CLEAR KEY</button>
+      <button id="saveKey" class="btn-primary">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
