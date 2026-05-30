@@ -2260,6 +2260,409 @@ function updateProjectionBody(html) {
 }
 
 /* =====================================================
+ *  Trade Builder — propose a trade, get an AI verdict + grades
+ * ===================================================== */
+const TRADE_KEY = 'baseballai_trade';
+let trade = { teamId: null, teamName: null, teamAbbr: null, in: [], out: [] };
+(function loadTrade() {
+  try {
+    const raw = localStorage.getItem(TRADE_KEY);
+    if (raw) trade = JSON.parse(raw);
+  } catch (e) {}
+})();
+function saveTrade() {
+  try { localStorage.setItem(TRADE_KEY, JSON.stringify(trade)); } catch (e) {}
+}
+
+function detectTradeQuery(text) {
+  const lower = text.toLowerCase().trim();
+  const wantsTrade = /\b(trade|swap|deal)\b/.test(lower);
+  const explicitOpen = /\b(propose|build|make|design|create|start)\b[^.?!]{0,30}\btrade\b/.test(lower)
+    || /\btrade\s*(builder|maker|proposer|proposal|machine)\b/.test(lower)
+    || /^trade\s*\.?$/.test(lower)
+    || /^(let me|i want to|i'd like to|i wanna|gonna)\b[^.?!]{0,40}\btrade\b/.test(lower);
+  if (!wantsTrade) return null;
+
+  let teamName = null;
+  for (const tn of TEAM_KEYWORDS) {
+    const re = new RegExp(`\\b${tn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (re.test(lower)) { teamName = tn; break; }
+  }
+
+  if (teamName || explicitOpen) return { teamName };
+  return null;
+}
+
+async function openTradeBuilder() {
+  const existing = document.getElementById('tradeBuilderPanel');
+  if (existing) { existing.style.zIndex = String(++floatTopZ); await renderTradeBody(); return; }
+
+  const panel = document.createElement('div');
+  panel.id = 'tradeBuilderPanel';
+  panel.className = 'trade-builder-panel';
+  panel.innerHTML = `
+    <div class="tr-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="tr-flag">TRADE</span>
+      <span class="tr-title" id="trTitle">SELECT TEAM</span>
+      <button class="tr-analyze" id="trAnalyze" disabled>RATE</button>
+    </div>
+    <div class="tr-body" id="trBody"><div class="pp-loading">Loading...</div></div>
+  `;
+  document.body.appendChild(panel);
+
+  const W = 440;
+  panel.style.width = W + 'px';
+  panel.style.maxHeight = 'calc(100vh - 80px)';
+  panel.style.left = Math.max(20, window.innerWidth - W - 60) + 'px';
+  panel.style.top = '60px';
+  panel.style.zIndex = String(++floatTopZ);
+
+  const handle = panel.querySelector('.tr-head');
+  if (handle) makeDraggable(panel, handle);
+
+  panel.querySelector('#trAnalyze').addEventListener('click', analyzeTrade);
+
+  await renderTradeBody();
+}
+
+async function renderTradeBody() {
+  const body = document.getElementById('trBody');
+  const title = document.getElementById('trTitle');
+  const analyze = document.getElementById('trAnalyze');
+  if (!body) return;
+
+  if (!trade.teamId) {
+    title.textContent = 'SELECT TEAM';
+    if (analyze) analyze.disabled = true;
+    const teams = await getAllTeams();
+    const sortedTeams = [...teams].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    body.innerHTML = `
+      <div class="tr-team-select">
+        <div class="tr-help">Choose the focal team. You'll then add players coming in and going out.</div>
+        <input class="tr-team-search" placeholder="Search teams...">
+        <div class="tr-team-grid">
+          ${sortedTeams.map(t => `
+            <button class="tr-team-btn" data-team-id="${t.id}" data-team-name="${escapeHtml(t.name)}" data-team-abbr="${escapeHtml(t.abbreviation || '')}">
+              <img class="tr-team-logo" src="${teamLogo(t.id)}" alt="${escapeHtml(t.name)}" onerror="this.style.opacity=0.2">
+              <span class="tr-team-abbr">${escapeHtml(t.abbreviation || '')}</span>
+              <span class="tr-team-name">${escapeHtml(t.clubName || t.teamName || t.name)}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    for (const btn of body.querySelectorAll('.tr-team-btn')) {
+      btn.addEventListener('click', () => {
+        trade.teamId = parseInt(btn.dataset.teamId);
+        trade.teamName = btn.dataset.teamName;
+        trade.teamAbbr = btn.dataset.teamAbbr || trade.teamName;
+        trade.in = [];
+        trade.out = [];
+        saveTrade();
+        renderTradeBody();
+      });
+    }
+    const search = body.querySelector('.tr-team-search');
+    search.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      for (const btn of body.querySelectorAll('.tr-team-btn')) {
+        const matches = !q || btn.dataset.teamName.toLowerCase().includes(q) || (btn.dataset.teamAbbr || '').toLowerCase().includes(q);
+        btn.style.display = matches ? '' : 'none';
+      }
+    });
+    return;
+  }
+
+  title.innerHTML = `<img class="tr-tab-logo" src="${teamLogo(trade.teamId)}" onerror="this.style.opacity=0.2"> ${escapeHtml((trade.teamName || '').toUpperCase())}`;
+
+  body.innerHTML = `
+    <div class="tr-team-bar">
+      <img class="tr-team-logo-sm" src="${teamLogo(trade.teamId)}" alt="${escapeHtml(trade.teamName)}" onerror="this.style.opacity=0.2">
+      <span class="tr-team-name-sm">${escapeHtml(trade.teamName)}</span>
+      <button class="tr-team-change" id="trTeamChange">CHANGE TEAM</button>
+    </div>
+    <div class="tr-cols">
+      <div class="tr-col tr-col-in">
+        <div class="tr-col-head">
+          <span class="tr-col-arrow">&larr;</span>
+          <span class="tr-col-title">${escapeHtml(trade.teamAbbr)} RECEIVES</span>
+        </div>
+        <div class="tr-col-list" id="trIn"></div>
+        <button class="tr-add" id="trAddIn">+ ADD PLAYER FROM ANOTHER TEAM</button>
+      </div>
+      <div class="tr-col tr-col-out">
+        <div class="tr-col-head">
+          <span class="tr-col-arrow">&rarr;</span>
+          <span class="tr-col-title">${escapeHtml(trade.teamAbbr)} SENDS</span>
+        </div>
+        <div class="tr-col-list" id="trOut"></div>
+        <button class="tr-add" id="trAddOut">+ ADD PLAYER FROM ${escapeHtml(trade.teamAbbr)}</button>
+      </div>
+    </div>
+  `;
+
+  renderTradeColumns();
+
+  body.querySelector('#trTeamChange').addEventListener('click', () => {
+    trade.teamId = null;
+    trade.teamName = null;
+    trade.teamAbbr = null;
+    trade.in = [];
+    trade.out = [];
+    saveTrade();
+    renderTradeBody();
+  });
+  body.querySelector('#trAddIn').addEventListener('click', () => openTradePlayerPicker('in'));
+  body.querySelector('#trAddOut').addEventListener('click', () => openTradePlayerPicker('out'));
+
+  if (analyze) analyze.disabled = !(trade.in.length && trade.out.length);
+}
+
+function renderTradeColumns() {
+  const inList = document.getElementById('trIn');
+  const outList = document.getElementById('trOut');
+  if (!inList || !outList) return;
+
+  const renderList = (el, players, side) => {
+    el.innerHTML = '';
+    if (!players.length) {
+      el.innerHTML = '<div class="tr-empty">No players added yet.</div>';
+      return;
+    }
+    players.forEach((p, idx) => {
+      const row = document.createElement('div');
+      row.className = 'tr-row';
+      row.innerHTML = `
+        <img class="tr-row-img" src="${headshot(p.id)}" onerror="this.style.opacity=0.2">
+        <div class="tr-row-info">
+          <div class="tr-row-name">${escapeHtml(p.fullName)}</div>
+          <div class="tr-row-team">${escapeHtml(p.currentTeam?.name || '—')} &middot; ${escapeHtml(p.primaryPosition?.abbreviation || '')}${p.statValue ? ' &middot; ' + escapeHtml(p.statLabel || '') + ' ' + escapeHtml(String(p.statValue)) : ''}</div>
+        </div>
+        <button class="tr-row-remove" title="Remove">&times;</button>
+      `;
+      row.querySelector('.tr-row-remove').addEventListener('click', () => {
+        if (side === 'in') trade.in.splice(idx, 1);
+        else trade.out.splice(idx, 1);
+        saveTrade();
+        renderTradeColumns();
+        const analyzeBtn = document.getElementById('trAnalyze');
+        if (analyzeBtn) analyzeBtn.disabled = !(trade.in.length && trade.out.length);
+      });
+      el.appendChild(row);
+    });
+  };
+
+  renderList(inList, trade.in, 'in');
+  renderList(outList, trade.out, 'out');
+}
+
+async function openTradePlayerPicker(side) {
+  const existing = document.getElementById('tradePickerPanel');
+  if (existing) existing.remove();
+
+  const isIncoming = side === 'in';
+  const picker = document.createElement('div');
+  picker.id = 'tradePickerPanel';
+  picker.className = 'player-picker-panel';
+  picker.innerHTML = `
+    <div class="pp-folder-tab">${isIncoming ? 'GET' : 'GIVE'}</div>
+    <div class="pp-head">
+      <span class="ds-grip" title="Drag to move">&#8942;&#8942;</span>
+      <span class="pp-title">${isIncoming ? 'ACQUIRE — NON-' + escapeHtml(trade.teamAbbr) + ' POOL' : escapeHtml(trade.teamAbbr) + ' ROSTER'}</span>
+    </div>
+    <div class="pp-search-row">
+      <input class="pp-search" placeholder="Search by name...">
+    </div>
+    <div class="pp-body"><div class="pp-loading">Loading...</div></div>
+  `;
+  document.body.appendChild(picker);
+
+  const W = 360;
+  picker.style.width = W + 'px';
+  picker.style.maxHeight = '78vh';
+  picker.style.left = '80px';
+  picker.style.top = '100px';
+  picker.style.zIndex = String(++floatTopZ);
+
+  const handle = picker.querySelector('.pp-head');
+  if (handle) makeDraggable(picker, handle);
+  addCloseBtn(picker);
+
+  let rankedPool = [];
+  let fullPool = [];
+
+  if (isIncoming) {
+    const [topH, topP, allPlayers] = await Promise.all([getTopHitters(), getTopPitchers(), getAllPlayers()]);
+    rankedPool = [...topH, ...topP].filter(p => p.currentTeam?.id !== trade.teamId);
+    fullPool = allPlayers.filter(p => p.currentTeam?.id !== trade.teamId);
+  } else {
+    try {
+      const r = await fetch(`${STATS}/teams/${trade.teamId}/roster?rosterType=active&season=${SEASON}`);
+      const j = await r.json();
+      const roster = (j.roster || []).map(rp => ({
+        id: rp.person.id,
+        fullName: rp.person.fullName,
+        currentTeam: { id: trade.teamId, name: trade.teamName },
+        primaryPosition: rp.position ? { abbreviation: rp.position.abbreviation, name: rp.position.name } : null,
+        jersey: rp.jerseyNumber,
+      }));
+      rankedPool = roster;
+      fullPool = roster;
+    } catch (e) { console.warn('[trade picker]', e); }
+  }
+
+  const body = picker.querySelector('.pp-body');
+  const renderList = (query) => {
+    body.innerHTML = '';
+    const q = query?.toLowerCase().trim();
+    let list;
+    if (q) {
+      list = fullPool
+        .filter(p => (p.fullName || '').toLowerCase().includes(q))
+        .slice(0, 80);
+    } else {
+      list = rankedPool.slice(0, 100);
+    }
+    if (!list.length) { body.innerHTML = '<div class="pp-loading">No matches.</div>'; return; }
+    let counter = 0;
+    for (const p of list) {
+      const row = document.createElement('div');
+      row.className = 'pp-row';
+      const rank = p.rank || (++counter);
+      const stat = p.statValue ? `<span class="pp-stat">${escapeHtml(p.statLabel || '')} ${escapeHtml(String(p.statValue))}</span>` : '';
+      row.innerHTML = `
+        <span class="pp-rank">${rank}</span>
+        <img class="pp-img" src="${headshot(p.id)}" onerror="this.style.opacity=0.2">
+        <div class="pp-info">
+          <div class="pp-name">${escapeHtml(p.fullName)}</div>
+          <div class="pp-team">${escapeHtml(p.currentTeam?.name || '—')} &middot; ${escapeHtml(p.primaryPosition?.abbreviation || '')}</div>
+        </div>
+        ${stat}
+      `;
+      row.addEventListener('click', () => {
+        const playerObj = {
+          id: p.id,
+          fullName: p.fullName,
+          currentTeam: p.currentTeam ? { id: p.currentTeam.id, name: p.currentTeam.name } : null,
+          primaryPosition: p.primaryPosition ? { abbreviation: p.primaryPosition.abbreviation, name: p.primaryPosition.name } : null,
+          statValue: p.statValue,
+          statLabel: p.statLabel,
+        };
+        if (side === 'in') trade.in.push(playerObj);
+        else trade.out.push(playerObj);
+        saveTrade();
+        picker.remove();
+        renderTradeColumns();
+        const analyzeBtn = document.getElementById('trAnalyze');
+        if (analyzeBtn) analyzeBtn.disabled = !(trade.in.length && trade.out.length);
+      });
+      body.appendChild(row);
+    }
+  };
+  renderList('');
+  picker.querySelector('.pp-search').addEventListener('input', (e) => renderList(e.target.value));
+}
+
+async function analyzeTrade() {
+  if (!trade.in.length || !trade.out.length) return;
+  const apiKey = localStorage.getItem(STORAGE_KEY);
+  if (!apiKey) { openSettings(); return; }
+
+  openProjectionPanel(`${trade.teamAbbr} TRADE`, 'Pulling stats and evaluating trade...');
+
+  const sideStats = async (players) => Promise.all(players.map(async p => {
+    const pos = p.primaryPosition?.abbreviation;
+    const isPitcher = ['SP','RP','P','CL'].includes(pos) || pos === 'TWP';
+    const group = isPitcher ? 'pitching' : 'hitting';
+    try {
+      const r = await fetch(`${STATS}/people/${p.id}?hydrate=stats(group=${group},type=season,season=${SEASON})`);
+      const j = await r.json();
+      const pp = j.people?.[0];
+      return { player: p, isPitcher, stats: pp?.stats?.[0]?.splits?.[0]?.stat || {}, age: pp?.currentAge };
+    } catch (e) { return { player: p, isPitcher, stats: {}, age: null }; }
+  }));
+
+  const [inStats, outStats] = await Promise.all([sideStats(trade.in), sideStats(trade.out)]);
+
+  const formatPlayer = (s) => {
+    const p = s.player;
+    const ct = p.currentTeam?.name || '—';
+    const age = s.age ? `, age ${s.age}` : '';
+    if (s.isPitcher) {
+      return `- ${p.fullName} (${ct}, ${p.primaryPosition?.abbreviation || 'P'}${age}) — ERA ${s.stats.era || '—'}, WHIP ${s.stats.whip || '—'}, K/9 ${s.stats.strikeoutsPer9Inn || '—'}, IP ${s.stats.inningsPitched || '—'}, ${s.stats.wins || 0}-${s.stats.losses || 0}, ${s.stats.saves || 0} SV`;
+    }
+    return `- ${p.fullName} (${ct}, ${p.primaryPosition?.abbreviation || '—'}${age}) — ${s.stats.avg || '—'}/${s.stats.obp || '—'}/${s.stats.slg || '—'}, ${s.stats.homeRuns || 0} HR, ${s.stats.rbi || 0} RBI, ${s.stats.stolenBases || 0} SB`;
+  };
+
+  const senderTeams = [...new Set(trade.in.map(p => p.currentTeam?.name).filter(Boolean))];
+  const otherSide = senderTeams.length === 1 ? senderTeams[0] : `${senderTeams.length}-team package`;
+
+  const prompt = `Evaluate this proposed MLB trade. The focal team is the ${trade.teamName}.
+
+THE ${trade.teamName.toUpperCase()} ACQUIRE (${trade.in.length}):
+${inStats.map(formatPlayer).join('\n')}
+
+THE ${trade.teamName.toUpperCase()} SEND OUT (${trade.out.length}):
+${outStats.map(formatPlayer).join('\n')}
+
+The other side is the ${otherSide}.
+
+Return a MARKDOWN evaluation with these EXACT sections (in order):
+
+## Verdict
+A single bold line. Pick one: **"Heavily favors ${trade.teamAbbr}"**, **"Mild edge for ${trade.teamAbbr}"**, **"Roughly fair"**, **"Mild loss for ${trade.teamAbbr}"**, **"Heavy loss for ${trade.teamAbbr}"**.
+
+## Grades
+| Side | Grade |
+| --- | --- |
+| ${trade.teamAbbr} | A/B/C/D/F |
+| ${otherSide} | A/B/C/D/F |
+
+## Why
+2–3 sentences on the value differential, using the specific stats above.
+
+## Roster Impact on ${trade.teamAbbr}
+One paragraph: which positions get stronger/weaker, age curve shift, and the strategic logic (contend / retool / sell).
+
+## Risks
+2–3 bullets identifying downside scenarios.
+
+## Comparable Historical Trade
+One sentence naming a real MLB trade with a similar shape.
+
+Be analytical. Use the numbers. Don't address the user with a title.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      updateProjectionBody(`<div class="hp-err">Trade rating failed (${res.status}). ${escapeHtml(t.slice(0, 200))}</div>`);
+      return;
+    }
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    updateProjectionBody(renderMarkdown(text));
+  } catch (e) {
+    console.warn('[trade] failed', e);
+    updateProjectionBody(`<div class="hp-err">Trade rating failed: ${escapeHtml(e.message)}</div>`);
+  }
+}
+
+/* =====================================================
  *  Claude API call: streaming (general) and tool loop (baseball)
  * ===================================================== */
 async function callJarvis(userText) {
@@ -2602,6 +3005,31 @@ function send() {
   if (detectTeamBuilderQuery(text)) {
     quickReply(text, 'Opening the team builder. Draft a roster, then hit PROJECT for a 162-game outlook.');
     openTeamBuilder();
+    return;
+  }
+
+  const tr = detectTradeQuery(text);
+  if (tr) {
+    (async () => {
+      let ack = 'Opening the trade builder. Pick a focal team to start.';
+      if (tr.teamName) {
+        try {
+          const teams = await getAllTeams();
+          const match = matchTeam(tr.teamName, teams);
+          if (match) {
+            trade.teamId = match.id;
+            trade.teamName = match.name;
+            trade.teamAbbr = match.abbreviation || match.name;
+            trade.in = [];
+            trade.out = [];
+            saveTrade();
+            ack = `Opening trade builder for the ${match.name}.`;
+          }
+        } catch (e) { console.warn('[trade] team lookup', e); }
+      }
+      quickReply(text, ack);
+      openTradeBuilder();
+    })();
     return;
   }
 
