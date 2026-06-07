@@ -1,11 +1,405 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>startrate</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STARTRATE — MLB Pitching Start Evaluator</title>
+<style>
+  :root{
+    --bg:#0a0e14; --panel:#0f1620; --panel2:#131c28; --line:#1f2c3a;
+    --ink:#e8eef6; --mut:#7e90a6; --mut2:#566479;
+    --acc:#ff5a3c; --acc2:#ffb13c; --good:#34d39a; --mid:#ffcc4d; --bad:#ff5a6e;
+    --chip:#16212f;
+    --fontmono:"SFMono-Regular",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --fontui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(255,90,60,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(255,177,60,.07), transparent 55%),
+      var(--bg);
+    color:var(--ink); font-family:var(--fontui); line-height:1.5;
+    -webkit-font-smoothing:antialiased; min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 20px 80px}
+
+  /* Header */
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .seam{width:46px;height:46px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%, #fff, #eef1f4 55%, #d6dbe1);
+    position:relative;box-shadow:0 6px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.06)}
+  .seam:before,.seam:after{content:"";position:absolute;top:7px;bottom:7px;width:9px;
+    border:2px solid var(--acc);border-radius:50%}
+  .seam:before{left:6px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
+  .seam:after{right:6px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
+  .brand h1{font-size:25px;letter-spacing:3px;margin:0;font-weight:800}
+  .brand h1 b{color:var(--acc)}
+  .brand .sub{font-size:11px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:2px}
+  .keywrap{display:flex;align-items:center;gap:8px}
+  .keywrap input{
+    background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    padding:9px 12px;border-radius:9px;font-family:var(--fontmono);font-size:12px;width:230px;outline:none}
+  .keywrap input:focus{border-color:var(--acc)}
+  .keystat{font-size:10px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
+
+  /* Input card */
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+  .card h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 12px}
+  textarea#start{
+    width:100%;min-height:128px;resize:vertical;background:#0b121b;border:1px solid var(--line);
+    border-radius:11px;color:var(--ink);padding:14px;font-size:14.5px;font-family:var(--fontui);outline:none}
+  textarea#start:focus{border-color:var(--acc)}
+  textarea#start::placeholder{color:var(--mut2)}
+  .examples{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .ex{background:var(--chip);border:1px solid var(--line);color:var(--mut);font-size:11.5px;
+    padding:6px 11px;border-radius:20px;cursor:pointer;transition:.15s}
+  .ex:hover{color:var(--ink);border-color:var(--acc);background:#19232f}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;flex-wrap:wrap}
+  .hint{font-size:11.5px;color:var(--mut2)}
+  button.grade{
+    background:linear-gradient(180deg,var(--acc),#e23f22);border:none;color:#fff;font-weight:800;
+    letter-spacing:1.5px;font-size:13.5px;padding:13px 26px;border-radius:11px;cursor:pointer;
+    box-shadow:0 10px 28px rgba(255,90,60,.35);transition:.15s;text-transform:uppercase}
+  button.grade:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  button.grade:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+  /* Status / loader */
+  #status{margin-top:18px;font-size:13px;color:var(--mut);display:none}
+  #status.show{display:block}
+  .dots:after{content:"";animation:dots 1.4s steps(4,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
+  .err{color:var(--bad)}
+
+  /* Result */
+  #result{margin-top:26px;display:none}
+  #result.show{display:block;animation:rise .45s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  .scoreboard{display:grid;grid-template-columns:230px 1fr;gap:20px}
+  @media(max-width:720px){.scoreboard{grid-template-columns:1fr}}
+
+  .gradebox{background:linear-gradient(180deg,var(--panel),#0c131c);border:1px solid var(--line);
+    border-radius:16px;padding:24px 18px;text-align:center;position:relative;overflow:hidden}
+  .ring{width:160px;height:160px;margin:4px auto 10px;border-radius:50%;position:relative;
+    display:flex;align-items:center;justify-content:center}
+  .ring .inner{width:128px;height:128px;border-radius:50%;background:#0a1019;
+    display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .num{font-size:44px;font-weight:800;line-height:1;font-family:var(--fontmono)}
+  .ring .of{font-size:11px;color:var(--mut2);margin-top:3px;letter-spacing:1px}
+  .letter{font-size:34px;font-weight:800;letter-spacing:1px;margin-top:6px}
+  .gradelabel{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-top:2px}
+
+  .pressure{background:linear-gradient(180deg,var(--panel),#0c131c);border:1px solid var(--line);
+    border-radius:16px;padding:20px}
+  .pressure h3,.section h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 14px}
+  .pgauge{height:13px;border-radius:8px;position:relative;
+    background:linear-gradient(90deg,#2a3a2e,#caa83a 55%,var(--bad));overflow:visible}
+  .pmark{position:absolute;top:-5px;width:4px;height:23px;background:#fff;border-radius:2px;
+    box-shadow:0 0 0 2px rgba(0,0,0,.5);transition:left 1s cubic-bezier(.2,.8,.2,1)}
+  .pscale{display:flex;justify-content:space-between;font-size:10px;color:var(--mut2);margin-top:7px;letter-spacing:1px}
+  .pval{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
+  .pval b{font-size:30px;font-family:var(--fontmono);font-weight:800}
+  .pval span{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
+  .pctx{font-size:13.5px;color:#c5d2e2;margin-top:16px;line-height:1.6}
+
+  .section{margin-top:22px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:16px;padding:22px}
+
+  /* Category table */
+  .cat{display:grid;grid-template-columns:200px 1fr 46px;gap:14px;align-items:center;
+    padding:13px 0;border-top:1px solid var(--line)}
+  .cat:first-of-type{border-top:none}
+  .cat .nm{font-size:13.5px;font-weight:600}
+  .cat .nm small{display:block;font-size:10.5px;color:var(--mut2);font-weight:500;letter-spacing:.3px;margin-top:2px}
+  .cat .nm .wt{color:var(--acc2)}
+  .bar{height:9px;background:#0b121b;border-radius:6px;overflow:hidden;border:1px solid #1a2532}
+  .bar > i{display:block;height:100%;border-radius:6px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .cat .sc{font-family:var(--fontmono);font-weight:700;font-size:16px;text-align:right}
+  .cat .reason{grid-column:1 / -1;font-size:12.5px;color:var(--mut);line-height:1.55;margin-top:-2px}
+
+  .summary{font-size:14.5px;line-height:1.7;color:#d2dded}
+  .oneliner{font-size:17px;font-weight:700;line-height:1.5;color:#fff;
+    border-left:3px solid var(--acc);padding:4px 0 4px 16px;margin-bottom:16px}
+
+  footer{margin-top:40px;text-align:center;font-size:11px;color:var(--mut2);letter-spacing:1px}
+  footer a{color:var(--mut);text-decoration:none}
+  .disc{font-size:10.5px;color:var(--mut2);margin-top:8px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.5}
+</style>
 </head>
 <body>
-  hi
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="seam" aria-hidden="true"></div>
+      <div>
+        <h1>START<b>RATE</b></h1>
+        <div class="sub">Hierarchical MLB Pitching Start Evaluator · 13-Category Model</div>
+      </div>
+    </div>
+    <div class="keywrap">
+      <div>
+        <input id="apiKey" type="password" placeholder="sk-ant-… Anthropic key" autocomplete="off" spellcheck="false" />
+        <div class="keystat" id="keyStat">stored locally in your browser only</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Describe the start</h2>
+    <textarea id="start" placeholder="e.g. Tarik Skubal vs Yankees, Aug 14. 7 IP, 4 H, 1 ER, 0 BB, 11 K, 98 pitches. Tied 1–1 when he left. Tigers bullpen had thrown 5 innings the night before. Yankee Stadium, warm, wind out to right. Lots of weak contact, several swinging Ks on the changeup with RISP."></textarea>
+    <div class="examples" id="examples"></div>
+    <div class="row">
+      <div class="hint">Box line + game context + opponent + park + how it <i>looked</i>. The more context, the sharper the grade.</div>
+      <button class="grade" id="go">Grade Start</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <div id="result"></div>
+
+  <footer>
+    <div>STARTRATE · evaluates the start that <i>should</i> have happened, not just the box score</div>
+    <div class="disc">Grades are model judgment, not official metrics. Advanced inputs (xERA, barrels, xwOBA) are estimated from your description — feed it Statcast figures for precision.</div>
+    <div style="margin-top:10px"><a href="/">← noahabrahani.com</a></div>
+  </footer>
+</div>
+
+<script>
+const KEY_STORE = 'startrate_anthropic_key';
+const MODEL = 'claude-sonnet-4-6';
+
+const CATEGORIES = [
+  ["Run Prevention (Deserved)","xERA, hard contact, BABIP & sequencing — runs that *should* have scored"],
+  ["Strikeout Dominance","K rate, whiffs, Ks vs elite hitters, leverage Ks"],
+  ["Command & Control","walks, zone control, precision, command under pressure"],
+  ["Efficiency","pitches/inning, early-count success, avoiding deep counts"],
+  ["Length / Durability","innings, fatigue resistance, 3rd-time-through, late-game"],
+  ["Quality of Contact","barrels, hard-hit %, xwOBA — weak vs dangerous contact"],
+  ["Leverage Performance","high-leverage innings, RISP, bases-loaded escapes, WPA"],
+  ["Bullpen Relief Value","innings saved, bullpen fatigue, leverage preserved"],
+  ["Game State Impact","score context, keeping team competitive, stabilizing"],
+  ["Opponent Strength","real lineup quality, star hitters, depth, platoon difficulty"],
+  ["Ballpark & Environment","park factors, altitude, weather, pitching difficulty"],
+  ["Luck Adjustment","BABIP deviation, sequencing luck, defensive support"],
+  ["Dominance Signal (Scouting)","batter discomfort, deception, perceived stuff, AB control"],
+];
+
+const EXAMPLES = [
+  "Skubal vs Yankees: 7 IP, 4 H, 1 ER, 0 BB, 11 K, 98 pitches, tied game, tired pen",
+  "Spotty start: 5 IP, 8 H, 5 ER, 3 BB, 2 K vs Dodgers at Coors, blown open early",
+  "Gritty: 6 IP, 6 H, 2 ER, 1 BB, 4 K vs Astros, weak contact, defense bailed him out twice",
+  "Dominant short: 6 IP, 1 H, 0 R, 1 BB, 14 K vs Orioles, 14 whiffs, hitters lost",
+];
+
+const SYSTEM = `You are a professional MLB pitching start evaluator. Grade a SINGLE pitching start on a 0–100 scale with a letter grade, using a 13-category hierarchical model that blends stats, context, environment, and scouting evaluation.
+
+You must NOT rely on box-score stats alone. Always adjust for: game context, opponent strength, bullpen fatigue, park effects, luck (BABIP/sequencing/defense), leverage situations, and scouting-level dominance signals.
+
+THE 13 CATEGORIES (score each 1–10):
+1. Run Prevention (DESERVED) — xERA, hard contact, BABIP luck, sequencing; how many runs SHOULD have scored.
+2. Strikeout Dominance — K rate, whiffs, batter quality, leverage Ks; Ks vs elite hitters matter more.
+3. Command & Control — walks, zone control, precision, command under pressure.
+4. Efficiency — pitches/inning, early-count success, avoiding deep counts without losing effectiveness.
+5. Length / Durability — IP, fatigue resistance, 3rd-time-through-order, late-game effectiveness.
+6. Quality of Contact — barrel rate, hard-hit %, xwOBA allowed; weak vs dangerous contact, luck-neutral.
+7. Leverage Performance — high-leverage innings, RISP, bases-loaded escapes, WPA moments.
+8. Bullpen Relief Value — innings saved, bullpen fatigue before game, leverage of innings saved.
+9. Game State Impact — score context/flow, keeping team competitive, stabilizing trajectory.
+10. Opponent Strength — real hitter quality (not just record), lineup depth, star hitters, platoon difficulty.
+11. Ballpark & Environment — park factors, altitude (Coors-type), weather, pitching difficulty.
+12. Luck Adjustment — BABIP deviation from expected, sequencing luck, defensive support, expected vs actual.
+13. Dominance Signal (SCOUTING) — batter discomfort, deception, perceived stuff, control of at-bats, eye-test vs stat mismatch.
+
+CONTEXT ENGINE — compute a Pressure Index (0–100) from: score margin (closer = higher), inning (later = higher), bullpen fatigue, leverage situations, game importance. Then DYNAMICALLY adjust category weights: high pressure → up-weight Run Prevention, Leverage Performance, clutch execution, Bullpen Relief Value; low pressure → reduce leverage impact. Weights must sum to 100.
+
+RULES: Never rely only on ERA/box score. Always adjust for context and environment. Never ignore bullpen fatigue or leverage. Correct luck but don't let it overpower. Dominance Signal can nudge perception up or down but must not override everything. If the user omits advanced data, estimate it reasonably from the description and league norms, and note assumptions in reasoning.
+
+LETTER GRADE: 95–100 A+ · 90–94 A · 85–89 A- · 80–84 B+ · 75–79 B · 70–74 B- · 65–69 C+ · 60–64 C · <60 D/F.
+
+OUTPUT — respond with STRICT JSON ONLY (no prose, no code fences), matching exactly:
+{
+  "finalGrade": <int 0-100>,
+  "letter": "<A+|A|A-|B+|B|B-|C+|C|D/F>",
+  "pressureIndex": <int 0-100>,
+  "pressureLabel": "<2-4 words, e.g. 'High-leverage tie game'>",
+  "categories": [ { "score": <int 1-10>, "weight": <number, all 13 sum to 100>, "reason": "<1-2 specific sentences>" } ],  // EXACTLY 13, in the order listed above
+  "contextExplanation": "<2-4 sentences: pressure + environment + bullpen impact and how it shaped weighting>",
+  "scoutingSummary": "<2-4 sentences: what kind of start this really was>",
+  "oneLiner": "<one punchy sentence — the verdict>"
+}
+The categories array MUST have exactly 13 entries in the given order. Output JSON only.`;
+
+const $ = s => document.querySelector(s);
+const keyEl = $('#apiKey'), startEl = $('#start'), goBtn = $('#go'),
+      statusEl = $('#status'), resultEl = $('#result'), keyStat = $('#keyStat');
+
+// restore key
+keyEl.value = localStorage.getItem(KEY_STORE) || '';
+syncKeyStat();
+keyEl.addEventListener('input', () => {
+  localStorage.setItem(KEY_STORE, keyEl.value.trim());
+  syncKeyStat();
+});
+function syncKeyStat(){
+  const v = keyEl.value.trim();
+  keyStat.textContent = v ? 'key stored locally · '+v.slice(0,7)+'…'+v.slice(-4) : 'stored locally in your browser only';
+}
+
+// examples
+const exWrap = $('#examples');
+EXAMPLES.forEach(t => {
+  const b = document.createElement('div');
+  b.className = 'ex'; b.textContent = t;
+  b.onclick = () => { startEl.value = t; startEl.focus(); };
+  exWrap.appendChild(b);
+});
+
+function colorFor(score){ // 1-10
+  if(score >= 8) return 'var(--good)';
+  if(score >= 6.5) return '#7fd47f';
+  if(score >= 5) return 'var(--mid)';
+  if(score >= 3.5) return 'var(--acc2)';
+  return 'var(--bad)';
+}
+function gradeColor(g){
+  if(g >= 85) return 'var(--good)';
+  if(g >= 75) return '#9fe06a';
+  if(g >= 65) return 'var(--mid)';
+  if(g >= 60) return 'var(--acc2)';
+  return 'var(--bad)';
+}
+const esc = s => String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+goBtn.addEventListener('click', run);
+startEl.addEventListener('keydown', e => { if((e.metaKey||e.ctrlKey) && e.key==='Enter') run(); });
+
+async function run(){
+  const key = keyEl.value.trim();
+  const desc = startEl.value.trim();
+  if(!key || !key.startsWith('sk-ant-')){
+    showStatus('Enter a valid Anthropic API key (starts with sk-ant-).', true); keyEl.focus(); return;
+  }
+  if(!desc){ showStatus('Describe the start first.', true); startEl.focus(); return; }
+
+  goBtn.disabled = true;
+  resultEl.classList.remove('show');
+  showStatus('<span class="dots">Scouting the start</span>', false);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true',
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 3000,
+        system: SYSTEM,
+        messages: [{ role:'user', content: 'Grade this start.\n\n'+desc }],
+      }),
+    });
+    if(!res.ok){
+      const t = await res.text();
+      showStatus('API error '+res.status+'. '+esc(t.slice(0,200)), true);
+      goBtn.disabled = false; return;
+    }
+    const data = await res.json();
+    const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    const parsed = parseJSON(text);
+    if(!parsed){ showStatus('Could not parse the evaluation. Try again.', true); goBtn.disabled=false; return; }
+    render(parsed);
+    statusEl.classList.remove('show');
+  } catch(e){
+    showStatus('Request failed: '+esc(e.message)+'. (CORS/network — check the key and connection.)', true);
+  } finally {
+    goBtn.disabled = false;
+  }
+}
+
+function parseJSON(text){
+  let t = text.trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  try { return JSON.parse(t); } catch(_){}
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if(a>=0 && b>a){ try { return JSON.parse(t.slice(a,b+1)); } catch(_){} }
+  return null;
+}
+
+function showStatus(html, isErr){
+  statusEl.innerHTML = html;
+  statusEl.className = 'show' + (isErr ? ' err' : '');
+}
+
+function render(d){
+  const g = Math.max(0, Math.min(100, +d.finalGrade||0));
+  const gc = gradeColor(g);
+  const cats = Array.isArray(d.categories) ? d.categories : [];
+  const pi = Math.max(0, Math.min(100, +d.pressureIndex||0));
+
+  let catRows = '';
+  CATEGORIES.forEach((meta, i) => {
+    const c = cats[i] || {};
+    const sc = Math.max(0, Math.min(10, +c.score||0));
+    const wt = (c.weight!=null) ? (+c.weight).toFixed(1).replace(/\.0$/,'') : '–';
+    catRows += `
+      <div class="cat">
+        <div class="nm">${esc(meta[0])}<small>${esc(meta[1])}</small></div>
+        <div class="bar"><i data-w="${sc*10}" style="background:${colorFor(sc)}"></i></div>
+        <div class="sc" style="color:${colorFor(sc)}">${sc}<span style="color:var(--mut2);font-size:11px">/10</span></div>
+        <div class="reason"><span class="nm" style="display:inline"><span class="wt">w ${wt}%</span></span> &nbsp;${esc(c.reason||'')}</div>
+      </div>`;
+  });
+
+  resultEl.innerHTML = `
+    <div class="scoreboard">
+      <div class="gradebox">
+        <div class="ring" id="ring">
+          <div class="inner">
+            <div class="num" style="color:${gc}">${g}</div>
+            <div class="of">OUT OF 100</div>
+          </div>
+        </div>
+        <div class="letter" style="color:${gc}">${esc(d.letter||'')}</div>
+        <div class="gradelabel">Start Grade</div>
+      </div>
+      <div class="pressure">
+        <h3>Pressure Index</h3>
+        <div class="pval"><b style="color:${gradeColor(100-pi+0)}">${pi}</b><span>${esc(d.pressureLabel||'context load')}</span></div>
+        <div class="pgauge"><div class="pmark" id="pmark" style="left:0"></div></div>
+        <div class="pscale"><span>CALM 0</span><span>50</span><span>100 MAX</span></div>
+        <div class="pctx">${esc(d.contextExplanation||'')}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Category Breakdown · 13-Point Model</h3>
+      ${catRows}
+    </div>
+
+    <div class="section">
+      <h3>Scouting Summary — What This Start Really Was</h3>
+      ${d.oneLiner ? `<div class="oneliner">${esc(d.oneLiner)}</div>` : ''}
+      <div class="summary">${esc(d.scoutingSummary||'')}</div>
+    </div>`;
+
+  resultEl.classList.add('show');
+
+  // animate
+  const ring = $('#ring');
+  requestAnimationFrame(() => {
+    ring.style.background = `conic-gradient(${gc} ${g*3.6}deg, #182230 0deg)`;
+    $('#pmark').style.left = pi + '%';
+    resultEl.querySelectorAll('.bar > i').forEach(i => { i.style.width = i.dataset.w + '%'; });
+  });
+  resultEl.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+</script>
 </body>
 </html>
