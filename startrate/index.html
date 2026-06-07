@@ -21,74 +21,66 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:
-      radial-gradient(1200px 680px at 84% -12%, rgba(255,90,60,.11), transparent 58%),
-      radial-gradient(1000px 560px at -12% 0%, rgba(92,217,255,.08), transparent 56%),
-      var(--bg);
-    color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;position:relative;
-  }
-  body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
-    background-image:radial-gradient(rgba(255,255,255,.022) 1px,transparent 1px);background-size:24px 24px}
-  .wrap{max-width:1120px;margin:0 auto;padding:30px 20px 90px}
+    background:radial-gradient(1300px 760px at 50% -24%, rgba(255,90,60,.10), transparent 62%), var(--bg);
+    color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 20px 90px}
 
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:15px}
-  .seam{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
-    background:radial-gradient(circle at 35% 30%,#fff,#eef1f4 55%,#d6dbe1);position:relative;box-shadow:0 8px 26px rgba(0,0,0,.6),0 0 24px rgba(255,90,60,.18),inset 0 0 0 1px rgba(0,0,0,.06)}
-  .seam:before,.seam:after{content:"";position:absolute;top:9px;bottom:9px;width:10px;border:2px solid var(--acc);border-radius:50%}
-  .seam:before{left:8px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
-  .seam:after{right:8px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
-  .brand h1{font-family:var(--anton);font-size:35px;letter-spacing:1px;margin:0;line-height:.9}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:8px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px}
+  .seam{width:36px;height:36px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%,#fff,#eef1f4 55%,#d6dbe1);position:relative;box-shadow:0 4px 14px rgba(0,0,0,.5),inset 0 0 0 1px rgba(0,0,0,.06)}
+  .seam:before,.seam:after{content:"";position:absolute;top:6px;bottom:6px;width:7px;border:1.5px solid var(--acc);border-radius:50%}
+  .seam:before{left:6px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
+  .seam:after{right:6px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
+  .brand h1{font-family:var(--anton);font-size:22px;letter-spacing:1px;margin:0;line-height:1}
   .brand h1 b{color:var(--acc)}
-  .brand .sub{font-size:10px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:5px}
-  .keywrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-  .keyfield{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:0 13px;transition:.15s}
-  .keyfield:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.1)}
+  .keywrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .keyfield{display:flex;align-items:center;gap:8px;background:#10161e;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:0 12px;transition:.15s}
+  .keyfield:focus-within{border-color:var(--acc)}
   .keyfield svg{color:var(--mut2);flex:0 0 auto}
-  .keywrap input{background:transparent;border:none;color:var(--ink);padding:11px 0;font-family:var(--mono);font-size:12px;width:206px;outline:none}
-  .keystat{font-size:9.5px;letter-spacing:.8px;color:var(--mut2);text-transform:uppercase}
+  .keywrap input{background:transparent;border:none;color:var(--ink);padding:9px 0;font-family:var(--mono);font-size:11.5px;width:184px;outline:none}
+  .keystat{font-size:9px;letter-spacing:.6px;color:var(--mut2);text-transform:uppercase}
 
-  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#13202d,#0c1620);border:1px solid var(--line);border-radius:20px;padding:30px 26px 24px;
-    box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)}
-  .hero:before{content:"";position:absolute;right:-70px;top:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(92,217,255,.12),transparent 70%);pointer-events:none}
-  .hero-head{position:relative;margin-bottom:20px}
-  .hero-title{font-family:var(--anton);font-size:42px;letter-spacing:.5px;line-height:.94;margin:0}
+  .hero{text-align:center;padding:60px 20px 6px}
+  .eyebrow{display:inline-flex;align-items:center;gap:11px;font-family:var(--cond);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);margin-bottom:18px}
+  .eyebrow:before,.eyebrow:after{content:"";width:30px;height:1px;background:var(--line)}
+  .hero-title{font-family:var(--anton);font-size:clamp(40px,7.2vw,62px);letter-spacing:.5px;line-height:.95;margin:0}
   .hero-title em{font-style:normal;color:var(--acc)}
-  .hero-sub{font-size:13.5px;color:var(--mut);margin:9px 0 0;max-width:560px;line-height:1.5}
-  .searchbar{position:relative;display:flex;align-items:center;gap:11px;background:#0a121b;border:1px solid var(--line);border-radius:14px;padding:7px 7px 7px 16px;transition:.15s}
-  .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12)}
+  .hero-sub{font-size:15px;color:var(--mut);margin:15px auto 0;max-width:500px;line-height:1.55}
+  .searchbar{display:flex;align-items:center;gap:12px;max-width:680px;margin:30px auto 0;background:#10161e;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:8px 8px 8px 18px;box-shadow:0 16px 44px rgba(0,0,0,.45);transition:.16s}
+  .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12),0 16px 44px rgba(0,0,0,.45)}
   .searchbar .sicon{flex:0 0 auto;color:var(--mut2)}
-  .searchbar input{flex:1;min-width:120px;background:transparent;border:none;color:var(--ink);padding:11px 0;font-size:15.5px;outline:none}
+  .searchbar input{flex:1;min-width:110px;background:transparent;border:none;color:var(--ink);padding:12px 0;font-size:16px;outline:none;text-align:left}
   .searchbar input::placeholder{color:var(--mut2)}
-  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e23f22);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 26px;border-radius:10px;cursor:pointer;min-height:48px;text-transform:uppercase;box-shadow:0 8px 22px rgba(255,90,60,.32);transition:.15s}
+  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e8401f);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 28px;border-radius:12px;cursor:pointer;min-height:50px;text-transform:uppercase;box-shadow:0 8px 20px rgba(255,90,60,.3);transition:.15s}
   .btnfind:hover{filter:brightness(1.08)}
   .btnfind:disabled{opacity:.55;cursor:default}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-  .chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--mut);font-size:12px;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
-  .chip:before{content:"◆";color:var(--d1);font-size:9px;opacity:.75}
-  .chip:hover{color:var(--ink);border-color:var(--d1);background:rgba(92,217,255,.07)}
-  #findMsg{margin-top:14px;font-size:13px;color:var(--mut2);min-height:15px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px auto 0;justify-content:center;max-width:640px}
+  .chip{background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--mut);font-size:12px;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .chip:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,90,60,.06)}
+  #findMsg{margin:18px auto 0;font-size:13px;color:var(--mut2);min-height:15px;text-align:center}
   #findMsg.err{color:var(--bad)}
   .dots:after{content:"";animation:dots 1.3s steps(4,end) infinite}
   @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
-  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;margin-top:18px}
-  .cand{position:relative;overflow:hidden;cursor:pointer;transition:.16s;background:linear-gradient(168deg,#13212e,#0b141d);
-    border:1px solid var(--line);border-radius:4px 14px 14px 14px;clip-path:polygon(20px 0,100% 0,100% 100%,0 100%,0 20px)}
-  .cand:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--tc,#5cd9ff);z-index:2}
-  .cand:hover{transform:translateY(-4px);border-color:var(--tc,#5cd9ff);box-shadow:0 18px 36px rgba(0,0,0,.55)}
-  .cand .clogo{position:absolute;right:-12px;top:8px;width:80px;height:80px;opacity:.09;z-index:0}
-  .cand .ctop{display:flex;align-items:center;gap:11px;padding:16px 14px 0;position:relative;z-index:1}
-  .cand .chead{width:50px;height:50px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:2px solid var(--tc,#2a3a48);background:#0a121b}
+  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:14px;margin:30px auto 0;max-width:820px}
+  .cand{position:relative;overflow:hidden;cursor:pointer;transition:.18s;background:#10161e;border:1px solid rgba(255,255,255,.06);border-radius:16px}
+  .cand:before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--tc,#5cd9ff);opacity:.85}
+  .cand:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.16);box-shadow:0 16px 34px rgba(0,0,0,.45);background:#121a23}
+  .cand .clogo{position:absolute;right:-10px;top:12px;width:70px;height:70px;opacity:.07}
+  .cand .ctop{display:flex;align-items:center;gap:12px;padding:18px 16px 0;position:relative;z-index:1}
+  .cand .chead{width:50px;height:50px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:1px solid rgba(255,255,255,.12);background:#0a121b}
   .cand .cwho{min-width:0}
-  .cand .pn{font-family:var(--cond);font-weight:600;font-size:16.5px;letter-spacing:.3px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cand .mt{font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.3}
-  .cand .dt{font-size:10px;color:var(--mut2);letter-spacing:.8px;text-transform:uppercase;padding:11px 14px 0;position:relative;z-index:1}
-  .cand .ln{font-family:var(--mono);font-size:12px;color:#a7bace;margin:9px 14px 0;padding-top:9px;border-top:1px solid var(--line);position:relative;z-index:1}
-  .cand .go{margin-top:12px;padding:10px 14px;background:rgba(255,90,60,.10);border-top:1px solid var(--line);
-    font-family:var(--cond);font-size:11.5px;font-weight:600;letter-spacing:1.5px;color:#ff8266;text-transform:uppercase;
-    display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;transition:.15s}
-  .cand:hover .go{background:rgba(255,90,60,.2);color:#ffa48d}
+  .cand .pn{font-family:var(--cond);font-weight:600;font-size:16px;letter-spacing:.2px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cand .mt{font-size:11.5px;color:var(--mut);margin-top:3px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cand .dt{font-size:10px;color:var(--mut2);letter-spacing:1px;text-transform:uppercase;padding:12px 16px 0;position:relative;z-index:1}
+  .cand .ln{font-family:var(--mono);font-size:12.5px;color:#aebfd0;padding:10px 16px 16px;position:relative;z-index:1}
+  .cand .go{border-top:1px solid rgba(255,255,255,.06);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
+    font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);transition:.15s;position:relative;z-index:1}
+  .cand:hover .go{color:var(--acc)}
+  .cand .go span{transition:transform .15s}
+  .cand:hover .go span{transform:translateX(3px)}
+  .tools{max-width:680px;margin:10px auto 0}
 
   details.more{margin-top:14px;border-top:1px solid var(--line)}
   details.more>summary{cursor:pointer;font-family:var(--cond);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:13px 0;list-style:none;display:flex;align-items:center;gap:9px}
@@ -233,7 +225,7 @@
   <header class="top">
     <div class="brand">
       <div class="seam" aria-hidden="true"></div>
-      <div><h1>START<b>RATE</b></h1><div class="sub">MLB Pitching Start Evaluator · 13-Category Scout Model</div></div>
+      <h1>START<b>RATE</b></h1>
     </div>
     <div class="keywrap">
       <label class="keyfield">
@@ -245,19 +237,21 @@
   </header>
 
   <section class="hero">
-    <div class="hero-head">
-      <h2 class="hero-title">GRADE <em>ANY</em> START</h2>
-      <p class="hero-sub">Type a pitcher, a matchup, or a date — StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
-    </div>
+    <div class="eyebrow">13-Category Scout Model</div>
+    <h2 class="hero-title">GRADE <em>ANY</em> MLB START</h2>
+    <p class="hero-sub">Type a pitcher, a matchup, or a date. StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
     <div class="searchbar">
       <svg class="sicon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="q" placeholder="Yamamoto vs Rays 2024  ·  Skubal's best start 2024  ·  Dodgers starter on 2024-08-24" />
+      <input id="q" placeholder="Yamamoto vs Rays 2024  ·  Skubal's best start  ·  Dodgers starter on 2024-08-24" />
       <button class="btnfind" id="find">Find</button>
     </div>
     <div class="chips" id="chips"></div>
     <div id="findMsg"></div>
-    <div class="cands" id="cands"></div>
+  </section>
 
+  <div class="cands" id="cands"></div>
+
+  <div class="tools">
     <details class="more"><summary>Browse the schedule by date</summary>
       <div class="sched">
         <input type="date" id="date" />
@@ -272,7 +266,7 @@
       <div class="mrow"><button class="gradebtn" id="go">Grade this line</button></div>
     </details>
     <div id="status" style="margin-top:12px"></div>
-  </section>
+  </div>
 
   <div id="result"></div>
 
@@ -450,7 +444,7 @@ function renderCands(cands){
       ${c.teamId?`<img class="clogo" src="${logoURL(c.teamId)}" onerror="this.remove()">`:''}
       <div class="ctop">
         <img class="chead" src="${headURL(c.pid)}" onerror="this.style.opacity=.45">
-        <div class="cwho"><div class="pn">${esc(c.name)}</div><div class="mt">${esc(c.teamName)} vs ${esc(c.oppName)}</div></div>
+        <div class="cwho"><div class="pn">${esc(c.name)}</div><div class="mt">vs ${esc(c.oppName)}</div></div>
       </div>
       <div class="dt">${esc(c.date)}</div>
       <div class="ln">${s.inningsPitched??'?'} IP · ${s.earnedRuns??'?'} ER · ${s.strikeOuts??'?'} K · ${s.baseOnBalls??'?'} BB</div>
@@ -459,9 +453,11 @@ function renderCands(cands){
 }
 let currentMeta=null;
 async function pickCandidate(c){
-  if(!c)return;findMsg('<span class="dots">Loading the box score</span>');
+  if(!c)return;findMsg('<span class="dots">Loading the box score & recent bullpen usage</span>');
   try{const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
-    currentMeta=buildMeta(g,box,c.side,weather);els.start.value=buildDescription(g,box,c.side,weather);findMsg('');await run();
+    currentMeta=buildMeta(g,box,c.side,weather);
+    const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
+    els.start.value=buildDescription(g,box,c.side,weather,bp);findMsg('');await run();
   }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
 }
 
@@ -500,7 +496,9 @@ els.gameSel.addEventListener('change',async()=>{
 els.teamSel.addEventListener('change',async()=>{
   const pk=els.gameSel.value,side=els.teamSel.value;if(!pk||!side)return;
   try{schedMsg('Building & grading…');const box=await getBox(pk),weather=await getWeather(pk),g=games[pk];
-    currentMeta=buildMeta(g,box,side,weather);els.start.value=buildDescription(g,box,side,weather);schedMsg('');await run();
+    currentMeta=buildMeta(g,box,side,weather);
+    const bp=await getBullpen(currentMeta.teamId,currentMeta.date,pk);
+    els.start.value=buildDescription(g,box,side,weather,bp);schedMsg('');await run();
   }catch(e){schedMsg('Failed: '+esc(e.message),true);}
 });
 
@@ -508,6 +506,27 @@ els.teamSel.addEventListener('change',async()=>{
 async function getBox(pk){if(boxCache[pk])return boxCache[pk];const r=await fetch(`${STATS}/game/${pk}/boxscore`);if(!r.ok)throw new Error('boxscore '+r.status);const j=await r.json();boxCache[pk]=j;return j;}
 async function getScheduleGame(pk){if(schedGameCache[pk])return schedGameCache[pk];const j=await fetch(`${STATS}/schedule?gamePk=${pk}&hydrate=team,linescore,venue`).then(r=>r.json());const g=j.dates[0].games[0];schedGameCache[pk]=g;return g;}
 async function getWeather(pk){try{const j=await fetch(`https://statsapi.mlb.com/api/v1.1/game/${pk}/feed/live`).then(r=>r.json());const w=j.gameData&&j.gameData.weather;return (w&&(w.condition||w.temp))?w:null;}catch(_){return null;}}
+async function getBullpen(teamId,dateISO,excludePk){
+  try{
+    const d=new Date(dateISO+'T12:00:00');
+    const from=new Date(d);from.setDate(d.getDate()-4);const end=new Date(d);end.setDate(d.getDate()-1);
+    const s=from.toISOString().slice(0,10),e=end.toISOString().slice(0,10);
+    const j=await fetch(`${STATS}/schedule?sportId=1&teamId=${teamId}&startDate=${s}&endDate=${e}&hydrate=team`).then(r=>r.json());
+    let gs=[];(j.dates||[]).forEach(x=>gs.push(...(x.games||[])));
+    gs=gs.filter(g=>g.status.abstractGameState==='Final'&&g.gamePk!==excludePk).sort((a,b)=>a.gameDate<b.gameDate?1:-1);
+    if(!gs.length)return null;
+    const lines=[];
+    for(const g of gs.slice(0,2)){
+      const side=g.teams.home.team.id===teamId?'home':'away';
+      const box=await getBox(g.gamePk);const t=box.teams[side];
+      const rel=(t.pitchers||[]).slice(1); // exclude that game's starter
+      let sum=0;const names=rel.map(pid=>{const p=t.players['ID'+pid];if(!p)return null;const st=(p.stats&&p.stats.pitching)||{};const pc=+st.numberOfPitches||0;sum+=pc;return `${p.person.fullName} (${st.inningsPitched||'0'} IP, ${pc}p)`;}).filter(Boolean);
+      const dd=(g.gameDate||'').slice(5,10);
+      lines.push(`  ${dd}: ${rel.length} reliever${rel.length===1?'':'s'} used, ${sum} relief pitches${names.length?' — '+names.join(', '):' (pen rested)'}`);
+    }
+    return lines.join('\n');
+  }catch(_){return null;}
+}
 function starterOf(box,side){const t=box.teams[side];const pid=t.pitchers&&t.pitchers[0];if(!pid)return null;const p=t.players['ID'+pid];if(!p)return null;
   return {id:pid,name:p.person.fullName,line:(p.stats&&p.stats.pitching)||{},season:(p.seasonStats&&p.seasonStats.pitching)||{},note:(p.stats&&p.stats.pitching&&p.stats.pitching.note)||''};}
 function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);
@@ -519,7 +538,7 @@ function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=st
   return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
     date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
-function buildDescription(g,box,side,weather){
+function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
   const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=g.gameDate?g.gameDate.slice(0,10):els.date.value;
@@ -538,7 +557,10 @@ LINE (this start, from the box score):
 OPPONENT — ${oppTeam} lineup he faced (season stats):
 ${lineup(box,opp)||'  (lineup unavailable)'}
 
-Notes: Bullpen fatigue, inning-by-inning leverage and pitch-level data weren't supplied — infer them reasonably from the score, park and opponent.`;
+${myTeam} BULLPEN STATE entering this start — actual relief usage in the prior games (more usage = more fatigued, raising the value of innings he saved):
+${bullpen||'  No completed games in the prior 4 days — the bullpen was rested.'}
+
+Notes: Weigh bullpen fatigue from the real usage above. Inning-by-inning leverage and pitch-level Statcast data weren't supplied — infer them reasonably from the score, park and opponent.`;
 }
 
 // ================= GRADE + CARD =================
