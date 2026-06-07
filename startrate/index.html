@@ -158,17 +158,40 @@
   .pmark{position:absolute;top:-4px;width:3px;height:17px;background:#16202b;border-radius:2px;transition:left 1s cubic-bezier(.2,.8,.2,1);left:0}
   .pctx{font-size:11px;color:#574d39;margin-top:7px;line-height:1.45}
 
-  .brow{display:grid;grid-template-columns:1fr 70px 26px;gap:9px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.09)}
-  .brow .bn{font-size:12px;font-weight:600;color:#222b36}
+  .bitem{border-bottom:1px solid rgba(0,0,0,.09)}
+  .brow{display:grid;grid-template-columns:1fr 70px 26px;gap:9px;align-items:center;padding:7px 0;cursor:pointer;user-select:none}
+  .brow:hover .bn{color:#000}
+  .brow .bn{font-size:12px;font-weight:600;color:#222b36;display:flex;align-items:center;gap:7px}
+  .bcar{font-size:8px;color:#9a8d6e;transition:transform .22s;flex:0 0 auto}
+  .bitem.open .bcar{transform:rotate(90deg)}
   .bbar{height:7px;background:rgba(0,0,0,.09);border-radius:4px;overflow:hidden}
   .bbar>i{display:block;height:100%;border-radius:4px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
   .bval{font-family:var(--cond);font-weight:700;font-size:16px;text-align:right;line-height:1}
+  .bdrop{max-height:0;overflow:hidden;transition:max-height .32s ease}
+  .bitem.open .bdrop{max-height:280px}
+  .bdrop-in{padding:1px 2px 12px}
+  .bdef{font-size:11px;color:#5a5240;line-height:1.5}
+  .bwhy{font-size:11.5px;color:#27313d;margin-top:8px;line-height:1.5}
+  .bwhy b{display:block;font-family:var(--cond);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:#16202b;margin-bottom:2px}
   .back-blurb{margin-top:13px;padding-top:12px;border-top:2px solid var(--c1);font-size:12px;line-height:1.55;color:#2a3340}
   .back-blurb b{font-family:var(--cond);letter-spacing:1px;text-transform:uppercase;color:#16202b;display:block;margin-bottom:3px;font-size:11px}
 
   .section{margin:22px auto 0;max-width:746px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:16px 18px}
   details.facts summary{cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2)}
   .factline{font-family:var(--mono);font-size:11.5px;color:#9fb3c9;background:#0a121b;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;white-space:pre-wrap;line-height:1.55}
+  .section h3{font-family:var(--cond);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 10px;font-weight:600}
+  .playlog .pl-sum{font-family:var(--mono);font-size:12px;color:#7e93aa;margin-bottom:6px}
+  .playlog .pl-sum b{color:#dbe6f1}
+  .pl-inn{font-family:var(--cond);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);margin:15px 0 6px;border-bottom:1px solid var(--line);padding-bottom:5px}
+  .pl-pa{display:flex;align-items:flex-start;gap:11px;padding:5px 0;font-size:13px;color:#cdd9e6;line-height:1.45}
+  .pl-tag{flex:0 0 38px;text-align:center;font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.5px;padding:3px 0;border-radius:6px;margin-top:1px}
+  .tag-k{background:rgba(52,211,154,.18);color:#34d39a}
+  .tag-hr{background:rgba(255,90,110,.22);color:#ff7a8c}
+  .tag-hit{background:rgba(255,177,60,.16);color:#ffb13c}
+  .tag-bb{background:rgba(255,206,58,.14);color:#ffce3a}
+  .tag-out{background:rgba(129,148,170,.13);color:#9fb3c9}
+  .pl-desc{flex:1}
+  .pl-empty{color:var(--mut2);font-size:12.5px}
 
   /* loading */
   .lcard{padding:5px;clip-path:polygon(28px 0,100% 0,100% calc(100% - 28px),calc(100% - 28px) 100%,0 100%,0 28px);background:linear-gradient(150deg,#2a3a48,#0e1822);}
@@ -258,11 +281,19 @@ function gemSVG(){return `<svg class="gem" viewBox="0 0 64 60" width="36" height
   </g></svg>`;}
 
 const CATEGORIES=[
-  ["Run Prevention","deserved runs"],["Strikeout Dominance","whiffs & Ks"],["Command & Control","walks, precision"],
-  ["Efficiency","pitches/inning"],["Length / Durability","IP & stamina"],["Quality of Contact","barrels, xwOBA"],
-  ["Leverage Performance","RISP, WPA"],["Bullpen Relief Value","innings saved"],["Game State Impact","kept it close"],
-  ["Opponent Strength","lineup faced"],["Ballpark & Environment","park & weather"],["Luck Adjustment","BABIP/defense"],
-  ["Dominance Signal","eye-test stuff"],
+  ["Run Prevention","How many runs the pitcher *deserved* to allow once luck is stripped out — judged on contact quality, sequencing and expected ERA (xERA), not just what scored."],
+  ["Strikeout Dominance","Swing-and-miss impact: strikeout rate, whiff rate, and how good the hitters he struck out were — high-leverage Ks count more."],
+  ["Command & Control","Walk avoidance and pitch precision — hitting spots and controlling the strike zone, especially under pressure."],
+  ["Efficiency","Getting outs without burning pitches: pitches per inning, early-count success, and avoiding long at-bats."],
+  ["Length / Durability","Innings absorbed and how he held up deep into the game, including the tough third time through the order."],
+  ["Quality of Contact","How hard the ball was hit when put in play — barrels, hard-hit rate, expected wOBA — independent of where it landed."],
+  ["Leverage Performance","Work in the moments that mattered most: runners in scoring position, bases loaded, and high win-probability spots."],
+  ["Bullpen Relief Value","How much the start protected the bullpen — innings saved and their leverage, factoring in how tired the pen was."],
+  ["Game State Impact","Whether the outing kept the team in the game and stabilized the score, given the way the game flowed."],
+  ["Opponent Strength","The real quality of the lineup faced — star hitters, depth and platoon difficulty — not just the opponent's record."],
+  ["Ballpark & Environment","Difficulty of the pitching environment: park factors, altitude, and weather (wind, temperature, humidity)."],
+  ["Luck Adjustment","Correcting for fortune — BABIP swings, sequencing luck and defensive help — to separate results from process."],
+  ["Dominance Signal","The scouting eye test: did hitters look uncomfortable, was the stuff deceptive, did he own the at-bats — beyond the raw numbers."],
 ];
 
 const GRADE_SYS=`You are a professional MLB pitching start evaluator. Grade a SINGLE pitching start on a 0–100 scale with a letter grade, using a 13-category hierarchical model that blends stats, context, environment, and scouting evaluation. Do NOT rely on box-score stats alone — adjust for game context, opponent strength, bullpen fatigue, park effects, luck (BABIP/sequencing/defense), leverage, and scouting-level dominance.
@@ -455,7 +486,7 @@ function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t
     return `  ${i+1}. ${p.person.fullName} (${pos})${bits.length?' — '+bits.join(', '):''}`;}).filter(Boolean).join('\n');}
 function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const ln=sp.line;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
-  return {pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
+  return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
     date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
 function buildDescription(g,box,side,weather){
@@ -497,6 +528,8 @@ function attBack(v){ // colors that read on cream stock
 
 els.go.addEventListener('click',()=>{currentMeta=null;run();});
 els.start.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){currentMeta=null;run();}});
+// click a category row on the card back to expand its definition + reasoning (click again to close)
+els.result.addEventListener('click',e=>{const r=e.target.closest('.brow');if(r&&r.parentElement.classList.contains('bitem'))r.parentElement.classList.toggle('open');});
 
 async function run(){
   const desc=els.start.value.trim();
@@ -531,8 +564,13 @@ function render(d,factText){
   const tiles=m?[['IP',m.ip],['H',m.h],['ER',m.er],['BB',m.bb],['K',m.k],['P',m.pit]].map(([l,v])=>`<div class="st"><b>${v??'–'}</b><span>${l}</span></div>`).join(''):'';
 
   let brows='';
-  CATEGORIES.forEach((meta,i)=>{const c=cats[i]||{};const sc=Math.max(0,Math.min(10,+c.score||0));const val=Math.max(1,Math.round(sc*9.9));const ab=attBack(val);
-    brows+=`<div class="brow"><div class="bn">${esc(meta[0])}</div><div class="bbar"><i data-w="${val}" style="background:${ab.bar}"></i></div><div class="bval" style="color:${ab.ink}">${val}</div></div>`;});
+  CATEGORIES.forEach((meta,i)=>{const c=cats[i]||{};const sc=Math.max(0,Math.min(10,+c.score||0));const val=Math.max(1,Math.round(sc*9.9));const ab=attBack(val);const wt=(c.weight!=null)?(+c.weight).toFixed(0):'–';
+    brows+=`<div class="bitem">
+      <div class="brow"><div class="bn"><span class="bcar">▶</span>${esc(meta[0])}</div><div class="bbar"><i data-w="${val}" style="background:${ab.bar}"></i></div><div class="bval" style="color:${ab.ink}">${val}</div></div>
+      <div class="bdrop"><div class="bdrop-in">
+        <div class="bdef">${esc(meta[1])}</div>
+        <div class="bwhy"><b>This start · ${val}/99 · weight ${wt}%</b>${esc(c.reason||'—')}</div>
+      </div></div></div>`;});
 
   els.result.innerHTML=`
   <div class="duo">
@@ -557,7 +595,7 @@ function render(d,factText){
 
     <div class="tsc back" id="cardB" style="${tv}">
       <div class="tsc-inner"><div class="back-pad">
-        <div class="back-head">Scouting Grade<small>13-CATEGORY MODEL</small></div>
+        <div class="back-head">Scouting Grade<small>TAP A ROW ▾</small></div>
         <div class="press">
           <div class="pn">${pi}</div>
           <div class="pm"><div class="pl">Pressure · ${esc(d.pressureLabel||'')}</div>
@@ -569,13 +607,38 @@ function render(d,factText){
       </div></div>
     </div>
   </div>
+  ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
   <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>`;
 
   els.result.classList.add('show');
   const cf=$('#cardF'),cb=$('#cardB');
   requestAnimationFrame(()=>{cf.classList.add('in');cb.classList.add('in');cb.style.animationDelay='.12s';
     $('#pmark').style.left=pi+'%';els.result.querySelectorAll('.bbar>i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
+  if(m)loadPlayLog(m.gamePk,m.pid,m.name);
   els.result.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function ord(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function paTag(e){if(/Strikeout/.test(e))return'K';if(/Home Run/.test(e))return'HR';
+  if(e==='Single')return'1B';if(e==='Double')return'2B';if(e==='Triple')return'3B';
+  if(/Intent/.test(e))return'IBB';if(e==='Walk')return'BB';if(/Hit By Pitch/.test(e))return'HBP';if(/Error/.test(e))return'E';return'OUT';}
+function paCls(e){if(/Strikeout/.test(e))return'tag-k';if(/Home Run/.test(e))return'tag-hr';
+  if(/^(Single|Double|Triple)$/.test(e))return'tag-hit';if(/Walk|Hit By Pitch|Error/.test(e))return'tag-bb';return'tag-out';}
+async function loadPlayLog(pk,pid,pname){
+  const host=document.getElementById('playlog');if(!host)return;
+  const body=host.querySelector('.pl-body'),sum=host.querySelector('.pl-sum');
+  try{
+    const j=await fetch(`${STATS}/game/${pk}/playByPlay`).then(r=>r.json());
+    const pas=(j.allPlays||[]).filter(p=>p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.id===pid&&p.result&&p.result.type==='atBat'&&p.about&&p.about.isComplete);
+    if(!pas.length){sum.textContent='';body.innerHTML='<div class="pl-empty">Play-by-play isn’t available for this game.</div>';return;}
+    let H=0,K=0,BB=0,HR=0;
+    pas.forEach(p=>{const e=p.result.event;if(/Strikeout/.test(e))K++;if(/Home Run/.test(e)){HR++;H++;}else if(/^(Single|Double|Triple)$/.test(e))H++;if(/Walk|Hit By Pitch/.test(e))BB++;});
+    sum.innerHTML=`<b>${pas.length}</b> batters faced &nbsp;·&nbsp; <b>${H}</b> H &nbsp;·&nbsp; <b>${K}</b> K &nbsp;·&nbsp; <b>${BB}</b> BB/HBP &nbsp;·&nbsp; <b>${HR}</b> HR`;
+    let html='',lastInn=0;
+    pas.forEach(p=>{const inn=p.about.inning;if(inn!==lastInn){html+=`<div class="pl-inn">${ord(inn)} inning</div>`;lastInn=inn;}
+      const e=p.result.event;html+=`<div class="pl-pa"><span class="pl-tag ${paCls(e)}">${paTag(e)}</span><span class="pl-desc">${esc(p.result.description||e)}</span></div>`;});
+    body.innerHTML=html;
+  }catch(err){sum.textContent='';body.innerHTML='<div class="pl-empty">Couldn’t load play-by-play.</div>';}
 }
 </script>
 </body>
