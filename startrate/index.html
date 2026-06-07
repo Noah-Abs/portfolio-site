@@ -4,160 +4,211 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>STARTRATE — MLB Pitching Start Evaluator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0e14; --panel:#0f1620; --panel2:#131c28; --line:#1f2c3a;
-    --ink:#e8eef6; --mut:#7e90a6; --mut2:#566479;
-    --acc:#ff5a3c; --acc2:#ffb13c; --good:#34d39a; --mid:#ffcc4d; --bad:#ff5a6e;
-    --chip:#16212f;
-    --fontmono:"SFMono-Regular",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
-    --fontui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --bg:#070b11; --panel:#0f1620; --panel2:#131c28; --line:#22303f;
+    --ink:#eaf1f8; --mut:#8194aa; --mut2:#586a7e;
+    --acc:#ff5a3c; --good:#34d39a; --bad:#ff5a6e;
+    --d1:#62e7d6; --d2:#c4fff7;   /* diamond */
+    --g1:#ffd24a; --g2:#fff0b0;   /* gold */
+    --s1:#cdd7e2; --s2:#f2f6fa;   /* silver */
+    --b1:#d88a52; --b2:#f3c193;   /* bronze */
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+    --ui:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --cond:"Oswald",var(--ui);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
     background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(255,90,60,.10), transparent 60%),
-      radial-gradient(900px 500px at -10% 10%, rgba(255,177,60,.07), transparent 55%),
+      radial-gradient(1100px 600px at 82% -8%, rgba(255,90,60,.12), transparent 60%),
+      radial-gradient(900px 520px at -8% 4%, rgba(98,231,214,.08), transparent 55%),
       var(--bg);
-    color:var(--ink); font-family:var(--fontui); line-height:1.5;
-    -webkit-font-smoothing:antialiased; min-height:100vh;
+    color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
   }
-  .wrap{max-width:1080px;margin:0 auto;padding:34px 20px 80px}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 20px 90px}
 
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px;flex-wrap:wrap}
   .brand{display:flex;align-items:center;gap:14px}
-  .seam{width:46px;height:46px;border-radius:50%;flex:0 0 auto;
-    background:radial-gradient(circle at 35% 30%, #fff, #eef1f4 55%, #d6dbe1);
-    position:relative;box-shadow:0 6px 22px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.06)}
-  .seam:before,.seam:after{content:"";position:absolute;top:7px;bottom:7px;width:9px;
-    border:2px solid var(--acc);border-radius:50%}
-  .seam:before{left:6px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
-  .seam:after{right:6px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
-  .brand h1{font-size:25px;letter-spacing:3px;margin:0;font-weight:800}
+  .seam{width:48px;height:48px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%,#fff,#eef1f4 55%,#d6dbe1);
+    position:relative;box-shadow:0 6px 22px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.06)}
+  .seam:before,.seam:after{content:"";position:absolute;top:8px;bottom:8px;width:9px;border:2px solid var(--acc);border-radius:50%}
+  .seam:before{left:7px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
+  .seam:after{right:7px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
+  .brand h1{font-family:var(--cond);font-size:30px;letter-spacing:3px;margin:0;font-weight:700}
   .brand h1 b{color:var(--acc)}
-  .brand .sub{font-size:11px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:2px}
-  .keywrap input{
-    background:var(--panel2);border:1px solid var(--line);color:var(--ink);
-    padding:9px 12px;border-radius:9px;font-family:var(--fontmono);font-size:12px;width:230px;outline:none}
+  .brand .sub{font-size:10.5px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:1px}
+  .keywrap input{background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    padding:10px 12px;border-radius:10px;font-family:var(--mono);font-size:12px;width:236px;outline:none}
   .keywrap input:focus{border-color:var(--acc)}
-  .keystat{font-size:10px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase;margin-top:4px}
+  .keystat{font-size:10px;letter-spacing:.8px;color:var(--mut2);text-transform:uppercase;margin-top:5px}
 
-  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));
-    border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
-  .card h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 12px;display:flex;align-items:center;gap:8px}
-  .card h2 .muted{color:var(--mut2);text-transform:none;letter-spacing:0;font-size:11px;font-weight:400}
-  .step{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;
-    background:var(--acc);color:#fff;font-size:11px;font-weight:800;flex:0 0 auto}
+  .hero{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  .hlabel{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 12px;font-weight:600}
 
-  /* finder */
   .finder{display:flex;gap:10px;flex-wrap:wrap}
-  .finder input{flex:1;min-width:240px;background:#0b121b;border:1px solid var(--line);color:var(--ink);
-    padding:13px 14px;border-radius:11px;font-size:14.5px;font-family:var(--fontui);outline:none}
-  .finder input:focus{border-color:var(--acc)}
+  .finder input{flex:1;min-width:240px;background:#0a121b;border:1px solid var(--line);color:var(--ink);
+    padding:15px 16px;border-radius:13px;font-size:15.5px;outline:none}
+  .finder input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12)}
   .finder input::placeholder{color:var(--mut2)}
-  .btnfind{background:linear-gradient(180deg,var(--acc),#e23f22);border:none;color:#fff;font-weight:800;
-    letter-spacing:1px;font-size:13px;padding:0 24px;border-radius:11px;cursor:pointer;min-height:48px;
-    text-transform:uppercase;box-shadow:0 8px 22px rgba(255,90,60,.3);transition:.15s}
-  .btnfind:hover{filter:brightness(1.07)}
+  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e23f22);border:none;color:#fff;font-family:var(--cond);font-weight:600;
+    letter-spacing:1.5px;font-size:15px;padding:0 28px;border-radius:13px;cursor:pointer;min-height:52px;
+    text-transform:uppercase;box-shadow:0 10px 26px rgba(255,90,60,.32);transition:.15s}
+  .btnfind:hover{filter:brightness(1.08)}
   .btnfind:disabled{opacity:.55;cursor:default}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
-  .chip{background:var(--chip);border:1px solid var(--line);color:var(--mut);font-size:11.5px;
-    padding:6px 11px;border-radius:20px;cursor:pointer;transition:.15s}
-  .chip:hover{color:var(--ink);border-color:var(--acc);background:#19232f}
-  #findMsg{margin-top:12px;font-size:12.5px;color:var(--mut2);min-height:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .chip{background:#16212f;border:1px solid var(--line);color:var(--mut);font-size:12px;
+    padding:7px 12px;border-radius:20px;cursor:pointer;transition:.15s}
+  .chip:hover{color:var(--ink);border-color:var(--acc);background:#1a2735}
+  #findMsg{margin-top:12px;font-size:13px;color:var(--mut2);min-height:15px}
   #findMsg.err{color:var(--bad)}
+  .dots:after{content:"";animation:dots 1.3s steps(4,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
   /* candidate cards */
-  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:12px;margin-top:14px}
-  .cand{background:#0b121b;border:1px solid var(--line);border-radius:13px;padding:14px;cursor:pointer;
-    transition:.15s;position:relative}
-  .cand:hover{border-color:var(--acc);background:#111a26;transform:translateY(-2px)}
-  .cand .pn{font-weight:700;font-size:14.5px}
-  .cand .mt{font-size:12px;color:var(--mut);margin-top:2px}
-  .cand .dt{font-size:11px;color:var(--mut2);letter-spacing:.5px;margin-top:6px;text-transform:uppercase}
-  .cand .ln{font-family:var(--fontmono);font-size:12.5px;color:#9fb3c9;margin-top:9px;
-    border-top:1px solid var(--line);padding-top:9px}
-  .cand .go{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;letter-spacing:1px;
-    color:var(--acc);text-transform:uppercase}
+  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:13px;margin-top:16px}
+  .cand{background:linear-gradient(165deg,#11202c,#0b141d);border:1px solid var(--line);border-radius:15px;
+    padding:14px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
+  .cand:hover{border-color:#3aa0ff;transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.5)}
+  .cand .clogo{position:absolute;right:-14px;top:-10px;width:88px;height:88px;opacity:.10}
+  .cand .chead{width:54px;height:54px;border-radius:50%;background:#0a121b url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="9" fill="none" stroke="%23586a7e" stroke-width="1.5"/></svg>') center/22px no-repeat;
+    object-fit:cover;border:1px solid var(--line)}
+  .cand .pn{font-family:var(--cond);font-weight:600;font-size:17px;margin-top:10px;letter-spacing:.3px}
+  .cand .mt{font-size:12px;color:var(--mut);margin-top:1px}
+  .cand .dt{font-size:10.5px;color:var(--mut2);letter-spacing:.6px;margin-top:7px;text-transform:uppercase}
+  .cand .ln{font-family:var(--mono);font-size:12px;color:#a7bace;margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
+  .cand .go{display:inline-block;margin-top:11px;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:1.5px;color:#ff6a4d;text-transform:uppercase}
 
-  .divider{display:flex;align-items:center;gap:12px;margin:24px 0 16px;color:var(--mut2);font-size:11px;letter-spacing:1px;text-transform:uppercase}
-  .divider:before,.divider:after{content:"";flex:1;height:1px;background:var(--line)}
-
-  .sched{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .sched input[type=date],.sched select{background:#0b121b;border:1px solid var(--line);color:var(--ink);
-    padding:11px 12px;border-radius:10px;font-size:13.5px;font-family:var(--fontui);outline:none;min-height:44px}
+  details.more{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
+  details.more>summary{cursor:pointer;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);padding:10px 0;list-style:none}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more>summary:before{content:"▸ ";color:var(--acc)}
+  details.more[open]>summary:before{content:"▾ "}
+  .sched{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  .sched input[type=date],.sched select{background:#0a121b;border:1px solid var(--line);color:var(--ink);
+    padding:11px 12px;border-radius:10px;font-size:13.5px;outline:none;min-height:44px}
   .sched input[type=date]{color-scheme:dark}
-  .sched select{flex:1;min-width:200px;cursor:pointer}
-  .sched select:disabled{opacity:.45;cursor:default}
-  .sched input:focus,.sched select:focus{border-color:var(--acc)}
-  .btn2{background:var(--chip);border:1px solid var(--line);color:var(--ink);padding:11px 18px;border-radius:10px;
-    font-size:13px;font-weight:600;cursor:pointer;min-height:44px;transition:.15s;white-space:nowrap}
-  .btn2:hover{border-color:var(--acc);background:#19232f}
-  .btn2:disabled{opacity:.5;cursor:default}
-  #schedMsg{margin-top:10px;min-height:16px;font-size:12px;color:var(--mut2)}
+  .sched select{flex:1;min-width:190px;cursor:pointer}
+  .sched select:disabled{opacity:.45}
+  .btn2{background:#16212f;border:1px solid var(--line);color:var(--ink);padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;min-height:44px;transition:.15s}
+  .btn2:hover{border-color:var(--acc);background:#1a2735}
+  #schedMsg{margin-top:9px;font-size:12px;color:var(--mut2)}
   #schedMsg.err{color:var(--bad)}
-
-  textarea#start{width:100%;min-height:120px;resize:vertical;background:#0b121b;border:1px solid var(--line);
-    border-radius:11px;color:var(--ink);padding:14px;font-size:13.5px;font-family:var(--fontmono);outline:none;line-height:1.55}
+  textarea#start{width:100%;min-height:110px;resize:vertical;background:#0a121b;border:1px solid var(--line);
+    border-radius:11px;color:var(--ink);padding:13px;font-size:13px;font-family:var(--mono);outline:none;line-height:1.55;margin-top:6px}
   textarea#start:focus{border-color:var(--acc)}
-  textarea#start::placeholder{color:var(--mut2);font-family:var(--fontui)}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:14px;flex-wrap:wrap}
-  .hint{font-size:11.5px;color:var(--mut2)}
-  button.grade{background:linear-gradient(180deg,var(--acc),#e23f22);border:none;color:#fff;font-weight:800;
-    letter-spacing:1.5px;font-size:13.5px;padding:13px 26px;border-radius:11px;cursor:pointer;
-    box-shadow:0 10px 28px rgba(255,90,60,.35);transition:.15s;text-transform:uppercase}
-  button.grade:hover{filter:brightness(1.07);transform:translateY(-1px)}
-  button.grade:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+  .mrow{display:flex;justify-content:flex-end;margin-top:10px}
+  .gradebtn{background:linear-gradient(180deg,#ff6a4d,#e23f22);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:14px;padding:11px 24px;border-radius:11px;cursor:pointer;text-transform:uppercase}
 
-  #status{margin-top:18px;font-size:13px;color:var(--mut);display:none}
-  #status.show{display:block}
-  .dots:after{content:"";animation:dots 1.4s steps(4,end) infinite}
-  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
-  .err{color:var(--bad)}
+  #result{margin-top:24px;display:none}
+  #result.show{display:block}
 
-  #result{margin-top:26px;display:none}
-  #result.show{display:block;animation:rise .45s ease}
-  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  /* ======= MLB THE SHOW CARD ======= */
+  .reveal{display:grid;grid-template-columns:368px 1fr;gap:22px;align-items:start}
+  @media(max-width:780px){.reveal{grid-template-columns:1fr}}
 
-  .scoreboard{display:grid;grid-template-columns:230px 1fr;gap:20px}
-  @media(max-width:720px){.scoreboard{grid-template-columns:1fr}}
-  .gradebox{background:linear-gradient(180deg,var(--panel),#0c131c);border:1px solid var(--line);
-    border-radius:16px;padding:24px 18px;text-align:center}
-  .ring{width:160px;height:160px;margin:4px auto 10px;border-radius:50%;position:relative;
-    display:flex;align-items:center;justify-content:center;background:#182230}
-  .ring .inner{width:128px;height:128px;border-radius:50%;background:#0a1019;
-    display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .ring .num{font-size:44px;font-weight:800;line-height:1;font-family:var(--fontmono)}
-  .ring .of{font-size:11px;color:var(--mut2);margin-top:3px;letter-spacing:1px}
-  .letter{font-size:34px;font-weight:800;letter-spacing:1px;margin-top:6px}
-  .gradelabel{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin-top:2px}
-  .pressure{background:linear-gradient(180deg,var(--panel),#0c131c);border:1px solid var(--line);border-radius:16px;padding:20px}
-  .pressure h3,.section h3{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 14px}
-  .pgauge{height:13px;border-radius:8px;position:relative;background:linear-gradient(90deg,#2a3a2e,#caa83a 55%,var(--bad));overflow:visible}
-  .pmark{position:absolute;top:-5px;width:4px;height:23px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px rgba(0,0,0,.5);transition:left 1s cubic-bezier(.2,.8,.2,1);left:0}
-  .pscale{display:flex;justify-content:space-between;font-size:10px;color:var(--mut2);margin-top:7px;letter-spacing:1px}
-  .pval{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
-  .pval b{font-size:30px;font-family:var(--fontmono);font-weight:800}
-  .pval span{font-size:12px;color:var(--mut);letter-spacing:1px;text-transform:uppercase}
-  .pctx{font-size:13.5px;color:#c5d2e2;margin-top:16px;line-height:1.6}
-  .section{margin-top:22px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:22px}
-  .factline{font-family:var(--fontmono);font-size:12px;color:#9fb3c9;background:#0b121b;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:0;white-space:pre-wrap;line-height:1.55}
-  .cat{display:grid;grid-template-columns:200px 1fr 46px;gap:14px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
-  .cat:first-of-type{border-top:none}
-  .cat .nm{font-size:13.5px;font-weight:600}
-  .cat .nm small{display:block;font-size:10.5px;color:var(--mut2);font-weight:500;letter-spacing:.3px;margin-top:2px}
-  .cat .wt{color:var(--acc2)}
-  .bar{height:9px;background:#0b121b;border-radius:6px;overflow:hidden;border:1px solid #1a2532}
-  .bar > i{display:block;height:100%;border-radius:6px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
-  .cat .sc{font-family:var(--fontmono);font-weight:700;font-size:16px;text-align:right}
-  .cat .reason{grid-column:1 / -1;font-size:12.5px;color:var(--mut);line-height:1.55;margin-top:-2px}
-  .summary{font-size:14.5px;line-height:1.7;color:#d2dded}
-  .oneliner{font-size:17px;font-weight:700;line-height:1.5;color:#fff;border-left:3px solid var(--acc);padding:4px 0 4px 16px;margin-bottom:16px}
+  .show-card{position:relative;border-radius:22px;padding:20px 20px 22px;overflow:hidden;isolation:isolate;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,0) 30%),
+      linear-gradient(160deg,#1a2735 0%,#0c141d 60%,#070d14 100%);
+    border:2px solid transparent;
+    box-shadow:0 26px 70px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04) inset, 0 0 50px var(--glow);
+  }
+  .show-card:before{content:"";position:absolute;inset:0;border-radius:22px;padding:2px;z-index:-1;
+    background:linear-gradient(150deg,var(--c2),var(--c1) 45%,rgba(255,255,255,.15) 60%,var(--c1));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .show-card.in{animation:cardIn .65s cubic-bezier(.2,.9,.25,1)}
+  @keyframes cardIn{0%{opacity:0;transform:perspective(1300px) rotateY(-20deg) translateY(22px) scale(.95)}100%{opacity:1;transform:none}}
+  .sc-shine{position:absolute;top:0;left:0;width:60%;height:100%;z-index:3;pointer-events:none;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.16) 48%,rgba(255,255,255,.04) 55%,transparent 70%);
+    transform:translateX(-130%) skewX(-16deg);animation:shine 1.15s ease .35s 1}
+  @keyframes shine{to{transform:translateX(240%) skewX(-16deg)}}
 
-  footer{margin-top:40px;text-align:center;font-size:11px;color:var(--mut2);letter-spacing:1px}
+  .sc-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2}
+  .sc-ovr{text-align:center;line-height:1}
+  .ovr-num{font-family:var(--cond);font-weight:700;font-size:62px;letter-spacing:-1px;
+    background:linear-gradient(180deg,var(--c2),var(--c1));-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+  .ovr-lab{font-family:var(--cond);font-size:12px;letter-spacing:4px;color:var(--mut);margin-top:-4px}
+  .ovr-letter{display:inline-block;margin-top:8px;font-family:var(--cond);font-weight:700;font-size:22px;color:var(--c1);
+    border:2px solid var(--c1);border-radius:9px;padding:1px 11px}
+  .sc-tier{font-family:var(--cond);font-weight:700;letter-spacing:3px;font-size:14px;
+    color:#0a0f15;background:linear-gradient(180deg,var(--c2),var(--c1));padding:6px 13px;border-radius:8px;
+    box-shadow:0 6px 16px var(--glow);align-self:flex-start}
+
+  .sc-photo{position:relative;height:172px;margin:6px 0 2px;display:flex;align-items:flex-end;justify-content:center;z-index:1}
+  .sc-photo .glow{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:200px;height:130px;border-radius:50%;
+    background:radial-gradient(ellipse at center,var(--glow),transparent 70%);filter:blur(4px)}
+  .sc-photo .sc-logo{position:absolute;width:150px;height:150px;top:8px;left:50%;transform:translateX(-50%);opacity:.14;z-index:0}
+  .sc-photo .sc-head{position:relative;z-index:1;height:172px;width:auto;filter:drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+  .sc-photo.nohead .seamfb{position:relative;z-index:1;width:96px;height:96px;border-radius:50%;margin-bottom:24px;
+    background:radial-gradient(circle at 35% 30%,#fff,#d6dbe1);box-shadow:0 8px 20px rgba(0,0,0,.5)}
+
+  .sc-id{position:relative;z-index:2;text-align:center;margin-top:2px}
+  .sc-name{font-family:var(--cond);font-weight:700;font-size:27px;letter-spacing:.4px;line-height:1.04}
+  .sc-sub{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c1);margin-top:3px;font-weight:600}
+  .sc-match{font-size:12px;color:var(--mut);margin-top:6px}
+
+  .sc-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:16px;position:relative;z-index:2}
+  .stile{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:9px;padding:7px 2px;text-align:center}
+  .stile b{display:block;font-family:var(--cond);font-weight:600;font-size:18px;color:#fff;line-height:1}
+  .stile span{font-size:9px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
+
+  .sc-flavor{position:relative;z-index:2;margin-top:15px;font-size:13.5px;line-height:1.5;color:#dbe6f1;
+    border-top:1px solid var(--line);padding-top:13px;font-style:italic}
+
+  /* ratings panel */
+  .ratings{display:flex;flex-direction:column;gap:0}
+  .rblock{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+  .rblock+.rblock{margin-top:16px}
+  .rblock h3{font-family:var(--cond);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 14px;font-weight:600}
+  .pwrap{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .pbig{font-family:var(--cond);font-weight:700;font-size:38px;line-height:1}
+  .pmeta{flex:1}
+  .plabel{font-size:13px;color:#cdd9e6;font-weight:600}
+  .pgauge{height:11px;border-radius:7px;position:relative;margin-top:8px;background:linear-gradient(90deg,#2a3a2e,#caa83a 55%,var(--bad));overflow:visible}
+  .pmark{position:absolute;top:-5px;width:4px;height:21px;background:#fff;border-radius:2px;box-shadow:0 0 0 2px rgba(0,0,0,.55);transition:left 1s cubic-bezier(.2,.8,.2,1);left:0}
+  .pscale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--mut2);margin-top:6px;letter-spacing:1px}
+  .pctx{font-size:13px;color:#c5d2e2;margin-top:14px;line-height:1.6}
+
+  .att{display:grid;grid-template-columns:1fr 88px 34px;gap:11px;align-items:center;padding:10px 0 4px;border-top:1px solid var(--line)}
+  .att:first-of-type{border-top:none}
+  .att-nm{font-size:13px;font-weight:600}
+  .att-bar{height:8px;background:#0a121b;border-radius:5px;overflow:hidden;border:1px solid #1a2532}
+  .att-bar>i{display:block;height:100%;border-radius:5px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .att-val{font-family:var(--cond);font-weight:700;font-size:20px;text-align:right;line-height:1}
+  .att-reason{grid-column:1/-1;font-size:11.5px;color:var(--mut);line-height:1.5;margin:2px 0 2px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* attribute tiers */
+  .t-d .att-val{color:var(--d1)} .t-d .att-bar>i{background:linear-gradient(90deg,var(--d1),var(--d2))}
+  .t-g .att-val{color:var(--g1)} .t-g .att-bar>i{background:linear-gradient(90deg,var(--g1),var(--g2))}
+  .t-s .att-val{color:var(--s1)} .t-s .att-bar>i{background:linear-gradient(90deg,#9fb0c2,var(--s2))}
+  .t-b .att-val{color:var(--b1)} .t-b .att-bar>i{background:linear-gradient(90deg,var(--b1),var(--b2))}
+
+  .section{margin-top:18px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:20px}
+  .section h3{font-family:var(--cond);font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 12px;font-weight:600}
+  .summary{font-size:14.5px;line-height:1.7;color:#d6e1ee}
+  details.facts summary{cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2)}
+  .factline{font-family:var(--mono);font-size:11.5px;color:#9fb3c9;background:#0a121b;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;white-space:pre-wrap;line-height:1.55}
+
+  /* loading card */
+  .lcard{height:520px;border-radius:22px;border:2px solid var(--line);position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#141f2b,#0a121b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+  .lcard .seam{width:60px;height:60px;animation:pulse 1.2s ease-in-out infinite}
+  .lcard .lt{font-family:var(--cond);letter-spacing:3px;color:var(--mut);font-size:15px}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
+  .lcard:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.06) 50%,transparent 65%);transform:translateX(-100%);animation:shine 1.4s linear infinite}
+  .lblock{height:520px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel),var(--panel2));position:relative;overflow:hidden}
+  .lblock:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.05) 50%,transparent 65%);transform:translateX(-100%);animation:shine 1.6s linear infinite}
+
+  footer{margin-top:42px;text-align:center;font-size:11px;color:var(--mut2);letter-spacing:.6px}
   footer a{color:var(--mut);text-decoration:none}
-  .disc{font-size:10.5px;color:var(--mut2);margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.5}
+  .disc{font-size:10.5px;color:var(--mut2);margin-top:8px;max-width:620px;margin:8px auto 0;line-height:1.55}
 </style>
 </head>
 <body>
@@ -168,7 +219,7 @@
       <div class="seam" aria-hidden="true"></div>
       <div>
         <h1>START<b>RATE</b></h1>
-        <div class="sub">Hierarchical MLB Pitching Start Evaluator · 13-Category Model</div>
+        <div class="sub">MLB Pitching Start Evaluator · 13-Category Scout Model</div>
       </div>
     </div>
     <div class="keywrap">
@@ -179,39 +230,40 @@
     </div>
   </header>
 
-  <div class="card">
-    <h2><span class="step">1</span> Tell me the start <span class="muted">· real games & stats from the MLB Stats API</span></h2>
+  <div class="hero">
+    <p class="hlabel">Find any real MLB start — then it grades like a card pull</p>
     <div class="finder">
-      <input id="q" placeholder="e.g. Yoshinobu Yamamoto vs Rays in August  ·  Dodgers starter on 2024-08-24  ·  Skubal's best start in 2024" />
-      <button class="btnfind" id="find">Find start</button>
+      <input id="q" placeholder="Yoshinobu Yamamoto vs Rays 2024  ·  Skubal's best start 2024  ·  Dodgers starter on 2024-08-24" />
+      <button class="btnfind" id="find">Find</button>
     </div>
     <div class="chips" id="chips"></div>
     <div id="findMsg"></div>
     <div class="cands" id="cands"></div>
 
-    <div class="divider"><span>or browse the schedule by date</span></div>
-    <div class="sched">
-      <input type="date" id="date" />
-      <button class="btn2" id="loadGames">Load games</button>
-      <select id="gameSel" disabled><option>— choose a date, then Load games —</option></select>
-      <select id="teamSel" disabled><option>— pick a game —</option></select>
-    </div>
-    <div id="schedMsg"></div>
+    <details class="more">
+      <summary>Browse the schedule by date</summary>
+      <div class="sched">
+        <input type="date" id="date" />
+        <button class="btn2" id="loadGames">Load games</button>
+        <select id="gameSel" disabled><option>— choose a date, then Load games —</option></select>
+        <select id="teamSel" disabled><option>— pick a game —</option></select>
+      </div>
+      <div id="schedMsg"></div>
+    </details>
 
-    <h2 style="margin-top:24px"><span class="step">2</span> The start <span class="muted">· auto-filled from the box score — add bullpen / weather notes for a sharper grade</span></h2>
-    <textarea id="start" placeholder="Pick a start above to auto-fill the real line — or type one in yourself."></textarea>
-    <div class="row">
-      <div class="hint">Bullpen fatigue & how it <i>looked</i> aren't in the box score — add a note and re-grade anytime.</div>
-      <button class="grade" id="go">Grade Start</button>
-    </div>
-    <div id="status"></div>
+    <details class="more">
+      <summary>Grade a custom line (type your own)</summary>
+      <textarea id="start" placeholder="e.g. Tarik Skubal vs Yankees — 7 IP, 4 H, 1 ER, 0 BB, 11 K, 98 pitches, tied game, tired bullpen."></textarea>
+      <div class="mrow"><button class="gradebtn" id="go">Grade this line</button></div>
+    </details>
+    <div id="status" style="margin-top:12px"></div>
   </div>
 
   <div id="result"></div>
 
   <footer>
-    <div>STARTRATE · grades the start that <i>should</i> have happened, not just the box score</div>
-    <div class="disc">Games, lines, lineups & weather are pulled live from the official MLB Stats API. Advanced inputs (xERA, barrels, xwOBA) and bullpen/leverage context are estimated by the model from the real situation — add notes for precision. Grades are model judgment, not official metrics.</div>
+    <div>STARTRATE · grades the start that <i>should</i> have happened — not just the box score</div>
+    <div class="disc">Games, lines, lineups, headshots, logos & weather are pulled live from the official MLB Stats API. Advanced inputs (xERA, barrels, xwOBA) and bullpen/leverage context are estimated by the model from the real situation. Grades are model judgment, not official metrics.</div>
     <div style="margin-top:10px"><a href="/">← noahabrahani.com</a></div>
   </footer>
 </div>
@@ -223,130 +275,89 @@ const STATS='https://statsapi.mlb.com/api/v1';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pad2=n=>String(n).padStart(2,'0');
+const headURL=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+const logoURL=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
 
 const CATEGORIES=[
-  ["Run Prevention (Deserved)","xERA, hard contact, BABIP & sequencing — runs that *should* have scored"],
-  ["Strikeout Dominance","K rate, whiffs, Ks vs elite hitters, leverage Ks"],
-  ["Command & Control","walks, zone control, precision, command under pressure"],
-  ["Efficiency","pitches/inning, early-count success, avoiding deep counts"],
-  ["Length / Durability","innings, fatigue resistance, 3rd-time-through, late-game"],
-  ["Quality of Contact","barrels, hard-hit %, xwOBA — weak vs dangerous contact"],
-  ["Leverage Performance","high-leverage innings, RISP, bases-loaded escapes, WPA"],
-  ["Bullpen Relief Value","innings saved, bullpen fatigue, leverage preserved"],
-  ["Game State Impact","score context, keeping team competitive, stabilizing"],
-  ["Opponent Strength","real lineup quality, star hitters, depth, platoon difficulty"],
-  ["Ballpark & Environment","park factors, altitude, weather, pitching difficulty"],
-  ["Luck Adjustment","BABIP deviation, sequencing luck, defensive support"],
-  ["Dominance Signal (Scouting)","batter discomfort, deception, perceived stuff, AB control"],
+  ["Run Prevention","deserved runs · xERA, sequencing, BABIP"],
+  ["Strikeout Dominance","K rate, whiffs, leverage Ks"],
+  ["Command & Control","walks, zone control, precision"],
+  ["Efficiency","pitches/inning, early-count success"],
+  ["Length / Durability","IP, fatigue, 3rd time through"],
+  ["Quality of Contact","barrels, hard-hit, xwOBA"],
+  ["Leverage Performance","RISP, high-leverage, WPA"],
+  ["Bullpen Relief Value","innings & leverage saved"],
+  ["Game State Impact","kept team competitive"],
+  ["Opponent Strength","real lineup quality faced"],
+  ["Ballpark & Environment","park, altitude, weather"],
+  ["Luck Adjustment","BABIP/sequence/defense correction"],
+  ["Dominance Signal","eye-test stuff & deception"],
 ];
 
-const GRADE_SYS=`You are a professional MLB pitching start evaluator. Grade a SINGLE pitching start on a 0–100 scale with a letter grade, using a 13-category hierarchical model that blends stats, context, environment, and scouting evaluation.
-
-You must NOT rely on box-score stats alone. Always adjust for: game context, opponent strength, bullpen fatigue, park effects, luck (BABIP/sequencing/defense), leverage situations, and scouting-level dominance signals.
+const GRADE_SYS=`You are a professional MLB pitching start evaluator. Grade a SINGLE pitching start on a 0–100 scale with a letter grade, using a 13-category hierarchical model that blends stats, context, environment, and scouting evaluation. Do NOT rely on box-score stats alone — adjust for game context, opponent strength, bullpen fatigue, park effects, luck (BABIP/sequencing/defense), leverage, and scouting-level dominance.
 
 THE 13 CATEGORIES (score each 1–10):
-1. Run Prevention (DESERVED) — xERA, hard contact, BABIP luck, sequencing; how many runs SHOULD have scored.
-2. Strikeout Dominance — K rate, whiffs, batter quality, leverage Ks; Ks vs elite hitters matter more.
-3. Command & Control — walks, zone control, precision, command under pressure.
-4. Efficiency — pitches/inning, early-count success, avoiding deep counts without losing effectiveness.
-5. Length / Durability — IP, fatigue resistance, 3rd-time-through-order, late-game effectiveness.
-6. Quality of Contact — barrel rate, hard-hit %, xwOBA allowed; weak vs dangerous contact, luck-neutral.
-7. Leverage Performance — high-leverage innings, RISP, bases-loaded escapes, WPA moments.
-8. Bullpen Relief Value — innings saved, bullpen fatigue before game, leverage of innings saved.
-9. Game State Impact — score context/flow, keeping team competitive, stabilizing trajectory.
-10. Opponent Strength — real hitter quality (not just record), lineup depth, star hitters, platoon difficulty.
-11. Ballpark & Environment — park factors, altitude (Coors-type), weather, pitching difficulty.
-12. Luck Adjustment — BABIP deviation from expected, sequencing luck, defensive support, expected vs actual.
-13. Dominance Signal (SCOUTING) — batter discomfort, deception, perceived stuff, control of at-bats, eye-test vs stat mismatch.
+1. Run Prevention (DESERVED) — how many runs SHOULD have scored (xERA, hard contact, BABIP luck, sequencing).
+2. Strikeout Dominance — K rate, whiffs, batter quality, leverage Ks.
+3. Command & Control — walks, zone control, precision under pressure.
+4. Efficiency — pitches/inning, early-count success, avoiding deep counts.
+5. Length / Durability — IP, fatigue resistance, 3rd-time-through, late-game.
+6. Quality of Contact — barrels, hard-hit %, xwOBA; weak vs dangerous contact.
+7. Leverage Performance — high-leverage innings, RISP, bases-loaded escapes, WPA.
+8. Bullpen Relief Value — innings saved, bullpen fatigue before game, leverage preserved.
+9. Game State Impact — score context/flow, keeping team competitive, stabilizing.
+10. Opponent Strength — real hitter quality, lineup depth, star hitters, platoon difficulty.
+11. Ballpark & Environment — park factors, altitude, weather, pitching difficulty.
+12. Luck Adjustment — BABIP deviation, sequencing luck, defensive support, expected vs actual.
+13. Dominance Signal (SCOUTING) — batter discomfort, deception, perceived stuff, AB control, eye-test vs stat mismatch.
 
-CONTEXT ENGINE — compute a Pressure Index (0–100) from: score margin (closer = higher), inning (later = higher), bullpen fatigue, leverage situations, game importance. Then DYNAMICALLY adjust category weights: high pressure → up-weight Run Prevention, Leverage Performance, clutch execution, Bullpen Relief Value; low pressure → reduce leverage impact. Weights must sum to 100.
+CONTEXT ENGINE — compute a Pressure Index (0–100) from score margin (closer=higher), inning (later=higher), bullpen fatigue, leverage, game importance. DYNAMICALLY adjust category weights: high pressure → up-weight Run Prevention, Leverage Performance, clutch, Bullpen Relief Value; low pressure → reduce leverage impact. Weights sum to 100.
 
-RULES: Never rely only on ERA/box score. Always adjust for context and environment. Never ignore bullpen fatigue or leverage. Correct luck but don't let it overpower. Dominance Signal can nudge perception up or down but must not override everything. The box-score facts provided are REAL (from the MLB Stats API) — trust them exactly. Where advanced data (xERA, barrels, xwOBA, exact leverage, bullpen fatigue, weather) is missing, estimate it reasonably from the game situation and the named opponent hitters, and note key assumptions in the reasoning. Use your knowledge of the specific players and ballpark named.
+RULES: Never rely only on ERA/box score. Always adjust for context and environment. Never ignore bullpen fatigue or leverage. Correct luck but don't let it overpower. Dominance Signal can nudge perception but not override. The box-score facts provided are REAL (MLB Stats API) — trust them exactly. Estimate missing advanced data from the situation and named opponent hitters; note key assumptions. Use your knowledge of the specific players and park. Keep each "reason" to ONE crisp sentence.
 
-LETTER GRADE: 95–100 A+ · 90–94 A · 85–89 A- · 80–84 B+ · 75–79 B · 70–74 B- · 65–69 C+ · 60–64 C · <60 D/F.
+LETTER: 95–100 A+ · 90–94 A · 85–89 A- · 80–84 B+ · 75–79 B · 70–74 B- · 65–69 C+ · 60–64 C · <60 D/F.
 
-OUTPUT — respond with STRICT JSON ONLY (no prose, no code fences), matching exactly:
-{
-  "finalGrade": <int 0-100>,
-  "letter": "<A+|A|A-|B+|B|B-|C+|C|D/F>",
-  "pressureIndex": <int 0-100>,
-  "pressureLabel": "<2-4 words, e.g. 'High-leverage tie game'>",
-  "categories": [ { "score": <int 1-10>, "weight": <number, all 13 sum to 100>, "reason": "<1-2 specific sentences>" } ],
-  "contextExplanation": "<2-4 sentences: pressure + environment + bullpen impact and how it shaped weighting>",
-  "scoutingSummary": "<2-4 sentences: what kind of start this really was>",
-  "oneLiner": "<one punchy sentence — the verdict>"
-}
-The categories array MUST have exactly 13 entries in the order listed above. Output JSON only.`;
+OUTPUT STRICT JSON ONLY (no prose, no code fences):
+{"finalGrade":<int 0-100>,"letter":"<A+|A|A-|B+|B|B-|C+|C|D/F>","pressureIndex":<int 0-100>,"pressureLabel":"<2-4 words>","categories":[{"score":<int 1-10>,"weight":<number; all 13 sum to 100>,"reason":"<one sentence>"}],"contextExplanation":"<2-4 sentences: pressure+environment+bullpen and how it shaped weighting>","scoutingSummary":"<2-4 sentences: what kind of start this really was>","oneLiner":"<one punchy verdict sentence>"}
+categories MUST have exactly 13 entries in the order above. JSON only.`;
 
-const els={
-  key:$('#apiKey'), keyStat:$('#keyStat'), q:$('#q'), find:$('#find'), chips:$('#chips'),
-  findMsg:$('#findMsg'), cands:$('#cands'), date:$('#date'), loadGames:$('#loadGames'),
-  gameSel:$('#gameSel'), teamSel:$('#teamSel'), schedMsg:$('#schedMsg'), start:$('#start'),
-  go:$('#go'), status:$('#status'), result:$('#result'),
-};
+const els={key:$('#apiKey'),keyStat:$('#keyStat'),q:$('#q'),find:$('#find'),chips:$('#chips'),
+  findMsg:$('#findMsg'),cands:$('#cands'),date:$('#date'),loadGames:$('#loadGames'),gameSel:$('#gameSel'),
+  teamSel:$('#teamSel'),schedMsg:$('#schedMsg'),start:$('#start'),go:$('#go'),status:$('#status'),result:$('#result')};
 
-// ---------- API key ----------
+// ---- key ----
 els.key.value=localStorage.getItem(KEY_STORE)||''; syncKey();
 els.key.addEventListener('input',()=>{localStorage.setItem(KEY_STORE,els.key.value.trim());syncKey();});
 function syncKey(){const v=els.key.value.trim();els.keyStat.textContent=v?'key stored locally · '+v.slice(0,7)+'…'+v.slice(-4):'stored locally in your browser only';}
 function haveKey(){const k=els.key.value.trim();return k.startsWith('sk-ant-')?k:null;}
 
-// ---------- Anthropic helper ----------
 async function anthropic(body){
-  const key=haveKey(); if(!key) throw new Error('Enter a valid Anthropic key (sk-ant-…).');
+  const key=haveKey(); if(!key) throw new Error('Enter your Anthropic key (sk-ant-…) up top.');
   const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
     headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
     body:JSON.stringify(body)});
-  if(!res.ok){const t=await res.text();throw new Error('Anthropic '+res.status+': '+t.slice(0,160));}
+  if(!res.ok){let t='';try{t=await res.text();}catch(_){} throw new Error('Anthropic '+res.status+' — '+t.slice(0,180));}
   const data=await res.json();
   return (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
 }
-function parseJSON(text){
-  let t=String(text).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
-  try{return JSON.parse(t);}catch(_){}
-  const a=t.indexOf('{'),b=t.lastIndexOf('}');
-  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1));}catch(_){}}
-  return null;
-}
-
-// ---------- season default ----------
+function parseJSON(text){let t=String(text).trim().replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  try{return JSON.parse(t);}catch(_){}const a=t.indexOf('{'),b=t.lastIndexOf('}');
+  if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1));}catch(_){}}return null;}
 function defaultSeason(){const d=new Date();return (d.getMonth()+1)<3?d.getFullYear()-1:d.getFullYear();}
 
-// ---------- teams map ----------
 let TEAMS=null;
-async function ensureTeams(){
-  if(TEAMS) return TEAMS;
-  const j=await fetch(`${STATS}/teams?sportId=1&activeStatus=Yes`).then(r=>r.json());
-  TEAMS=j.teams||[];
-  return TEAMS;
-}
-function matchTeam(token){
-  if(!token||!TEAMS) return null;
-  const t=token.toLowerCase().trim();
-  let best=null;
-  for(const tm of TEAMS){
-    const names=[tm.name,tm.clubName,tm.teamName,tm.shortName,tm.abbreviation,tm.franchiseName].filter(Boolean).map(x=>x.toLowerCase());
-    if(names.includes(t)) return tm;
-    if(names.some(n=>n.includes(t)||t.includes(n))) best=best||tm;
-  }
-  return best;
-}
+async function ensureTeams(){if(TEAMS)return TEAMS;const j=await fetch(`${STATS}/teams?sportId=1&activeStatus=Yes`).then(r=>r.json());TEAMS=j.teams||[];return TEAMS;}
+function matchTeam(token){if(!token||!TEAMS)return null;const t=token.toLowerCase().trim();let best=null;
+  for(const tm of TEAMS){const names=[tm.name,tm.clubName,tm.teamName,tm.shortName,tm.abbreviation,tm.franchiseName].filter(Boolean).map(x=>x.toLowerCase());
+    if(names.includes(t))return tm;if(names.some(n=>n.includes(t)||t.includes(n)))best=best||tm;}return best;}
 
-// ========================================================================
-//  NATURAL-LANGUAGE FINDER
-// ========================================================================
-const CHIPS=[
-  "Tarik Skubal vs Yankees in 2024",
-  "Yoshinobu Yamamoto best start 2024",
-  "Dodgers starter on 2024-08-24",
-  "Gerrit Cole vs Astros",
-];
-CHIPS.forEach(c=>{const b=document.createElement('div');b.className='chip';b.textContent=c;
-  b.onclick=()=>{els.q.value=c;els.q.focus();};els.chips.appendChild(b);});
+// ================= FINDER =================
+["Tarik Skubal vs Yankees 2024","Yoshinobu Yamamoto best start 2024","Dodgers starter on 2024-08-24","Gerrit Cole vs Astros 2024"]
+.forEach(c=>{const b=document.createElement('div');b.className='chip';b.textContent=c;b.onclick=()=>{els.q.value=c;els.q.focus();findStart();};els.chips.appendChild(b);});
 
-const PARSE_SYS_BASE=`Extract structured search fields from a request to find ONE MLB pitching start. Output STRICT JSON only, no prose:
-{"player": <pitcher full name or null>, "team": <team name/nickname if they reference a team's starter and named NO pitcher, else null>, "opponent": <opposing team name/nickname or null>, "season": <4-digit year or null>, "date": <"YYYY-MM-DD" if a specific calendar date, else null>, "month": <1-12 if a month is named without a full date, else null>, "rank": <"best"|"worst"|null>}
-Rules: If they name a pitcher, set player and leave team null. If they only reference a club ("the Dodgers starter"), set team. "vs"/"against" X → opponent. If a month/timeframe is given with no year, choose the most recent season in which it has ALREADY occurred relative to today. Output JSON only.`;
+const PARSE_SYS=`Extract structured search fields from a request to find ONE MLB pitching start. Output STRICT JSON only:
+{"player":<pitcher full name or null>,"team":<team name/nickname if they reference a club's starter and named NO pitcher, else null>,"opponent":<opposing team name/nickname or null>,"season":<4-digit year or null>,"date":<"YYYY-MM-DD" or null>,"month":<1-12 if a month named without full date, else null>,"rank":<"best"|"worst"|null>}
+If they name a pitcher set player and leave team null. "vs"/"against" X → opponent. If a month/timeframe is given with no year, use the most recent season it has ALREADY occurred relative to today. JSON only.`;
 
 els.find.addEventListener('click',findStart);
 els.q.addEventListener('keydown',e=>{if(e.key==='Enter')findStart();});
@@ -354,187 +365,141 @@ els.q.addEventListener('keydown',e=>{if(e.key==='Enter')findStart();});
 let LAST_CANDS=[];
 async function findStart(){
   const text=els.q.value.trim();
-  if(!haveKey()){findMsg('Enter your Anthropic key first (top right).',true);return;}
+  if(!haveKey()){findMsg('Enter your Anthropic key first (top-right).',true);return;}
   if(!text){findMsg('Type a pitcher, team, date or matchup.',true);return;}
-  els.find.disabled=true; els.cands.innerHTML=''; findMsg('<span class="dots">Finding the start</span>');
+  els.find.disabled=true;els.cands.innerHTML='';findMsg('<span class="dots">Finding the start</span>');
   try{
     await ensureTeams();
     const today=new Date().toISOString().slice(0,10);
-    const out=await anthropic({model:MODEL,max_tokens:300,system:PARSE_SYS_BASE+'\nToday is '+today+'.',messages:[{role:'user',content:text}]});
+    const out=await anthropic({model:MODEL,max_tokens:280,system:PARSE_SYS+'\nToday is '+today+'.',messages:[{role:'user',content:text}]});
     const p=parseJSON(out)||{};
-    let cands=[], note='';
-    if(p.player){ const r=await playerCandidates(p); cands=r.cands; note=r.note; }
-    else if(p.team){ const r=await teamCandidates(p); cands=r.cands; note=r.note; }
-    else { findMsg('Tell me a pitcher (e.g. “Skubal vs Yankees”) or a team + date (e.g. “Dodgers starter on 2024-08-24”).',true); els.find.disabled=false; return; }
-
-    if(!cands.length){ findMsg(note||'No matching start found. Try a different season, opponent, or date.',true); els.find.disabled=false; return; }
-    LAST_CANDS=cands;
-    renderCands(cands);
-    findMsg(note||('Found '+cands.length+' start'+(cands.length>1?'s':'')+' — pick the one you mean.'));
-  }catch(e){
-    findMsg('Search failed: '+esc(e.message),true);
-  }finally{ els.find.disabled=false; }
+    let r;
+    if(p.player) r=await playerCandidates(p);
+    else if(p.team) r=await teamCandidates(p);
+    else { findMsg('Tell me a pitcher (“Skubal vs Yankees 2024”) or a team + date (“Dodgers starter on 2024-08-24”).',true);return; }
+    if(!r.cands.length){findMsg(r.note||'No matching start found — try a year, opponent, or date.',true);return;}
+    LAST_CANDS=r.cands; renderCands(r.cands);
+    findMsg(r.note||('Found '+r.cands.length+' start'+(r.cands.length>1?'s':'')+' — tap the one you mean to grade it.'));
+  }catch(e){findMsg('Search failed: '+esc(e.message),true);}
+  finally{els.find.disabled=false;}
 }
 function findMsg(html,isErr){els.findMsg.innerHTML=html;els.findMsg.className=isErr?'err':'';}
-
 function ipOuts(ip){if(ip==null)return 0;const[w,f]=String(ip).split('.');return (+w||0)*3+(+f||0);}
-function startScore(s){return ipOuts(s.inningsPitched)*1.1 + (+s.strikeOuts||0) - (+s.hits||0)*1.1 - (+s.earnedRuns||0)*2.5 - (+s.baseOnBalls||0)*0.6 - (+s.homeRuns||0)*1.5;}
+function startScore(s){return ipOuts(s.inningsPitched)*1.1+(+s.strikeOuts||0)-(+s.hits||0)*1.1-(+s.earnedRuns||0)*2.5-(+s.baseOnBalls||0)*0.6-(+s.homeRuns||0)*1.5;}
 
 async function searchPlayer(name){
   const j=await fetch(`${STATS}/people/search?names=${encodeURIComponent(name)}`).then(r=>r.json());
-  const people=j.people||[];
-  if(!people.length) return null;
+  const people=j.people||[];if(!people.length)return null;
   const toks=name.toLowerCase().split(/\s+/);
-  const exact=people.find(pp=>toks.every(t=>pp.fullName.toLowerCase().includes(t)));
-  return exact||people[0];
+  return people.find(pp=>toks.every(t=>pp.fullName.toLowerCase().includes(t)))||people[0];
 }
-
 async function playerCandidates(p){
   const person=await searchPlayer(p.player);
-  if(!person) return {cands:[],note:'Couldn’t find a pitcher named “'+esc(p.player)+'”.'};
-  const seasons = p.season ? [p.season] : [defaultSeason(), defaultSeason()-1];
-  let splits=[], usedSeason=null;
-  for(const yr of seasons){
-    const j=await fetch(`${STATS}/people/${person.id}/stats?stats=gameLog&group=pitching&season=${yr}`).then(r=>r.json()).catch(()=>({}));
-    const sp=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];
-    if(sp.length){ splits=sp; usedSeason=yr; break; }
-  }
-  if(!splits.length) return {cands:[],note:'No '+(p.season||'')+' game log for '+esc(person.fullName)+'.'};
-  let starts=splits.filter(s=>+(s.stat&&s.stat.gamesStarted)===1);
-  const all=starts.slice();
-  if(p.opponent){const tm=matchTeam(p.opponent);const full=tm?tm.name.toLowerCase():p.opponent.toLowerCase();
-    starts=starts.filter(s=>s.opponent&&s.opponent.name.toLowerCase().includes(full.split(' ').pop()));}
-  if(p.date) starts=starts.filter(s=>s.date===p.date);
-  else if(p.month) starts=starts.filter(s=>+s.date.slice(5,7)===+p.month);
+  if(!person)return {cands:[],note:'Couldn’t find a pitcher named “'+esc(p.player)+'”.'};
+  const seasons=p.season?[p.season]:[defaultSeason(),defaultSeason()-1];
+  let splits=[],used=null;
+  for(const yr of seasons){const j=await fetch(`${STATS}/people/${person.id}/stats?stats=gameLog&group=pitching&season=${yr}`).then(r=>r.json()).catch(()=>({}));
+    const sp=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];if(sp.length){splits=sp;used=yr;break;}}
+  if(!splits.length)return {cands:[],note:'No game log found for '+esc(person.fullName)+'.'};
+  let starts=splits.filter(s=>+(s.stat&&s.stat.gamesStarted)===1);const all=starts.slice();
+  if(p.opponent){const tm=matchTeam(p.opponent);const tail=(tm?tm.name:p.opponent).toLowerCase().split(' ').pop();
+    starts=starts.filter(s=>s.opponent&&s.opponent.name.toLowerCase().includes(tail));}
+  if(p.date)starts=starts.filter(s=>s.date===p.date);
+  else if(p.month)starts=starts.filter(s=>+s.date.slice(5,7)===+p.month);
   let note='';
-  if(!starts.length && all.length){ starts=all; note='No exact match — showing all '+usedSeason+' starts for '+esc(person.fullName)+'.'; }
-  if(p.rank){ starts=starts.slice().sort((a,b)=>startScore(b.stat)-startScore(a.stat)); if(p.rank==='worst')starts.reverse(); starts=starts.slice(0,1); note=(p.rank==='best'?'Best':'Worst')+' '+usedSeason+' start for '+esc(person.fullName)+':'; }
+  if(!starts.length&&all.length){starts=all;note='No exact match — showing all '+used+' starts for '+esc(person.fullName)+'.';}
+  if(p.rank){starts=starts.slice().sort((a,b)=>startScore(b.stat)-startScore(a.stat));if(p.rank==='worst')starts.reverse();starts=starts.slice(0,1);
+    note=(p.rank==='best'?'Best':'Worst')+' '+used+' start for '+esc(person.fullName)+':';}
   else starts=starts.slice(0,8);
-  const cands=starts.map(s=>({gamePk:s.game.gamePk, side:s.isHome?'home':'away', name:person.fullName,
-    teamName:s.team.name, oppName:s.opponent.name, date:s.date, stat:s.stat}));
-  return {cands,note};
+  return {cands:starts.map(s=>({gamePk:s.game.gamePk,side:s.isHome?'home':'away',pid:person.id,name:person.fullName,
+    teamId:s.team&&s.team.id,teamName:s.team.name,oppId:s.opponent&&s.opponent.id,oppName:s.opponent.name,date:s.date,stat:s.stat})),note};
 }
-
 async function teamCandidates(p){
-  const tm=matchTeam(p.team);
-  if(!tm) return {cands:[],note:'Couldn’t identify team “'+esc(p.team)+'”.'};
+  const tm=matchTeam(p.team);if(!tm)return {cands:[],note:'Couldn’t identify team “'+esc(p.team)+'”.'};
   let start,end;
   if(p.date){start=end=p.date;}
   else if(p.month){const yr=p.season||defaultSeason();const last=new Date(yr,p.month,0).getDate();start=`${yr}-${pad2(p.month)}-01`;end=`${yr}-${pad2(p.month)}-${pad2(last)}`;}
-  else if(p.season&&!p.opponent){return {cands:[],note:'Give a date, month, or opponent for the '+esc(tm.clubName)+' starter (a whole season is too many starts).'};}
-  else {return {cands:[],note:'Add a date (e.g. “'+esc(tm.clubName)+' starter on 2024-08-24”) or opponent + month.'};}
-  const url=`${STATS}/schedule?sportId=1&teamId=${tm.id}&startDate=${start}&endDate=${end}&hydrate=team,linescore,venue`;
-  const j=await fetch(url).then(r=>r.json());
-  let games=[]; (j.dates||[]).forEach(d=>games.push(...(d.games||[])));
-  games=games.filter(g=>['Final','Live'].includes(g.status.abstractGameState));
-  if(p.opponent){const opp=matchTeam(p.opponent);const oid=opp&&opp.id;
-    games=games.filter(g=>oid?(g.teams.away.team.id===oid||g.teams.home.team.id===oid):true);}
-  if(!games.length) return {cands:[],note:'No completed '+esc(tm.clubName)+' games found for that window.'};
-  games=games.slice(0,8);
-  const cands=[];
-  for(const g of games){
-    const side=g.teams.home.team.id===tm.id?'home':'away';
-    try{
-      const box=await getBox(g.gamePk);
-      const sp=starterOf(box,side);
-      if(!sp) continue;
-      cands.push({gamePk:g.gamePk,side,name:sp.name,teamName:g.teams[side].team.name,
-        oppName:g.teams[side==='home'?'away':'home'].team.name,date:(g.gameDate||'').slice(0,10),stat:sp.line});
-    }catch(_){}
-  }
+  else {return {cands:[],note:'Add a date (“'+esc(tm.clubName)+' starter on 2024-08-24”) or an opponent + month.'};}
+  const j=await fetch(`${STATS}/schedule?sportId=1&teamId=${tm.id}&startDate=${start}&endDate=${end}&hydrate=team,linescore,venue`).then(r=>r.json());
+  let g2=[];(j.dates||[]).forEach(d=>g2.push(...(d.games||[])));
+  g2=g2.filter(g=>['Final','Live'].includes(g.status.abstractGameState));
+  if(p.opponent){const opp=matchTeam(p.opponent);const oid=opp&&opp.id;if(oid)g2=g2.filter(g=>g.teams.away.team.id===oid||g.teams.home.team.id===oid);}
+  if(!g2.length)return {cands:[],note:'No completed '+esc(tm.clubName)+' games in that window.'};
+  g2=g2.slice(0,8);const cands=[];
+  for(const g of g2){const side=g.teams.home.team.id===tm.id?'home':'away';
+    try{const box=await getBox(g.gamePk);const sp=starterOf(box,side);if(!sp)continue;const opp=side==='home'?'away':'home';
+      cands.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,
+        oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:(g.gameDate||'').slice(0,10),stat:sp.line});}catch(_){}}
   return {cands,note:''};
 }
-
 function renderCands(cands){
-  els.cands.innerHTML=cands.map((c,i)=>{
-    const s=c.stat||{};
-    const line=`${s.inningsPitched??'?'} IP · ${s.earnedRuns??'?'} ER · ${s.strikeOuts??'?'} K · ${s.baseOnBalls??'?'} BB`;
+  els.cands.innerHTML=cands.map((c,i)=>{const s=c.stat||{};
     return `<div class="cand" data-i="${i}">
+      ${c.teamId?`<img class="clogo" src="${logoURL(c.teamId)}" onerror="this.remove()">`:''}
+      <img class="chead" src="${headURL(c.pid)}" onerror="this.style.opacity=.5">
       <div class="pn">${esc(c.name)}</div>
       <div class="mt">${esc(c.teamName)} vs ${esc(c.oppName)}</div>
       <div class="dt">${esc(c.date)}</div>
-      <div class="ln">${esc(line)}</div>
-      <div class="go">✓ Grade this start →</div>
-    </div>`;
-  }).join('');
-  els.cands.querySelectorAll('.cand').forEach(el=>{
-    el.addEventListener('click',()=>pickCandidate(LAST_CANDS[+el.dataset.i]));
-  });
-}
-async function pickCandidate(c){
-  if(!c) return;
-  findMsg('<span class="dots">Loading the box score</span>');
-  try{
-    const g=await getScheduleGame(c.gamePk);
-    const box=await getBox(c.gamePk);
-    const weather=await getWeather(c.gamePk);
-    els.start.value=buildDescription(g,box,c.side,weather);
-    findMsg('Loaded ✓ — grading…');
-    await run();
-    findMsg('');
-  }catch(e){ findMsg('Couldn’t load that start: '+esc(e.message),true); }
+      <div class="ln">${s.inningsPitched??'?'} IP · ${s.earnedRuns??'?'} ER · ${s.strikeOuts??'?'} K · ${s.baseOnBalls??'?'} BB</div>
+      <div class="go">✓ Grade this →</div></div>`;}).join('');
+  els.cands.querySelectorAll('.cand').forEach(el=>el.addEventListener('click',()=>pickCandidate(LAST_CANDS[+el.dataset.i])));
 }
 
-// ========================================================================
-//  SCHEDULE BROWSER (date dropdowns)
-// ========================================================================
-let games={}, boxCache={}, schedGameCache={};
+let currentMeta=null;
+async function pickCandidate(c){
+  if(!c)return;findMsg('<span class="dots">Loading the box score</span>');
+  try{
+    const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
+    currentMeta=buildMeta(g,box,c.side,weather);
+    els.start.value=buildDescription(g,box,c.side,weather);
+    findMsg('');
+    await run();
+  }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
+}
+
+// ================= schedule browser =================
+let games={},boxCache={},schedGameCache={};
 (function(){const n=new Date();n.setDate(n.getDate()-1);els.date.value=n.toISOString().slice(0,10);})();
 els.loadGames.addEventListener('click',loadGames);
 els.date.addEventListener('change',()=>{els.gameSel.disabled=true;els.teamSel.disabled=true;});
-
 async function loadGames(){
-  const d=els.date.value; if(!d){schedMsg('Pick a date first.');return;}
-  els.loadGames.disabled=true;els.gameSel.disabled=true;els.teamSel.disabled=true;
-  els.gameSel.innerHTML='<option>loading…</option>';schedMsg('Loading schedule…');
-  try{
-    const j=await fetch(`${STATS}/schedule?sportId=1&date=${d}&hydrate=team,linescore,venue`).then(r=>r.json());
-    const list=(j.dates&&j.dates[0]&&j.dates[0].games)||[];
-    games={};
+  const d=els.date.value;if(!d){schedMsg('Pick a date first.');return;}
+  els.loadGames.disabled=true;els.gameSel.disabled=true;els.teamSel.disabled=true;els.gameSel.innerHTML='<option>loading…</option>';schedMsg('Loading…');
+  try{const j=await fetch(`${STATS}/schedule?sportId=1&date=${d}&hydrate=team,linescore,venue`).then(r=>r.json());
+    const list=(j.dates&&j.dates[0]&&j.dates[0].games)||[];games={};
     if(!list.length){els.gameSel.innerHTML='<option>— no MLB games —</option>';schedMsg('No games on '+d+'.');return;}
     els.gameSel.innerHTML='<option value="">— select a game —</option>';
     list.forEach(g=>{games[g.gamePk]=g;const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState;
-      let sc=(st==='Final'||st==='Live')?` · ${a.score??0}–${h.score??0}`:'';
-      const tag=st==='Final'?'Final':st==='Live'?'LIVE':'scheduled';
+      const sc=(st==='Final'||st==='Live')?` · ${a.score??0}–${h.score??0}`:'';const tag=st==='Final'?'Final':st==='Live'?'LIVE':'sched';
       const o=document.createElement('option');o.value=g.gamePk;o.textContent=`${a.team.name} @ ${h.team.name} (${tag})${sc}`;els.gameSel.appendChild(o);});
-    els.gameSel.disabled=false;schedMsg(`${list.length} game${list.length>1?'s':''} on ${d} — pick one, then the team.`);
-  }catch(e){schedMsg('Could not load schedule: '+esc(e.message),true);els.gameSel.innerHTML='<option>— error —</option>';}
+    els.gameSel.disabled=false;schedMsg(list.length+' games — pick one, then the team.');
+  }catch(e){schedMsg('Could not load: '+esc(e.message),true);els.gameSel.innerHTML='<option>— error —</option>';}
   finally{els.loadGames.disabled=false;}
 }
 function schedMsg(t,isErr){els.schedMsg.textContent=t;els.schedMsg.className=isErr?'err':'';}
-
-els.gameSel.addEventListener('change',onGameChange);
-async function onGameChange(){
-  const pk=els.gameSel.value;els.teamSel.disabled=true;els.teamSel.innerHTML='<option>loading pitchers…</option>';
+els.gameSel.addEventListener('change',async()=>{
+  const pk=els.gameSel.value;els.teamSel.disabled=true;els.teamSel.innerHTML='<option>loading…</option>';
   if(!pk){els.teamSel.innerHTML='<option>— pick a game —</option>';return;}
-  const g=games[pk];
-  if(g.status.abstractGameState==='Preview'){els.teamSel.innerHTML='<option>— not played yet —</option>';schedMsg('That game hasn’t been played yet.',true);return;}
+  const g=games[pk];if(g.status.abstractGameState==='Preview'){els.teamSel.innerHTML='<option>— not played yet —</option>';schedMsg('Not played yet.',true);return;}
   schedMsg('Loading box score…');
-  try{
-    const box=await getBox(pk);const a=starterOf(box,'away'),h=starterOf(box,'home');
+  try{const box=await getBox(pk);const a=starterOf(box,'away'),h=starterOf(box,'home');
     els.teamSel.innerHTML='<option value="">— pick the team / starter —</option>';
     if(a){const o=document.createElement('option');o.value='away';o.textContent=`${g.teams.away.team.name} — ${a.name}`;els.teamSel.appendChild(o);}
     if(h){const o=document.createElement('option');o.value='home';o.textContent=`${g.teams.home.team.name} — ${h.name}`;els.teamSel.appendChild(o);}
-    els.teamSel.disabled=false;schedMsg('Pick the team whose starter you want graded.');
-  }catch(e){schedMsg('Could not load box score: '+esc(e.message),true);els.teamSel.innerHTML='<option>— error —</option>';}
-}
+    els.teamSel.disabled=false;schedMsg('Pick the team to grade its starter.');
+  }catch(e){schedMsg('Could not load box score: '+esc(e.message),true);}
+});
 els.teamSel.addEventListener('change',async()=>{
   const pk=els.gameSel.value,side=els.teamSel.value;if(!pk||!side)return;
-  try{schedMsg('Building the start profile…');
-    const box=await getBox(pk),weather=await getWeather(pk);
-    els.start.value=buildDescription(games[pk],box,side,weather);
-    schedMsg('Loaded ✓ — review below and hit Grade Start.');
-    els.start.scrollIntoView({behavior:'smooth',block:'center'});
-  }catch(e){schedMsg('Could not build profile: '+esc(e.message),true);}
+  try{schedMsg('Building & grading…');const box=await getBox(pk),weather=await getWeather(pk),g=games[pk];
+    currentMeta=buildMeta(g,box,side,weather);els.start.value=buildDescription(g,box,side,weather);schedMsg('');await run();
+  }catch(e){schedMsg('Failed: '+esc(e.message),true);}
 });
 
-// ========================================================================
-//  MLB DATA HELPERS
-// ========================================================================
+// ================= MLB helpers =================
 async function getBox(pk){if(boxCache[pk])return boxCache[pk];const r=await fetch(`${STATS}/game/${pk}/boxscore`);if(!r.ok)throw new Error('boxscore '+r.status);const j=await r.json();boxCache[pk]=j;return j;}
 async function getScheduleGame(pk){if(schedGameCache[pk])return schedGameCache[pk];const j=await fetch(`${STATS}/schedule?gamePk=${pk}&hydrate=team,linescore,venue`).then(r=>r.json());const g=j.dates[0].games[0];schedGameCache[pk]=g;return g;}
 async function getWeather(pk){try{const j=await fetch(`https://statsapi.mlb.com/api/v1.1/game/${pk}/feed/live`).then(r=>r.json());const w=j.gameData&&j.gameData.weather;return (w&&(w.condition||w.temp))?w:null;}catch(_){return null;}}
-
 function starterOf(box,side){const t=box.teams[side];const pid=t.pitchers&&t.pitchers[0];if(!pid)return null;const p=t.players['ID'+pid];if(!p)return null;
   return {id:pid,name:p.person.fullName,line:(p.stats&&p.stats.pitching)||{},season:(p.seasonStats&&p.seasonStats.pitching)||{},note:(p.stats&&p.stats.pitching&&p.stats.pitching.note)||''};}
 function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);
@@ -542,13 +507,20 @@ function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t
     const bits=[];if(s.avg)bits.push(s.avg+' AVG');if(s.ops)bits.push(s.ops+' OPS');if(s.homeRuns!=null)bits.push(s.homeRuns+' HR');
     return `  ${i+1}. ${p.person.fullName} (${pos})${bits.length?' — '+bits.join(', '):''}`;}).filter(Boolean).join('\n');}
 
+function buildMeta(g,box,side,weather){
+  const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const ln=sp.line;
+  const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
+  return {pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,
+    oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:(g.gameDate||'').slice(0,10),
+    venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',
+    ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};
+}
 function buildDescription(g,box,side,weather){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);
   const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
   const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;
-  const venue=(g.venue&&g.venue.name)||'unknown park';
-  const dateStr=g.gameDate?g.gameDate.slice(0,10):els.date.value;
+  const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=g.gameDate?g.gameDate.slice(0,10):els.date.value;
   const pitches=ln.numberOfPitches??ln.pitchesThrown,strikes=ln.strikes;
   let wStr='';if(weather){const ps=[];if(weather.temp)ps.push(weather.temp+'°F');if(weather.condition)ps.push(weather.condition);if(weather.wind)ps.push('wind '+weather.wind);if(ps.length)wStr='\nWeather: '+ps.join(', ');}
   const decision=sp.note?'  '+sp.note:'';
@@ -564,67 +536,101 @@ LINE (this start, from the box score):
 OPPONENT — ${oppTeam} lineup he faced (season stats):
 ${lineup(box,opp)||'  (lineup unavailable)'}
 
-Notes: Bullpen fatigue, inning-by-inning leverage, and pitch-level data weren't supplied — infer them reasonably from the score, park, and opponent.`;
+Notes: Bullpen fatigue, inning-by-inning leverage and pitch-level data weren't supplied — infer them reasonably from the score, park and opponent.`;
 }
 
-// ========================================================================
-//  GRADE + RENDER
-// ========================================================================
-function colorFor(s){if(s>=8)return 'var(--good)';if(s>=6.5)return '#7fd47f';if(s>=5)return 'var(--mid)';if(s>=3.5)return 'var(--acc2)';return 'var(--bad)';}
-function gradeColor(g){if(g>=85)return 'var(--good)';if(g>=75)return '#9fe06a';if(g>=65)return 'var(--mid)';if(g>=60)return 'var(--acc2)';return 'var(--bad)';}
+// ================= GRADE + CARD =================
+function tier(g){
+  if(g>=90)return{key:'DIAMOND',c1:'#62e7d6',c2:'#c4fff7',glow:'rgba(98,231,214,.5)'};
+  if(g>=80)return{key:'GOLD',c1:'#ffd24a',c2:'#fff0b0',glow:'rgba(255,210,74,.45)'};
+  if(g>=70)return{key:'SILVER',c1:'#cdd7e2',c2:'#f2f6fa',glow:'rgba(205,215,226,.4)'};
+  if(g>=60)return{key:'BRONZE',c1:'#d88a52',c2:'#f3c193',glow:'rgba(216,138,82,.4)'};
+  return{key:'COMMON',c1:'#7c8898',c2:'#aeb8c4',glow:'rgba(124,136,152,.3)'};
+}
+function attCls(v){return v>=85?'t-d':v>=70?'t-g':v>=55?'t-s':'t-b';}
 
-els.go.addEventListener('click',run);
-els.start.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')run();});
+els.go.addEventListener('click',()=>{currentMeta=null;run();});
+els.start.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){currentMeta=null;run();}});
 
 async function run(){
   const desc=els.start.value.trim();
-  if(!haveKey()){showStatus('Enter a valid Anthropic API key (sk-ant-…).',true);els.key.focus();return;}
-  if(!desc){showStatus('Pick a start above or describe one first.',true);els.start.focus();return;}
-  els.go.disabled=true;els.result.classList.remove('show');showStatus('<span class="dots">Scouting the start</span>',false);
+  if(!haveKey()){status('Enter a valid Anthropic key (sk-ant-…) up top.',true);els.key.focus();return;}
+  if(!desc){status('Pick a start above or type a custom line first.',true);return;}
+  showLoading();status('');
   try{
-    const text=await anthropic({model:MODEL,max_tokens:3000,system:GRADE_SYS,messages:[{role:'user',content:'Grade this start.\n\n'+desc}]});
+    const text=await anthropic({model:MODEL,max_tokens:4096,system:GRADE_SYS,messages:[{role:'user',content:'Grade this start.\n\n'+desc}]});
     const parsed=parseJSON(text);
-    if(!parsed){showStatus('Could not parse the evaluation. Try again.',true);return;}
-    render(parsed,desc);els.status.classList.remove('show');
-  }catch(e){showStatus('Grade failed: '+esc(e.message),true);}
-  finally{els.go.disabled=false;}
+    if(!parsed||!Array.isArray(parsed.categories)){els.result.classList.remove('show');els.result.innerHTML='';status('The grader returned an unexpected format — try again.',true);return;}
+    render(parsed,desc);
+  }catch(e){els.result.classList.remove('show');els.result.innerHTML='';status('Grade failed: '+esc(e.message),true);}
 }
-function showStatus(html,isErr){els.status.innerHTML=html;els.status.className='show'+(isErr?' err':'');}
+function status(html,isErr){els.status.innerHTML=html;els.status.style.color=isErr?'var(--bad)':'var(--mut)';}
+
+function showLoading(){
+  els.result.innerHTML=`<div class="reveal">
+    <div class="lcard"><div class="seam"></div><div class="lt">SCOUTING THE START…</div></div>
+    <div class="lblock"></div></div>`;
+  els.result.classList.add('show');
+  els.result.scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 function render(d,factText){
-  const g=Math.max(0,Math.min(100,+d.finalGrade||0)),gc=gradeColor(g);
-  const cats=Array.isArray(d.categories)?d.categories:[];const pi=Math.max(0,Math.min(100,+d.pressureIndex||0));
+  const g=Math.max(0,Math.min(100,Math.round(+d.finalGrade||0)));const t=tier(g);
+  const m=currentMeta;const cats=d.categories||[];const pi=Math.max(0,Math.min(100,+d.pressureIndex||0));
+
+  const photo=m?`<div class="sc-photo" id="scPhoto">
+      ${m.teamId?`<img class="sc-logo" src="${logoURL(m.teamId)}" onerror="this.remove()">`:''}
+      <div class="glow"></div>
+      <img class="sc-head" src="${headURL(m.pid)}" onerror="this.remove();document.getElementById('scPhoto').classList.add('nohead');document.getElementById('scPhoto').insertAdjacentHTML('beforeend','<div class=seamfb></div>')">
+    </div>`:`<div class="sc-photo nohead"><div class="glow"></div><div class="seamfb"></div></div>`;
+
+  const name=m?m.name:'Custom Start';
+  const sub=m?`SP · ${esc(m.teamName)}`:'SP';
+  const match=m?`vs ${esc(m.oppName)} · ${esc(m.date)}${m.venue?' · '+esc(m.venue):''}`:'';
+  const tiles=m?[['IP',m.ip],['H',m.h],['ER',m.er],['BB',m.bb],['K',m.k],['PIT',m.pit]]
+      .map(([l,v])=>`<div class="stile"><b>${v??'–'}</b><span>${l}</span></div>`).join(''):'';
+
   let rows='';
   CATEGORIES.forEach((meta,i)=>{const c=cats[i]||{};const sc=Math.max(0,Math.min(10,+c.score||0));
-    const wt=(c.weight!=null)?(+c.weight).toFixed(1).replace(/\.0$/,''):'–';
-    rows+=`<div class="cat">
-      <div class="nm">${esc(meta[0])}<small>${esc(meta[1])}</small></div>
-      <div class="bar"><i data-w="${sc*10}" style="background:${colorFor(sc)}"></i></div>
-      <div class="sc" style="color:${colorFor(sc)}">${sc}<span style="color:var(--mut2);font-size:11px">/10</span></div>
-      <div class="reason"><span class="wt">w ${wt}%</span> &nbsp;${esc(c.reason||'')}</div></div>`;});
+    const val=Math.max(1,Math.round(sc*9.9));const cls=attCls(val);const wt=(c.weight!=null)?(+c.weight).toFixed(0):'–';
+    rows+=`<div class="att ${cls}">
+      <div class="att-nm">${esc(meta[0])}</div>
+      <div class="att-bar"><i data-w="${val}"></i></div>
+      <div class="att-val">${val}</div>
+      <div class="att-reason"><b style="color:#8aa0b6">w${wt}</b> · ${esc(c.reason||'')}</div></div>`;});
+
   els.result.innerHTML=`
-    <div class="scoreboard">
-      <div class="gradebox">
-        <div class="ring" id="ring"><div class="inner"><div class="num" style="color:${gc}">${g}</div><div class="of">OUT OF 100</div></div></div>
-        <div class="letter" style="color:${gc}">${esc(d.letter||'')}</div><div class="gradelabel">Start Grade</div>
+  <div class="reveal">
+    <div class="show-card" id="card" style="--c1:${t.c1};--c2:${t.c2};--glow:${t.glow}">
+      <div class="sc-shine"></div>
+      <div class="sc-top">
+        <div class="sc-ovr"><div class="ovr-num">${g}</div><div class="ovr-lab">OVR</div><div class="ovr-letter">${esc(d.letter||'')}</div></div>
+        <div class="sc-tier">${t.key}</div>
       </div>
-      <div class="pressure">
+      ${photo}
+      <div class="sc-id"><div class="sc-name">${esc(name)}</div><div class="sc-sub">${sub}</div>${match?`<div class="sc-match">${match}</div>`:''}</div>
+      ${tiles?`<div class="sc-stats">${tiles}</div>`:''}
+      ${d.oneLiner?`<div class="sc-flavor">“${esc(d.oneLiner)}”</div>`:''}
+    </div>
+    <div class="ratings">
+      <div class="rblock">
         <h3>Pressure Index</h3>
-        <div class="pval"><b style="color:${gradeColor(100-pi)}">${pi}</b><span>${esc(d.pressureLabel||'context load')}</span></div>
-        <div class="pgauge"><div class="pmark" id="pmark"></div></div>
-        <div class="pscale"><span>CALM 0</span><span>50</span><span>100 MAX</span></div>
+        <div class="pwrap"><div class="pbig" style="color:${tier(100-pi).c1}">${pi}</div>
+          <div class="pmeta"><div class="plabel">${esc(d.pressureLabel||'context load')}</div>
+            <div class="pgauge"><div class="pmark" id="pmark"></div></div>
+            <div class="pscale"><span>CALM</span><span>50</span><span>MAX</span></div></div></div>
         <div class="pctx">${esc(d.contextExplanation||'')}</div>
       </div>
+      <div class="rblock"><h3>Ratings · 13-Category Model</h3>${rows}</div>
     </div>
-    <div class="section"><h3>The Start · real facts graded</h3><div class="factline">${esc(factText)}</div></div>
-    <div class="section"><h3>Category Breakdown · 13-Point Model</h3>${rows}</div>
-    <div class="section"><h3>Scouting Summary — What This Start Really Was</h3>
-      ${d.oneLiner?`<div class="oneliner">${esc(d.oneLiner)}</div>`:''}
-      <div class="summary">${esc(d.scoutingSummary||'')}</div></div>`;
+  </div>
+  <div class="section"><h3>Scouting Report</h3><div class="summary">${esc(d.scoutingSummary||'')}</div></div>
+  <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>`;
+
   els.result.classList.add('show');
-  const ring=$('#ring');
-  requestAnimationFrame(()=>{ring.style.background=`conic-gradient(${gc} ${g*3.6}deg, #182230 0deg)`;
-    $('#pmark').style.left=pi+'%';els.result.querySelectorAll('.bar > i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
+  const card=$('#card');
+  requestAnimationFrame(()=>{card.classList.add('in');$('#pmark').style.left=pi+'%';
+    els.result.querySelectorAll('.att-bar>i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
   els.result.scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
