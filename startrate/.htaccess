@@ -1,7 +1,7 @@
-# StartRate: never let browsers cache the app HTML so updates show immediately.
+# StartRate: ask browsers not to cache the app HTML so updates show immediately.
+# (Only takes effect if .htaccess processing is enabled for this site in the host panel.)
 <FilesMatch "\.html$">
 Header set Cache-Control "no-cache, no-store, must-revalidate"
 Header set Pragma "no-cache"
 Header set Expires "0"
-Header set X-Startrate-Cache "off"
 </FilesMatch>
