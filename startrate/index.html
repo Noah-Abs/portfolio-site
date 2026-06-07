@@ -130,15 +130,20 @@
 
   /* ================= TOPPS / THE SHOW CARDS ================= */
   /* result board — front+back card pair on top (trading-card proportions), supporting panels spread below; uses full width on big screens */
-  .board{max-width:1180px;margin:0 auto}
-  .pair{display:flex;gap:22px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
-  .pair .tsc{width:360px;max-width:100%;flex:0 0 auto}
+  .board{max-width:1080px;margin:0 auto}
+  .herocard{display:flex;justify-content:center}
+  .herocard .tsc{width:360px;max-width:100%;flex:0 0 auto}
+  #cardB{width:100%;max-width:780px;margin:20px auto 0}
+  .brows-grid{display:grid;grid-template-columns:1fr;column-gap:34px}
+  @media(min-width:640px){.brows-grid{grid-template-columns:1fr 1fr}}
   .under{margin-top:20px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
   @media(min-width:1000px){.under{grid-template-columns:362px minmax(0,1fr);align-items:start}}
   .under .lineupcard{margin:0}
   .under .playlog{margin:0}
   .board .section{max-width:none;margin:0}
   .board>.facts{margin-top:20px}
+  .board .scoutbox{margin-top:20px}
+  .scoutbox .summary{font-size:14px;line-height:1.7;color:#d6e1ee}
   @media(min-width:1000px){.under .playlog .pl-body{column-count:2;column-gap:28px}}
   .pl-grp{break-inside:avoid}
   .lwrap{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
@@ -774,7 +779,7 @@ function render(d,factText){
 
   els.result.innerHTML=`
   <div class="board">
-    <div class="pair">
+    <div class="herocard">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -793,6 +798,7 @@ function render(d,factText){
         ${d.oneLiner?`<div class="flavor">“${esc(d.oneLiner)}”</div>`:''}
       </div>
     </div>
+    </div>
 
     <div class="tsc back" id="cardB" style="${tv}">
       <div class="tsc-inner"><div class="back-pad">
@@ -803,11 +809,10 @@ function render(d,factText){
             <div class="pgauge"><div class="pmark" id="pmark"></div></div>
             <div class="pctx">${esc(d.contextExplanation||'')}</div></div>
         </div>
-        ${brows}
-        <div class="back-blurb"><b>Scouting Report</b>${esc(d.scoutingSummary||'')}</div>
+        <div class="brows-grid">${brows}</div>
       </div></div>
     </div>
-    </div>
+    <div class="section scoutbox"><h3>Scouting Report</h3><div class="summary">${esc(d.scoutingSummary||'')}</div></div>
     <div class="under">
     ${lineupCardHTML(m)}
     ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
