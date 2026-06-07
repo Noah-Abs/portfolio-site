@@ -188,6 +188,28 @@
   .back-blurb{margin-top:13px;padding-top:12px;border-top:2px solid var(--c1);font-size:12px;line-height:1.55;color:#2a3340}
   .back-blurb b{font-family:var(--cond);letter-spacing:1px;text-transform:uppercase;color:#16202b;display:block;margin-bottom:3px;font-size:11px}
 
+  .lcol{display:flex;flex-direction:column;gap:20px;min-width:0}
+  .lineupcard{position:relative;overflow:hidden;padding:4px;animation:cardIn .55s cubic-bezier(.2,.9,.25,1) .16s both;
+    clip-path:polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px);background:linear-gradient(150deg,#34424f,#0e1822)}
+  .lineupcard .lc-in{position:relative;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
+    background:linear-gradient(180deg,#101a24,#0a121b);padding:18px 16px 15px}
+  .lc-in:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--tc,#5cd9ff);opacity:.9}
+  .lc-head{display:flex;align-items:center;gap:11px;margin:2px 0 13px}
+  .lc-head img{width:28px;height:28px;flex:0 0 auto}
+  .lc-head .t{font-family:var(--cond);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);line-height:1.1}
+  .lc-head .t small{display:block;font-family:var(--ui);font-size:10px;letter-spacing:.4px;text-transform:none;color:var(--mut2);margin-top:2px}
+  .lc-row{display:grid;grid-template-columns:20px minmax(0,1fr) repeat(6,23px);align-items:center;font-size:12px;padding:5px 0;border-top:1px solid rgba(255,255,255,.05)}
+  .lc-row.hd{border-top:none;font-family:var(--cond);letter-spacing:.5px;font-size:10px;text-transform:uppercase;padding-bottom:7px}
+  .lc-row .o{color:var(--mut2);font-family:var(--mono);font-size:11px}
+  .lc-row .nm{color:#dbe6f1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px}
+  .lc-row .nm i{color:var(--mut2);font-style:normal;font-size:10px;margin-left:3px}
+  .lc-row .n{text-align:center;font-family:var(--mono);color:#aebfd0}
+  .lc-row.hd .o,.lc-row.hd .nm,.lc-row.hd .n{color:var(--mut2)}
+  .lc-row.hot .nm{color:#fff;font-weight:600}
+  .lc-row .n.hr{color:#ff7a8c;font-weight:700}
+  .lc-row.tot{border-top:1px solid var(--line);margin-top:3px;padding-top:8px}
+  .lc-row.tot .nm{font-family:var(--cond);letter-spacing:1px;color:#fff;font-size:11px}
+  .lc-row.tot .n{color:#fff;font-weight:700}
   .section{margin:22px auto 0;max-width:746px;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:16px 18px}
   details.facts summary{cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut2)}
   .factline{font-family:var(--mono);font-size:11.5px;color:#9fb3c9;background:#0a121b;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:12px;white-space:pre-wrap;line-height:1.55}
@@ -533,10 +555,13 @@ function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t
   return order.map((pid,i)=>{const p=t.players['ID'+pid];if(!p)return null;const s=(p.seasonStats&&p.seasonStats.batting)||{};const pos=(p.position&&p.position.abbreviation)||'';
     const bits=[];if(s.avg)bits.push(s.avg+' AVG');if(s.ops)bits.push(s.ops+' OPS');if(s.homeRuns!=null)bits.push(s.homeRuns+' HR');
     return `  ${i+1}. ${p.person.fullName} (${pos})${bits.length?' — '+bits.join(', '):''}`;}).filter(Boolean).join('\n');}
+function oppBatting(box,opp){const t=box.teams[opp];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);
+  return order.map(pid=>{const p=t.players['ID'+pid];if(!p)return null;const b=(p.stats&&p.stats.batting)||{};const pos=(p.position&&p.position.abbreviation)||'';
+    return {name:p.person.fullName,pos,ab:+b.atBats||0,r:+b.runs||0,h:+b.hits||0,rbi:+b.rbi||0,bb:+b.baseOnBalls||0,hr:+b.homeRuns||0};}).filter(Boolean);}
 function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const ln=sp.line;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
   return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
-    date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',
+    date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppLineup:oppBatting(box,opp),
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
 function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
@@ -576,6 +601,22 @@ function attBack(v){ // colors that read on cream stock
   if(v>=70)return{bar:'#d39a12',ink:'#9c7100'};
   if(v>=55)return{bar:'#8492a1',ink:'#566472'};
   return{bar:'#c0763d',ink:'#8a4d20'};
+}
+
+function lineupCardHTML(m){
+  if(!m||!m.oppLineup||!m.oppLineup.length)return '';
+  const lg=m.oppId?`<img src="${logoURL(m.oppId)}" onerror="this.remove()">`:'';
+  const tot=m.oppLineup.reduce((a,b)=>({ab:a.ab+b.ab,r:a.r+b.r,h:a.h+b.h,rbi:a.rbi+b.rbi,bb:a.bb+b.bb,hr:a.hr+b.hr}),{ab:0,r:0,h:0,rbi:0,bb:0,hr:0});
+  const rows=m.oppLineup.map((b,i)=>{
+    const hot=b.h>=2||b.hr>0;const parts=b.name.split(' ');const disp=parts.length>1?`${parts[0][0]}. ${parts.slice(1).join(' ')}`:b.name;
+    return `<div class="lc-row${hot?' hot':''}"><span class="o">${i+1}</span><span class="nm">${esc(disp)} <i>${esc(b.pos)}</i></span>`+
+      `<span class="n">${b.ab}</span><span class="n">${b.r}</span><span class="n">${b.h}</span><span class="n">${b.rbi}</span><span class="n">${b.bb}</span><span class="n${b.hr?' hr':''}">${b.hr}</span></div>`;}).join('');
+  return `<div class="lineupcard" style="--tc:${TEAMCOL[m.oppId]||'#5cd9ff'}"><div class="lc-in">
+    <div class="lc-head">${lg}<div class="t">Opponent Lineup<small>${esc(m.oppName)} · what they did vs him</small></div></div>
+    <div class="lc-row hd"><span class="o">#</span><span class="nm">Batter</span><span class="n">AB</span><span class="n">R</span><span class="n">H</span><span class="n">RBI</span><span class="n">BB</span><span class="n">HR</span></div>
+    ${rows}
+    <div class="lc-row tot"><span class="o"></span><span class="nm">TOTALS</span><span class="n">${tot.ab}</span><span class="n">${tot.r}</span><span class="n">${tot.h}</span><span class="n">${tot.rbi}</span><span class="n">${tot.bb}</span><span class="n">${tot.hr}</span></div>
+  </div></div>`;
 }
 
 els.go.addEventListener('click',()=>{currentMeta=null;run();});
@@ -626,6 +667,7 @@ function render(d,factText){
 
   els.result.innerHTML=`
   <div class="duo">
+    <div class="lcol">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -643,6 +685,8 @@ function render(d,factText){
         ${tiles?`<div class="statline">${tiles}</div>`:''}
         ${d.oneLiner?`<div class="flavor">“${esc(d.oneLiner)}”</div>`:''}
       </div>
+    </div>
+    ${lineupCardHTML(m)}
     </div>
 
     <div class="tsc back" id="cardB" style="${tv}">
