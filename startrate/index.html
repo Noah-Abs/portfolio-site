@@ -22,61 +22,81 @@
   html,body{margin:0;padding:0}
   body{
     background:
-      radial-gradient(1100px 620px at 84% -10%, rgba(255,90,60,.07), transparent 60%),
-      radial-gradient(900px 520px at -10% 2%, rgba(92,217,255,.05), transparent 55%),
+      radial-gradient(1200px 680px at 84% -12%, rgba(255,90,60,.11), transparent 58%),
+      radial-gradient(1000px 560px at -12% 0%, rgba(92,217,255,.08), transparent 56%),
       var(--bg);
-    color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;
+    color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;position:relative;
   }
+  body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+    background-image:radial-gradient(rgba(255,255,255,.022) 1px,transparent 1px);background-size:24px 24px}
   .wrap{max-width:1120px;margin:0 auto;padding:30px 20px 90px}
 
-  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px;flex-wrap:wrap}
-  .brand{display:flex;align-items:center;gap:14px}
-  .seam{width:48px;height:48px;border-radius:50%;flex:0 0 auto;
-    background:radial-gradient(circle at 35% 30%,#fff,#eef1f4 55%,#d6dbe1);position:relative;box-shadow:0 6px 22px rgba(0,0,0,.55),inset 0 0 0 1px rgba(0,0,0,.06)}
-  .seam:before,.seam:after{content:"";position:absolute;top:8px;bottom:8px;width:9px;border:2px solid var(--acc);border-radius:50%}
-  .seam:before{left:7px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
-  .seam:after{right:7px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
-  .brand h1{font-family:var(--cond);font-size:30px;letter-spacing:3px;margin:0;font-weight:700}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:15px}
+  .seam{width:52px;height:52px;border-radius:50%;flex:0 0 auto;
+    background:radial-gradient(circle at 35% 30%,#fff,#eef1f4 55%,#d6dbe1);position:relative;box-shadow:0 8px 26px rgba(0,0,0,.6),0 0 24px rgba(255,90,60,.18),inset 0 0 0 1px rgba(0,0,0,.06)}
+  .seam:before,.seam:after{content:"";position:absolute;top:9px;bottom:9px;width:10px;border:2px solid var(--acc);border-radius:50%}
+  .seam:before{left:8px;border-right-color:transparent;border-top-color:transparent;transform:rotate(8deg)}
+  .seam:after{right:8px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg)}
+  .brand h1{font-family:var(--anton);font-size:35px;letter-spacing:1px;margin:0;line-height:.9}
   .brand h1 b{color:var(--acc)}
-  .brand .sub{font-size:10.5px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:1px}
-  .keywrap input{background:var(--panel2);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:10px;font-family:var(--mono);font-size:12px;width:236px;outline:none}
-  .keywrap input:focus{border-color:var(--acc)}
-  .keystat{font-size:10px;letter-spacing:.8px;color:var(--mut2);text-transform:uppercase;margin-top:5px}
+  .brand .sub{font-size:10px;letter-spacing:2.5px;color:var(--mut);text-transform:uppercase;margin-top:5px}
+  .keywrap{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .keyfield{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:0 13px;transition:.15s}
+  .keyfield:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.1)}
+  .keyfield svg{color:var(--mut2);flex:0 0 auto}
+  .keywrap input{background:transparent;border:none;color:var(--ink);padding:11px 0;font-family:var(--mono);font-size:12px;width:206px;outline:none}
+  .keystat{font-size:9.5px;letter-spacing:.8px;color:var(--mut2);text-transform:uppercase}
 
-  .hero{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-  .hlabel{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);margin:0 0 12px;font-weight:600}
-  .finder{display:flex;gap:10px;flex-wrap:wrap}
-  .finder input{flex:1;min-width:240px;background:#0a121b;border:1px solid var(--line);color:var(--ink);padding:15px 16px;border-radius:13px;font-size:15.5px;outline:none}
-  .finder input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12)}
-  .finder input::placeholder{color:var(--mut2)}
-  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e23f22);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 28px;border-radius:13px;cursor:pointer;min-height:52px;text-transform:uppercase;box-shadow:0 10px 26px rgba(255,90,60,.32);transition:.15s}
+  .hero{position:relative;overflow:hidden;background:linear-gradient(180deg,#13202d,#0c1620);border:1px solid var(--line);border-radius:20px;padding:30px 26px 24px;
+    box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)}
+  .hero:before{content:"";position:absolute;right:-70px;top:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(92,217,255,.12),transparent 70%);pointer-events:none}
+  .hero-head{position:relative;margin-bottom:20px}
+  .hero-title{font-family:var(--anton);font-size:42px;letter-spacing:.5px;line-height:.94;margin:0}
+  .hero-title em{font-style:normal;color:var(--acc)}
+  .hero-sub{font-size:13.5px;color:var(--mut);margin:9px 0 0;max-width:560px;line-height:1.5}
+  .searchbar{position:relative;display:flex;align-items:center;gap:11px;background:#0a121b;border:1px solid var(--line);border-radius:14px;padding:7px 7px 7px 16px;transition:.15s}
+  .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12)}
+  .searchbar .sicon{flex:0 0 auto;color:var(--mut2)}
+  .searchbar input{flex:1;min-width:120px;background:transparent;border:none;color:var(--ink);padding:11px 0;font-size:15.5px;outline:none}
+  .searchbar input::placeholder{color:var(--mut2)}
+  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e23f22);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 26px;border-radius:10px;cursor:pointer;min-height:48px;text-transform:uppercase;box-shadow:0 8px 22px rgba(255,90,60,.32);transition:.15s}
   .btnfind:hover{filter:brightness(1.08)}
   .btnfind:disabled{opacity:.55;cursor:default}
-  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-  .chip{background:#16212f;border:1px solid var(--line);color:var(--mut);font-size:12px;padding:7px 12px;border-radius:20px;cursor:pointer;transition:.15s}
-  .chip:hover{color:var(--ink);border-color:var(--acc);background:#1a2735}
-  #findMsg{margin-top:12px;font-size:13px;color:var(--mut2);min-height:15px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--mut);font-size:12px;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .chip:before{content:"◆";color:var(--d1);font-size:9px;opacity:.75}
+  .chip:hover{color:var(--ink);border-color:var(--d1);background:rgba(92,217,255,.07)}
+  #findMsg{margin-top:14px;font-size:13px;color:var(--mut2);min-height:15px}
   #findMsg.err{color:var(--bad)}
   .dots:after{content:"";animation:dots 1.3s steps(4,end) infinite}
   @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
-  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:13px;margin-top:16px}
-  .cand{background:linear-gradient(165deg,#11202c,#0b141d);border:1px solid var(--line);border-radius:15px;padding:14px;cursor:pointer;transition:.16s;position:relative;overflow:hidden}
-  .cand:hover{border-color:var(--d1);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.5)}
-  .cand .clogo{position:absolute;right:-14px;top:-10px;width:88px;height:88px;opacity:.10}
-  .cand .chead{width:54px;height:54px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:#0a121b}
-  .cand .pn{font-family:var(--cond);font-weight:600;font-size:17px;margin-top:10px;letter-spacing:.3px}
-  .cand .mt{font-size:12px;color:var(--mut);margin-top:1px}
-  .cand .dt{font-size:10.5px;color:var(--mut2);letter-spacing:.6px;margin-top:7px;text-transform:uppercase}
-  .cand .ln{font-family:var(--mono);font-size:12px;color:#a7bace;margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
-  .cand .go{display:inline-block;margin-top:11px;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:1.5px;color:#ff6a4d;text-transform:uppercase}
+  .cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;margin-top:18px}
+  .cand{position:relative;overflow:hidden;cursor:pointer;transition:.16s;background:linear-gradient(168deg,#13212e,#0b141d);
+    border:1px solid var(--line);border-radius:4px 14px 14px 14px;clip-path:polygon(20px 0,100% 0,100% 100%,0 100%,0 20px)}
+  .cand:before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--tc,#5cd9ff);z-index:2}
+  .cand:hover{transform:translateY(-4px);border-color:var(--tc,#5cd9ff);box-shadow:0 18px 36px rgba(0,0,0,.55)}
+  .cand .clogo{position:absolute;right:-12px;top:8px;width:80px;height:80px;opacity:.09;z-index:0}
+  .cand .ctop{display:flex;align-items:center;gap:11px;padding:16px 14px 0;position:relative;z-index:1}
+  .cand .chead{width:50px;height:50px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:2px solid var(--tc,#2a3a48);background:#0a121b}
+  .cand .cwho{min-width:0}
+  .cand .pn{font-family:var(--cond);font-weight:600;font-size:16.5px;letter-spacing:.3px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cand .mt{font-size:11.5px;color:var(--mut);margin-top:2px;line-height:1.3}
+  .cand .dt{font-size:10px;color:var(--mut2);letter-spacing:.8px;text-transform:uppercase;padding:11px 14px 0;position:relative;z-index:1}
+  .cand .ln{font-family:var(--mono);font-size:12px;color:#a7bace;margin:9px 14px 0;padding-top:9px;border-top:1px solid var(--line);position:relative;z-index:1}
+  .cand .go{margin-top:12px;padding:10px 14px;background:rgba(255,90,60,.10);border-top:1px solid var(--line);
+    font-family:var(--cond);font-size:11.5px;font-weight:600;letter-spacing:1.5px;color:#ff8266;text-transform:uppercase;
+    display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;transition:.15s}
+  .cand:hover .go{background:rgba(255,90,60,.2);color:#ffa48d}
 
-  details.more{margin-top:16px;border-top:1px solid var(--line);padding-top:6px}
-  details.more>summary{cursor:pointer;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);padding:10px 0;list-style:none}
+  details.more{margin-top:14px;border-top:1px solid var(--line)}
+  details.more>summary{cursor:pointer;font-family:var(--cond);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut);padding:13px 0;list-style:none;display:flex;align-items:center;gap:9px}
   details.more>summary::-webkit-details-marker{display:none}
-  details.more>summary:before{content:"▸ ";color:var(--acc)}
-  details.more[open]>summary:before{content:"▾ "}
-  .sched{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+  details.more>summary:before{content:"+";display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border:1px solid var(--line);border-radius:6px;color:var(--acc);font-size:15px;font-family:var(--ui)}
+  details.more[open]>summary{color:var(--ink)}
+  details.more[open]>summary:before{content:"–";border-color:var(--acc)}
+  .sched{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:4px}
   .sched input[type=date],.sched select{background:#0a121b;border:1px solid var(--line);color:var(--ink);padding:11px 12px;border-radius:10px;font-size:13.5px;outline:none;min-height:44px}
   .sched input[type=date]{color-scheme:dark}
   .sched select{flex:1;min-width:190px;cursor:pointer}.sched select:disabled{opacity:.45}
@@ -201,9 +221,10 @@
   @keyframes pulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.12);opacity:1}}
   .lcard .li:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.07) 50%,transparent 62%);transform:translateX(-100%);animation:shine 1.5s linear infinite}
 
-  footer{margin-top:42px;text-align:center;font-size:11px;color:var(--mut2);letter-spacing:.6px}
-  footer a{color:var(--mut);text-decoration:none}
-  .disc{font-size:10.5px;color:var(--mut2);margin:8px auto 0;max-width:620px;line-height:1.55}
+  footer{margin-top:46px;text-align:center;font-size:11px;color:var(--mut2);letter-spacing:.4px;border-top:1px solid var(--line);padding-top:24px}
+  footer a{color:var(--mut);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}
+  footer a:hover{color:var(--ink);border-bottom-color:var(--acc)}
+  .disc{font-size:10.5px;color:var(--mut2);margin:9px auto 0;max-width:620px;line-height:1.55}
 </style>
 </head>
 <body>
@@ -214,16 +235,23 @@
       <div class="seam" aria-hidden="true"></div>
       <div><h1>START<b>RATE</b></h1><div class="sub">MLB Pitching Start Evaluator · 13-Category Scout Model</div></div>
     </div>
-    <div class="keywrap"><div>
-      <input id="apiKey" type="password" placeholder="sk-ant-… Anthropic key" autocomplete="off" spellcheck="false" />
+    <div class="keywrap">
+      <label class="keyfield">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="5"/><path d="M11.5 11.5 20 3m-3 0h3v3"/></svg>
+        <input id="apiKey" type="password" placeholder="sk-ant-… Anthropic key" autocomplete="off" spellcheck="false" />
+      </label>
       <div class="keystat" id="keyStat">stored locally in your browser only</div>
-    </div></div>
+    </div>
   </header>
 
-  <div class="hero">
-    <p class="hlabel">Find any real MLB start — then it grades like a card pull</p>
-    <div class="finder">
-      <input id="q" placeholder="Yoshinobu Yamamoto vs Rays 2024  ·  Skubal's best start 2024  ·  Dodgers starter on 2024-08-24" />
+  <section class="hero">
+    <div class="hero-head">
+      <h2 class="hero-title">GRADE <em>ANY</em> START</h2>
+      <p class="hero-sub">Type a pitcher, a matchup, or a date — StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
+    </div>
+    <div class="searchbar">
+      <svg class="sicon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" placeholder="Yamamoto vs Rays 2024  ·  Skubal's best start 2024  ·  Dodgers starter on 2024-08-24" />
       <button class="btnfind" id="find">Find</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -244,7 +272,7 @@
       <div class="mrow"><button class="gradebtn" id="go">Grade this line</button></div>
     </details>
     <div id="status" style="margin-top:12px"></div>
-  </div>
+  </section>
 
   <div id="result"></div>
 
@@ -417,14 +445,16 @@ async function teamCandidates(p){
   return {cands,note:''};
 }
 function renderCands(cands){
-  els.cands.innerHTML=cands.map((c,i)=>{const s=c.stat||{};
-    return `<div class="cand" data-i="${i}">
+  els.cands.innerHTML=cands.map((c,i)=>{const s=c.stat||{};const tc=TEAMCOL[c.teamId]||'#5cd9ff';
+    return `<div class="cand" data-i="${i}" style="--tc:${tc}">
       ${c.teamId?`<img class="clogo" src="${logoURL(c.teamId)}" onerror="this.remove()">`:''}
-      <img class="chead" src="${headURL(c.pid)}" onerror="this.style.opacity=.5">
-      <div class="pn">${esc(c.name)}</div><div class="mt">${esc(c.teamName)} vs ${esc(c.oppName)}</div>
+      <div class="ctop">
+        <img class="chead" src="${headURL(c.pid)}" onerror="this.style.opacity=.45">
+        <div class="cwho"><div class="pn">${esc(c.name)}</div><div class="mt">${esc(c.teamName)} vs ${esc(c.oppName)}</div></div>
+      </div>
       <div class="dt">${esc(c.date)}</div>
       <div class="ln">${s.inningsPitched??'?'} IP · ${s.earnedRuns??'?'} ER · ${s.strikeOuts??'?'} K · ${s.baseOnBalls??'?'} BB</div>
-      <div class="go">✓ Grade this →</div></div>`;}).join('');
+      <div class="go">Grade this start <span>→</span></div></div>`;}).join('');
   els.cands.querySelectorAll('.cand').forEach(el=>el.addEventListener('click',()=>pickCandidate(LAST_CANDS[+el.dataset.i])));
 }
 let currentMeta=null;
