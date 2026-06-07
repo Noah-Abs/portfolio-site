@@ -38,7 +38,8 @@
   .keywrap input{background:transparent;border:none;color:var(--ink);padding:9px 0;font-family:var(--mono);font-size:11.5px;width:184px;outline:none}
   .keystat{font-size:9px;letter-spacing:.6px;color:var(--mut2);text-transform:uppercase}
 
-  .hero{text-align:center;padding:60px 20px 6px}
+  .hero{position:relative;isolation:isolate;text-align:center;padding:56px 20px 10px}
+  .hero:before{content:"";position:absolute;left:50%;top:28px;width:580px;max-width:92%;height:250px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,90,60,.16),transparent 72%);filter:blur(10px);z-index:-1;pointer-events:none}
   .eyebrow{display:inline-flex;align-items:center;gap:11px;font-family:var(--cond);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);margin-bottom:18px}
   .eyebrow:before,.eyebrow:after{content:"";width:30px;height:1px;background:var(--line)}
   .hero-title{font-family:var(--anton);font-size:clamp(40px,7.2vw,62px);letter-spacing:.5px;line-height:.95;margin:0}
@@ -57,6 +58,16 @@
   .chip:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,90,60,.06)}
   #findMsg{margin:18px auto 0;font-size:13px;color:var(--mut2);min-height:15px;text-align:center}
   #findMsg.err{color:var(--bad)}
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:760px;margin:36px auto 0;text-align:left}
+  @media(max-width:680px){.feats{grid-template-columns:1fr;max-width:440px}}
+  .feat{display:flex;gap:12px;align-items:flex-start;background:#10161e;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:15px}
+  .feat .fic{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
+  .feat .fic svg{width:17px;height:17px}
+  .fic-a{background:rgba(255,90,60,.13);color:#ff6a4d}
+  .fic-b{background:rgba(92,217,255,.13);color:#5cd9ff}
+  .fic-c{background:rgba(255,206,58,.13);color:#ffce3a}
+  .feat b{display:block;font-family:var(--cond);font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
+  .feat i{font-style:normal;font-size:11.5px;color:var(--mut);line-height:1.45}
   .dots:after{content:"";animation:dots 1.3s steps(4,end) infinite}
   @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
@@ -265,6 +276,11 @@
     </div>
     <div class="chips" id="chips"></div>
     <div id="findMsg"></div>
+    <div class="feats">
+      <div class="feat"><span class="fic fic-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6.5 5.5c2.4 2.8 2.4 10.2 0 13M17.5 5.5c-2.4 2.8-2.4 10.2 0 13"/></svg></span><div><b>Real MLB data</b><i>Lines, lineups, weather &amp; bullpen — live from the Stats API</i></div></div>
+      <div class="feat"><span class="fic fic-b"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9.5 10L12 22 2.5 12z"/></svg></span><div><b>Diamond-tier grade</b><i>0–100 on a Topps-style front &amp; cream card back</i></div></div>
+      <div class="feat"><span class="fic fic-c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><div><b>Every batter</b><i>Full play-by-play log &amp; the box he faced</i></div></div>
+    </div>
   </section>
 
   <div class="cands" id="cands"></div>
@@ -474,13 +490,15 @@ async function pickCandidate(c){
   if(!c)return;findMsg('<span class="dots">Loading the box score & recent bullpen usage</span>');
   try{const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
     currentMeta=buildMeta(g,box,c.side,weather);
+    currentMeta.oppLineup=await computeOppLineup(c.gamePk,currentMeta.pid,currentMeta.oppOrder,box,c.side==='away'?'home':'away');
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
     els.start.value=buildDescription(g,box,c.side,weather,bp);findMsg('');await run();
   }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
 }
 
 // schedule browser
-let games={},boxCache={},schedGameCache={};
+let games={},boxCache={},schedGameCache={},playsCache={};
+async function getPlays(pk){if(playsCache[pk])return playsCache[pk];const j=await fetch(`${STATS}/game/${pk}/playByPlay`).then(r=>r.json());const a=j.allPlays||[];playsCache[pk]=a;return a;}
 (function(){const n=new Date();n.setDate(n.getDate()-1);els.date.value=n.toISOString().slice(0,10);})();
 els.loadGames.addEventListener('click',loadGames);
 els.date.addEventListener('change',()=>{els.gameSel.disabled=true;els.teamSel.disabled=true;});
@@ -515,6 +533,7 @@ els.teamSel.addEventListener('change',async()=>{
   const pk=els.gameSel.value,side=els.teamSel.value;if(!pk||!side)return;
   try{schedMsg('Building & grading…');const box=await getBox(pk),weather=await getWeather(pk),g=games[pk];
     currentMeta=buildMeta(g,box,side,weather);
+    currentMeta.oppLineup=await computeOppLineup(pk,currentMeta.pid,currentMeta.oppOrder,box,side==='away'?'home':'away');
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,pk);
     els.start.value=buildDescription(g,box,side,weather,bp);schedMsg('');await run();
   }catch(e){schedMsg('Failed: '+esc(e.message),true);}
@@ -551,13 +570,27 @@ function lineup(box,side){const t=box.teams[side];const order=(t.battingOrder&&t
   return order.map((pid,i)=>{const p=t.players['ID'+pid];if(!p)return null;const s=(p.seasonStats&&p.seasonStats.batting)||{};const pos=(p.position&&p.position.abbreviation)||'';
     const bits=[];if(s.avg)bits.push(s.avg+' AVG');if(s.ops)bits.push(s.ops+' OPS');if(s.homeRuns!=null)bits.push(s.homeRuns+' HR');
     return `  ${i+1}. ${p.person.fullName} (${pos})${bits.length?' — '+bits.join(', '):''}`;}).filter(Boolean).join('\n');}
-function oppBatting(box,opp){const t=box.teams[opp];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);
-  return order.map(pid=>{const p=t.players['ID'+pid];if(!p)return null;const b=(p.stats&&p.stats.batting)||{};const pos=(p.position&&p.position.abbreviation)||'';
-    return {name:p.person.fullName,pos,ab:+b.atBats||0,r:+b.runs||0,h:+b.hits||0,rbi:+b.rbi||0,bb:+b.baseOnBalls||0,hr:+b.homeRuns||0};}).filter(Boolean);}
+function oppOrderOf(box,opp){const t=box.teams[opp];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);
+  return order.map(pid=>{const p=t.players['ID'+pid];if(!p)return null;return {id:pid,name:p.person.fullName,pos:(p.position&&p.position.abbreviation)||''};}).filter(Boolean);}
+function oppFullGame(box,opp,order){const t=box.teams[opp];return order.map(o=>{const b=((t.players['ID'+o.id]||{}).stats||{}).batting||{};
+  return {name:o.name,pos:o.pos,ab:+b.atBats||0,r:+b.runs||0,h:+b.hits||0,rbi:+b.rbi||0,bb:+b.baseOnBalls||0,hr:+b.homeRuns||0};});}
+function lineupVsStarter(plays,pid,order){
+  const stat={};const ens=id=>stat[id]||(stat[id]={ab:0,r:0,h:0,rbi:0,bb:0,hr:0});
+  for(const p of plays){const mp=p.matchup&&p.matchup.pitcher;if(!(mp&&mp.id===pid))continue;
+    if(p.result&&p.result.type==='atBat'&&p.about&&p.about.isComplete){const s=ens(p.matchup.batter.id);const e=p.result.event||'';s.rbi+=(+p.result.rbi||0);
+      if(/Home Run/.test(e)){s.h++;s.hr++;}else if(/^(Single|Double|Triple)$/.test(e))s.h++;
+      if(!/Walk|Hit By Pitch|Sac|Catcher Interf|Sacrifice/i.test(e))s.ab++;if(/Walk/.test(e))s.bb++;}
+    if(Array.isArray(p.runners))for(const r of p.runners){if(r.movement&&r.movement.end==='score'&&r.details&&r.details.runner)ens(r.details.runner.id).r++;}}
+  return order.map(o=>{const s=stat[o.id]||{};return {name:o.name,pos:o.pos,ab:s.ab||0,r:s.r||0,h:s.h||0,rbi:s.rbi||0,bb:s.bb||0,hr:s.hr||0};});
+}
+async function computeOppLineup(pk,pid,order,box,opp){
+  try{const plays=await getPlays(pk);const vs=lineupVsStarter(plays,pid,order);if(vs.some(b=>b.ab+b.bb+b.h>0))return vs;}catch(_){}
+  return oppFullGame(box,opp,order);
+}
 function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const ln=sp.line;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
   return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
-    date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppLineup:oppBatting(box,opp),
+    date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppOrder:oppOrderOf(box,opp),
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
 function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
@@ -608,7 +641,7 @@ function lineupCardHTML(m){
     return `<div class="lc-row${hot?' hot':''}"><span class="o">${i+1}</span><span class="nm">${esc(disp)} <i>${esc(b.pos)}</i></span>`+
       `<span class="n">${b.ab}</span><span class="n">${b.r}</span><span class="n">${b.h}</span><span class="n">${b.rbi}</span><span class="n">${b.bb}</span><span class="n${b.hr?' hr':''}">${b.hr}</span></div>`;}).join('');
   return `<div class="lineupcard" style="--tc:${TEAMCOL[m.oppId]||'#5cd9ff'}"><div class="lc-in">
-    <div class="lc-head">${lg}<div class="t">Opponent Lineup<small>${esc(m.oppName)} · what they did vs him</small></div></div>
+    <div class="lc-head">${lg}<div class="t">Opponent Lineup<small>${esc(m.oppName)} · only the at-bats vs him</small></div></div>
     <div class="lc-row hd"><span class="o">#</span><span class="nm">Batter</span><span class="n">AB</span><span class="n">R</span><span class="n">H</span><span class="n">RBI</span><span class="n">BB</span><span class="n">HR</span></div>
     ${rows}
     <div class="lc-row tot"><span class="o"></span><span class="nm">TOTALS</span><span class="n">${tot.ab}</span><span class="n">${tot.r}</span><span class="n">${tot.h}</span><span class="n">${tot.rbi}</span><span class="n">${tot.bb}</span><span class="n">${tot.hr}</span></div>
@@ -720,8 +753,8 @@ async function loadPlayLog(pk,pid,pname){
   const host=document.getElementById('playlog');if(!host)return;
   const body=host.querySelector('.pl-body'),sum=host.querySelector('.pl-sum');
   try{
-    const j=await fetch(`${STATS}/game/${pk}/playByPlay`).then(r=>r.json());
-    const pas=(j.allPlays||[]).filter(p=>p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.id===pid&&p.result&&p.result.type==='atBat'&&p.about&&p.about.isComplete);
+    const plays=await getPlays(pk);
+    const pas=plays.filter(p=>p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.id===pid&&p.result&&p.result.type==='atBat'&&p.about&&p.about.isComplete);
     if(!pas.length){sum.textContent='';body.innerHTML='<div class="pl-empty">Play-by-play isn’t available for this game.</div>';return;}
     let H=0,K=0,BB=0,HR=0;
     pas.forEach(p=>{const e=p.result.event;if(/Strikeout/.test(e))K++;if(/Home Run/.test(e)){HR++;H++;}else if(/^(Single|Double|Triple)$/.test(e))H++;if(/Walk|Hit By Pitch/.test(e))BB++;});
