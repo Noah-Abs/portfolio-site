@@ -129,21 +129,18 @@
   #result.show{display:block}
 
   /* ================= TOPPS / THE SHOW CARDS ================= */
-  /* result board — responsive HUD: stacks on phones, spreads out on big screens with the grade card centered */
-  .board{display:grid;gap:18px;justify-content:center;align-items:start;
-    grid-template-columns:minmax(0,420px);
-    grid-template-areas:"grade" "ratings" "lineup" "log" "facts"}
-  @media(min-width:880px){.board{grid-template-columns:358px 358px;
-    grid-template-areas:"grade ratings" "lineup ratings" "log ratings" "facts facts"}}
-  @media(min-width:1300px){.board{grid-template-columns:336px 384px 336px;gap:22px;
-    grid-template-areas:"lineup grade ratings" "log grade ratings" "log facts ratings"}}
-  #cardF{grid-area:grade}
-  #cardB{grid-area:ratings}
-  .board .lineupcard{grid-area:lineup;margin:0}
-  .board .playlog{grid-area:log}
-  .board .facts{grid-area:facts}
+  /* result board — front+back card pair on top (trading-card proportions), supporting panels spread below; uses full width on big screens */
+  .board{max-width:1180px;margin:0 auto}
+  .pair{display:flex;gap:22px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+  .pair .tsc{width:360px;max-width:100%;flex:0 0 auto}
+  .under{margin-top:20px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+  @media(min-width:1000px){.under{grid-template-columns:362px minmax(0,1fr);align-items:start}}
+  .under .lineupcard{margin:0}
+  .under .playlog{margin:0}
   .board .section{max-width:none;margin:0}
-  .board .tsc{width:100%}
+  .board>.facts{margin-top:20px}
+  @media(min-width:1000px){.under .playlog .pl-body{column-count:2;column-gap:28px}}
+  .pl-grp{break-inside:avoid}
   .lwrap{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
 
   .tsc{position:relative;width:100%;padding:5px;
@@ -776,6 +773,7 @@ function render(d,factText){
 
   els.result.innerHTML=`
   <div class="board">
+    <div class="pair">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -808,8 +806,11 @@ function render(d,factText){
         <div class="back-blurb"><b>Scouting Report</b>${esc(d.scoutingSummary||'')}</div>
       </div></div>
     </div>
+    </div>
+    <div class="under">
     ${lineupCardHTML(m)}
     ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
+    </div>
     <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>
   </div>`;
 
@@ -838,8 +839,10 @@ async function loadPlayLog(pk,pid,pname){
     pas.forEach(p=>{const e=p.result.event;if(/Strikeout/.test(e))K++;if(/Home Run/.test(e)){HR++;H++;}else if(/^(Single|Double|Triple)$/.test(e))H++;if(/Walk|Hit By Pitch/.test(e))BB++;});
     sum.innerHTML=`<b>${pas.length}</b> batters faced &nbsp;·&nbsp; <b>${H}</b> H &nbsp;·&nbsp; <b>${K}</b> K &nbsp;·&nbsp; <b>${BB}</b> BB/HBP &nbsp;·&nbsp; <b>${HR}</b> HR`;
     let html='',lastInn=0;
-    pas.forEach(p=>{const inn=p.about.inning;if(inn!==lastInn){html+=`<div class="pl-inn">${ord(inn)} inning</div>`;lastInn=inn;}
+    pas.forEach(p=>{const inn=p.about.inning;
+      if(inn!==lastInn){if(lastInn!==0)html+=`</div>`;html+=`<div class="pl-grp"><div class="pl-inn">${ord(inn)} inning</div>`;lastInn=inn;}
       const e=p.result.event;html+=`<div class="pl-pa"><span class="pl-tag ${paCls(e)}">${paTag(e)}</span><span class="pl-desc">${esc(p.result.description||e)}</span></div>`;});
+    if(lastInn!==0)html+=`</div>`;
     body.innerHTML=html;
   }catch(err){sum.textContent='';body.innerHTML='<div class="pl-empty">Couldn’t load play-by-play.</div>';}
 }
