@@ -37,6 +37,23 @@
   .keyfield svg{color:var(--mut2);flex:0 0 auto}
   .keywrap input{background:transparent;border:none;color:var(--ink);padding:9px 0;font-family:var(--mono);font-size:11.5px;width:184px;outline:none}
   .keystat{font-size:9px;letter-spacing:.6px;color:var(--mut2);text-transform:uppercase}
+  .scorebar{margin:4px 0 14px}
+  .sb-head{display:flex;align-items:baseline;gap:10px;margin-bottom:9px;padding:0 2px}
+  .sb-t{font-family:var(--cond);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ink);font-weight:600}
+  .sb-d{font-size:11px;color:var(--mut2);letter-spacing:.5px}
+  .sb-strip{display:flex;gap:9px;overflow-x:auto;padding:2px 2px 9px}
+  .sb-strip::-webkit-scrollbar{height:6px}
+  .sb-strip::-webkit-scrollbar-thumb{background:#26323d;border-radius:3px}
+  .sb-strip::-webkit-scrollbar-track{background:transparent}
+  .sg{flex:0 0 auto;width:148px;background:#10161e;border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:9px 12px;cursor:pointer;transition:.15s}
+  .sg:hover{border-color:rgba(255,255,255,.2);background:#131c26;transform:translateY(-2px)}
+  .sg-st{font-family:var(--cond);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin-bottom:7px}
+  .sg-st.live{color:var(--acc)}
+  .sg-row{display:flex;align-items:center;gap:8px;padding:2.5px 0}
+  .sg-row img{width:21px;height:21px;flex:0 0 auto;object-fit:contain}
+  .sg-row .ab{flex:1;font-family:var(--cond);font-size:13.5px;letter-spacing:.5px;color:var(--mut)}
+  .sg-row .sc{font-family:var(--mono);font-size:14px;color:var(--mut);font-weight:600}
+  .sg-row.w .ab,.sg-row.w .sc{color:#fff}
 
   .hero{position:relative;isolation:isolate;text-align:center;padding:56px 20px 10px}
   .hero:before{content:"";position:absolute;left:50%;top:28px;width:580px;max-width:92%;height:250px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,90,60,.16),transparent 72%);filter:blur(10px);z-index:-1;pointer-events:none}
@@ -265,6 +282,8 @@
     </div>
   </header>
 
+  <div class="scorebar" id="scorebar"></div>
+
   <section class="hero">
     <div class="eyebrow">13-Category Scout Model</div>
     <h2 class="hero-title">GRADE <em>ANY</em> MLB START</h2>
@@ -406,6 +425,7 @@ function matchTeam(token){if(!token||!TEAMS)return null;const t=token.toLowerCas
 
 ["Tarik Skubal vs Yankees 2024","Yoshinobu Yamamoto best start 2024","Dodgers starter on 2024-08-24","Gerrit Cole vs Astros 2024"]
 .forEach(c=>{const b=document.createElement('div');b.className='chip';b.textContent=c;b.onclick=()=>{els.q.value=c;els.q.focus();findStart();};els.chips.appendChild(b);});
+loadScoreboard();
 
 const PARSE_SYS=`Extract structured search fields from a request to find ONE MLB pitching start. Output STRICT JSON only:
 {"player":<pitcher full name or null>,"team":<team name/nickname if they reference a club's starter and named NO pitcher, else null>,"opponent":<opposing team name/nickname or null>,"season":<4-digit year or null>,"date":<"YYYY-MM-DD" or null>,"month":<1-12 if a month named without full date, else null>,"rank":<"best"|"worst"|null>}
@@ -494,6 +514,43 @@ async function pickCandidate(c){
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
     els.start.value=buildDescription(g,box,c.side,weather,bp);findMsg('');await run();
   }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
+}
+
+// ===== MLB scoreboard ticker =====
+let scoreGames={};
+function teamAbbr(id){const t=(TEAMS||[]).find(x=>x.id===id);return (t&&t.abbreviation)||'';}
+function fmtSbDate(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});}catch(_){return iso;}}
+function scoreTile(g){
+  const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState,final=st==='Final',live=st==='Live';
+  const ls=g.linescore||{};
+  const status=final?'Final':live?`${ls.inningState||''} ${ls.currentInningOrdinal||''}`.trim()||'Live':(g.gameDate?new Date(g.gameDate).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'');
+  const aw=a.score??0,hw=h.score??0,awin=final&&aw>hw,hwin=final&&hw>aw,show=final||live;
+  const row=(t,sc,win)=>`<div class="sg-row${win?' w':''}"><img src="${logoURL(t.team.id)}" onerror="this.style.visibility='hidden'"><span class="ab">${esc(teamAbbr(t.team.id)||t.team.name.slice(0,3).toUpperCase())}</span><span class="sc">${show?sc:''}</span></div>`;
+  return `<div class="sg" data-pk="${g.gamePk}"><div class="sg-st${live?' live':''}">${esc(status)}</div>${row(a,aw,awin)}${row(h,hw,hwin)}</div>`;
+}
+async function loadScoreboard(){
+  const host=document.getElementById('scorebar');if(!host)return;
+  try{
+    await ensureTeams();
+    const now=new Date();const end=now.toISOString().slice(0,10);const f=new Date(now);f.setDate(now.getDate()-7);const start=f.toISOString().slice(0,10);
+    const j=await fetch(`${STATS}/schedule?sportId=1&startDate=${start}&endDate=${end}&hydrate=team,linescore`).then(r=>r.json());
+    const dates=(j.dates||[]).filter(d=>d.games&&d.games.length);
+    if(!dates.length){host.style.display='none';return;}
+    const last=dates[dates.length-1];scoreGames={};
+    const tiles=last.games.map(g=>{scoreGames[g.gamePk]=g;return scoreTile(g);}).join('');
+    host.innerHTML=`<div class="sb-head"><span class="sb-t">Scoreboard</span><span class="sb-d">${esc(fmtSbDate(last.date))}</span></div><div class="sb-strip">${tiles}</div>`;
+    host.querySelectorAll('.sg').forEach(el=>el.addEventListener('click',()=>pickScoreGame(el.dataset.pk)));
+  }catch(e){host.style.display='none';}
+}
+async function gameToCandidates(g){const box=await getBox(g.gamePk);const out=[];
+  for(const side of ['away','home']){const sp=starterOf(box,side);if(!sp)continue;const opp=side==='away'?'home':'away';
+    out.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:(g.gameDate||'').slice(0,10),stat:sp.line});}
+  return out;}
+async function pickScoreGame(pk){const g=scoreGames[pk];if(!g)return;
+  document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});findMsg('<span class="dots">Loading the starters</span>');
+  try{const cands=await gameToCandidates(g);if(!cands.length){findMsg('That game hasn’t been played yet — no box score.',true);return;}
+    LAST_CANDS=cands;renderCands(cands);findMsg('Pick the starter you want graded.');}
+  catch(e){findMsg('Couldn’t load that game: '+esc(e.message),true);}
 }
 
 // schedule browser
