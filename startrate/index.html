@@ -129,8 +129,22 @@
   #result.show{display:block}
 
   /* ================= TOPPS / THE SHOW CARDS ================= */
-  .duo{display:grid;grid-template-columns:repeat(2,minmax(0,360px));gap:26px;justify-content:center;align-items:start}
-  @media(max-width:780px){.duo{grid-template-columns:minmax(0,360px)}}
+  /* result board — responsive HUD: stacks on phones, spreads out on big screens with the grade card centered */
+  .board{display:grid;gap:18px;justify-content:center;align-items:start;
+    grid-template-columns:minmax(0,420px);
+    grid-template-areas:"grade" "ratings" "lineup" "log" "facts"}
+  @media(min-width:880px){.board{grid-template-columns:358px 358px;
+    grid-template-areas:"grade ratings" "lineup ratings" "log ratings" "facts facts"}}
+  @media(min-width:1300px){.board{grid-template-columns:336px 384px 336px;gap:22px;
+    grid-template-areas:"lineup grade ratings" "log grade ratings" "log facts ratings"}}
+  #cardF{grid-area:grade}
+  #cardB{grid-area:ratings}
+  .board .lineupcard{grid-area:lineup;margin:0}
+  .board .playlog{grid-area:log}
+  .board .facts{grid-area:facts}
+  .board .section{max-width:none;margin:0}
+  .board .tsc{width:100%}
+  .lwrap{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
 
   .tsc{position:relative;width:100%;padding:5px;
     clip-path:polygon(28px 0,100% 0,100% calc(100% - 28px),calc(100% - 28px) 100%,0 100%,0 28px);
@@ -337,6 +351,7 @@ const STATS='https://statsapi.mlb.com/api/v1';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const pad2=n=>String(n).padStart(2,'0');
+const offDate=g=>(g&&g.officialDate)||((g&&g.gameDate)||'').slice(0,10); // calendar date, not the UTC roll-over
 const headURL=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
 const logoURL=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
 
@@ -371,28 +386,36 @@ const CATEGORIES=[
   ["Dominance Signal","The scouting eye test: did hitters look uncomfortable, was the stuff deceptive, did he own the at-bats — beyond the raw numbers."],
 ];
 
-const GRADE_SYS=`You are a professional MLB pitching start evaluator. Grade a SINGLE pitching start on a 0–100 scale with a letter grade, using a 13-category hierarchical model that blends stats, context, environment, and scouting evaluation. Do NOT rely on box-score stats alone — adjust for game context, opponent strength, bullpen fatigue, park effects, luck (BABIP/sequencing/defense), leverage, and scouting-level dominance.
+const GRADE_SYS=`You are a professional MLB pitching start evaluator. Grade ONE start 0–100 with a letter grade using a 13-category model that blends stats, context, environment, and scouting. Never rely on the box score alone — adjust for opponent, park, luck, leverage, bullpen state, and the eye test.
 
-THE 13 CATEGORIES (score each 1–10):
-1. Run Prevention (DESERVED) — how many runs SHOULD have scored (xERA, hard contact, BABIP luck, sequencing).
-2. Strikeout Dominance — K rate, whiffs, batter quality, leverage Ks.
-3. Command & Control — walks, zone control, precision under pressure.
-4. Efficiency — pitches/inning, early-count success, avoiding deep counts.
-5. Length / Durability — IP, fatigue resistance, 3rd-time-through, late-game.
-6. Quality of Contact — barrels, hard-hit %, xwOBA; weak vs dangerous contact.
-7. Leverage Performance — high-leverage innings, RISP, bases-loaded escapes, WPA.
-8. Bullpen Relief Value — innings saved, bullpen fatigue before game, leverage preserved.
-9. Game State Impact — score context/flow, keeping team competitive, stabilizing.
-10. Opponent Strength — real hitter quality, lineup depth, star hitters, platoon difficulty.
-11. Ballpark & Environment — park factors, altitude, weather, pitching difficulty.
-12. Luck Adjustment — BABIP deviation, sequencing luck, defensive support, expected vs actual.
-13. Dominance Signal (SCOUTING) — batter discomfort, deception, perceived stuff, AB control, eye-test vs stat mismatch.
+SCORE EACH CATEGORY 1–10. Calibrate to a normal MLB start: an average quality start ≈ 6, not 5. Be fair, not stingy — reserve 1–3 for genuinely poor marks. General scale: 10 = elite/best-in-class, 8–9 = excellent, 6–7 = above average, 5 = average, 3–4 = below average, 1–2 = poor.
 
-CONTEXT ENGINE — compute a Pressure Index (0–100) from score margin (closer=higher), inning (later=higher), bullpen fatigue, leverage, game importance. DYNAMICALLY adjust category weights: high pressure → up-weight Run Prevention, Leverage Performance, clutch, Bullpen Relief Value; low pressure → reduce leverage impact. Weights sum to 100.
+CATEGORY ANCHORS (rate categories scale to the innings actually pitched — a great rate over a short outing still grades well; Length is its own separate category, so do NOT punish rate categories twice for a short start):
+1. Run Prevention (DESERVED — runs that SHOULD have scored given contact quality/sequencing/xERA, not just what crossed): 0 ER & clean = 9–10; ≤1 ER on sound contact = 8; 2 ER = 6–7; 3 ER = 5; 4 ER = 3–4; 5+ ER = 1–2. (Example: 1 ER over 5–6 IP on weak contact ≈ 8, i.e. ~79/99 — NOT a 5.)
+2. Strikeout Dominance: ~1.4+ K/IP or 12+ whiffs = 9–10; ~1 K/IP = 6–7; few Ks/whiffs = 3–4.
+3. Command & Control: 0 BB hitting spots = 9–10; 1–2 BB = 6–7; 4+ BB or wild = 2–4.
+4. Efficiency: <14 pitches/inning & early contact = 8–10; ~15–16 = 6; >18 or many deep counts = 3–4.
+5. Length / Durability: 8+ IP = 9–10; 7 IP = 8; 6 IP = 6–7; 5 IP = 5; <5 IP = 2–4.
+6. Quality of Contact: mostly soft contact/grounders, no barrels = 8–10; some hard contact = 5–6; lots of barrels = 2–4.
+7. Leverage Performance: stranded RISP / escaped real jams = 8–10; failed in big spots = 2–4; few leverage spots faced = neutral 5–6.
+8. Bullpen Relief Value: judge from the team's prior-day relief usage in the input — going deep when the pen was gassed = 8–10; a short outing taxing a fresh pen = 3–4.
+9. Game State Impact: kept the team in it / stabilized the game = high; let it slip = low.
+10. Opponent Strength: this scores the DIFFICULTY of the lineup faced — a strong/deep lineup = 8–10, a weak lineup = 3–5 (facing tougher hitters earns more).
+11. Ballpark & Environment: hostile hitter's park / wind blowing out = 7–9; neutral = 5–6; pitcher's park helping = 3–5.
+12. Luck Adjustment: if results were LUCKIER than the process, score lower; if he was UNLUCKY and deserved better, score higher; matched = ~6.
+13. Dominance Signal (scouting eye test): hitters uncomfortable, plus stuff/deception, owned the at-bats = 8–10; hittable = 3–5.
 
-RULES: Never rely only on ERA/box score. Always adjust for context and environment. Never ignore bullpen fatigue or leverage. Correct luck but don't let it overpower. Dominance Signal can nudge perception but not override. The box-score facts provided are REAL (MLB Stats API) — trust them exactly. Estimate missing advanced data from the situation and named opponent hitters; note key assumptions. Use your knowledge of the specific players and park. Keep each "reason" to ONE crisp sentence.
+PRESSURE INDEX (0–100): from score margin (closer=higher), inning (later=higher), bullpen fatigue, leverage, game importance.
+
+WEIGHTS — START from these base weights, then adjust for the pressure index and NORMALIZE so all 13 sum to EXACTLY 100:
+Run Prevention 16 · Quality of Contact 11 · Command & Control 10 · Strikeout Dominance 10 · Length/Durability 10 · Opponent Strength 9 · Leverage 7 · Dominance Signal 7 · Efficiency 6 · Luck 5 · Game State 4 · Bullpen Relief 3 · Ballpark 2.
+High pressure → add weight to Run Prevention, Leverage, Bullpen Relief, Game State (trim Efficiency/Ballpark). Low-pressure blowout → trim Leverage & Game State, add to Length, Efficiency, Dominance.
+
+FINAL GRADE = the weight-average of the 13 scores: round( (Σ score×weight) / 100 × 10 ). Sanity-check it against reality: a dominant ace gem ≈ 90–97, a strong start ≈ 80–88, a solid quality start ≈ 72–79, mediocre ≈ 62–70, poor < 60. Do NOT bunch everything near 50.
 
 LETTER: 95–100 A+ · 90–94 A · 85–89 A- · 80–84 B+ · 75–79 B · 70–74 B- · 65–69 C+ · 60–64 C · <60 D/F.
+
+The box-score facts provided are REAL (MLB Stats API) — trust them exactly. Estimate missing advanced data from the situation and the named hitters; note key assumptions. Keep each "reason" to ONE crisp sentence.
 
 OUTPUT STRICT JSON ONLY (no prose, no code fences):
 {"finalGrade":<int 0-100>,"letter":"<A+|A|A-|B+|B|B-|C+|C|D/F>","pressureIndex":<int 0-100>,"pressureLabel":"<2-4 words>","categories":[{"score":<int 1-10>,"weight":<number; all 13 sum to 100>,"reason":"<one sentence>"}],"contextExplanation":"<2-3 sentences: pressure+environment+bullpen and how it shaped weighting>","scoutingSummary":"<2-4 sentences: what kind of start this really was>","oneLiner":"<one punchy verdict sentence>"}
@@ -489,7 +512,7 @@ async function teamCandidates(p){
   for(const g of g2){const side=g.teams.home.team.id===tm.id?'home':'away';
     try{const box=await getBox(g.gamePk);const sp=starterOf(box,side);if(!sp)continue;const opp=side==='home'?'away':'home';
       cands.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,
-        oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:(g.gameDate||'').slice(0,10),stat:sp.line});}catch(_){}}
+        oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:offDate(g),stat:sp.line});}catch(_){}}
   return {cands,note:''};
 }
 function renderCands(cands){
@@ -544,7 +567,7 @@ async function loadScoreboard(){
 }
 async function gameToCandidates(g){const box=await getBox(g.gamePk);const out=[];
   for(const side of ['away','home']){const sp=starterOf(box,side);if(!sp)continue;const opp=side==='away'?'home':'away';
-    out.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:(g.gameDate||'').slice(0,10),stat:sp.line});}
+    out.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:offDate(g),stat:sp.line});}
   return out;}
 async function pickScoreGame(pk){const g=scoreGames[pk];if(!g)return;
   document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});findMsg('<span class="dots">Loading the starters</span>');
@@ -647,12 +670,12 @@ async function computeOppLineup(pk,pid,order,box,opp){
 function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const ln=sp.line;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
   return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
-    date:(g.gameDate||'').slice(0,10),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppOrder:oppOrderOf(box,opp),
+    date:offDate(g),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppOrder:oppOrderOf(box,opp),
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
 function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
-  const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=g.gameDate?g.gameDate.slice(0,10):els.date.value;
+  const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=offDate(g)||els.date.value;
   const pitches=ln.numberOfPitches??ln.pitchesThrown,strikes=ln.strikes;
   let wStr='';if(weather){const ps=[];if(weather.temp)ps.push(weather.temp+'°F');if(weather.condition)ps.push(weather.condition);if(weather.wind)ps.push('wind '+weather.wind);if(ps.length)wStr='\nWeather: '+ps.join(', ');}
   const decision=sp.note?'  '+sp.note:'';
@@ -724,7 +747,7 @@ async function run(){
 }
 function status(html,isErr){els.status.innerHTML=html;els.status.style.color=isErr?'var(--bad)':'var(--mut)';}
 function showLoading(){
-  els.result.innerHTML=`<div class="duo">
+  els.result.innerHTML=`<div class="lwrap">
     <div class="lcard"><div class="li"><svg class="ball lball" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="bg2" cx="38%" cy="32%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset="62%" stop-color="#eef2f6"/><stop offset="100%" stop-color="#cdd4db"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#bg2)"/><g fill="none" stroke="#e23f22" stroke-linecap="round"><path d="M12 3.8C6.6 11.6 6.6 28.4 12 36.2" stroke-width="1.7"/><path d="M28 3.8C33.4 11.6 33.4 28.4 28 36.2" stroke-width="1.7"/><g stroke-width="1.2"><path d="M9.6 10.6l3 1.2"/><path d="M8.5 15.5l3.1 .9"/><path d="M8.2 20.4l3.1 .3"/><path d="M8.5 25.3l3.1 -.4"/><path d="M9.6 30.2l3 -1.1"/><path d="M30.4 10.6l-3 1.2"/><path d="M31.5 15.5l-3.1 .9"/><path d="M31.8 20.4l-3.1 .3"/><path d="M31.5 25.3l-3.1 -.4"/><path d="M30.4 30.2l-3 -1.1"/></g></g></svg><div class="lt">PULLING THE CARD…</div></div></div>
     <div class="lcard"><div class="li"></div></div></div>`;
   els.result.classList.add('show');els.result.scrollIntoView({behavior:'smooth',block:'start'});
@@ -752,8 +775,7 @@ function render(d,factText){
       </div></div></div>`;});
 
   els.result.innerHTML=`
-  <div class="duo">
-    <div class="lcol">
+  <div class="board">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -772,8 +794,6 @@ function render(d,factText){
         ${d.oneLiner?`<div class="flavor">“${esc(d.oneLiner)}”</div>`:''}
       </div>
     </div>
-    ${lineupCardHTML(m)}
-    </div>
 
     <div class="tsc back" id="cardB" style="${tv}">
       <div class="tsc-inner"><div class="back-pad">
@@ -788,9 +808,10 @@ function render(d,factText){
         <div class="back-blurb"><b>Scouting Report</b>${esc(d.scoutingSummary||'')}</div>
       </div></div>
     </div>
-  </div>
-  ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
-  <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>`;
+    ${lineupCardHTML(m)}
+    ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
+    <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>
+  </div>`;
 
   els.result.classList.add('show');
   const cf=$('#cardF'),cb=$('#cardB');
