@@ -135,14 +135,17 @@
   .brows-grid{display:grid;grid-template-columns:1fr;column-gap:34px}
   @media(min-width:640px){.brows-grid{grid-template-columns:1fr 1fr}}
   .under{margin-top:20px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
-  @media(min-width:1000px){.under{grid-template-columns:362px minmax(0,1fr);align-items:start}}
-  .under .lineupcard{margin:0}
-  .under .playlog{margin:0}
+  @media(min-width:820px){.under{grid-template-columns:1fr 1fr;align-items:start}}
+  .under .lineupcard,.under .spray{margin:0}
   .board .section{max-width:none;margin:0}
   .board>.facts{margin-top:20px}
   .board .scoutbox{margin-top:20px}
+  .board>.playlog{margin-top:20px}
   .scoutbox .summary{font-size:14px;line-height:1.7;color:#d6e1ee}
-  @media(min-width:1000px){.under .playlog .pl-body{column-count:2;column-gap:28px}}
+  @media(min-width:760px){.board>.playlog .pl-body{column-count:2;column-gap:28px}}
+  .spray .field{display:block;width:100%;height:auto;margin-top:6px;border-radius:9px}
+  .spray-lg{display:flex;justify-content:center;gap:18px;margin-top:11px;font-size:11.5px;color:var(--mut)}
+  .spray-lg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .pl-grp{break-inside:avoid}
   .lwrap{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
 
@@ -228,9 +231,10 @@
   .back-blurb b{font-family:var(--cond);letter-spacing:1px;text-transform:uppercase;color:#16202b;display:block;margin-bottom:3px;font-size:11px}
 
   .lcol{display:flex;flex-direction:column;gap:20px;min-width:0}
-  .lineupcard{position:relative;overflow:hidden;padding:4px;animation:cardIn .55s cubic-bezier(.2,.9,.25,1) .16s both;
+  .lineupcard,.spray{position:relative;overflow:hidden;padding:4px;animation:cardIn .55s cubic-bezier(.2,.9,.25,1) .16s both;
     clip-path:polygon(22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%,0 22px);background:linear-gradient(150deg,#34424f,#0e1822)}
-  .lineupcard .lc-in{position:relative;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
+  .spray{--tc:#34d39a}
+  .lineupcard .lc-in,.spray .lc-in{position:relative;clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px);
     background:linear-gradient(180deg,#101a24,#0a121b);padding:18px 16px 15px}
   .lc-in:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--tc,#5cd9ff);opacity:.9}
   .lc-head{display:flex;align-items:center;gap:11px;margin:2px 0 13px}
@@ -504,6 +508,7 @@ async function pickCandidate(c){
   try{const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
     currentMeta=buildMeta(g,box,c.side,weather);
     currentMeta.oppLineup=await computeOppLineup(c.gamePk,currentMeta.pid,currentMeta.oppOrder,box,c.side==='away'?'home':'away');
+    currentMeta.spray=sprayData(await getPlays(c.gamePk),currentMeta.pid);
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
     const desc=buildDescription(g,box,c.side,weather,bp);findMsg('');await run(desc);
   }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
@@ -622,6 +627,33 @@ function lineupCardHTML(m){
   </div></div>`;
 }
 
+// batted balls (with field coordinates) the pitcher allowed — for the spray chart
+function sprayData(plays,pid){
+  const out=[];
+  for(const p of plays){if(!(p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.id===pid&&p.result&&p.result.type==='atBat'))continue;
+    for(const ev of (p.playEvents||[])){const c=ev.hitData&&ev.hitData.coordinates;
+      if(c&&c.coordX!=null&&c.coordY!=null){const e=p.result.event||'';const hr=/Home Run/.test(e),hit=hr||/^(Single|Double|Triple)$/.test(e);
+        out.push({x:+c.coordX,y:+c.coordY,hit,hr});break;}}}
+  return out;
+}
+const FIELD=`<defs><radialGradient id="grass" cx="50%" cy="80%" r="82%"><stop offset="0" stop-color="#173a22"/><stop offset="100%" stop-color="#0b1a10"/></radialGradient></defs>`+
+  `<path d="M125 205 L23 95 Q125 -42 227 95 Z" fill="url(#grass)" stroke="#2c4a35" stroke-width="1.2"/>`+
+  `<path d="M125 205 L160 170 L125 135 L90 170 Z" fill="#3a2a1c" fill-opacity=".5" stroke="#5a4636" stroke-width="1"/>`+
+  `<line x1="125" y1="205" x2="23" y2="95" stroke="#46694f" stroke-width="1.3"/><line x1="125" y1="205" x2="227" y2="95" stroke="#46694f" stroke-width="1.3"/>`+
+  `<circle cx="160" cy="170" r="2" fill="#d6dbe1"/><circle cx="125" cy="135" r="2" fill="#d6dbe1"/><circle cx="90" cy="170" r="2" fill="#d6dbe1"/>`+
+  `<circle cx="125" cy="178" r="3" fill="#5a4636"/><path d="M121.5 205 h7 v3.2 l-3.5 3 l-3.5 -3 Z" fill="#e6eaef"/>`;
+function sprayCardHTML(m){
+  if(!m||!m.spray||!m.spray.length)return '';
+  const balls=m.spray,hr=balls.filter(b=>b.hr).length,hits=balls.filter(b=>b.hit).length,outs=balls.length-hits;
+  const dots=balls.map(b=>{const col=b.hr?'#ff5a6e':b.hit?'#ffb13c':'#7fa0bd';const r=b.hr?4.2:3.4;
+    return `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${r}" fill="${col}" stroke="#0a0f15" stroke-width=".7"/>`;}).join('');
+  return `<div class="spray"><div class="lc-in">
+    <div class="lc-head"><div class="t">Spray Chart<small>balls in play vs him — hits vs outs</small></div></div>
+    <svg viewBox="0 14 250 198" class="field">${FIELD}${dots}</svg>
+    <div class="spray-lg"><span><i style="background:#7fa0bd"></i>${outs} out${outs!==1?'s':''}</span><span><i style="background:#ffb13c"></i>${hits-hr} hit${(hits-hr)!==1?'s':''}</span>${hr?`<span><i style="background:#ff5a6e"></i>${hr} HR</span>`:''}</div>
+  </div></div>`;
+}
+
 // click a category row on the card back to expand its definition + reasoning (click again to close)
 els.result.addEventListener('click',e=>{const r=e.target.closest('.brow');if(r&&r.parentElement.classList.contains('bitem'))r.parentElement.classList.toggle('open');});
 
@@ -704,8 +736,9 @@ function render(d,factText){
     <div class="section scoutbox"><h3>Scouting Report</h3><div class="summary">${esc(d.scoutingSummary||'')}</div></div>
     <div class="under">
     ${lineupCardHTML(m)}
-    ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
+    ${sprayCardHTML(m)}
     </div>
+    ${m?`<div class="section playlog" id="playlog"><h3>Vs the Lineup · every batter faced</h3><div class="pl-sum">loading play-by-play…</div><div class="pl-body"></div></div>`:''}
     <details class="facts section"><summary>The real box-score facts that were graded</summary><div class="factline">${esc(factText)}</div></details>
   </div>`;
 
