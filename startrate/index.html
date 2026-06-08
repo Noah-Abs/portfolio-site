@@ -430,10 +430,14 @@ async function ensureTeams(){if(TEAMS)return TEAMS;const j=await fetch(`${STATS}
 function matchTeam(token){if(!token||!TEAMS)return null;const t=token.toLowerCase().trim();let best=null;
   for(const tm of TEAMS){const names=[tm.name,tm.clubName,tm.teamName,tm.shortName,tm.abbreviation,tm.franchiseName].filter(Boolean).map(x=>x.toLowerCase());
     if(names.includes(t))return tm;if(names.some(n=>n.includes(t)||t.includes(n)))best=best||tm;}return best;}
+// ballpark keyword -> home team id, so "at Fenway" can be matched
+const PARK_TEAM={fenway:111,yankee:147,wrigley:112,'great american':113,coors:115,comerica:116,'minute maid':117,daikin:117,kauffman:118,dodger:119,nationals:120,'citi field':121,oracle:137,busch:138,tropicana:139,steinbrenner:139,'globe life':140,rogers:141,'target field':142,'citizens bank':143,truist:144,'rate field':145,'guaranteed rate':145,loandepot:146,'american family':158,angel:108,chase:109,camden:110,oriole:110,progressive:114,sutter:133,coliseum:133,pnc:134,petco:135,'t-mobile':136};
+function parkTeamId(v){if(!v)return null;const s=v.toLowerCase();for(const k in PARK_TEAM)if(s.includes(k))return PARK_TEAM[k];return null;}
+function venueWords(v){return (v||'').toLowerCase().split(/\s+/).filter(w=>w.length>3&&!/(park|field|stadium|ballpark|center|centre|coliseum)/.test(w));}
 
 const PARSE_SYS=`Extract structured search fields from a request to find MLB pitching starts. Output STRICT JSON only:
-{"player":<pitcher full name or null>,"team":<team name/nickname if they reference a club's starter and named NO pitcher, else null>,"opponent":<opposing team name/nickname or null>,"season":<4-digit year or null>,"date":<"YYYY-MM-DD" or null>,"month":<1-12 if a month named without full date, else null>,"rank":<"best"|"worst"|null>}
-EXPAND nicknames/short names to the pitcher's real full name (e.g. "yoshi" → Yoshinobu Yamamoto, "JV" → Justin Verlander, "Gerrit" → Gerrit Cole). If a pitcher is named, set player and leave team null. Any OTHER team mentioned (with or without "vs"/"against") is the opponent — e.g. "yoshi diamondbacks 2025" → player "Yoshinobu Yamamoto", opponent "Arizona Diamondbacks", season 2025. If a month/timeframe is given with no year, use the most recent season it has ALREADY occurred relative to today. Output JSON only.`;
+{"player":<pitcher full name or null>,"team":<team name/nickname if they reference a club's starter(s) and named NO pitcher, else null>,"opponent":<opposing team name/nickname or null>,"venue":<ballpark/stadium name if a place is mentioned (e.g. "Fenway Park","Yankee Stadium","Wrigley"), else null>,"season":<4-digit year or null>,"date":<"YYYY-MM-DD" or null>,"month":<1-12 if a month named without full date, else null>,"rank":<"best"|"worst"|null>}
+EXPAND nicknames/short names to the pitcher's real full name (e.g. "yoshi" → Yoshinobu Yamamoto, "JV" → Justin Verlander). If a pitcher is named, set player and leave team null. "<team> starter(s)" → team. A team after vs/against/@ → opponent. "at <ballpark>" or a named stadium → venue. Example: "yankees starters at fenway park 2026" → team "New York Yankees", venue "Fenway Park", season 2026 (a broad request for every matching start). If a month/timeframe has no year, use the most recent season it has already occurred. Output JSON only.`;
 
 els.find.addEventListener('click',findStart);
 els.q.addEventListener('keydown',e=>{if(e.key==='Enter')findStart();});
@@ -472,6 +476,7 @@ async function playerCandidates(p){
   let starts=splits.filter(s=>+(s.stat&&s.stat.gamesStarted)===1);const all=starts.slice();
   if(p.opponent){const tm=matchTeam(p.opponent);const tail=(tm?tm.name:p.opponent).toLowerCase().split(' ').pop();
     starts=starts.filter(s=>s.opponent&&s.opponent.name.toLowerCase().includes(tail));}
+  if(p.venue){const hid=parkTeamId(p.venue);if(hid)starts=starts.filter(s=>(s.opponent&&s.opponent.id===hid&&!s.isHome)||(s.team&&s.team.id===hid&&s.isHome));}
   if(p.date)starts=starts.filter(s=>s.date===p.date);else if(p.month)starts=starts.filter(s=>+s.date.slice(5,7)===+p.month);
   let note='';if(!starts.length&&all.length){starts=all;note='No exact match — showing all '+used+' starts for '+esc(person.fullName)+'.';}
   if(p.rank){starts=starts.slice().sort((a,b)=>startScore(b.stat)-startScore(a.stat));if(p.rank==='worst')starts.reverse();starts=starts.slice(0,1);
@@ -481,20 +486,23 @@ async function playerCandidates(p){
 }
 async function teamCandidates(p){
   const tm=matchTeam(p.team);if(!tm)return {cands:[],note:'Couldn’t identify team “'+esc(p.team)+'”.'};
-  let start,end;
+  const yr=p.season||defaultSeason();let start,end;
   if(p.date){start=end=p.date;}
-  else if(p.month){const yr=p.season||defaultSeason();const last=new Date(yr,p.month,0).getDate();start=`${yr}-${pad2(p.month)}-01`;end=`${yr}-${pad2(p.month)}-${pad2(last)}`;}
-  else {return {cands:[],note:'Add a date (“'+esc(tm.clubName)+' starter on 2024-08-24”) or an opponent + month.'};}
+  else if(p.month){const last=new Date(yr,p.month,0).getDate();start=`${yr}-${pad2(p.month)}-01`;end=`${yr}-${pad2(p.month)}-${pad2(last)}`;}
+  else {start=`${yr}-03-01`;end=`${yr}-11-30`;} // whole season
   const j=await fetch(`${STATS}/schedule?sportId=1&teamId=${tm.id}&startDate=${start}&endDate=${end}&hydrate=team,linescore,venue`).then(r=>r.json());
-  let g2=[];(j.dates||[]).forEach(d=>g2.push(...(d.games||[])));g2=g2.filter(g=>['Final','Live'].includes(g.status.abstractGameState));
+  let g2=[];(j.dates||[]).forEach(d=>g2.push(...(d.games||[])));
+  g2=g2.filter(g=>['Final','Live'].includes(g.status.abstractGameState)&&g.gameType!=='S'&&g.gameType!=='E');
   if(p.opponent){const opp=matchTeam(p.opponent);const oid=opp&&opp.id;if(oid)g2=g2.filter(g=>g.teams.away.team.id===oid||g.teams.home.team.id===oid);}
-  if(!g2.length)return {cands:[],note:'No completed '+esc(tm.clubName)+' games in that window.'};
-  g2=g2.slice(0,8);const cands=[];
+  if(p.venue){const vw=venueWords(p.venue);if(vw.length)g2=g2.filter(g=>{const vn=((g.venue&&g.venue.name)||'').toLowerCase();return vw.some(w=>vn.includes(w));});}
+  if(!g2.length)return {cands:[],note:'No completed '+esc(tm.clubName)+' starts found for that.'};
+  g2.sort((a,b)=>(a.gameDate<b.gameDate?-1:1));
+  const total=g2.length;g2=g2.slice(0,18);const cands=[];
   for(const g of g2){const side=g.teams.home.team.id===tm.id?'home':'away';
     try{const box=await getBox(g.gamePk);const sp=starterOf(box,side);if(!sp)continue;const opp=side==='home'?'away':'home';
       cands.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,
-        oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:offDate(g),stat:sp.line});}catch(_){}}
-  return {cands,note:''};
+        oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:offDate(g),stat:sp.line,venueName:(g.venue&&g.venue.name)||''});}catch(_){}}
+  return {cands,note:total>18?total+' starts found — showing the first 18. Add a month or opponent to narrow.':''};
 }
 function renderCands(cands){
   els.cands.innerHTML=cands.map((c,i)=>{const s=c.stat||{};const tc=TEAMCOL[c.teamId]||'#5cd9ff';
@@ -504,7 +512,7 @@ function renderCands(cands){
         <img class="chead" src="${headURL(c.pid)}" onerror="this.style.opacity=.45">
         <div class="cwho"><div class="pn">${esc(c.name)}</div><div class="mt">vs ${esc(c.oppName)}</div></div>
       </div>
-      <div class="dt">${esc(c.date)}</div>
+      <div class="dt">${esc(c.date)}${c.venueName?' · '+esc(c.venueName):''}</div>
       <div class="ln">${s.inningsPitched??'?'} IP · ${s.earnedRuns??'?'} ER · ${s.strikeOuts??'?'} K · ${s.baseOnBalls??'?'} BB</div>
       <div class="go">Grade this start <span>→</span></div></div>`;}).join('');
   els.cands.querySelectorAll('.cand').forEach(el=>el.addEventListener('click',()=>pickCandidate(LAST_CANDS[+el.dataset.i])));
