@@ -171,11 +171,12 @@
     background:conic-gradient(from 200deg at 30% 20%,#ff5a3c,#ffd24a,#5cd9ff,#a06bff,#34d39a,#ff5a3c);}
 
   /* FRONT */
-  .photo{position:relative;height:236px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
-  .photo .plogo{position:absolute;width:188px;height:188px;top:24px;left:50%;transform:translateX(-50%);opacity:.16;z-index:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
-  .photo .phead{position:relative;z-index:2;height:230px;width:auto;filter:drop-shadow(0 8px 14px rgba(0,0,0,.55))}
+  .photo{position:relative;height:250px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+  .photo .plogo{position:absolute;width:200px;height:200px;top:14px;left:50%;transform:translateX(-50%);opacity:.12;z-index:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .photo .phead{position:relative;z-index:2;width:84%;max-width:270px;height:auto;filter:drop-shadow(0 7px 13px rgba(0,0,0,.5))}
+  .photo .phead.phead-sm{width:auto;height:206px;margin-bottom:8px}
   .photo .seamfb{position:relative;z-index:2;width:110px;height:110px;border-radius:50%;margin-bottom:30px;background:radial-gradient(circle at 35% 30%,#fff,#d6dbe1);box-shadow:0 8px 20px rgba(0,0,0,.5)}
-  .photo:after{content:"";position:absolute;left:0;right:0;bottom:0;height:64px;z-index:3;background:linear-gradient(180deg,transparent,#0b141d)}
+  .photo:after{content:"";position:absolute;left:0;right:0;bottom:0;height:86px;z-index:3;background:linear-gradient(180deg,transparent,#0b141d 88%)}
 
   .hud{position:absolute;top:12px;left:0;right:0;z-index:4;display:flex;justify-content:space-between;align-items:flex-start;padding:0 14px}
   .ovr{display:flex;flex-direction:column;align-items:center;line-height:.86;
@@ -339,6 +340,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','
 const pad2=n=>String(n).padStart(2,'0');
 const offDate=g=>(g&&g.officialDate)||((g&&g.gameDate)||'').slice(0,10); // calendar date, not the UTC roll-over
 const headURL=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+const siloURL=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/w_280,q_auto:best/v1/people/${id}/headshot/silo/current`;
 const logoURL=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
 
 // team primary colors by MLB teamId
@@ -346,7 +348,7 @@ const TEAMCOL={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3
 115:'#33006F',116:'#0C2340',117:'#002D62',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#002D72',133:'#003831',
 134:'#FDB827',135:'#2F241D',136:'#0C2C56',137:'#FD5A1E',138:'#C41E3A',139:'#092C5C',140:'#003278',141:'#134A8E',
 142:'#002B5C',143:'#E81828',144:'#CE1141',145:'#27251F',146:'#00A3E0',147:'#0C2340',158:'#12284B'};
-function teamBG(id){const c=TEAMCOL[id]||'#1b2735';return `radial-gradient(ellipse 150% 120% at 50% 22%, ${c} 0%, ${c}d0 34%, #0b141d 84%)`;}
+function teamBG(id){const c=TEAMCOL[id]||'#1b2735';return `radial-gradient(135% 115% at 50% 6%, ${c} 0%, ${c}b0 46%, #0b141d 92%)`;}
 function gemSVG(){return `<svg class="gem" viewBox="0 0 64 60" width="36" height="34" aria-hidden="true">
   <defs><linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c2)"/><stop offset="1" stop-color="var(--c1)"/></linearGradient></defs>
   <g stroke="rgba(255,255,255,.6)" stroke-width="1" stroke-linejoin="round">
@@ -719,7 +721,7 @@ function render(d,factText){
 
   const photo=m?`<div class="photo" id="ph" style="background:${teamBG(m.teamId)}">
       ${m.teamId?`<img class="plogo" src="${logoURL(m.teamId)}" onerror="this.remove()">`:''}
-      <img class="phead" src="${headURL(m.pid)}" onerror="this.remove();document.getElementById('ph').insertAdjacentHTML('beforeend','<div class=seamfb></div>')">
+      <img class="phead" src="${siloURL(m.pid)}" onerror="this.onerror=null;this.src='${headURL(m.pid)}';this.classList.add('phead-sm')">
     </div>`:`<div class="photo" style="background:${teamBG()}"><div class="seamfb"></div></div>`;
   const name=m?m.name:'Custom Start', team=m?m.teamName:'—';
   const match=m?`vs ${esc(m.oppName)} · ${esc(m.date)}${m.venue?' · '+esc(m.venue):''}`:'';
