@@ -217,21 +217,23 @@
   .pmark{position:absolute;top:-4px;width:3px;height:17px;background:#16202b;border-radius:2px;transition:left 1s cubic-bezier(.2,.8,.2,1);left:0}
   .pctx{font-size:11px;color:#574d39;margin-top:7px;line-height:1.45}
 
-  .bitem{border-bottom:1px solid rgba(0,0,0,.09)}
-  .brow{display:grid;grid-template-columns:1fr 70px 26px;gap:9px;align-items:center;padding:7px 0;cursor:pointer;user-select:none}
-  .brow:hover .bn{color:#000}
-  .brow .bn{font-size:12px;font-weight:600;color:#222b36;display:flex;align-items:center;gap:7px}
-  .bcar{font-size:8px;color:#9a8d6e;transition:transform .22s;flex:0 0 auto}
-  .bitem.open .bcar{transform:rotate(90deg)}
-  .bbar{height:7px;background:rgba(0,0,0,.09);border-radius:4px;overflow:hidden}
-  .bbar>i{display:block;height:100%;border-radius:4px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
-  .bval{font-family:var(--cond);font-weight:700;font-size:16px;text-align:right;line-height:1}
-  .bdrop{max-height:0;overflow:hidden;transition:max-height .32s ease}
-  .bitem.open .bdrop{max-height:280px}
-  .bdrop-in{padding:1px 2px 12px}
-  .bdef{font-size:11px;color:#5a5240;line-height:1.5}
-  .bwhy{font-size:11.5px;color:#27313d;margin-top:8px;line-height:1.5}
-  .bwhy b{display:block;font-family:var(--cond);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:#16202b;margin-bottom:2px}
+  /* ratings master-detail: list of categories + a side panel that shows the clicked one */
+  .rate-wrap{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}
+  @media(min-width:560px){.rate-wrap{grid-template-columns:minmax(0,1fr) minmax(0,.92fr);gap:16px}}
+  .rate-row{display:grid;grid-template-columns:1fr 54px 24px;gap:9px;align-items:center;padding:6px 8px;cursor:pointer;border-radius:7px;transition:background .12s}
+  .rate-row:hover{background:rgba(0,0,0,.05)}
+  .rate-row.active{background:rgba(0,0,0,.09)}
+  .rate-row .rn{font-size:12.5px;font-weight:600;color:#222b36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rate-row .rbar{height:7px;background:rgba(0,0,0,.1);border-radius:4px;overflow:hidden}
+  .rate-row .rbar>i{display:block;height:100%;border-radius:4px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .rate-row .rval{font-family:var(--cond);font-weight:700;font-size:15px;text-align:right;line-height:1}
+  .rate-detail{background:rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.09);border-radius:11px;padding:15px 16px;align-self:start;min-height:158px}
+  .rd-name{font-family:var(--anton);font-size:18px;color:#16202b;letter-spacing:.3px;line-height:1.05}
+  .rd-score{font-family:var(--cond);font-weight:700;font-size:30px;line-height:1;margin:7px 0 11px}
+  .rd-score small{font-family:var(--ui);font-size:11px;color:#6a6450;font-weight:600;margin-left:6px}
+  .rd-def{font-size:12.5px;color:#574d39;line-height:1.55}
+  .rd-why{font-size:12.5px;color:#27313d;line-height:1.55;margin-top:11px;padding-top:11px;border-top:1px solid rgba(0,0,0,.1)}
+  .rd-why b{display:block;font-family:var(--cond);font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:#16202b;margin-bottom:3px}
   .back-blurb{margin-top:13px;padding-top:12px;border-top:2px solid var(--c1);font-size:12px;line-height:1.55;color:#2a3340}
   .back-blurb b{font-family:var(--cond);letter-spacing:1px;text-transform:uppercase;color:#16202b;display:block;margin-bottom:3px;font-size:11px}
 
@@ -507,7 +509,8 @@ function renderCands(cands){
       <div class="go">Grade this start <span>→</span></div></div>`;}).join('');
   els.cands.querySelectorAll('.cand').forEach(el=>el.addEventListener('click',()=>pickCandidate(LAST_CANDS[+el.dataset.i])));
 }
-let currentMeta=null;
+let currentMeta=null, RATE_DATA=[];
+function rateDetail(d){if(!d)return '';return `<div class="rd-name">${esc(d.name)}</div><div class="rd-score" style="color:${d.ink}">${d.val}<small>/99 · weight ${d.wt}%</small></div><div class="rd-def">${esc(d.def)}</div><div class="rd-why"><b>This start</b>${esc(d.reason)}</div>`;}
 async function pickCandidate(c){
   if(!c)return;findMsg('<span class="dots">Loading the box score & recent bullpen usage</span>');
   try{const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
@@ -678,7 +681,9 @@ function sprayCardHTML(m){
 }
 
 // click a category row on the card back to expand its definition + reasoning (click again to close)
-els.result.addEventListener('click',e=>{const r=e.target.closest('.brow');if(r&&r.parentElement.classList.contains('bitem'))r.parentElement.classList.toggle('open');});
+els.result.addEventListener('click',e=>{const row=e.target.closest('.rate-row');if(!row)return;
+  const i=+row.dataset.i;els.result.querySelectorAll('.rate-row').forEach(r=>r.classList.remove('active'));row.classList.add('active');
+  const dt=document.getElementById('rateDetail');if(dt&&RATE_DATA[i])dt.innerHTML=rateDetail(RATE_DATA[i]);});
 
 async function run(desc){
   desc=(desc||'').trim();
@@ -712,14 +717,9 @@ function render(d,factText){
   const match=m?`vs ${esc(m.oppName)} · ${esc(m.date)}${m.venue?' · '+esc(m.venue):''}`:'';
   const tiles=m?[['IP',m.ip],['H',m.h],['ER',m.er],['BB',m.bb],['K',m.k],['P',m.pit]].map(([l,v])=>`<div class="st"><b>${v??'–'}</b><span>${l}</span></div>`).join(''):'';
 
-  let brows='';
-  CATEGORIES.forEach((meta,i)=>{const c=cats[i]||{};const sc=Math.max(0,Math.min(10,+c.score||0));const val=Math.max(1,Math.round(sc*9.9));const ab=attBack(val);const wt=(c.weight!=null)?(+c.weight).toFixed(0):'–';
-    brows+=`<div class="bitem">
-      <div class="brow"><div class="bn"><span class="bcar">▶</span>${esc(meta[0])}</div><div class="bbar"><i data-w="${val}" style="background:${ab.bar}"></i></div><div class="bval" style="color:${ab.ink}">${val}</div></div>
-      <div class="bdrop"><div class="bdrop-in">
-        <div class="bdef">${esc(meta[1])}</div>
-        <div class="bwhy"><b>This start · ${val}/99 · weight ${wt}%</b>${esc(c.reason||'—')}</div>
-      </div></div></div>`;});
+  RATE_DATA=CATEGORIES.map((meta,i)=>{const c=cats[i]||{};const sc=Math.max(0,Math.min(10,+c.score||0));const val=Math.max(1,Math.round(sc*9.9));const ab=attBack(val);
+    return {name:meta[0],def:meta[1],val,wt:(c.weight!=null)?(+c.weight).toFixed(0):'–',reason:c.reason||'—',bar:ab.bar,ink:ab.ink};});
+  const rrows=RATE_DATA.map((d,i)=>`<div class="rate-row${i===0?' active':''}" data-i="${i}"><span class="rn">${esc(d.name)}</span><span class="rbar"><i data-w="${d.val}" style="background:${d.bar}"></i></span><span class="rval" style="color:${d.ink}">${d.val}</span></div>`).join('');
 
   els.result.innerHTML=`
   <div class="board">
@@ -747,14 +747,17 @@ function render(d,factText){
 
     <div class="tsc back" id="cardB" style="${tv}">
       <div class="tsc-inner"><div class="back-pad">
-        <div class="back-head">Scouting Grade<small>TAP A ROW ▾</small></div>
+        <div class="back-head">Scouting Grade<small>TAP A CATEGORY</small></div>
         <div class="press">
           <div class="pn">${pi}</div>
           <div class="pm"><div class="pl">Pressure · ${esc(d.pressureLabel||'')}</div>
             <div class="pgauge"><div class="pmark" id="pmark"></div></div>
             <div class="pctx">${esc(d.contextExplanation||'')}</div></div>
         </div>
-        <div class="brows-grid">${brows}</div>
+        <div class="rate-wrap">
+          <div class="rate-list">${rrows}</div>
+          <div class="rate-detail" id="rateDetail">${rateDetail(RATE_DATA[0])}</div>
+        </div>
       </div></div>
     </div>
     </div>
@@ -770,7 +773,7 @@ function render(d,factText){
   els.result.classList.add('show');
   const cf=$('#cardF'),cb=$('#cardB');
   requestAnimationFrame(()=>{cf.classList.add('in');cb.classList.add('in');cb.style.animationDelay='.12s';
-    $('#pmark').style.left=pi+'%';els.result.querySelectorAll('.bbar>i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
+    $('#pmark').style.left=pi+'%';els.result.querySelectorAll('.rbar>i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
   if(m)loadPlayLog(m.gamePk,m.pid,m.name);
   els.result.scrollIntoView({behavior:'smooth',block:'start'});
 }
