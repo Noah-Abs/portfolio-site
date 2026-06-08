@@ -64,7 +64,9 @@
   .h-tag i{color:var(--d1);font-style:normal;font-size:9px}
   .h-title{font-family:var(--anton);font-size:clamp(48px,7.8vw,78px);line-height:.9;letter-spacing:.5px;text-transform:uppercase;margin:20px 0 0}
   .h-title em{font-style:normal;background:linear-gradient(180deg,#ff8567,#ff4a1f 72%);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .h-sub{font-size:16px;color:var(--mut);margin:18px auto 0;max-width:480px;line-height:1.6}
+  .h-sub{font-size:16px;color:var(--mut);margin:18px auto 0;max-width:500px;line-height:1.6}
+  .h-sub b{color:#cdd9e6;font-weight:600}
+  #status{text-align:center;margin:14px auto 0;font-size:13px;min-height:16px}
   .searchbar{display:flex;align-items:center;gap:10px;max-width:620px;margin:32px auto 0;background:#0d141d;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:9px 9px 9px 18px;box-shadow:0 24px 60px rgba(0,0,0,.55);transition:.16s}
   .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.14),0 24px 60px rgba(0,0,0,.55)}
   .searchbar .sicon{flex:0 0 auto;color:var(--mut2)}
@@ -297,38 +299,17 @@
   <section class="hero">
     <span class="h-tag"><i>◆</i> 13-Category Scout Model</span>
     <h1 class="h-title">Grade any <em>MLB start</em></h1>
-    <p class="h-sub">Search a pitcher, a matchup, or a date — StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
+    <p class="h-sub">Type a pitcher — add an opponent, a season, or a date to narrow it. Try <b>“yoshi diamondbacks 2025”</b> or <b>“Skubal's best start 2024.”</b></p>
     <div class="searchbar">
       <svg class="sicon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="q" placeholder="Yamamoto vs Rays 2024   ·   Skubal's best start   ·   Dodgers SP on 2024-08-24" />
+      <input id="q" placeholder="yoshi diamondbacks 2025" />
       <button class="btnfind" id="find">Find</button>
     </div>
-    <div class="chips" id="chips"></div>
     <div id="findMsg"></div>
   </section>
 
   <div class="cands" id="cands"></div>
-
-  <section class="recent">
-    <div class="scorebar" id="scorebar"></div>
-  </section>
-
-  <div class="tools">
-    <details class="more"><summary>Browse the schedule by date</summary>
-      <div class="sched">
-        <input type="date" id="date" />
-        <button class="btn2" id="loadGames">Load games</button>
-        <select id="gameSel" disabled><option>— choose a date, then Load games —</option></select>
-        <select id="teamSel" disabled><option>— pick a game —</option></select>
-      </div>
-      <div id="schedMsg"></div>
-    </details>
-    <details class="more"><summary>Grade a custom line (type your own)</summary>
-      <textarea id="start" placeholder="e.g. Tarik Skubal vs Yankees — 7 IP, 4 H, 1 ER, 0 BB, 11 K, 98 pitches, tied game, tired bullpen."></textarea>
-      <div class="mrow"><button class="gradebtn" id="go">Grade this line</button></div>
-    </details>
-    <div id="status" style="margin-top:12px"></div>
-  </div>
+  <div id="status"></div>
 
   <div id="result"></div>
 
@@ -416,8 +397,7 @@ OUTPUT STRICT JSON ONLY (no prose, no code fences):
 {"finalGrade":<int 0-100>,"letter":"<A+|A|A-|B+|B|B-|C+|C|D/F>","pressureIndex":<int 0-100>,"pressureLabel":"<2-4 words>","categories":[{"score":<int 1-10>,"weight":<number; all 13 sum to 100>,"reason":"<one sentence>"}],"contextExplanation":"<2-3 sentences: pressure+environment+bullpen and how it shaped weighting>","scoutingSummary":"<2-4 sentences: what kind of start this really was>","oneLiner":"<one punchy verdict sentence>"}
 categories MUST have exactly 13 entries in the order above. JSON only.`;
 
-const els={key:$('#apiKey'),keyStat:$('#keyStat'),q:$('#q'),find:$('#find'),chips:$('#chips'),findMsg:$('#findMsg'),cands:$('#cands'),
-  date:$('#date'),loadGames:$('#loadGames'),gameSel:$('#gameSel'),teamSel:$('#teamSel'),schedMsg:$('#schedMsg'),start:$('#start'),go:$('#go'),status:$('#status'),result:$('#result')};
+const els={key:$('#apiKey'),keyStat:$('#keyStat'),q:$('#q'),find:$('#find'),findMsg:$('#findMsg'),cands:$('#cands'),status:$('#status'),result:$('#result')};
 
 els.key.value=localStorage.getItem(KEY_STORE)||''; syncKey();
 els.key.addEventListener('input',()=>{localStorage.setItem(KEY_STORE,els.key.value.trim());syncKey();});
@@ -441,13 +421,9 @@ function matchTeam(token){if(!token||!TEAMS)return null;const t=token.toLowerCas
   for(const tm of TEAMS){const names=[tm.name,tm.clubName,tm.teamName,tm.shortName,tm.abbreviation,tm.franchiseName].filter(Boolean).map(x=>x.toLowerCase());
     if(names.includes(t))return tm;if(names.some(n=>n.includes(t)||t.includes(n)))best=best||tm;}return best;}
 
-["Tarik Skubal vs Yankees 2024","Yoshinobu Yamamoto best start 2024","Dodgers starter on 2024-08-24","Gerrit Cole vs Astros 2024"]
-.forEach(c=>{const b=document.createElement('div');b.className='chip';b.textContent=c;b.onclick=()=>{els.q.value=c;els.q.focus();findStart();};els.chips.appendChild(b);});
-loadScoreboard();
-
-const PARSE_SYS=`Extract structured search fields from a request to find ONE MLB pitching start. Output STRICT JSON only:
+const PARSE_SYS=`Extract structured search fields from a request to find MLB pitching starts. Output STRICT JSON only:
 {"player":<pitcher full name or null>,"team":<team name/nickname if they reference a club's starter and named NO pitcher, else null>,"opponent":<opposing team name/nickname or null>,"season":<4-digit year or null>,"date":<"YYYY-MM-DD" or null>,"month":<1-12 if a month named without full date, else null>,"rank":<"best"|"worst"|null>}
-If they name a pitcher set player and leave team null. "vs"/"against" X → opponent. If a month/timeframe is given with no year, use the most recent season it has ALREADY occurred relative to today. JSON only.`;
+EXPAND nicknames/short names to the pitcher's real full name (e.g. "yoshi" → Yoshinobu Yamamoto, "JV" → Justin Verlander, "Gerrit" → Gerrit Cole). If a pitcher is named, set player and leave team null. Any OTHER team mentioned (with or without "vs"/"against") is the opponent — e.g. "yoshi diamondbacks 2025" → player "Yoshinobu Yamamoto", opponent "Arizona Diamondbacks", season 2025. If a month/timeframe is given with no year, use the most recent season it has ALREADY occurred relative to today. Output JSON only.`;
 
 els.find.addEventListener('click',findStart);
 els.q.addEventListener('keydown',e=>{if(e.key==='Enter')findStart();});
@@ -530,89 +506,13 @@ async function pickCandidate(c){
     currentMeta=buildMeta(g,box,c.side,weather);
     currentMeta.oppLineup=await computeOppLineup(c.gamePk,currentMeta.pid,currentMeta.oppOrder,box,c.side==='away'?'home':'away');
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
-    els.start.value=buildDescription(g,box,c.side,weather,bp);findMsg('');await run();
+    const desc=buildDescription(g,box,c.side,weather,bp);findMsg('');await run(desc);
   }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
 }
 
-// ===== MLB scoreboard ticker =====
-let scoreGames={};
-function teamAbbr(id){const t=(TEAMS||[]).find(x=>x.id===id);return (t&&t.abbreviation)||'';}
-function fmtSbDate(iso){try{return new Date(iso+'T12:00:00').toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'});}catch(_){return iso;}}
-function scoreTile(g){
-  const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState,final=st==='Final',live=st==='Live';
-  const ls=g.linescore||{};
-  const status=final?'Final':live?`${ls.inningState||''} ${ls.currentInningOrdinal||''}`.trim()||'Live':(g.gameDate?new Date(g.gameDate).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'');
-  const aw=a.score??0,hw=h.score??0,awin=final&&aw>hw,hwin=final&&hw>aw,show=final||live;
-  const row=(t,sc,win)=>`<div class="sg-row${win?' w':''}"><img src="${logoURL(t.team.id)}" onerror="this.style.visibility='hidden'"><span class="ab">${esc(teamAbbr(t.team.id)||t.team.name.slice(0,3).toUpperCase())}</span><span class="sc">${show?sc:''}</span></div>`;
-  return `<div class="sg" data-pk="${g.gamePk}"><div class="sg-st${live?' live':''}">${esc(status)}</div>${row(a,aw,awin)}${row(h,hw,hwin)}</div>`;
-}
-async function loadScoreboard(){
-  const host=document.getElementById('scorebar');if(!host)return;
-  try{
-    await ensureTeams();
-    const now=new Date();const end=now.toISOString().slice(0,10);const f=new Date(now);f.setDate(now.getDate()-7);const start=f.toISOString().slice(0,10);
-    const j=await fetch(`${STATS}/schedule?sportId=1&startDate=${start}&endDate=${end}&hydrate=team,linescore`).then(r=>r.json());
-    const dates=(j.dates||[]).filter(d=>d.games&&d.games.length);
-    if(!dates.length){host.style.display='none';return;}
-    const last=dates[dates.length-1];scoreGames={};
-    const tiles=last.games.map(g=>{scoreGames[g.gamePk]=g;return scoreTile(g);}).join('');
-    host.innerHTML=`<div class="sb-head"><span class="sb-t">Recent Games</span><span class="sb-d">${esc(fmtSbDate(last.date))} · tap one to grade a starter</span></div><div class="sb-strip">${tiles}</div>`;
-    host.querySelectorAll('.sg').forEach(el=>el.addEventListener('click',()=>pickScoreGame(el.dataset.pk)));
-  }catch(e){host.style.display='none';}
-}
-async function gameToCandidates(g){const box=await getBox(g.gamePk);const out=[];
-  for(const side of ['away','home']){const sp=starterOf(box,side);if(!sp)continue;const opp=side==='away'?'home':'away';
-    out.push({gamePk:g.gamePk,side,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,date:offDate(g),stat:sp.line});}
-  return out;}
-async function pickScoreGame(pk){const g=scoreGames[pk];if(!g)return;
-  document.querySelector('.hero').scrollIntoView({behavior:'smooth',block:'start'});findMsg('<span class="dots">Loading the starters</span>');
-  try{const cands=await gameToCandidates(g);if(!cands.length){findMsg('That game hasn’t been played yet — no box score.',true);return;}
-    LAST_CANDS=cands;renderCands(cands);findMsg('Pick the starter you want graded.');}
-  catch(e){findMsg('Couldn’t load that game: '+esc(e.message),true);}
-}
-
-// schedule browser
-let games={},boxCache={},schedGameCache={},playsCache={};
+// data caches
+let boxCache={},schedGameCache={},playsCache={};
 async function getPlays(pk){if(playsCache[pk])return playsCache[pk];const j=await fetch(`${STATS}/game/${pk}/playByPlay`).then(r=>r.json());const a=j.allPlays||[];playsCache[pk]=a;return a;}
-(function(){const n=new Date();n.setDate(n.getDate()-1);els.date.value=n.toISOString().slice(0,10);})();
-els.loadGames.addEventListener('click',loadGames);
-els.date.addEventListener('change',()=>{els.gameSel.disabled=true;els.teamSel.disabled=true;});
-async function loadGames(){
-  const d=els.date.value;if(!d){schedMsg('Pick a date first.');return;}
-  els.loadGames.disabled=true;els.gameSel.disabled=true;els.teamSel.disabled=true;els.gameSel.innerHTML='<option>loading…</option>';schedMsg('Loading…');
-  try{const j=await fetch(`${STATS}/schedule?sportId=1&date=${d}&hydrate=team,linescore,venue`).then(r=>r.json());
-    const list=(j.dates&&j.dates[0]&&j.dates[0].games)||[];games={};
-    if(!list.length){els.gameSel.innerHTML='<option>— no MLB games —</option>';schedMsg('No games on '+d+'.');return;}
-    els.gameSel.innerHTML='<option value="">— select a game —</option>';
-    list.forEach(g=>{games[g.gamePk]=g;const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState;
-      const sc=(st==='Final'||st==='Live')?` · ${a.score??0}–${h.score??0}`:'';const tag=st==='Final'?'Final':st==='Live'?'LIVE':'sched';
-      const o=document.createElement('option');o.value=g.gamePk;o.textContent=`${a.team.name} @ ${h.team.name} (${tag})${sc}`;els.gameSel.appendChild(o);});
-    els.gameSel.disabled=false;schedMsg(list.length+' games — pick one, then the team.');
-  }catch(e){schedMsg('Could not load: '+esc(e.message),true);els.gameSel.innerHTML='<option>— error —</option>';}
-  finally{els.loadGames.disabled=false;}
-}
-function schedMsg(t,isErr){els.schedMsg.textContent=t;els.schedMsg.className=isErr?'err':'';}
-els.gameSel.addEventListener('change',async()=>{
-  const pk=els.gameSel.value;els.teamSel.disabled=true;els.teamSel.innerHTML='<option>loading…</option>';
-  if(!pk){els.teamSel.innerHTML='<option>— pick a game —</option>';return;}
-  const g=games[pk];if(g.status.abstractGameState==='Preview'){els.teamSel.innerHTML='<option>— not played yet —</option>';schedMsg('Not played yet.',true);return;}
-  schedMsg('Loading box score…');
-  try{const box=await getBox(pk);const a=starterOf(box,'away'),h=starterOf(box,'home');
-    els.teamSel.innerHTML='<option value="">— pick the team / starter —</option>';
-    if(a){const o=document.createElement('option');o.value='away';o.textContent=`${g.teams.away.team.name} — ${a.name}`;els.teamSel.appendChild(o);}
-    if(h){const o=document.createElement('option');o.value='home';o.textContent=`${g.teams.home.team.name} — ${h.name}`;els.teamSel.appendChild(o);}
-    els.teamSel.disabled=false;schedMsg('Pick the team to grade its starter.');
-  }catch(e){schedMsg('Could not load box score: '+esc(e.message),true);}
-});
-els.teamSel.addEventListener('change',async()=>{
-  const pk=els.gameSel.value,side=els.teamSel.value;if(!pk||!side)return;
-  try{schedMsg('Building & grading…');const box=await getBox(pk),weather=await getWeather(pk),g=games[pk];
-    currentMeta=buildMeta(g,box,side,weather);
-    currentMeta.oppLineup=await computeOppLineup(pk,currentMeta.pid,currentMeta.oppOrder,box,side==='away'?'home':'away');
-    const bp=await getBullpen(currentMeta.teamId,currentMeta.date,pk);
-    els.start.value=buildDescription(g,box,side,weather,bp);schedMsg('');await run();
-  }catch(e){schedMsg('Failed: '+esc(e.message),true);}
-});
 
 // MLB helpers
 async function getBox(pk){if(boxCache[pk])return boxCache[pk];const r=await fetch(`${STATS}/game/${pk}/boxscore`);if(!r.ok)throw new Error('boxscore '+r.status);const j=await r.json();boxCache[pk]=j;return j;}
@@ -670,7 +570,7 @@ function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=st
 function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
   const aR=g.teams.away.score,hR=g.teams.home.score,myR=side==='away'?aR:hR,oppR=side==='away'?hR:aR;
-  const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=offDate(g)||els.date.value;
+  const won=myR>oppR,tied=myR===oppR,ln=sp.line,ss=sp.season;const venue=(g.venue&&g.venue.name)||'unknown park';const dateStr=offDate(g)||'';
   const pitches=ln.numberOfPitches??ln.pitchesThrown,strikes=ln.strikes;
   let wStr='';if(weather){const ps=[];if(weather.temp)ps.push(weather.temp+'°F');if(weather.condition)ps.push(weather.condition);if(weather.wind)ps.push('wind '+weather.wind);if(ps.length)wStr='\nWeather: '+ps.join(', ');}
   const decision=sp.note?'  '+sp.note:'';
@@ -723,15 +623,13 @@ function lineupCardHTML(m){
   </div></div>`;
 }
 
-els.go.addEventListener('click',()=>{currentMeta=null;run();});
-els.start.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){currentMeta=null;run();}});
 // click a category row on the card back to expand its definition + reasoning (click again to close)
 els.result.addEventListener('click',e=>{const r=e.target.closest('.brow');if(r&&r.parentElement.classList.contains('bitem'))r.parentElement.classList.toggle('open');});
 
-async function run(){
-  const desc=els.start.value.trim();
+async function run(desc){
+  desc=(desc||'').trim();
   if(!haveKey()){status('Enter a valid Anthropic key (sk-ant-…) up top.',true);els.key.focus();return;}
-  if(!desc){status('Pick a start above or type a custom line first.',true);return;}
+  if(!desc){status('Search for a start above first.',true);return;}
   showLoading();status('');
   try{
     const text=await anthropic({model:MODEL,max_tokens:4096,system:GRADE_SYS,messages:[{role:'user',content:'Grade this start.\n\n'+desc}]});
