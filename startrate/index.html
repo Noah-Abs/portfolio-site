@@ -144,10 +144,10 @@
   .flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
   .flip-back{transform:rotateY(180deg)}
   .flip-face .tsc{width:100%;height:100%}
-  /* grade card (back) keeps its natural, compact stack — quote sits right under the statline */
-  .flip-back .tsc-inner{height:100%}
-  /* linescore front is a flex column that fills the frame */
-  .flip-front .tsc-inner{height:100%;display:flex;flex-direction:column}
+  /* both faces fill the frame; the grade card keeps a natural compact stack (quote under the statline) */
+  .flip-face .tsc-inner{height:100%}
+  /* the linescore is a flex column that fills the frame, whichever face it sits on */
+  .lsfront .tsc-inner{display:flex;flex-direction:column}
   /* linescore front — gameday scoreboard */
   .ls-in{padding:18px 17px 15px}
   .ls-top{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;padding-bottom:14px;border-bottom:1px solid var(--line)}
@@ -881,8 +881,7 @@ function render(d,factText){
     <div class="topduo">
     <div class="herocard">
     <div class="flip"><div class="flip-in">
-    <div class="flip-face flip-front">${linescoreCard(m,tv)}</div>
-    <div class="flip-face flip-back">
+    <div class="flip-face flip-front">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -902,6 +901,7 @@ function render(d,factText){
       </div>
     </div>
     </div>
+    <div class="flip-face flip-back">${linescoreCard(m,tv)}</div>
     </div></div>
     </div>
 
