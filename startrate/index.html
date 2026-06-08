@@ -138,13 +138,23 @@
   .topduo #cardB{margin:0}
   @media(min-width:1080px){.topduo #cardB{flex:1 1 auto;max-width:820px}}
   /* flip card: hover/tap to flip the grade card to its stat back */
-  .flip{perspective:1600px;width:360px;max-width:100%}
-  .flip-in{position:relative;transition:transform .7s cubic-bezier(.2,.85,.3,1);transform-style:preserve-3d}
+  .flip{position:relative;width:360px;max-width:100%;height:532px;perspective:1700px}
+  .flip-in{position:absolute;inset:0;transition:transform .75s cubic-bezier(.2,.85,.3,1);transform-style:preserve-3d}
   .flip:hover .flip-in,.flip.flipped .flip-in{transform:rotateY(180deg)}
-  .flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
-  .flip-front{position:relative}
-  .flip-back{position:absolute;inset:0;transform:rotateY(180deg)}
-  .flip-face .tsc{width:100%;height:100%}
+  .flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .flip-back{transform:rotateY(180deg)}
+  .flip-face .tsc,.flip-face .vcard{width:100%;height:100%}
+  .flip-hint{position:absolute;bottom:7px;right:11px;z-index:6;font-family:var(--cond);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);pointer-events:none}
+  .vcard{position:relative;border-radius:14px;padding:9px;background:linear-gradient(155deg,var(--tc),#0d1620);box-shadow:0 26px 70px rgba(0,0,0,.6)}
+  .vc-in{height:100%;display:flex;flex-direction:column;background:#efe7d4;border-radius:8px;padding:8px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}
+  .vc-photo{flex:1;position:relative;border-radius:5px;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .vc-photo .vc-logo{position:absolute;width:155px;height:155px;top:14px;left:50%;transform:translateX(-50%);opacity:.16;z-index:1}
+  .vc-photo .vc-head{position:relative;z-index:2;width:92%;max-width:250px;height:auto;filter:drop-shadow(0 6px 11px rgba(0,0,0,.55))}
+  .vc-year{position:absolute;top:8px;left:8px;z-index:3;font-family:var(--anton);font-size:14px;color:#fff;background:var(--tc);padding:2px 9px;border-radius:5px;letter-spacing:1px;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .vc-plate{margin-top:8px;background:var(--tc);border-radius:7px;padding:9px 12px 10px;text-align:center;color:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+  .vc-name{font-family:var(--anton);font-size:25px;letter-spacing:.5px;line-height:1;text-transform:uppercase}
+  .vc-pos{font-family:var(--cond);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;opacity:.9}
+  .vc-line{font-family:var(--mono);font-size:10px;color:#5a5240;text-align:center;margin-top:7px;letter-spacing:.2px}
   .statback .tsc-inner{height:100%}
   .sb-in{display:flex;flex-direction:column}
   .sb-photo{position:relative;height:170px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;flex:0 0 auto}
@@ -760,6 +770,21 @@ function statBack(m,tv){
     <div class="sb-stats">${startT.map(x=>tile(x[0],x[1])).join('')}</div>
   </div></div>`;
 }
+// original vintage-style baseball card (real MLB photo + that season's line) — the flip FRONT
+function vintageCard(m){
+  if(!m)return `<div class="vcard" style="--tc:#1b2735"><div class="vc-in"></div></div>`;
+  const tc=TEAMCOL[m.teamId]||'#1b2735';const s=m.season||{};
+  const sl=(s.era!=null||s.wins!=null)?`${m.year||''}: ${(s.wins??'–')}-${(s.losses??'–')} · ${s.era??'–'} ERA · ${s.strikeOuts??'–'} K`:'';
+  return `<div class="vcard" style="--tc:${tc}"><div class="vc-in">
+    <div class="vc-photo" style="background:${teamBG(m.teamId)}">
+      ${m.teamId?`<img class="vc-logo" src="${logoURL(m.teamId)}" onerror="this.remove()">`:''}
+      <img class="vc-head" src="${siloURL(m.pid)}" onerror="this.onerror=null;this.src='${headURL(m.pid)}'">
+      <div class="vc-year">${esc(m.year||'')}</div>
+    </div>
+    <div class="vc-plate"><div class="vc-name">${esc(m.name)}</div><div class="vc-pos">PITCHER · ${esc(m.teamName)}</div></div>
+    ${sl?`<div class="vc-line">${esc(sl)}</div>`:''}
+  </div></div>`;
+}
 function letterFor(g){return g>=95?'A+':g>=90?'A':g>=85?'A-':g>=80?'B+':g>=75?'B':g>=70?'B-':g>=65?'C+':g>=60?'C':'D/F';}
 function render(d,factText){
   const cats=d.categories||[];const m=currentMeta;
@@ -785,7 +810,8 @@ function render(d,factText){
     <div class="topduo">
     <div class="herocard">
     <div class="flip" title="hover or tap to flip"><div class="flip-in">
-    <div class="flip-face flip-front">
+    <div class="flip-face flip-front">${vintageCard(m)}</div>
+    <div class="flip-face flip-back">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -805,8 +831,7 @@ function render(d,factText){
       </div>
     </div>
     </div>
-    <div class="flip-face flip-back">${statBack(m,tv)}</div>
-    </div></div>
+    </div><div class="flip-hint">hover / tap to flip ↻</div></div>
     </div>
 
     <div class="tsc back" id="cardB" style="${tv}">
