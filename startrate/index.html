@@ -40,7 +40,7 @@
   .keyfield svg{color:var(--mut2);flex:0 0 auto}
   .keywrap input{background:transparent;border:none;color:var(--ink);padding:9px 0;font-family:var(--mono);font-size:11.5px;width:184px;outline:none}
   .keystat{font-size:9px;letter-spacing:.6px;color:var(--mut2);text-transform:uppercase}
-  .scorebar{margin:30px 0 10px}
+  .scorebar{margin:0}
   .sb-head{display:flex;align-items:baseline;gap:10px;margin-bottom:9px;padding:0 2px}
   .sb-t{font-family:var(--cond);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--ink);font-weight:600}
   .sb-d{font-size:11px;color:var(--mut2);letter-spacing:.5px}
@@ -48,8 +48,8 @@
   .sb-strip::-webkit-scrollbar{height:6px}
   .sb-strip::-webkit-scrollbar-thumb{background:#26323d;border-radius:3px}
   .sb-strip::-webkit-scrollbar-track{background:transparent}
-  .sg{flex:0 0 auto;width:144px;background:#10161e;border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:9px 12px;cursor:pointer;transition:.15s}
-  .sg:hover{border-color:rgba(255,255,255,.2);background:#131c26;transform:translateY(-2px)}
+  .sg{flex:0 0 auto;width:146px;background:#0f1620;border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 13px;cursor:pointer;transition:.15s}
+  .sg:hover{border-color:var(--acc);background:#141d28;transform:translateY(-2px)}
   .sg-st{font-family:var(--cond);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);margin-bottom:7px}
   .sg-st.live{color:var(--acc)}
   .sg-row{display:flex;align-items:center;gap:8px;padding:2.5px 0}
@@ -58,36 +58,28 @@
   .sg-row .sc{font-family:var(--mono);font-size:14px;color:var(--mut);font-weight:600}
   .sg-row.w .ab,.sg-row.w .sc{color:#fff}
 
-  .hero{position:relative;isolation:isolate;text-align:center;padding:44px 20px 8px}
-  .hero:before{content:"";position:absolute;left:50%;top:28px;width:580px;max-width:92%;height:250px;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(255,90,60,.16),transparent 72%);filter:blur(10px);z-index:-1;pointer-events:none}
-  .eyebrow{display:inline-flex;align-items:center;gap:11px;font-family:var(--cond);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--mut);margin-bottom:18px}
-  .eyebrow:before,.eyebrow:after{content:"";width:30px;height:1px;background:var(--line)}
-  .hero-title{font-family:var(--anton);font-size:clamp(40px,7.2vw,62px);letter-spacing:.5px;line-height:.95;margin:0}
-  .hero-title em{font-style:normal;color:var(--acc)}
-  .hero-sub{font-size:15px;color:var(--mut);margin:15px auto 0;max-width:500px;line-height:1.55}
-  .searchbar{display:flex;align-items:center;gap:12px;max-width:680px;margin:30px auto 0;background:#10161e;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:8px 8px 8px 18px;box-shadow:0 16px 44px rgba(0,0,0,.45);transition:.16s}
-  .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.12),0 16px 44px rgba(0,0,0,.45)}
+  .hero{position:relative;isolation:isolate;text-align:center;max-width:820px;margin:0 auto;padding:56px 18px 0}
+  .hero:before{content:"";position:absolute;left:50%;top:0;width:660px;max-width:96%;height:340px;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 28%,rgba(255,90,60,.17),transparent 66%);filter:blur(16px);z-index:-1;pointer-events:none}
+  .h-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#93a4b8;border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:999px;padding:7px 15px}
+  .h-tag i{color:var(--d1);font-style:normal;font-size:9px}
+  .h-title{font-family:var(--anton);font-size:clamp(48px,7.8vw,78px);line-height:.9;letter-spacing:.5px;text-transform:uppercase;margin:20px 0 0}
+  .h-title em{font-style:normal;background:linear-gradient(180deg,#ff8567,#ff4a1f 72%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .h-sub{font-size:16px;color:var(--mut);margin:18px auto 0;max-width:480px;line-height:1.6}
+  .searchbar{display:flex;align-items:center;gap:10px;max-width:620px;margin:32px auto 0;background:#0d141d;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:9px 9px 9px 18px;box-shadow:0 24px 60px rgba(0,0,0,.55);transition:.16s}
+  .searchbar:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px rgba(255,90,60,.14),0 24px 60px rgba(0,0,0,.55)}
   .searchbar .sicon{flex:0 0 auto;color:var(--mut2)}
-  .searchbar input{flex:1;min-width:110px;background:transparent;border:none;color:var(--ink);padding:12px 0;font-size:16px;outline:none;text-align:left}
+  .searchbar input{flex:1;min-width:100px;background:transparent;border:none;color:var(--ink);padding:13px 0;font-size:16.5px;outline:none;text-align:left}
   .searchbar input::placeholder{color:var(--mut2)}
-  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e8401f);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 28px;border-radius:12px;cursor:pointer;min-height:50px;text-transform:uppercase;box-shadow:0 8px 20px rgba(255,90,60,.3);transition:.15s}
+  .btnfind{background:linear-gradient(180deg,#ff6a4d,#e8401f);border:none;color:#fff;font-family:var(--cond);font-weight:600;letter-spacing:1.5px;font-size:15px;padding:0 26px;border-radius:14px;cursor:pointer;min-height:52px;text-transform:uppercase;box-shadow:0 8px 20px rgba(255,90,60,.32);transition:.15s}
   .btnfind:hover{filter:brightness(1.08)}
   .btnfind:disabled{opacity:.55;cursor:default}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px auto 0;justify-content:center;max-width:640px}
-  .chip{background:transparent;border:1px solid rgba(255,255,255,.09);color:var(--mut);font-size:12px;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
-  .chip:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,90,60,.06)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px auto 0;justify-content:center;max-width:560px}
+  .chip{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);color:var(--mut);font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer;transition:.15s}
+  .chip:hover{color:var(--ink);border-color:var(--acc);background:rgba(255,90,60,.07)}
   #findMsg{margin:18px auto 0;font-size:13px;color:var(--mut2);min-height:15px;text-align:center}
   #findMsg.err{color:var(--bad)}
-  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:30px auto 0;text-align:left}
-  @media(max-width:680px){.feats{grid-template-columns:1fr;max-width:440px}}
-  .feat{display:flex;gap:13px;align-items:flex-start;background:#10161e;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:18px}
-  .feat .fic{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center}
-  .feat .fic svg{width:17px;height:17px}
-  .fic-a{background:rgba(255,90,60,.13);color:#ff6a4d}
-  .fic-b{background:rgba(92,217,255,.13);color:#5cd9ff}
-  .fic-c{background:rgba(255,206,58,.13);color:#ffce3a}
-  .feat b{display:block;font-family:var(--cond);font-size:13px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink);margin-bottom:3px}
-  .feat i{font-style:normal;font-size:11.5px;color:var(--mut);line-height:1.45}
+  .recent{max-width:1040px;margin:50px auto 0}
+  .recent:before{content:"";display:block;height:1px;background:linear-gradient(90deg,transparent,var(--line) 50%,transparent);margin-bottom:22px}
   .dots:after{content:"";animation:dots 1.3s steps(4,end) infinite}
   @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}100%{content:""}}
 
@@ -303,12 +295,12 @@
   </header>
 
   <section class="hero">
-    <div class="eyebrow">13-Category Scout Model</div>
-    <h2 class="hero-title">GRADE <em>ANY</em> MLB START</h2>
-    <p class="hero-sub">Type a pitcher, a matchup, or a date. StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
+    <span class="h-tag"><i>◆</i> 13-Category Scout Model</span>
+    <h1 class="h-title">Grade any <em>MLB start</em></h1>
+    <p class="h-sub">Search a pitcher, a matchup, or a date — StartRate pulls the real outing from the MLB archive and grades it like a card.</p>
     <div class="searchbar">
-      <svg class="sicon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="q" placeholder="Yamamoto vs Rays 2024  ·  Skubal's best start  ·  Dodgers starter on 2024-08-24" />
+      <svg class="sicon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" placeholder="Yamamoto vs Rays 2024   ·   Skubal's best start   ·   Dodgers SP on 2024-08-24" />
       <button class="btnfind" id="find">Find</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -317,7 +309,9 @@
 
   <div class="cands" id="cands"></div>
 
-  <div class="scorebar" id="scorebar"></div>
+  <section class="recent">
+    <div class="scorebar" id="scorebar"></div>
+  </section>
 
   <div class="tools">
     <details class="more"><summary>Browse the schedule by date</summary>
@@ -337,12 +331,6 @@
   </div>
 
   <div id="result"></div>
-
-  <div class="feats">
-    <div class="feat"><span class="fic fic-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6.5 5.5c2.4 2.8 2.4 10.2 0 13M17.5 5.5c-2.4 2.8-2.4 10.2 0 13"/></svg></span><div><b>Real MLB data</b><i>Lines, lineups, weather &amp; bullpen — live from the Stats API</i></div></div>
-    <div class="feat"><span class="fic fic-b"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9.5 10L12 22 2.5 12z"/></svg></span><div><b>Diamond-tier grade</b><i>0–100 on a Topps-style front &amp; cream card back</i></div></div>
-    <div class="feat"><span class="fic fic-c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><div><b>Every batter</b><i>Full play-by-play log &amp; the box he faced</i></div></div>
-  </div>
 
   <footer>
     <div>STARTRATE · grades the start that <i>should</i> have happened — not just the box score</div>
