@@ -183,7 +183,8 @@
   .scoutbox .summary{font-size:14px;line-height:1.7;color:#d6e1ee}
   @media(min-width:760px){.board>.playlog .pl-body{column-count:2;column-gap:28px}}
   .spray .field{display:block;width:100%;height:auto;margin-top:6px;border-radius:9px}
-  .spray-lg{display:flex;justify-content:center;gap:18px;margin-top:11px;font-size:11.5px;color:var(--mut)}
+  .spray-lg{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:11px;font-size:11.5px;color:var(--mut)}
+  .spray-note{text-align:center;font-size:10px;color:var(--mut2);margin-top:6px}
   .spray-lg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
   .pl-grp{break-inside:avoid}
   .lwrap{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
@@ -557,14 +558,17 @@ function renderCands(cands){
 let currentMeta=null, RATE_DATA=[];
 function rateDetail(d){if(!d)return '';return `<div class="rd-name">${esc(d.name)}</div><div class="rd-score" style="color:${d.ink}">${d.val}<small>/99 · weight ${d.wt}%</small></div><div class="rd-def">${esc(d.def)}</div><div class="rd-why"><b>This start</b>${esc(d.reason)}</div>`;}
 async function pickCandidate(c){
-  if(!c)return;findMsg('<span class="dots">Loading the box score & recent bullpen usage</span>');
+  if(!c)return;findMsg('<span class="dots">Loading the start</span>');showLoading();
   try{const g=await getScheduleGame(c.gamePk),box=await getBox(c.gamePk),weather=await getWeather(c.gamePk);
     currentMeta=buildMeta(g,box,c.side,weather);
     currentMeta.oppLineup=await computeOppLineup(c.gamePk,currentMeta.pid,currentMeta.oppOrder,box,c.side==='away'?'home':'away');
     currentMeta.spray=sprayData(await getPlays(c.gamePk),currentMeta.pid);
+    currentMeta.hardHit=hardHitPct(currentMeta.spray);
+    currentMeta.parkFactor=parkFactor(currentMeta.venue);
     const bp=await getBullpen(currentMeta.teamId,currentMeta.date,c.gamePk);
-    const desc=buildDescription(g,box,c.side,weather,bp);findMsg('');await run(desc);
-  }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);}
+    currentMeta.penFatigue=(bp&&bp.pitches)||0;
+    const desc=buildDescription(g,box,c.side,weather,bp&&bp.text);findMsg('');run(desc);
+  }catch(e){findMsg('Couldn’t load that start: '+esc(e.message),true);els.result.classList.remove('show');els.result.innerHTML='';}
 }
 
 // data caches
@@ -583,18 +587,18 @@ async function getBullpen(teamId,dateISO,excludePk){
     const j=await fetch(`${STATS}/schedule?sportId=1&teamId=${teamId}&startDate=${s}&endDate=${e}&hydrate=team`).then(r=>r.json());
     let gs=[];(j.dates||[]).forEach(x=>gs.push(...(x.games||[])));
     gs=gs.filter(g=>g.status.abstractGameState==='Final'&&g.gamePk!==excludePk).sort((a,b)=>a.gameDate<b.gameDate?1:-1);
-    if(!gs.length)return null;
-    const lines=[];
+    if(!gs.length)return {text:null,pitches:0};
+    const lines=[];let total=0;
     for(const g of gs.slice(0,2)){
       const side=g.teams.home.team.id===teamId?'home':'away';
       const box=await getBox(g.gamePk);const t=box.teams[side];
       const rel=(t.pitchers||[]).slice(1); // exclude that game's starter
       let sum=0;const names=rel.map(pid=>{const p=t.players['ID'+pid];if(!p)return null;const st=(p.stats&&p.stats.pitching)||{};const pc=+st.numberOfPitches||0;sum+=pc;return `${p.person.fullName} (${st.inningsPitched||'0'} IP, ${pc}p)`;}).filter(Boolean);
-      const dd=(g.gameDate||'').slice(5,10);
+      total+=sum;const dd=(g.gameDate||'').slice(5,10);
       lines.push(`  ${dd}: ${rel.length} reliever${rel.length===1?'':'s'} used, ${sum} relief pitches${names.length?' — '+names.join(', '):' (pen rested)'}`);
     }
-    return lines.join('\n');
-  }catch(_){return null;}
+    return {text:lines.join('\n'),pitches:total};
+  }catch(_){return {text:null,pitches:0};}
 }
 function starterOf(box,side){const t=box.teams[side];const pid=t.pitchers&&t.pitchers[0];if(!pid)return null;const p=t.players['ID'+pid];if(!p)return null;
   return {id:pid,name:p.person.fullName,line:(p.stats&&p.stats.pitching)||{},season:(p.seasonStats&&p.seasonStats.pitching)||{},note:(p.stats&&p.stats.pitching&&p.stats.pitching.note)||''};}
@@ -624,6 +628,7 @@ function buildMeta(g,box,side){const opp=side==='away'?'home':'away';const sp=st
   return {gamePk:g.gamePk,pid:sp.id,name:sp.name,teamId:g.teams[side].team.id,teamName:g.teams[side].team.name,oppId:g.teams[opp].team.id,oppName:g.teams[opp].team.name,
     date:offDate(g),venue:(g.venue&&g.venue.name)||'',result:myR>oppR?'W':myR===oppR?'T':'L',oppOrder:oppOrderOf(box,opp),
     season:sp.season||{},year:offDate(g).slice(0,4),
+    margin:myR-oppR,bf:+ln.battersFaced||0,strikes:+ln.strikes||0,oppOPS:avgOppOPS(box,opp),
     ip:ln.inningsPitched,h:ln.hits,r:ln.runs,er:ln.earnedRuns,bb:ln.baseOnBalls,k:ln.strikeOuts,hr:ln.homeRuns,pit:ln.numberOfPitches??ln.pitchesThrown};}
 function buildDescription(g,box,side,weather,bullpen){
   const opp=side==='away'?'home':'away';const sp=starterOf(box,side);const myTeam=g.teams[side].team.name,oppTeam=g.teams[opp].team.name;
@@ -685,8 +690,8 @@ function lineupCardHTML(m){
 function sprayData(plays,pid){
   const out=[];
   for(const p of plays){if(!(p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.id===pid&&p.result&&p.result.type==='atBat'))continue;
-    let c=null;for(const ev of (p.playEvents||[])){if(ev.details&&ev.details.isInPlay&&ev.hitData&&ev.hitData.coordinates&&ev.hitData.coordinates.coordX!=null)c=ev.hitData.coordinates;}
-    if(c){const e=p.result.event||'';const hr=/Home Run/.test(e),hit=hr||/^(Single|Double|Triple)$/.test(e);out.push({x:+c.coordX,y:+c.coordY,hit,hr});}}
+    let c=null,ev=0;for(const pe of (p.playEvents||[])){if(pe.details&&pe.details.isInPlay&&pe.hitData&&pe.hitData.coordinates&&pe.hitData.coordinates.coordX!=null){c=pe.hitData.coordinates;ev=+pe.hitData.launchSpeed||0;}}
+    if(c){const e=p.result.event||'';const hr=/Home Run/.test(e),hit=hr||/^(Single|Double|Triple)$/.test(e);out.push({x:+c.coordX,y:+c.coordY,hit,hr,ev});}}
   return out;
 }
 // approximate outfield dimensions (LF, LCF, CF, RCF, RF in feet) so the spray field matches the real park
@@ -718,10 +723,12 @@ function sprayCardHTML(m){
   const balls=m.spray,hr=balls.filter(b=>b.hr).length,hits=balls.filter(b=>b.hit).length,outs=balls.length-hits;
   const dots=balls.map(b=>{const col=b.hr?'#ff5a6e':b.hit?'#ffb13c':'#7fa0bd';const r=b.hr?4.2:3.4;
     return `<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${r}" fill="${col}" stroke="#0a0f15" stroke-width=".7"/>`;}).join('');
+  const K=+(m&&m.k)||0;
   return `<div class="spray"><div class="lc-in">
-    <div class="lc-head"><div class="t">Spray Chart<small>${esc(m.venue||'the park')} · hits vs outs</small></div></div>
+    <div class="lc-head"><div class="t">Spray Chart<small>${esc(m.venue||'the park')} · balls in play</small></div></div>
     <svg viewBox="0 22 250 196" class="field">${fieldSVG(parkDims(m.venue))}${dots}</svg>
-    <div class="spray-lg"><span><i style="background:#7fa0bd"></i>${outs} out${outs!==1?'s':''}</span><span><i style="background:#ffb13c"></i>${hits-hr} hit${(hits-hr)!==1?'s':''}</span>${hr?`<span><i style="background:#ff5a6e"></i>${hr} HR</span>`:''}</div>
+    <div class="spray-lg"><span><i style="background:#7fa0bd"></i>${outs} out${outs!==1?'s':''}</span><span><i style="background:#ffb13c"></i>${hits-hr} hit${(hits-hr)!==1?'s':''}</span>${hr?`<span><i style="background:#ff5a6e"></i>${hr} HR</span>`:''}${K?`<span><i style="background:#34d39a"></i>${K} K</span>`:''}</div>
+    <div class="spray-note">${balls.length} balls in play · strikeouts have no field location</div>
   </div></div>`;
 }
 
@@ -731,17 +738,11 @@ els.result.addEventListener('click',e=>{const fl=e.target.closest('.flip');if(fl
   const i=+row.dataset.i;els.result.querySelectorAll('.rate-row').forEach(r=>r.classList.remove('active'));row.classList.add('active');
   const dt=document.getElementById('rateDetail');if(dt&&RATE_DATA[i])dt.innerHTML=rateDetail(RATE_DATA[i]);});
 
-async function run(desc){
-  desc=(desc||'').trim();
-  if(!haveKey()){status('Enter a valid Anthropic key (sk-ant-…) up top.',true);els.key.focus();return;}
-  if(!desc){status('Search for a start above first.',true);return;}
-  showLoading();status('');
-  try{
-    const text=await anthropic({model:MODEL,max_tokens:4096,system:GRADE_SYS,messages:[{role:'user',content:'Grade this start.\n\n'+desc}]});
-    const parsed=parseJSON(text);
-    if(!parsed||!Array.isArray(parsed.categories)){els.result.classList.remove('show');els.result.innerHTML='';status('The grader returned an unexpected format — try again.',true);return;}
-    render(parsed,desc);
-  }catch(e){els.result.classList.remove('show');els.result.innerHTML='';status('Grade failed: '+esc(e.message),true);}
+function run(desc){
+  if(!currentMeta){status('Pick a start above first.',true);return;}
+  status('');
+  try{const d=gradeStart(currentMeta);render(d,(desc||'').trim());}
+  catch(e){els.result.classList.remove('show');els.result.innerHTML='';status('Grade failed: '+esc(e.message),true);}
 }
 function status(html,isErr){els.status.innerHTML=html;els.status.style.color=isErr?'var(--bad)':'var(--mut)';}
 function showLoading(){
@@ -786,6 +787,61 @@ function vintageCard(m){
   </div></div>`;
 }
 function letterFor(g){return g>=95?'A+':g>=90?'A':g>=85?'A-':g>=80?'B+':g>=75?'B':g>=70?'B-':g>=65?'C+':g>=60?'C':'D/F';}
+// ===== deterministic grader: same inputs -> same grade, every time (no LLM randomness) =====
+function ipDec(ip){const a=String(ip==null?'0':ip).split('.');return (+a[0]||0)+((+a[1]||0)/3);}
+function cl(v,a,b){return v<a?a:v>b?b:v;}
+const PARK_FACTOR={coors:9,'great american':7,fenway:6.6,yankee:6.4,wrigley:6,camden:6,oriole:6,chase:6,'citizens bank':6,'american family':5.6,truist:5.6,'globe life':5.6,rate:5.4,'guaranteed rate':5.4,nationals:5.4,rogers:5.4,loandepot:5.2,minute:5.2,daikin:5.2,sutter:5.8,steinbrenner:5.5,target:5,busch:5,progressive:5,angel:5,kauffman:4.8,dodger:4.8,citi:4.8,pnc:4.8,comerica:4.4,coliseum:4.4,'t-mobile':4.2,petco:4,tropicana:4.5,oracle:3.6};
+function parkFactor(v){const s=(v||'').toLowerCase();for(const k in PARK_FACTOR)if(s.includes(k))return PARK_FACTOR[k];return 5.5;}
+function hardHitPct(spray){if(!spray||!spray.length)return null;const ev=spray.filter(b=>b.ev>0);if(!ev.length)return null;return Math.round(ev.filter(b=>b.ev>=95).length/ev.length*100);}
+function avgOppOPS(box,opp){const t=box.teams[opp];const order=(t.battingOrder&&t.battingOrder.length)?t.battingOrder:(t.batters||[]).slice(0,9);let sum=0,n=0;
+  order.forEach(pid=>{const p=t.players['ID'+pid];const o=p&&p.seasonStats&&p.seasonStats.batting&&parseFloat(p.seasonStats.batting.ops);if(o>0){sum+=o;n++;}});return n?+(sum/n).toFixed(3):0.715;}
+function gradeStart(m){
+  const IP=ipDec(m.ip)||0.1,ER=+m.er||0,H=+m.h||0,BB=+m.bb||0,K=+m.k||0,HR=+m.hr||0;
+  const PIT=+m.pit||Math.round(IP*15.5),STR=+m.strikes||Math.round(PIT*0.63);
+  const era=ER*9/IP,k9=K*9/IP,bb9=BB*9/IP,h9=H*9/IP,br9=(H+BB)*9/IP,pPerInn=PIT/IP,strPct=PIT?STR/PIT:0.63;
+  const oppOPS=+m.oppOPS||0.715,pf=m.parkFactor!=null?+m.parkFactor:5.5,fatigue=+m.penFatigue||0,hh=(m.hardHit!=null&&m.hardHit>=0)?+m.hardHit:null;
+  const margin=m.margin!=null?+m.margin:0,close=Math.abs(margin)<=3,expER=H*0.3+HR;
+  const s=[
+    cl(10-era*1.15,1,10),
+    cl(3+k9*0.5,1,10),
+    cl(9.6-bb9*1.25+(strPct-0.63)*7,1,10),
+    cl(10-(pPerInn-13)*0.85,1,10),
+    cl((IP-0.5)*1.3,1,10),
+    hh!=null?cl(10-hh*0.085-HR*0.5,1,10):cl(10-h9*0.5-HR*0.6,1,10),
+    close?cl(7.6-ER*0.7,2,10):6,
+    cl((IP-2.5)*1.2+(fatigue>70?1.6:fatigue>40?0.7:0),1,10),
+    margin>0?cl(8.4-ER*0.25,4,10):margin===0?6.4:close?5.4:cl(4.2-ER*0.2,1,5.5),
+    cl(6+(oppOPS-0.715)*30,1.5,10),
+    cl(pf,1,10),
+    cl(6+(ER-expER)*0.7,1.5,9.5),
+    cl(11-br9+k9*0.15,1,10)
+  ];
+  const W=[18,9,11,7,12,11,5,4,4,5,2,4,8];
+  const R=[
+    `${ER} ER over ${m.ip} IP — ${era.toFixed(2)} ERA for the start.`,
+    `${K} strikeout${K===1?'':'s'}, ${k9.toFixed(1)} per nine.`,
+    `${BB} walk${BB===1?'':'s'}, ${Math.round(strPct*100)}% strikes.`,
+    `${PIT} pitches, ${pPerInn.toFixed(1)} per inning.`,
+    `${m.ip} innings of work.`,
+    (hh!=null?`${hh}% hard-hit`:`${H} hit${H===1?'':'s'}`)+`, ${HR} HR allowed.`,
+    close?`Held it to ${ER} run${ER===1?'':'s'} in a ${Math.abs(margin)}-run game.`:`Lower-leverage game (${Math.abs(margin)}-run margin).`,
+    `Covered ${m.ip} innings${fatigue>60?' with a taxed bullpen behind him':''}.`,
+    margin>0?`His team won by ${margin}.`:margin<0?`His team lost by ${-margin}.`:`Tie game when he left.`,
+    `Faced a ${oppOPS>=.75?'strong':oppOPS>=.71?'roughly average':'soft'} lineup (${oppOPS.toFixed(3)} OPS).`,
+    `${pf>=6.5?'Hitter-friendly':pf<=4.5?'Pitcher-friendly':'Fairly neutral'} park.`,
+    `Allowed ${ER}, deserved ≈ ${expER.toFixed(1)}.`,
+    `${br9.toFixed(1)} baserunners per nine.`
+  ];
+  const categories=s.map((sc,i)=>({score:+sc.toFixed(1),weight:W[i],reason:R[i]}));
+  let gw=0;for(let i=0;i<13;i++)gw+=s[i]*W[i];const grade=Math.round(gw/100*10);
+  const pi=cl(Math.round(66-Math.abs(margin)*9+(fatigue>60?12:0)),6,96);
+  const tw=grade>=90?'A dominant gem':grade>=83?'A strong start':grade>=74?'A solid quality start':grade>=64?'A middling outing':'A rough start';
+  return {finalGrade:grade,letter:letterFor(grade),pressureIndex:pi,
+    pressureLabel:close?'High-leverage game':Math.abs(margin)>=6?'Low-leverage blowout':'Moderate leverage',categories,
+    contextExplanation:`${close?'A tight game kept the leverage up':'A lopsided game kept leverage low'}; ${fatigue>60?'the bullpen was taxed entering this start, raising the value of his innings':'the bullpen was reasonably rested'}.`,
+    scoutingSummary:`${m.name} went ${m.ip} and allowed ${ER} earned run${ER===1?'':'s'} on ${H} hit${H===1?'':'s'} with ${BB} walk${BB===1?'':'s'} and ${K} strikeout${K===1?'':'s'} against ${oppOPS>=.75?'a strong':oppOPS>=.71?'an average':'a soft'} ${m.oppName} lineup${pf>=6.5?' in a hitter-friendly park':pf<=4.5?' in a pitcher-friendly park':''}. ${era<2?'Elite run prevention':era<3.5?'Solid run prevention':'Run prevention was the issue'}, and ${br9<7?'he kept the bases clear':br9<11?'traffic stayed manageable':'too many runners reached'}.`,
+    oneLiner:`${tw} — ${m.ip} IP, ${ER} ER, ${BB} BB, ${K} K${HR?', '+HR+' HR':''}.`};
+}
 function render(d,factText){
   const cats=d.categories||[];const m=currentMeta;
   // compute the overall grade from the category scores×weights — don't trust the model's finalGrade number
@@ -809,9 +865,6 @@ function render(d,factText){
   <div class="board">
     <div class="topduo">
     <div class="herocard">
-    <div class="flip" title="hover or tap to flip"><div class="flip-in">
-    <div class="flip-face flip-front">${vintageCard(m)}</div>
-    <div class="flip-face flip-back">
     <div class="tsc" id="cardF" style="${tv}">
       <div class="tsc-inner">
         <div class="foil"></div><div class="tsc-shine"></div>
@@ -830,8 +883,6 @@ function render(d,factText){
         ${d.oneLiner?`<div class="flavor">“${esc(d.oneLiner)}”</div>`:''}
       </div>
     </div>
-    </div>
-    </div><div class="flip-hint">hover / tap to flip ↻</div></div>
     </div>
 
     <div class="tsc back" id="cardB" style="${tv}">
