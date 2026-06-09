@@ -47,9 +47,10 @@
 
   .fieldwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   #field{display:block;width:100%;height:auto}
-  .dot{transition:opacity .18s ease}
-  @keyframes drop{0%{transform:translateY(-14px) scale(.2);opacity:0}60%{opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
-  .pop{transform-box:fill-box;transform-origin:center;animation:drop .42s cubic-bezier(.2,.9,.3,1.2) both}
+  .dot{transition:opacity .25s ease}
+  @keyframes splash{0%{transform:scale(.3);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+  .splash{transform-box:fill-box;transform-origin:center;animation:splash .46s ease-out forwards}
+  #fly circle.ball{filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 
   .readout{display:flex;align-items:center;gap:12px;min-height:54px;margin-top:13px;
     background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px}
@@ -257,34 +258,62 @@ function setupGame(){
     $('innings').querySelectorAll('.inn').forEach(x=>x.classList.remove('on'));
     el.classList.add('on');inningSel=el.dataset.inn;applyFilter();
   });
+  $('field').innerHTML=fieldSVG(parkDims(venue))+'<g id="dots"></g><g id="fly"></g>';
   applyFilter();
-  $('field').innerHTML=fieldSVG(parkDims(venue))+'<g id="arc"></g><g id="dots"></g>';
   $('stage').classList.remove('hide');
   drawReadout(null);
 }
 
 function applyFilter(){
   view=(inningSel==='all')?GAME.balls.slice():GAME.balls.filter(b=>String(b.inning)===String(inningSel));
-  cursor=0;
+  cursor=0;cancelFly();
   $('scrub').max=view.length;$('scrub').value=0;
-  pause();renderDots();updateCounter();drawReadout(null);
+  pause();restingDots(0,false);updateCounter();drawReadout(null);
 }
 
 /* ---- rendering ---- */
-function renderDots(){
+let flyRAF=null;
+function cancelFly(){if(flyRAF){cancelAnimationFrame(flyRAF);flyRAF=null;}const f=$('fly');if(f)f.innerHTML='';}
+function dotR(b){return b.cat==='hr'?4.3:b.cat==='out'?3.2:3.7;}
+// resting (already-landed) balls; if highlight, ring the most recent one
+function restingDots(count,highlight){
   const g=$('dots');if(!g)return;let h='';
-  for(let i=0;i<cursor;i++){
-    const b=view[i];const r=b.cat==='hr'?4.3:b.cat==='out'?3.2:3.7;
-    const cur=(i===cursor-1);
-    h+=`<circle class="dot${cur?' pop':''}" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${cur?r+1.4:r}" fill="${CAT_COLOR[b.cat]}" stroke="#0a0f15" stroke-width=".7"${cur?' opacity="1"':' opacity=".82"'}/>`;
-    if(cur)h+=`<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${r+4.5}" fill="none" stroke="${CAT_COLOR[b.cat]}" stroke-width="1" opacity=".55"/>`;
+  for(let i=0;i<count;i++){
+    const b=view[i],r=dotR(b),cur=highlight&&i===count-1;
+    h+=`<circle class="dot" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${(cur?r+1.2:r).toFixed(1)}" fill="${CAT_COLOR[b.cat]}" stroke="#0a0f15" stroke-width=".7" opacity="${cur?1:.8}"/>`;
+    if(cur)h+=`<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${(r+4.5).toFixed(1)}" fill="none" stroke="${CAT_COLOR[b.cat]}" stroke-width="1" opacity=".55"/>`;
   }
   g.innerHTML=h;
-  // arc for the current ball
-  const a=$('arc');
-  if(cursor>0){const b=view[cursor-1];const mx=(HX+b.x)/2,my=Math.min(HY,b.y)-26;
-    a.innerHTML=`<path d="M${HX} ${HY} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" stroke="${CAT_COLOR[b.cat]}" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
-  }else a.innerHTML='';
+}
+function quadAt(t,p0,c,p1){const m=1-t;return [m*m*p0[0]+2*m*t*c[0]+t*t*p1[0], m*m*p0[1]+2*m*t*c[1]+t*t*p1[1]];}
+// animate one ball flying from home plate along its arc to where it lands
+function flyBall(b,dur,done){
+  cancelFly();
+  const home=[HX,HY],land=[b.x,b.y],col=CAT_COLOR[b.cat],r=dotR(b);
+  const mx=(home[0]+land[0])/2,my=(home[1]+land[1])/2;
+  const dist=Math.hypot(land[0]-home[0],land[1]-home[1]);
+  const lift=Math.min(dist*(b.cat==='hr'?0.72:b.cat==='out'?0.42:0.56),b.cat==='hr'?95:72);
+  const c=[mx,my-lift];                       // arc apex
+  const fly=$('fly');if(!fly){if(done)done();return;}
+  let start=null;
+  function frame(ts){
+    if(start==null)start=ts;
+    let t=(ts-start)/dur;if(t>1)t=1;
+    const e=1-Math.pow(1-t,3);                 // ease-out: quick off the bat, settling as it lands
+    const pos=quadAt(e,home,c,land);
+    const cp=[home[0]+e*(c[0]-home[0]),home[1]+e*(c[1]-home[1])]; // control pt of the partial arc
+    fly.innerHTML=
+      `<path d="M${home[0]} ${home[1]} Q ${cp[0].toFixed(1)} ${cp[1].toFixed(1)} ${pos[0].toFixed(1)} ${pos[1].toFixed(1)}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round" opacity="${(0.5*(1-t)+0.12).toFixed(2)}"/>`+
+      `<circle class="ball" cx="${pos[0].toFixed(1)}" cy="${pos[1].toFixed(1)}" r="${(r+0.7).toFixed(1)}" fill="#fff" stroke="${col}" stroke-width="1.3"/>`;
+    if(t<1)flyRAF=requestAnimationFrame(frame);
+    else{
+      flyRAF=null;
+      fly.innerHTML=`<circle class="splash" cx="${land[0].toFixed(1)}" cy="${land[1].toFixed(1)}" r="${(r).toFixed(1)}" fill="none" stroke="${col}" stroke-width="1.5"/>`;
+      setTimeout(()=>{const f=$('fly');if(f)f.innerHTML='';},470);
+      if(done)done();
+    }
+  }
+  flyRAF=requestAnimationFrame(frame);
 }
 function updateCounter(){
   $('counter').textContent=`${cursor} / ${view.length}`;
@@ -308,23 +337,28 @@ function drawReadout(b){
 }
 
 /* ---- playback ---- */
-function step(){
+function step(animate){
   if(cursor>=view.length){pause();drawReadout(null);return;}
-  cursor++;renderDots();updateCounter();drawReadout(view[cursor-1]);
+  cursor++;updateCounter();drawReadout(view[cursor-1]);
+  if(animate){
+    restingDots(cursor-1,false);                          // prior balls sit still
+    const dur=Math.min(+$('speed').value*0.82,520);       // flight scales with playback speed
+    flyBall(view[cursor-1],dur,()=>restingDots(cursor,true)); // new ball flies, then lands
+  }else restingDots(cursor,true);
 }
 function play(){
   if(!view.length)return;
-  if(cursor>=view.length){cursor=0;}      // restart from the top
+  if(cursor>=view.length)cursor=0;          // restart from the top
   playing=true;$('play').textContent='⏸';
-  const tick=()=>{ if(!playing)return; step(); if(cursor<view.length){timer=setTimeout(tick,+$('speed').value);} else {pause();} };
-  step();timer=setTimeout(tick,+$('speed').value);
+  const tick=()=>{ if(!playing)return; if(cursor>=view.length){pause();return;} step(true); timer=setTimeout(tick,+$('speed').value); };
+  tick();
 }
 function pause(){playing=false;$('play').textContent='▶';if(timer){clearTimeout(timer);timer=null;}}
 function toggle(){playing?pause():play();}
 
 $('play').onclick=toggle;
-$('reset').onclick=()=>{pause();cursor=0;renderDots();updateCounter();drawReadout(null);};
-$('scrub').oninput=e=>{pause();cursor=+e.target.value;renderDots();updateCounter();drawReadout(cursor>0?view[cursor-1]:null);};
+$('reset').onclick=()=>{pause();cancelFly();cursor=0;restingDots(0,false);updateCounter();drawReadout(null);};
+$('scrub').oninput=e=>{pause();cancelFly();cursor=+e.target.value;restingDots(cursor,true);updateCounter();drawReadout(cursor>0?view[cursor-1]:null);};
 $('load').onclick=()=>{const d=$('date').value;if(d)loadGames(d);else setMsg('Pick a date first.',true);};
 $('games').onchange=loadSelected;
 $('speed').onchange=()=>{};
