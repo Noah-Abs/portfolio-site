@@ -265,9 +265,21 @@
 
   .statline{position:relative;z-index:4;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;margin:15px 12px 0;
     background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden}
-  .statline .st{background:#0e1822;padding:8px 2px;text-align:center}
-  .statline .st b{display:block;font-family:var(--cond);font-weight:600;font-size:18px;color:#fff;line-height:1}
-  .statline .st span{font-size:9px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
+  .statline .st{position:relative;background:#0e1822;padding:8px 2px;text-align:center;overflow:hidden}
+  .statline .st b{display:block;font-family:var(--cond);font-weight:600;font-size:18px;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+  .statline .st span{display:block;font-size:9px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
+  .ovrn{font-variant-numeric:tabular-nums}
+  /* game-style statline reveal: numbers roll up, tiles rise + flash + punch, shine sweep */
+  @keyframes stRise{0%{opacity:0;transform:translateY(125%)}100%{opacity:1;transform:translateY(0)}}
+  .statline.anim .st b{animation:stRise .42s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:var(--d,0s)}
+  .statline.anim .st span{animation:stRise .42s cubic-bezier(.2,.9,.3,1.25) both;animation-delay:calc(var(--d,0s) + .05s)}
+  @keyframes stPunch{0%{transform:scale(1)}45%{transform:scale(1.42)}100%{transform:scale(1)}}
+  @keyframes stFlash{0%{box-shadow:inset 0 0 0 0 transparent;background:#0e1822}45%{box-shadow:inset 0 0 17px 1px var(--c1);background:#13212e}100%{box-shadow:inset 0 0 0 0 transparent;background:#0e1822}}
+  .statline .st.flash{animation:stFlash .55s ease-out}
+  .statline.anim:after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;
+    background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.24) 50%,transparent 58%);
+    transform:translateX(-130%);animation:stShine .9s ease .5s 1}
+  @keyframes stShine{to{transform:translateX(130%)}}
   .flavor{position:relative;z-index:4;margin:14px 16px 18px;font-size:13px;line-height:1.5;color:#dbe6f1;font-style:italic;
     border-top:1px solid var(--line);padding-top:13px}
 
@@ -954,6 +966,36 @@ function gradeStart(m){
     scoutingSummary:`${m.name} went ${m.ip} and allowed ${ER} earned run${ER===1?'':'s'} on ${H} hit${H===1?'':'s'} with ${BB} walk${BB===1?'':'s'} and ${K} strikeout${K===1?'':'s'} against ${oppOPS>=.75?'a strong':oppOPS>=.71?'an average':'a soft'} ${m.oppName} lineup${pf>=6.5?' in a hitter-friendly park':pf<=4.5?' in a pitcher-friendly park':''}. ${era<2?'Elite run prevention':era<3.5?'Solid run prevention':'Run prevention was the issue'}, and ${br9<7?'he kept the bases clear':br9<11?'traffic stayed manageable':'too many runners reached'}.`,
     oneLiner:`${tw} — ${m.ip} IP, ${ER} ER, ${BB} BB, ${K} K${HR?', '+HR+' HR':''}.`};
 }
+// roll a number up to its target; finalText preserves a decimal display (e.g. "6.1")
+function countUp(el,target,finalText,dur,done){
+  if(typeof performance==='undefined'){el.textContent=finalText||String(target);if(done)done();return;}
+  const start=performance.now();
+  function f(now){let t=(now-start)/dur;if(t>1)t=1;const e=1-Math.pow(1-t,3);
+    if(t<1){el.textContent=String(finalText?Math.floor(target*e):Math.round(target*e));requestAnimationFrame(f);}
+    else{el.textContent=finalText||String(Math.round(target));if(done)done();}}
+  requestAnimationFrame(f);
+}
+// game-style reveal: OVR rolls up, each statline tile rises + counts up + flashes + punches
+function animateGradeReveal(){
+  const root=els.result;if(!root)return;
+  const ovr=root.querySelector('.ovrn');
+  if(ovr){const g=parseInt(ovr.textContent,10)||0;ovr.textContent='0';
+    countUp(ovr,g,null,950,()=>{ovr.style.animation='stPunch .42s cubic-bezier(.2,.9,.3,1.5)';setTimeout(()=>{ovr.style.animation='';},470);});}
+  const sl=root.querySelector('.statline');if(!sl)return;
+  sl.classList.add('anim');
+  [...sl.querySelectorAll('.st')].forEach((st,i)=>{
+    st.style.setProperty('--d',(0.12+i*0.08)+'s');
+    const b=st.querySelector('b');if(!b)return;
+    const txt=b.textContent.trim(),num=parseFloat(txt);
+    if(!isFinite(num)){return;}
+    const finalText=/\./.test(txt)?txt:null;
+    b.textContent='0';
+    setTimeout(()=>{countUp(b,num,finalText,560,()=>{
+      b.style.animation='stPunch .34s cubic-bezier(.2,.9,.3,1.5)';st.classList.add('flash');
+      setTimeout(()=>{b.style.animation='';st.classList.remove('flash');},560);
+    });},170+i*95);
+  });
+}
 function render(d,factText){
   const cats=d.categories||[];const m=currentMeta;
   // compute the overall grade from the category scores×weights — don't trust the model's finalGrade number
@@ -1032,6 +1074,7 @@ function render(d,factText){
   const cb=$('#cardB');
   requestAnimationFrame(()=>{cb.classList.add('in');cb.style.animationDelay='.12s';
     $('#pmark').style.left=pi+'%';els.result.querySelectorAll('.rbar>i').forEach(i=>{i.style.width=i.dataset.w+'%';});});
+  requestAnimationFrame(()=>animateGradeReveal());
   if(m)loadPlayLog(m.gamePk,m.pid,m.name);
   if(m&&m.spray&&m.spray.length)SprayPlay.init(m);
   els.result.scrollIntoView({behavior:'smooth',block:'start'});
