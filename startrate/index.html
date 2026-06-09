@@ -153,9 +153,9 @@
   .ls-top{display:flex;justify-content:space-between;align-items:center;flex:0 0 auto;padding-bottom:14px;border-bottom:1px solid var(--line)}
   .ls-fin{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:3.5px;text-transform:uppercase;color:var(--c1)}
   .ls-dt{font-family:var(--mono);font-size:11px;color:var(--mut2);letter-spacing:.5px}
-  .ls-mid{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:18px}
-  .ls-teams{display:flex;flex-direction:column;gap:9px}
-  .ls-row{display:flex;align-items:center;gap:13px;padding:9px 13px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.022)}
+  .ls-mid{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:13px}
+  .ls-teams{display:flex;flex-direction:column;gap:8px}
+  .ls-row{display:flex;align-items:center;gap:12px;padding:8px 13px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.022)}
   .ls-row.win{background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,.012));border-color:rgba(255,255,255,.15)}
   .ls-row.lose{opacity:.58}
   .ls-logo{flex:0 0 auto;width:47px;height:47px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -177,6 +177,19 @@
   .lsc.rhe{font-weight:700;color:#fff}
   .lsc.rhe.r,.lsh.rhe.r{color:var(--c1)}
   .ls-foot{flex:0 0 auto;text-align:center;font-family:var(--cond);font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--mut2);padding-top:13px;border-top:1px solid var(--line)}
+  /* card-back pitcher panel: this start's line + season stats */
+  .ls-pitch{margin-top:3px}
+  .ls-pname{font-family:var(--anton);font-size:17px;letter-spacing:.4px;text-transform:uppercase;color:#fff;display:flex;align-items:baseline;justify-content:center;gap:9px;margin-bottom:8px}
+  .ls-pera{font-family:var(--cond);font-weight:600;font-size:11.5px;letter-spacing:1px;color:var(--c1)}
+  .ls-slabel{font-family:var(--cond);font-weight:600;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);text-align:center;margin:11px 0 7px;position:relative}
+  .ls-slabel:before,.ls-slabel:after{content:"";position:absolute;top:50%;width:18%;height:1px;background:var(--line)}
+  .ls-slabel:before{left:5%}.ls-slabel:after{right:5%}
+  .ls-sgrid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .ls-sgrid.st6{grid-template-columns:repeat(6,1fr)}
+  .ls-sgrid.st5{grid-template-columns:repeat(5,1fr)}
+  .ls-scell{background:#0e1822;padding:7px 1px;text-align:center}
+  .ls-scell b{display:block;font-family:var(--cond);font-weight:600;font-size:15px;color:#fff;line-height:1}
+  .ls-scell span{font-size:8.5px;letter-spacing:1px;color:var(--mut2);text-transform:uppercase}
   .brows-grid{display:grid;grid-template-columns:1fr;column-gap:34px}
   @media(min-width:640px){.brows-grid{grid-template-columns:1fr 1fr}}
   .under{margin-top:20px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
@@ -889,6 +902,18 @@ function linescoreCard(m,tv){
     rowH+=`<div class="lsc">${inn?num(inn.h):''}</div>`;}
   const cols=`30px repeat(${n},minmax(0,1fr)) 23px 23px 23px`;
   const rhe=t=>`<div class="lsc rhe r">${num(t.r)}</div><div class="lsc rhe">${num(t.h)}</div><div class="lsc rhe">${num(t.e)}</div>`;
+  // card-back content: the starter's line for this game + his season stats
+  const s=m.season||{};
+  const ipd=ipDec(m.ip)||0, sEra=ipd>0?(m.er*9/ipd).toFixed(2):'–';
+  const hasSeason=s.era!=null||s.wins!=null||s.strikeOuts!=null;
+  const sCells=[['W-L',(s.wins??'–')+'-'+(s.losses??'–')],['ERA',s.era??'–'],['IP',s.inningsPitched??'–'],['SO',s.strikeOuts??'–'],['WHIP',s.whip??'–']];
+  const startCells=[['IP',m.ip],['H',m.h],['R',m.r],['ER',m.er],['BB',m.bb],['K',m.k]];
+  const pitchPanel=`<div class="ls-pitch">
+      <div class="ls-pname">${esc(m.name||'Starting Pitcher')}<span class="ls-pera">${sEra} ERA</span></div>
+      <div class="ls-sgrid st6">${startCells.map(([l,v])=>`<div class="ls-scell"><b>${esc(String(v??'–'))}</b><span>${esc(l)}</span></div>`).join('')}</div>
+      ${hasSeason?`<div class="ls-slabel">${esc(m.year||'')} Season</div>
+      <div class="ls-sgrid st5">${sCells.map(([l,v])=>`<div class="ls-scell"><b>${esc(String(v))}</b><span>${esc(l)}</span></div>`).join('')}</div>`:''}
+    </div>`;
   return `<div class="tsc lsfront" style="${tv}"><div class="tsc-inner ls-in">
     <div class="ls-top"><span class="ls-fin">Final</span><span class="ls-dt">${esc(m.date||'')}</span></div>
     <div class="ls-mid">
@@ -901,6 +926,7 @@ function linescoreCard(m,tv){
         <div class="lst ${aWin?'win':''}">${esc(aAbbr)}</div>${rowA}${rhe(L.away)}
         <div class="lst ${hWin?'win':''}">${esc(hAbbr)}</div>${rowH}${rhe(L.home)}
       </div>
+      ${pitchPanel}
     </div>
     <div class="ls-foot">${esc(m.venue||'')}</div>
   </div></div>`;
