@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>Spray Chart Playback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080c12;--panel:#0f1620;--panel2:#131c28;--line:#22303f;
+    --ink:#eaf1f8;--mut:#8194aa;--mut2:#586a7e;--acc:#5cd9ff;--good:#46c7a0;--bad:#ff5a6e;
+    --ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --cond:"Oswald",var(--ui);--anton:"Anton",var(--cond);
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#0e1722,#070b10 60%);color:var(--ink);
+    font-family:var(--ui);min-height:100vh;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:26px 16px 60px}
+  header h1{font-family:var(--anton);font-size:30px;letter-spacing:.5px;margin:0;text-transform:uppercase}
+  header h1 span{background:linear-gradient(90deg,var(--acc),#a06bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--mut);font-size:13.5px;margin:6px 0 0}
+
+  .loader{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:20px 0 0;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px}
+  .loader input[type=date],.loader select,.loader button{font-family:var(--cond);font-size:14px;color:var(--ink);
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;outline:none}
+  .loader select{flex:1;min-width:160px}
+  .loader button{cursor:pointer;font-weight:600;background:linear-gradient(180deg,#1c6fb0,#15568a);border-color:#1c6fb0;color:#fff;letter-spacing:.5px}
+  .loader button:hover{filter:brightness(1.1)}
+  .msg{color:var(--mut);font-size:13px;margin-top:12px;min-height:18px}
+  .msg.err{color:var(--bad)}
+
+  .stage{margin-top:18px}
+  .scoreline{display:flex;align-items:center;justify-content:center;gap:14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px}
+  .scoreline .tm{display:flex;align-items:center;gap:9px}
+  .scoreline img{width:30px;height:30px;background:radial-gradient(circle at 50% 35%,#fff,#dbe2e9);border-radius:50%;padding:3px}
+  .scoreline .nm{font-family:var(--cond);font-weight:600;font-size:14px;letter-spacing:1px;text-transform:uppercase}
+  .scoreline .sc{font-family:var(--anton);font-size:24px}
+  .scoreline .at{color:var(--mut2);font-family:var(--cond);font-size:13px}
+  .scoreline .vn{flex-basis:100%;text-align:center;color:var(--mut2);font-family:var(--cond);font-size:11.5px;
+    letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+  .fieldwrap{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  #field{display:block;width:100%;height:auto}
+  .dot{transition:opacity .18s ease}
+  @keyframes drop{0%{transform:translateY(-14px) scale(.2);opacity:0}60%{opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+  .pop{transform-box:fill-box;transform-origin:center;animation:drop .42s cubic-bezier(.2,.9,.3,1.2) both}
+
+  .readout{display:flex;align-items:center;gap:12px;min-height:54px;margin-top:13px;
+    background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 14px}
+  .readout .ri{font-family:var(--anton);font-size:13px;letter-spacing:1px;color:#0a0f15;background:var(--acc);
+    border-radius:7px;padding:5px 9px;white-space:nowrap}
+  .readout .rt{flex:1;min-width:0}
+  .readout .r1{font-family:var(--cond);font-weight:600;font-size:15px;letter-spacing:.3px}
+  .readout .r2{font-size:12.5px;color:var(--mut);margin-top:2px}
+  .readout .rv{font-family:var(--mono);font-size:12px;color:var(--mut);white-space:nowrap}
+  .readout.idle .r1{color:var(--mut)}
+
+  .controls{display:flex;align-items:center;gap:11px;margin-top:13px}
+  .controls button{cursor:pointer;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--ink);font-size:17px;display:flex;align-items:center;justify-content:center}
+  .controls button.play{width:54px;height:54px;font-size:20px;background:linear-gradient(180deg,#1c6fb0,#15568a);border-color:#1c6fb0;color:#fff}
+  .controls button:hover{filter:brightness(1.12)}
+  .scrubwrap{flex:1;display:flex;flex-direction:column;gap:3px}
+  input[type=range]{width:100%;accent-color:var(--acc);height:5px;cursor:pointer}
+  .scrubrow{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--mut2)}
+  .controls select{font-family:var(--cond);font-size:13px;color:var(--ink);background:var(--panel2);
+    border:1px solid var(--line);border-radius:9px;padding:8px 9px;outline:none}
+
+  .innings{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+  .innings .inn{cursor:pointer;font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.5px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 12px;color:var(--mut);min-width:38px;text-align:center}
+  .innings .inn.on{background:linear-gradient(180deg,var(--acc),#3bb6e0);border-color:var(--acc);color:#06121a}
+  .innings .inn.empty{opacity:.34;cursor:default}
+
+  .legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:16px;font-size:12.5px;color:var(--mut)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;border:1px solid rgba(0,0,0,.5)}
+  .hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Spray Chart <span>Playback</span></h1>
+    <p>Pick a game and watch every batted ball land on the real ballpark, in order. Play, pause, scrub, or jump to an inning.</p>
+  </header>
+
+  <div class="loader">
+    <input type="date" id="date">
+    <select id="games"><option value="">Load a date first…</option></select>
+    <button id="load">Load games</button>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div class="stage hide" id="stage">
+    <div class="scoreline" id="scoreline"></div>
+    <div class="fieldwrap">
+      <svg id="field" viewBox="0 22 250 196" aria-label="ballpark spray chart"></svg>
+    </div>
+    <div class="readout idle" id="readout"><div class="rt"><div class="r1">Press play to start the game</div><div class="r2">Batted balls appear in the order they happened.</div></div></div>
+
+    <div class="controls">
+      <button id="reset" title="Restart">⏮</button>
+      <button id="play" class="play" title="Play / pause">▶</button>
+      <div class="scrubwrap">
+        <input type="range" id="scrub" min="0" max="0" value="0">
+        <div class="scrubrow"><span id="counter">0 / 0</span><span id="phase"></span></div>
+      </div>
+      <select id="speed">
+        <option value="1300">0.5×</option>
+        <option value="650" selected>1×</option>
+        <option value="340">2×</option>
+        <option value="170">4×</option>
+      </select>
+    </div>
+
+    <div class="innings" id="innings"></div>
+
+    <div class="legend">
+      <span><i style="background:#6f8aa6"></i>Out / reached</span>
+      <span><i style="background:#46c7a0"></i>Single</span>
+      <span><i style="background:#ffc24a"></i>Double</span>
+      <span><i style="background:#c07bff"></i>Triple</span>
+      <span><i style="background:#ff5a6e"></i>Home run</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATS='https://statsapi.mlb.com/api/v1';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const logoURL=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+
+/* ---- ballpark field (reused from StartRate) ---- */
+const PARKS=[['angel',[330,387,396,370,330]],['chase',[330,374,407,374,334]],['camden',[333,364,410,373,318]],['oriole',[333,364,410,373,318]],
+ ['fenway',[310,379,390,420,302]],['wrigley',[355,368,400,368,353]],['great american',[328,379,404,370,325]],['progressive',[325,370,405,375,325]],
+ ['coors',[347,390,415,375,350]],['comerica',[345,370,412,365,330]],['daikin',[315,362,409,373,326]],['minute maid',[315,362,409,373,326]],
+ ['kauffman',[330,387,410,387,330]],['dodger',[330,385,395,385,330]],['nationals',[336,377,402,370,335]],['citi field',[335,384,408,391,330]],
+ ['sutter',[330,388,403,367,330]],['pnc',[325,389,399,375,320]],['petco',[336,390,396,387,322]],['t-mobile',[331,378,401,381,326]],
+ ['oracle',[339,364,399,415,309]],['busch',[336,375,400,375,335]],['tropicana',[315,370,404,370,322]],['steinbrenner',[318,385,402,385,318]],
+ ['globe life',[329,372,407,374,326]],['rogers',[328,375,400,375,328]],['target field',[339,377,404,367,328]],['citizens bank',[329,374,401,369,330]],
+ ['truist',[335,385,400,375,325]],['rate field',[330,377,400,372,335]],['guaranteed rate',[330,377,400,372,335]],['loandepot',[344,386,400,387,335]],
+ ['yankee',[318,399,408,385,314]],['american family',[344,371,400,374,345]],['coliseum',[330,388,400,388,330]]];
+function parkDims(venue){const v=(venue||'').toLowerCase();for(const[k,d]of PARKS)if(v.includes(k))return d;return [330,376,400,376,330];}
+const HX=125,HY=201,SCALE=2.42;
+function fieldSVG(dims){
+  const pt=(ft,deg)=>{const a=deg*Math.PI/180,r=ft/SCALE;return [HX+r*Math.sin(a),HY-r*Math.cos(a)];};
+  const P=[pt(dims[0],-45),pt(dims[1],-22.5),pt(dims[2],0),pt(dims[3],22.5),pt(dims[4],45)];
+  const f=p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+  const ln=p=>`<line x1="${HX}" y1="${HY}" x2="${p[0].toFixed(1)}" y2="${p[1].toFixed(1)}" stroke="#5f8669" stroke-width="1.2"/>`;
+  return `<defs><radialGradient id="grass" cx="50%" cy="84%" r="86%"><stop offset="0" stop-color="#173a22"/><stop offset="1" stop-color="#0b1a10"/></radialGradient></defs>`+
+    `<path d="M${HX} ${HY} L${P.map(f).join(' L')} Z" fill="url(#grass)" stroke="#39634a" stroke-width="1.5"/>`+
+    ln(P[0])+ln(P[4])+
+    `<path d="M125 201 L156 172 L125 143 L94 172 Z" fill="#3a2a1c" fill-opacity=".55" stroke="#5a4636" stroke-width="1"/>`+
+    `<circle cx="156" cy="172" r="2" fill="#d6dbe1"/><circle cx="125" cy="143" r="2" fill="#d6dbe1"/><circle cx="94" cy="172" r="2" fill="#d6dbe1"/>`+
+    `<circle cx="125" cy="174" r="3" fill="#5a4636"/><path d="M121.5 201 h7 v3.2 l-3.5 3 l-3.5 -3 Z" fill="#e6eaef"/>`;
+}
+
+/* ---- batted-ball extraction (whole game, chronological) ---- */
+function ballCat(event){
+  if(/Home Run/.test(event))return 'hr';
+  if(/Triple/.test(event))return 'triple';
+  if(/Double/.test(event))return 'double';
+  if(/Single/.test(event))return 'single';
+  return 'out';
+}
+const CAT_COLOR={out:'#6f8aa6',single:'#46c7a0',double:'#ffc24a',triple:'#c07bff',hr:'#ff5a6e'};
+function extractBalls(plays,away,home){
+  const out=[];
+  for(const p of plays){
+    if(!(p.result&&p.result.type==='atBat'&&p.about))continue;
+    let c=null,ev=0,dist=0;
+    for(const pe of (p.playEvents||[])){
+      if(pe.details&&pe.details.isInPlay&&pe.hitData&&pe.hitData.coordinates&&pe.hitData.coordinates.coordX!=null){
+        c=pe.hitData.coordinates;ev=+pe.hitData.launchSpeed||0;dist=+pe.hitData.totalDistance||0;}
+    }
+    if(!c)continue;
+    const half=p.about.halfInning,inning=+p.about.inning;
+    out.push({x:+c.coordX,y:+c.coordY,inning,half,
+      cat:ballCat(p.result.event||''),event:p.result.event||'In play',
+      desc:p.result.description||'',ev,dist,
+      batter:(p.matchup&&p.matchup.batter&&p.matchup.batter.fullName)||'',
+      pitcher:(p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.fullName)||'',
+      bat:half==='top'?away:home, idx:+p.about.atBatIndex});
+  }
+  out.sort((a,b)=>a.idx-b.idx);
+  return out;
+}
+
+/* ---- state ---- */
+let GAME=null;            // {venue, away, home, balls:[...]}
+let view=[];             // current filtered list (by inning or all)
+let cursor=0;            // how many balls revealed
+let playing=false, timer=null, inningSel='all';
+
+function setMsg(t,err){const m=$('msg');m.textContent=t||'';m.className='msg'+(err?' err':'');}
+
+/* ---- load games for a date ---- */
+async function loadGames(date){
+  setMsg('Loading games…');
+  $('games').innerHTML='<option value="">Loading…</option>';
+  try{
+    const j=await fetch(`${STATS}/schedule?sportId=1&date=${date}&hydrate=team,venue,linescore`).then(r=>r.json());
+    const games=(j.dates&&j.dates[0]&&j.dates[0].games)||[];
+    if(!games.length){$('games').innerHTML='<option value="">No games that day</option>';setMsg('No games found for '+date+'. Try another date.',true);return;}
+    $('games').innerHTML=games.map(g=>{
+      const a=g.teams.away.team,h=g.teams.home.team;
+      const sc=(g.teams.away.score!=null&&g.teams.home.score!=null)?` (${g.teams.away.score}-${g.teams.home.score})`:'';
+      return `<option value="${g.gamePk}" data-away="${esc(a.name)}" data-aid="${a.id}" data-home="${esc(h.name)}" data-hid="${h.id}" data-venue="${esc((g.venue&&g.venue.name)||'')}" data-as="${g.teams.away.score??''}" data-hs="${g.teams.home.score??''}">${esc(a.name)} @ ${esc(h.name)}${sc}</option>`;
+    }).join('');
+    setMsg(games.length+' game'+(games.length!==1?'s':'')+' — pick one and it loads automatically.');
+    loadSelected();
+  }catch(e){setMsg('Could not load games: '+e.message,true);}
+}
+
+async function loadSelected(){
+  const opt=$('games').selectedOptions[0];
+  if(!opt||!opt.value)return;
+  const pk=opt.value, d=opt.dataset;
+  setMsg('Loading game…');
+  try{
+    const plays=await fetch(`${STATS}/game/${pk}/playByPlay`).then(r=>r.json()).then(j=>j.allPlays||[]);
+    const away={name:d.away,id:+d.aid,score:d.as}, home={name:d.home,id:+d.hid,score:d.hs};
+    const balls=extractBalls(plays,away,home);
+    GAME={venue:d.venue,away,home,balls};
+    setupGame();
+    if(!balls.length)setMsg('No batted-ball coordinates available for this game.',true);
+    else setMsg('');
+  }catch(e){setMsg('Could not load that game: '+e.message,true);}
+}
+
+function setupGame(){
+  pause();cursor=0;inningSel='all';
+  // scoreline
+  const {away,home,venue}=GAME;
+  $('scoreline').innerHTML=
+    `<div class="tm"><img src="${logoURL(away.id)}" onerror="this.remove()"><span class="nm">${esc(away.name)}</span><span class="sc">${away.score!==''?away.score:''}</span></div>`+
+    `<span class="at">@</span>`+
+    `<div class="tm"><span class="sc">${home.score!==''?home.score:''}</span><span class="nm">${esc(home.name)}</span><img src="${logoURL(home.id)}" onerror="this.remove()"></div>`+
+    `<div class="vn">${esc(venue||'')}</div>`;
+  // innings buttons
+  const innMax=GAME.balls.reduce((m,b)=>Math.max(m,b.inning),9);
+  let btns=`<div class="inn on" data-inn="all">All</div>`;
+  for(let i=1;i<=innMax;i++){
+    const has=GAME.balls.some(b=>b.inning===i);
+    btns+=`<div class="inn${has?'':' empty'}" data-inn="${i}">${i}</div>`;
+  }
+  $('innings').innerHTML=btns;
+  $('innings').querySelectorAll('.inn').forEach(el=>el.onclick=()=>{
+    if(el.classList.contains('empty'))return;
+    $('innings').querySelectorAll('.inn').forEach(x=>x.classList.remove('on'));
+    el.classList.add('on');inningSel=el.dataset.inn;applyFilter();
+  });
+  applyFilter();
+  $('field').innerHTML=fieldSVG(parkDims(venue))+'<g id="arc"></g><g id="dots"></g>';
+  $('stage').classList.remove('hide');
+  drawReadout(null);
+}
+
+function applyFilter(){
+  view=(inningSel==='all')?GAME.balls.slice():GAME.balls.filter(b=>String(b.inning)===String(inningSel));
+  cursor=0;
+  $('scrub').max=view.length;$('scrub').value=0;
+  pause();renderDots();updateCounter();drawReadout(null);
+}
+
+/* ---- rendering ---- */
+function renderDots(){
+  const g=$('dots');if(!g)return;let h='';
+  for(let i=0;i<cursor;i++){
+    const b=view[i];const r=b.cat==='hr'?4.3:b.cat==='out'?3.2:3.7;
+    const cur=(i===cursor-1);
+    h+=`<circle class="dot${cur?' pop':''}" cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${cur?r+1.4:r}" fill="${CAT_COLOR[b.cat]}" stroke="#0a0f15" stroke-width=".7"${cur?' opacity="1"':' opacity=".82"'}/>`;
+    if(cur)h+=`<circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="${r+4.5}" fill="none" stroke="${CAT_COLOR[b.cat]}" stroke-width="1" opacity=".55"/>`;
+  }
+  g.innerHTML=h;
+  // arc for the current ball
+  const a=$('arc');
+  if(cursor>0){const b=view[cursor-1];const mx=(HX+b.x)/2,my=Math.min(HY,b.y)-26;
+    a.innerHTML=`<path d="M${HX} ${HY} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}" fill="none" stroke="${CAT_COLOR[b.cat]}" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`;
+  }else a.innerHTML='';
+}
+function updateCounter(){
+  $('counter').textContent=`${cursor} / ${view.length}`;
+  $('phase').textContent=inningSel==='all'?'full game':'inning '+inningSel;
+  $('scrub').value=cursor;
+}
+const ORD=n=>n+(['th','st','nd','rd'][(n%100>>3^1&&n%10)||0]||'th');
+function half(b){return (b.half==='top'?'Top ':'Bot ')+ORD(b.inning);}
+function drawReadout(b){
+  const r=$('readout');
+  if(!b){r.className='readout idle';
+    r.innerHTML=`<div class="rt"><div class="r1">${cursor>=view.length&&view.length?'End — '+(inningSel==='all'?'full game':'inning '+inningSel):'Press play to start'}</div><div class="r2">${view.length} batted ball${view.length!==1?'s':''} ${inningSel==='all'?'in the game':'this inning'}.</div></div>`;
+    return;}
+  r.className='readout';
+  const res=b.cat==='out'?b.event:b.event.toUpperCase();
+  const xtra=[b.ev?`${b.ev.toFixed(0)} mph`:'',b.dist?`${b.dist} ft`:''].filter(Boolean).join(' · ');
+  r.innerHTML=`<div class="ri">${esc(half(b))}</div>`+
+    `<div class="rt"><div class="r1">${esc(b.batter)} — ${esc(res)}</div>`+
+    `<div class="r2">off ${esc(b.pitcher)} · ${esc(b.bat.name)} batting</div></div>`+
+    (xtra?`<div class="rv">${esc(xtra)}</div>`:'');
+}
+
+/* ---- playback ---- */
+function step(){
+  if(cursor>=view.length){pause();drawReadout(null);return;}
+  cursor++;renderDots();updateCounter();drawReadout(view[cursor-1]);
+}
+function play(){
+  if(!view.length)return;
+  if(cursor>=view.length){cursor=0;}      // restart from the top
+  playing=true;$('play').textContent='⏸';
+  const tick=()=>{ if(!playing)return; step(); if(cursor<view.length){timer=setTimeout(tick,+$('speed').value);} else {pause();} };
+  step();timer=setTimeout(tick,+$('speed').value);
+}
+function pause(){playing=false;$('play').textContent='▶';if(timer){clearTimeout(timer);timer=null;}}
+function toggle(){playing?pause():play();}
+
+$('play').onclick=toggle;
+$('reset').onclick=()=>{pause();cursor=0;renderDots();updateCounter();drawReadout(null);};
+$('scrub').oninput=e=>{pause();cursor=+e.target.value;renderDots();updateCounter();drawReadout(cursor>0?view[cursor-1]:null);};
+$('load').onclick=()=>{const d=$('date').value;if(d)loadGames(d);else setMsg('Pick a date first.',true);};
+$('games').onchange=loadSelected;
+$('speed').onchange=()=>{};
+
+/* default to a date we know has data, and auto-load for an instant practice run */
+(function init(){
+  $('date').value='2024-05-05';
+  loadGames('2024-05-05');
+})();
+</script>
+</body>
+</html>
