@@ -44,54 +44,44 @@
     transform:translateX(-130%);animation:shine 1.4s ease .4s 1}
   @keyframes shine{to{transform:translateX(130%)}}
 
-  .wm{position:absolute;z-index:2;width:210px;height:210px;left:-34px;bottom:-30px;opacity:.85;
-    filter:drop-shadow(0 0 16px rgba(255,255,255,.35)) drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+  /* centered nested-diamond medallion (the focal background art) */
+  .medallion{position:absolute;z-index:1;left:50%;top:44%;transform:translate(-50%,-50%);width:80%;pointer-events:none;opacity:.55}
+  .medallion svg{width:100%;height:auto;display:block;filter:drop-shadow(0 0 16px rgba(255,255,255,.16))}
 
-  .set{position:absolute;z-index:6;top:14px;left:15px;display:flex;align-items:center;gap:7px;
-    font-family:var(--anton);font-size:15px;letter-spacing:1.5px;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.45)}
-  .set i{width:14px;height:14px;transform:rotate(45deg);border-radius:2px;
-    background:linear-gradient(180deg,var(--c2),var(--c1));box-shadow:0 0 8px var(--glow)}
+  .set{position:absolute;z-index:6;top:15px;left:16px}
+  .set i{display:block;width:16px;height:16px;transform:rotate(45deg);border-radius:3px;
+    background:linear-gradient(180deg,var(--c2),var(--c1));box-shadow:0 0 10px var(--glow),0 2px 4px rgba(0,0,0,.4)}
 
   .gem{position:absolute;z-index:8;top:-6px;right:-4px;width:92px;height:108px}
   .gem svg{width:100%;height:100%;filter:drop-shadow(0 5px 10px rgba(0,0,0,.5))}
   .ovr{position:absolute;top:20px;left:0;right:4px;text-align:center;z-index:9;
     font-family:var(--anton);font-size:38px;color:#fff;line-height:1;text-shadow:0 1px 5px rgba(0,0,0,.55)}
 
-  .photo{position:absolute;z-index:4;left:51%;top:4%;transform:translateX(-50%);height:74%;width:auto;max-width:104%;
-    filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))}
-  .scrim{position:absolute;z-index:5;left:0;right:0;bottom:0;height:42%;pointer-events:none;
-    background:linear-gradient(180deg,transparent 10%,rgba(40,30,80,.35) 55%,rgba(28,22,60,.6) 100%)}
-
-  .id{position:absolute;z-index:7;right:18px;bottom:40px;text-align:right;text-shadow:0 2px 6px rgba(0,0,0,.6)}
-  .fn{font-family:var(--cond);font-weight:600;font-size:21px;letter-spacing:1px;text-transform:uppercase;color:#fff;line-height:1}
-  .ln{font-family:var(--anton);font-size:40px;letter-spacing:.5px;text-transform:uppercase;color:#fff;line-height:.92}
-
-  /* angled blue position banner across the bottom */
+  /* angled blue banner across the bottom */
   .pos-banner{position:absolute;z-index:6;left:0;right:0;bottom:0;height:34px;
     background:linear-gradient(90deg,#1a64b0,#2b86d0);clip-path:polygon(0 42%,100% 0,100% 100%,0 100%)}
-  .pos{position:absolute;z-index:7;right:18px;bottom:8px;font-family:var(--cond);font-weight:600;font-style:italic;
-    font-size:15px;letter-spacing:1px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
   <div class="card">
     <div class="beads"></div>
     <div class="inner">
-      <div class="geo">
-        <svg viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
-          <g fill="none" stroke="#ffffff" stroke-width="0.4" opacity="0.5">
-            <polygon points="50,18 78,70 50,122 22,70"/>
-            <polygon points="50,30 68,70 50,110 32,70"/>
-            <polygon points="50,44 58,70 50,96 42,70"/>
-            <polygon points="50,2 96,70 50,138 4,70"/>
+      <div class="geo"></div>
+      <div class="medallion">
+        <svg viewBox="0 0 200 200" aria-hidden="true">
+          <g fill="none" stroke="#ffffff" stroke-linejoin="round">
+            <polygon points="100,14 186,100 100,186 14,100" stroke-width="1.1" opacity=".5"/>
+            <polygon points="100,38 162,100 100,162 38,100" stroke-width="1" opacity=".4"/>
+            <polygon points="100,62 138,100 100,138 62,100" stroke-width="1" opacity=".32"/>
+            <polygon points="100,84 116,100 100,116 84,100" stroke-width="1" opacity=".26"/>
+            <line x1="100" y1="2" x2="100" y2="198" stroke-width=".7" opacity=".14"/>
+            <line x1="2" y1="100" x2="198" y2="100" stroke-width=".7" opacity=".14"/>
           </g>
         </svg>
       </div>
       <div class="shine"></div>
 
-      <img class="wm" src="https://www.mlbstatic.com/team-logos/119.svg" alt="" onerror="this.remove()">
-
-      <div class="set"><i></i>DIAMOND</div>
+      <div class="set"><i></i></div>
 
       <div class="gem">
         <svg viewBox="0 0 104 122" aria-hidden="true">
@@ -108,16 +98,7 @@
         <span class="ovr">92</span>
       </div>
 
-      <img class="photo" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_500,q_auto:best/v1/people/660271/headshot/silo/current" alt="Shohei Ohtani"
-        onerror="this.onerror=null;this.src='https://midfield.mlbstatic.com/v1/people/660271/spots/240'">
-      <div class="scrim"></div>
-
-      <div class="id">
-        <div class="fn">Shohei</div>
-        <div class="ln">Ohtani</div>
-      </div>
       <div class="pos-banner"></div>
-      <div class="pos">SP - L/R</div>
     </div>
   </div>
 </body>
