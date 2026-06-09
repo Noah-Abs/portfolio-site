@@ -1046,7 +1046,9 @@ function gradeStart(m){
   ];
   const categories=s.map((sc,i)=>({score:+sc.toFixed(1),weight:W[i],reason:R[i]}));
   let gw=0,ws=0;for(let i=0;i<13;i++){gw+=s[i]*W[i];ws+=W[i];}
-  let grade=Math.max(1,Math.min(100,Math.round(expandGrade(gw/ws*10))));
+  // going 8+ innings with few runs is elite no matter the strikeout total
+  const lrBonus=cl(IP-7,0,2.5)*cl(2.9-era,0,3)*2.3;
+  let grade=Math.max(1,Math.min(100,Math.round(expandGrade(gw/ws*10+lrBonus))));
   // anchor the ceiling: a complete-game perfect game = 100, a no-hitter = 99, nothing else above 98
   const noHitter=H===0&&IP>=8.5;
   grade=(noHitter&&BB===0&&ER===0)?100:noHitter?99:Math.min(grade,98);
