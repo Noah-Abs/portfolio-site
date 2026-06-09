@@ -143,7 +143,7 @@
   .flip:hover .flip-in,.flip.flipped .flip-in{transform:rotateY(180deg)}
   .flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
   .flip-back{transform:rotateY(180deg)}
-  .flip-face .tsc{width:100%;height:100%}
+  .flip-face .tsc,.flip-face .showcard{width:100%;height:100%}
   /* both faces fill the frame; the grade card keeps a natural compact stack (quote under the statline) */
   .flip-face .tsc-inner{height:100%}
   /* the linescore is a flex column that fills the frame, whichever face it sits on */
@@ -295,6 +295,55 @@
   @keyframes stShine{to{transform:translateX(130%)}}
   .flavor{position:relative;z-index:4;margin:14px 16px 18px;font-size:13px;line-height:1.5;color:#dbe6f1;font-style:italic;
     border-top:1px solid var(--line);padding-top:13px}
+
+  /* ===== MLB-The-Show / Topps Diamond style front ===== */
+  .showcard{position:relative;width:100%;height:100%;border-radius:20px;padding:12px;overflow:hidden;
+    background:linear-gradient(135deg,#eef1f4,#aeb6bf 22%,#f7f9fb 50%,#959ea8 74%,#e2e6ea);
+    box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 26px var(--glow),inset 0 0 0 1px rgba(255,255,255,.6);
+    animation:cardIn .55s cubic-bezier(.2,.9,.25,1) both}
+  .sc-beads{position:absolute;inset:5px;border-radius:16px;z-index:0;pointer-events:none;opacity:.5;
+    background-image:radial-gradient(circle,rgba(255,255,255,.65) .9px,transparent 1.2px);background-size:6px 6px}
+  .sc-inner{position:relative;z-index:1;height:100%;border-radius:13px;overflow:hidden;
+    background:
+      radial-gradient(135% 80% at 50% 114%, #0a0f17 0%, transparent 60%),
+      radial-gradient(130% 88% at 50% -12%, var(--c1) 0%, transparent 52%),
+      conic-gradient(from 210deg at 76% 12%, rgba(160,107,255,.22), rgba(92,217,255,.18) 30%, rgba(255,150,90,.12) 55%, rgba(120,90,255,.20) 80%, rgba(160,107,255,.22)),
+      linear-gradient(158deg, var(--team) 0%, #131a26 125%);}
+  .sc-geo{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.10;
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.6) 0 1px,transparent 1px 24px),
+      repeating-linear-gradient(-45deg,rgba(255,255,255,.6) 0 1px,transparent 1px 24px)}
+  .sc-shine{position:absolute;inset:0;z-index:9;pointer-events:none;
+    background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.28) 49%,rgba(255,255,255,.06) 56%,transparent 66%);
+    transform:translateX(-130%);animation:shine 1.2s ease .35s 1}
+  .sc-wm{position:absolute;z-index:2;width:178px;height:178px;left:-32px;bottom:-24px;opacity:.6;
+    filter:drop-shadow(0 0 14px rgba(255,255,255,.28)) drop-shadow(0 2px 5px rgba(0,0,0,.4))}
+  .sc-set{position:absolute;z-index:6;top:12px;left:14px;font-family:var(--anton);font-size:13px;letter-spacing:1px;
+    color:#fff;opacity:.92;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .sc-set:before{content:"";display:inline-block;width:8px;height:8px;margin-right:5px;transform:rotate(45deg);
+    background:linear-gradient(180deg,var(--c2),var(--c1));vertical-align:middle}
+  .sc-gem{position:absolute;z-index:8;top:-5px;right:-3px;width:80px;height:94px}
+  .sc-gemsvg{width:100%;height:100%;filter:drop-shadow(0 4px 9px rgba(0,0,0,.5))}
+  .sc-ovrn{position:absolute;top:17px;left:0;right:3px;text-align:center;z-index:9;
+    font-family:var(--anton);font-size:31px;color:#fff;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.55);font-variant-numeric:tabular-nums}
+  .sc-photo{position:absolute;z-index:4;left:50%;top:3%;transform:translateX(-50%);height:67%;width:auto;max-width:98%;
+    filter:drop-shadow(0 9px 15px rgba(0,0,0,.55))}
+  .sc-photo.sc-photo-sm{height:60%}
+  .sc-photo.sc-fb{position:relative;height:67%;width:108px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#cfd6dd)}
+  .sc-scrim{position:absolute;z-index:5;left:0;right:0;bottom:0;height:48%;pointer-events:none;
+    background:linear-gradient(180deg,transparent 6%,rgba(9,13,19,.5) 52%,rgba(9,13,19,.88) 100%)}
+  .sc-id{position:absolute;z-index:6;right:14px;bottom:54px;text-align:right;text-shadow:0 2px 5px rgba(0,0,0,.65)}
+  .sc-fn{font-family:var(--cond);font-weight:600;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;color:#eef3f8;line-height:1}
+  .sc-ln{font-family:var(--anton);font-size:28px;letter-spacing:.5px;text-transform:uppercase;color:#fff;line-height:.94}
+  .sc-pos{display:inline-block;margin-top:7px;font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:1.5px;
+    text-transform:uppercase;color:#0a0f15;background:linear-gradient(180deg,var(--c2),var(--c1));padding:3px 11px;border-radius:5px;
+    box-shadow:0 2px 8px var(--glow);text-shadow:none}
+  .sc-tier{margin-left:7px;opacity:.82}
+  /* statline as a translucent bottom strip */
+  .sc-stats{position:absolute;z-index:7;left:0;right:0;bottom:0;margin:0;border:0;border-radius:0;
+    border-top:1px solid rgba(255,255,255,.16);background:rgba(6,10,16,.5);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .sc-stats .st{background:transparent;padding:6px 1px}
+  .sc-stats .st b{font-size:16px}
+  .sc-stats .st span{color:rgba(255,255,255,.55)}
 
   /* BACK (Topps stock) */
   .tsc.back .tsc-inner{background:linear-gradient(180deg,#f7efda,#ece0c2)}
@@ -449,6 +498,17 @@ function gemSVG(){return `<svg class="gem" viewBox="0 0 64 60" width="36" height
     <line x1="14" y1="6" x2="23" y2="23"/><line x1="50" y1="6" x2="41" y2="23"/><line x1="23" y1="23" x2="41" y2="23"/>
     <line x1="32" y1="6" x2="32" y2="23" stroke="rgba(255,255,255,.3)"/>
   </g></svg>`;}
+// big faceted corner diamond holding the OVR (MLB-The-Show style)
+function diamondGem(g){return `<svg class="sc-gemsvg" viewBox="0 0 104 122" aria-hidden="true">
+    <defs><linearGradient id="dg${g}" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="var(--c2)"/><stop offset=".5" stop-color="var(--c1)"/><stop offset="1" stop-color="var(--c2)"/></linearGradient></defs>
+    <polygon points="52,3 101,42 52,119 3,42" fill="url(#dg${g})" stroke="#fbfdff" stroke-width="2.6"/>
+    <polygon points="52,3 101,42 52,54 3,42" fill="rgba(255,255,255,.22)"/>
+    <polyline points="3,42 52,54 101,42" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.1"/>
+    <line x1="52" y1="3" x2="52" y2="119" stroke="rgba(255,255,255,.28)" stroke-width="1"/>
+    <line x1="27" y1="22" x2="52" y2="54" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+    <line x1="77" y1="22" x2="52" y2="54" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+  </svg><span class="ovrn sc-ovrn">${g}</span>`;}
 
 const CATEGORIES=[
   ["Run Prevention","How many runs the pitcher *deserved* to allow once luck is stripped out — judged on contact quality, sequencing and expected ERA (xERA), not just what scored."],
@@ -1036,6 +1096,10 @@ function render(d,factText){
       <img class="phead" src="${siloURL(m.pid)}" onerror="this.onerror=null;this.src='${headURL(m.pid)}';this.classList.add('phead-sm')">
     </div>`:`<div class="photo" style="background:${teamBG()}"><div class="seamfb"></div></div>`;
   const name=m?m.name:'Custom Start', team=m?m.teamName:'—';
+  const _nm=(name||'').trim().split(/\s+/);
+  const firstName=_nm.length>1?_nm[0]:'';
+  const lastName=_nm.length>1?_nm.slice(1).join(' '):name;
+  const teamCol=(typeof TEAMCOL!=='undefined'&&m&&TEAMCOL[m.teamId])||'#3a4a5e';
   const match=m?`vs ${esc(m.oppName)} · ${esc(m.date)}${m.venue?' · '+esc(m.venue):''}`:'';
   const tiles=m?[['IP',m.ip],['H',m.h],['ER',m.er],['BB',m.bb],['K',m.k],['P',m.pit]].map(([l,v])=>`<div class="st"><b>${v??'–'}</b><span>${l}</span></div>`).join(''):'';
 
@@ -1049,23 +1113,21 @@ function render(d,factText){
     <div class="herocard">
     <div class="flip"><div class="flip-in">
     <div class="flip-face flip-front">
-    <div class="tsc" id="cardF" style="${tv}">
-      <div class="tsc-inner">
-        <div class="foil"></div><div class="tsc-shine"></div>
-        ${photo}
-        <div class="pedge"></div>
-        <div class="hud">
-          <div class="ovr"><span class="ovrn">${g}</span><span class="ovrl">OVR</span></div>
-          <div class="gemwrap">${gemSVG()}<span class="gtier">${t.key}</span></div>
+    <div class="showcard" id="cardF" style="${tv};--team:${teamCol}">
+      <div class="sc-beads"></div>
+      <div class="sc-inner">
+        <div class="sc-geo"></div><div class="sc-shine"></div>
+        ${m&&m.teamId?`<img class="sc-wm" src="${logoURL(m.teamId)}" onerror="this.remove()">`:''}
+        <div class="sc-set">◆ STARTRATE</div>
+        <div class="sc-gem">${diamondGem(g)}</div>
+        ${m?`<img class="sc-photo" src="${siloURL(m.pid)}" onerror="this.onerror=null;this.src='${headURL(m.pid)}';this.classList.add('sc-photo-sm')">`:`<div class="sc-photo sc-fb"></div>`}
+        <div class="sc-scrim"></div>
+        <div class="sc-id">
+          ${firstName?`<div class="sc-fn">${esc(firstName)}</div>`:''}
+          <div class="sc-ln">${esc(lastName)}</div>
+          <div class="sc-pos">SP · ${esc(letter)}<span class="sc-tier">${esc(t.key)}</span></div>
         </div>
-        <div class="plate">
-          <span class="pos">SP · ${esc(letter)}</span>
-          <div class="pname">${esc(name)}</div>
-          <div class="pteam">${esc(team)}</div>
-          ${match?`<div class="match">${match}</div>`:''}
-        </div>
-        ${tiles?`<div class="statline">${tiles}</div>`:''}
-        ${d.oneLiner?`<div class="flavor">“${esc(d.oneLiner)}”</div>`:''}
+        ${tiles?`<div class="statline sc-stats">${tiles}</div>`:''}
       </div>
     </div>
     </div>
