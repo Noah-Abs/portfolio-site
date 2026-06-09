@@ -1046,7 +1046,10 @@ function gradeStart(m){
   ];
   const categories=s.map((sc,i)=>({score:+sc.toFixed(1),weight:W[i],reason:R[i]}));
   let gw=0,ws=0;for(let i=0;i<13;i++){gw+=s[i]*W[i];ws+=W[i];}
-  const grade=Math.max(1,Math.min(100,Math.round(expandGrade(gw/ws*10))));
+  let grade=Math.max(1,Math.min(100,Math.round(expandGrade(gw/ws*10))));
+  // anchor the ceiling: a complete-game perfect game = 100, a no-hitter = 99, nothing else above 98
+  const noHitter=H===0&&IP>=8.5;
+  grade=(noHitter&&BB===0&&ER===0)?100:noHitter?99:Math.min(grade,98);
   const pi=cl(Math.round(66-Math.abs(margin)*9+(fatigue>60?12:0)),6,96);
   const tw=grade>=90?'A dominant gem':grade>=80?'A strong start':grade>=70?'A quality start':grade>=58?'A middling outing':'A rough start';
   return {finalGrade:grade,letter:letterFor(grade),pressureIndex:pi,
