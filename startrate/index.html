@@ -931,7 +931,9 @@ function linescoreCard(m,tv){
     <div class="ls-foot">${esc(m.venue||'')}</div>
   </div></div>`;
 }
-function letterFor(g){return g>=95?'A+':g>=90?'A':g>=85?'A-':g>=80?'B+':g>=75?'B':g>=70?'B-':g>=65?'C+':g>=60?'C':'D/F';}
+function letterFor(g){return g>=95?'A+':g>=89?'A':g>=84?'A-':g>=79?'B+':g>=74?'B':g>=69?'B-':g>=63?'C+':g>=57?'C':g>=50?'C-':g>=42?'D':'F';}
+// stretch only the extremes: elite gems reach the 90s, blowups fall into the teens
+function expandGrade(g){if(g>=80)return 80+(g-80)*1.65;if(g<=46)return 46-(46-g)*1.45;return g;}
 // ===== deterministic grader: same inputs -> same grade, every time (no LLM randomness) =====
 function ipDec(ip){const a=String(ip==null?'0':ip).split('.');return (+a[0]||0)+((+a[1]||0)/3);}
 function cl(v,a,b){return v<a?a:v>b?b:v;}
@@ -952,21 +954,21 @@ function gradeStart(m){
   const oppOPS=+m.oppOPS||0.715,pf=m.parkFactor!=null?+m.parkFactor:5.5,fatigue=+m.penFatigue||0,hh=(m.hardHit!=null&&m.hardHit>=0)?+m.hardHit:null;
   const margin=m.margin!=null?+m.margin:0,close=Math.abs(margin)<=3,expER=H*0.3+HR;
   const s=[
-    cl(10-era*1.15,1,10),
-    cl(3+k9*0.5,1,10),
-    cl(9.6-bb9*1.25+(strPct-0.63)*7,1,10),
-    cl(10-(pPerInn-13)*0.85,1,10),
-    cl((IP-0.5)*1.3,1,10),
-    hh!=null?cl(10-hh*0.085-HR*0.5,1,10):cl(10-h9*0.5-HR*0.6,1,10),
-    close?cl(7.6-ER*0.7,2,10):6,
-    cl((IP-2.5)*1.2+(fatigue>70?1.6:fatigue>40?0.7:0),1,10),
-    margin>0?cl(8.4-ER*0.25,4,10):margin===0?6.4:close?5.4:cl(4.2-ER*0.2,1,5.5),
-    cl(6+(oppOPS-0.715)*30,1.5,10),
-    cl(pf,1,10),
-    cl(6+(ER-expER)*0.7,1.5,9.5),
-    cl(11-br9+k9*0.15,1,10)
+    cl(10.6-era*0.92,1,10),                                  // run prevention
+    cl(3.6+k9*0.44,1,10),                                    // strikeouts
+    cl(9.85-bb9*1.2+(strPct-0.63)*5,1,10),                   // command
+    cl(9.2-(pPerInn-14)*0.7,1,10),                           // efficiency
+    cl(IP*1.5-3.1,1,10),                                     // length
+    hh!=null?cl(10-hh*0.08-HR*0.7,1,10):cl(9.95-h9*0.46-HR*0.8,1,10), // contact
+    close?cl(8.6-ER*0.62,2,10):6.2,                          // leverage
+    cl(IP*1.1+(fatigue>60?1:fatigue>35?0.5:0)-1.0,1,10),     // bullpen value
+    margin>0?cl(7.6-ER*0.18,4.5,9):margin===0?5.5:close?5:cl(4-ER*0.15,1,5), // result
+    cl(6+(oppOPS-0.715)*28,2,10),                            // opponent quality
+    cl(pf,1,10),                                             // park
+    cl(6.6+(expER-ER)*0.7,1.5,9.5),                          // deserved runs
+    cl(13.25-br9*0.62,1,10)                                  // baserunner prevention
   ];
-  const W=[18,9,11,7,12,11,5,4,4,5,2,4,8];
+  const W=[16,9,10,4,13,11,5,4,5,2,2,4,15];
   const R=[
     `${ER} ER over ${m.ip} IP — ${era.toFixed(2)} ERA for the start.`,
     `${K} strikeout${K===1?'':'s'}, ${k9.toFixed(1)} per nine.`,
@@ -983,9 +985,10 @@ function gradeStart(m){
     `${br9.toFixed(1)} baserunners per nine.`
   ];
   const categories=s.map((sc,i)=>({score:+sc.toFixed(1),weight:W[i],reason:R[i]}));
-  let gw=0;for(let i=0;i<13;i++)gw+=s[i]*W[i];const grade=Math.round(gw/100*10);
+  let gw=0,ws=0;for(let i=0;i<13;i++){gw+=s[i]*W[i];ws+=W[i];}
+  const grade=Math.max(1,Math.min(100,Math.round(expandGrade(gw/ws*10))));
   const pi=cl(Math.round(66-Math.abs(margin)*9+(fatigue>60?12:0)),6,96);
-  const tw=grade>=90?'A dominant gem':grade>=83?'A strong start':grade>=74?'A solid quality start':grade>=64?'A middling outing':'A rough start';
+  const tw=grade>=90?'A dominant gem':grade>=80?'A strong start':grade>=70?'A quality start':grade>=58?'A middling outing':'A rough start';
   return {finalGrade:grade,letter:letterFor(grade),pressureIndex:pi,
     pressureLabel:close?'High-leverage game':Math.abs(margin)>=6?'Low-leverage blowout':'Moderate leverage',categories,
     contextExplanation:`${close?'A tight game kept the leverage up':'A lopsided game kept leverage low'}; ${fatigue>60?'the bullpen was taxed entering this start, raising the value of his innings':'the bullpen was reasonably rested'}.`,
@@ -1024,9 +1027,8 @@ function animateGradeReveal(){
 }
 function render(d,factText){
   const cats=d.categories||[];const m=currentMeta;
-  // compute the overall grade from the category scores×weights — don't trust the model's finalGrade number
-  let _gw=0,_gws=0;cats.forEach(c=>{const sc=Math.max(1,Math.min(10,+c.score||0));const w=Math.max(0,+c.weight||0);_gw+=sc*w;_gws+=w;});
-  const g=Math.max(0,Math.min(100,_gws>0?Math.round(_gw/_gws*10):Math.round(+d.finalGrade||0)));const t=tier(g);const letter=letterFor(g);
+  // deterministic grade from gradeStart (weighted categories + extreme-expansion)
+  const g=Math.max(0,Math.min(100,Math.round(+d.finalGrade||0)));const t=tier(g);const letter=letterFor(g);
   const pi=Math.max(0,Math.min(100,+d.pressureIndex||0));const tv=`--c1:${t.c1};--c2:${t.c2};--glow:${t.glow}`;
 
   const photo=m?`<div class="photo" id="ph" style="background:${teamBG(m.teamId)}">
