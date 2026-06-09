@@ -73,9 +73,15 @@
   .controls select{font-family:var(--cond);font-size:13px;color:var(--ink);background:var(--panel2);
     border:1px solid var(--line);border-radius:9px;padding:8px 9px;outline:none}
 
-  .innings{display:flex;flex-wrap:wrap;gap:7px;margin-top:15px}
+  .inn-label{font-family:var(--cond);font-weight:600;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--mut2);margin:20px 0 9px}
+  .innings{display:flex;flex-wrap:wrap;gap:7px}
   .innings .inn{cursor:pointer;font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.5px;
-    background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 12px;color:var(--mut);min-width:38px;text-align:center}
+    background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 12px;color:var(--mut);min-width:38px;text-align:center;transition:background .15s,color .15s,border-color .15s}
+  .innings .inn:hover:not(.empty):not(.on){border-color:var(--acc);color:var(--ink)}
+  .innings .inn.wg{padding-left:15px;padding-right:15px;letter-spacing:1px;color:var(--ink)}
+  .innings .inn.tm-btn{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;color:var(--ink)}
+  .innings .inn.tm-btn img{width:18px;height:18px;object-fit:contain}
+  .innings .inn.tm-btn.on img{filter:none}
   .innings .inn.on{background:linear-gradient(180deg,var(--acc),#3bb6e0);border-color:var(--acc);color:#06121a}
   .innings .inn.empty{opacity:.34;cursor:default}
 
@@ -105,6 +111,13 @@
     </div>
     <div class="readout idle" id="readout"><div class="rt"><div class="r1">Press play to start the game</div><div class="r2">Batted balls appear in the order they happened.</div></div></div>
 
+    <div class="inn-label">Team</div>
+    <div class="innings" id="teams"></div>
+
+    <div class="inn-label">Inning</div>
+    <div class="innings" id="innings"></div>
+
+    <div class="inn-label">Or play it through</div>
     <div class="controls">
       <button id="reset" title="Restart">⏮</button>
       <button id="play" class="play" title="Play / pause">▶</button>
@@ -119,8 +132,6 @@
         <option value="170">4×</option>
       </select>
     </div>
-
-    <div class="innings" id="innings"></div>
 
     <div class="legend">
       <span><i style="background:#6f8aa6"></i>Out / reached</span>
@@ -198,7 +209,9 @@ function extractBalls(plays,away,home){
 let GAME=null;            // {venue, away, home, balls:[...]}
 let view=[];             // current filtered list (by inning or all)
 let cursor=0;            // how many balls revealed
-let playing=false, timer=null, inningSel='all';
+let playing=false, timer=null, inningSel='all', teamSel='all';
+const nick=s=>{const w=(s||'').trim().split(/\s+/);return w[w.length-1]||s;};
+function teamNick(id){if(!GAME)return '';if(String(id)===String(GAME.away.id))return nick(GAME.away.name);if(String(id)===String(GAME.home.id))return nick(GAME.home.name);return '';}
 
 function setMsg(t,err){const m=$('msg');m.textContent=t||'';m.className='msg'+(err?' err':'');}
 
@@ -237,7 +250,7 @@ async function loadSelected(){
 }
 
 function setupGame(){
-  pause();cursor=0;inningSel='all';
+  pause();cursor=0;inningSel='all';teamSel='all';
   // scoreline
   const {away,home,venue}=GAME;
   $('scoreline').innerHTML=
@@ -245,13 +258,19 @@ function setupGame(){
     `<span class="at">@</span>`+
     `<div class="tm"><span class="sc">${home.score!==''?home.score:''}</span><span class="nm">${esc(home.name)}</span><img src="${logoURL(home.id)}" onerror="this.remove()"></div>`+
     `<div class="vn">${esc(venue||'')}</div>`;
+  // team buttons: whole game (both) or an individual team
+  $('teams').innerHTML=
+    `<div class="inn tm-btn on" data-team="all">Both Teams</div>`+
+    `<div class="inn tm-btn" data-team="${away.id}"><img src="${logoURL(away.id)}" onerror="this.remove()">${esc(nick(away.name))}</div>`+
+    `<div class="inn tm-btn" data-team="${home.id}"><img src="${logoURL(home.id)}" onerror="this.remove()">${esc(nick(home.name))}</div>`;
+  $('teams').querySelectorAll('.tm-btn').forEach(el=>el.onclick=()=>{
+    $('teams').querySelectorAll('.tm-btn').forEach(x=>x.classList.remove('on'));
+    el.classList.add('on');teamSel=el.dataset.team;refreshInnings();applyFilter();
+  });
   // innings buttons
   const innMax=GAME.balls.reduce((m,b)=>Math.max(m,b.inning),9);
-  let btns=`<div class="inn on" data-inn="all">All</div>`;
-  for(let i=1;i<=innMax;i++){
-    const has=GAME.balls.some(b=>b.inning===i);
-    btns+=`<div class="inn${has?'':' empty'}" data-inn="${i}">${i}</div>`;
-  }
+  let btns=`<div class="inn wg on" data-inn="all">All Innings</div>`;
+  for(let i=1;i<=innMax;i++)btns+=`<div class="inn" data-inn="${i}">${i}</div>`;
   $('innings').innerHTML=btns;
   $('innings').querySelectorAll('.inn').forEach(el=>el.onclick=()=>{
     if(el.classList.contains('empty'))return;
@@ -259,16 +278,28 @@ function setupGame(){
     el.classList.add('on');inningSel=el.dataset.inn;applyFilter();
   });
   $('field').innerHTML=fieldSVG(parkDims(venue))+'<g id="dots"></g><g id="fly"></g>';
-  applyFilter();
+  refreshInnings();applyFilter();
   $('stage').classList.remove('hide');
-  drawReadout(null);
 }
 
+// matches the current team + inning selection
+function inView(b){return (teamSel==='all'||String(b.bat.id)===String(teamSel)) && (inningSel==='all'||String(b.inning)===String(inningSel));}
+// grey out innings that have no batted balls for the selected team
+function refreshInnings(){
+  $('innings').querySelectorAll('.inn').forEach(el=>{
+    if(el.dataset.inn==='all')return;
+    const inn=+el.dataset.inn, has=GAME.balls.some(b=>b.inning===inn&&(teamSel==='all'||String(b.bat.id)===String(teamSel)));
+    el.classList.toggle('empty',!has);
+    if(!has&&el.classList.contains('on')){el.classList.remove('on');inningSel='all';$('innings').querySelector('.inn.wg').classList.add('on');}
+  });
+}
+// selecting a team / inning shows that spray chart in full (static — not playback)
 function applyFilter(){
-  view=(inningSel==='all')?GAME.balls.slice():GAME.balls.filter(b=>String(b.inning)===String(inningSel));
-  cursor=0;cancelFly();
-  $('scrub').max=view.length;$('scrub').value=0;
-  pause();restingDots(0,false);updateCounter();drawReadout(null);
+  view=GAME.balls.filter(inView);
+  cancelFly();pause();
+  cursor=view.length;                          // reveal the whole selection at once
+  $('scrub').max=view.length;$('scrub').value=cursor;
+  restingDots(cursor,false);updateCounter();drawReadout(null);
 }
 
 /* ---- rendering ---- */
@@ -334,15 +365,25 @@ function flyBall(b,dur,done){
 }
 function updateCounter(){
   $('counter').textContent=`${cursor} / ${view.length}`;
-  $('phase').textContent=inningSel==='all'?'full game':'inning '+inningSel;
+  $('phase').textContent=(teamSel==='all'?'both teams':teamNick(teamSel))+' · '+(inningSel==='all'?'full game':'inn '+inningSel);
   $('scrub').value=cursor;
 }
 const ORD=n=>n+(['th','st','nd','rd'][(n%100>>3^1&&n%10)||0]||'th');
 function half(b){return (b.half==='top'?'Top ':'Bot ')+ORD(b.inning);}
 function drawReadout(b){
   const r=$('readout');
-  if(!b){r.className='readout idle';
-    r.innerHTML=`<div class="rt"><div class="r1">${cursor>=view.length&&view.length?'End — '+(inningSel==='all'?'full game':'inning '+inningSel):'Press play to start'}</div><div class="r2">${view.length} batted ball${view.length!==1?'s':''} ${inningSel==='all'?'in the game':'this inning'}.</div></div>`;
+  if(!b){
+    if(view.length && cursor>=view.length){     // full selection shown -> summary
+      const hits=view.filter(x=>x.cat!=='out').length,hr=view.filter(x=>x.cat==='hr').length,outs=view.length-hits;
+      const il=inningSel==='all'?'whole game':ORD(+inningSel)+' inning';
+      const label=teamSel==='all'?(inningSel==='all'?'Whole game':ORD(+inningSel)+' inning'):`${teamNick(teamSel)} · ${il}`;
+      r.className='readout';
+      r.innerHTML=`<div class="ri">${esc(label)}</div><div class="rt"><div class="r1">${view.length} batted ball${view.length!==1?'s':''}</div>`+
+        `<div class="r2">${outs} out${outs!==1?'s':''} · ${hits-hr} hit${(hits-hr)!==1?'s':''}${hr?` · ${hr} HR`:''}</div></div>`;
+      return;
+    }
+    r.className='readout idle';
+    r.innerHTML=`<div class="rt"><div class="r1">${cursor===0?'Press ▶ to watch it fill in':'Paused'}</div><div class="r2">${view.length} batted ball${view.length!==1?'s':''} ${inningSel==='all'?'in the game':'this inning'}.</div></div>`;
     return;}
   r.className='readout';
   const res=b.cat==='out'?b.event:b.event.toUpperCase();
@@ -375,7 +416,7 @@ function toggle(){playing?pause():play();}
 
 $('play').onclick=toggle;
 $('reset').onclick=()=>{pause();cancelFly();cursor=0;restingDots(0,false);updateCounter();drawReadout(null);};
-$('scrub').oninput=e=>{pause();cancelFly();cursor=+e.target.value;restingDots(cursor,true);updateCounter();drawReadout(cursor>0?view[cursor-1]:null);};
+$('scrub').oninput=e=>{pause();cancelFly();cursor=+e.target.value;const mid=cursor>0&&cursor<view.length;restingDots(cursor,mid);updateCounter();drawReadout(mid?view[cursor-1]:null);};
 $('load').onclick=()=>{const d=$('date').value;if(d)loadGames(d);else setMsg('Pick a date first.',true);};
 $('games').onchange=loadSelected;
 $('speed').onchange=()=>{};
