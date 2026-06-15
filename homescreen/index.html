@@ -24,6 +24,7 @@
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;width:100%;max-width:1060px}
   .box{background:#15161b;border:1px solid #262a32;border-radius:22px;min-height:200px;
     display:flex;align-items:center;justify-content:center;padding:24px;cursor:pointer;
+    text-decoration:none;color:inherit;
     transition:border-color .18s ease, background .18s ease, transform .18s ease}
   .box:hover{border-color:#3b454f;background:#181a20;transform:translateY(-3px)}
   .box-label{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;
@@ -42,7 +43,7 @@
     <div class="grid">
       <div class="box"><span class="box-label">Teams</span></div>
       <div class="box"><span class="box-label">Starting Pitching</span></div>
-      <div class="box"></div>
+      <a class="box" href="/startrate/"><span class="box-label">Starter Rating</span></a>
       <div class="box"></div>
       <div class="box"></div>
       <div class="box"></div>
