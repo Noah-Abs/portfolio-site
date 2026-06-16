@@ -75,6 +75,7 @@
   table.stat td.grp,table.stat th.grp{border-left:1px solid #2a2f37}
   table.stat tbody tr:hover td{background:#13151a}
   table.stat tbody tr:hover th.splitcol{background:#16181e}
+  .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:middle}
   .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
 
   @media(max-width:900px){.hero{grid-template-columns:repeat(3,1fr)}}
@@ -175,6 +176,39 @@
     return statTable(fields,rows);
   }
 
+  // ---- pitch arsenal ----
+  const PCOL={FF:'#e23b34',FA:'#e23b34',FT:'#ef6a3c',SI:'#ef6a3c',FC:'#f0a13b',
+    FS:'#23c08a',CH:'#2fb673',SC:'#2fb673',
+    SL:'#3b82f0',ST:'#5b8def',SV:'#6b6bf0',
+    CU:'#9b5cf0',KC:'#b05cf0',CS:'#9b5cf0',KN:'#8a909a',EP:'#8a909a'};
+  const arPct=v=>(v==null||v===''||isNaN(+v))?'–':(+v).toFixed(1);
+  const arAvg=v=>(v==null||v===''||isNaN(+v))?'–':(+v).toFixed(3).replace(/^0(?=\.)/,'');
+  function parseCSV(text){
+    const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.length);
+    const rows=lines.map(l=>{const out=[];let cur='',q=false;
+      for(let i=0;i<l.length;i++){const ch=l[i];
+        if(q){if(ch==='"'){if(l[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+        else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}
+      out.push(cur);return out;});
+    const hdr=rows.shift();return {hdr,rows};
+  }
+  function arsenalSection(splits,savMap,year){
+    const ps=splits.map(s=>s.stat).filter(p=>p&&p.type).sort((a,b)=>(b.percentage||0)-(a.percentage||0));
+    const COLS=[['USE%','Share of total pitches thrown'],['VELO','Average velocity (mph)'],
+      ['WHIFF%','Swing-and-miss rate'],['K%','Strikeout rate on this pitch'],['PUT-AWAY%','2-strike strikeout rate'],
+      ['BAA','Opponent batting average'],['xwOBA','Expected wOBA — quality of contact allowed'],['HARD%','Hard-hit rate (95+ mph exit velo)']];
+    const head='<tr><th class="splitcol">Pitch</th>'+COLS.map(c=>`<th title="${esc(c[1])}">${esc(c[0])}</th>`).join('')+'</tr>';
+    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},col=PCOL[code]||'#6b727c';
+      return `<tr><th class="splitcol"><span class="pdot" style="background:${col}"></span>${esc(p.type.description||code)}</th>`+
+        `<td>${arPct((p.percentage||0)*100)}</td>`+
+        `<td>${p.averageSpeed!=null?(+p.averageSpeed).toFixed(1):'–'}</td>`+
+        `<td>${arPct(sv.whiff)}</td><td>${arPct(sv.k)}</td><td>${arPct(sv.putaway)}</td>`+
+        `<td>${arAvg(sv.ba)}</td><td>${arAvg(sv.xwoba)}</td><td>${arPct(sv.hard)}</td></tr>`;
+    }).join('');
+    return `<div class="sect"><h2>Pitch Arsenal</h2><div class="subh">${year} Season · pitch mix, velocity &amp; Statcast results</div>`+
+      `<div class="tbl-wrap"><table class="stat"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>`;
+  }
+
   function pick(stats,group,type){
     const g=(stats||[]).find(s=>s.group&&s.group.displayName===group&&s.type&&s.type.displayName===type);
     return g&&g.splits&&g.splits.length?g:null;
@@ -224,6 +258,22 @@
         if(s)html+=heroStrip(pitHero(s),s,c); else if(c)html+=heroStrip(pitHero(c),c,null);
         const cols=[];if(s)cols.push({label:String(YEAR),stat:s});if(c)cols.push({label:'Career',stat:c});
         html+=`<div class="subh">Full Pitching Line</div>`+statBlock(PIT,cols)+`</div>`;
+      }
+      if(pS||pC){
+        try{
+          const aj=await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=pitchArsenal&group=pitching&season=${YEAR}`).then(r=>r.json());
+          const aSplits=((aj.stats||[]).find(s=>s.type&&s.type.displayName==='pitchArsenal')||{}).splits||[];
+          if(aSplits.length){
+            let savMap={};
+            try{
+              const txt=(await fetch(`https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>r.text())).replace(/^﻿/,'');
+              const {hdr,rows}=parseCSV(txt);const ci=n=>hdr.indexOf(n);
+              const PID=ci('player_id'),PT=ci('pitch_type'),WH=ci('whiff_percent'),K=ci('k_percent'),PAW=ci('put_away'),BA=ci('ba'),XW=ci('est_woba'),HH=ci('hard_hit_percent');
+              rows.forEach(r=>{if(+r[PID]===ID)savMap[r[PT]]={whiff:r[WH],k:r[K],putaway:r[PAW],ba:r[BA],xwoba:r[XW],hard:r[HH]};});
+            }catch(e){}
+            html+=arsenalSection(aSplits,savMap,YEAR);
+          }
+        }catch(e){}
       }
       if(fS){
         html+=`<div class="sect"><h2>Fielding</h2><div class="subh">${YEAR} Season · by position</div>`;
