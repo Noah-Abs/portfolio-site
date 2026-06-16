@@ -82,7 +82,7 @@
   const DIV_ORDER=[201,202,200,204,205,203];
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  let TEAMS=[], YEAR, mode='flat', sortKey='pct', sortDir=-1;
+  let TEAMS=[], YEAR, mode='div', sortKey='pct', sortDir=-1;
 
   const pctv=t=>parseFloat(t.pct)||0;
   const l10w=t=>{const m=/^(\d+)/.exec(t.l10);return m?+m[1]:0;};
