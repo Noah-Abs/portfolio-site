@@ -59,6 +59,15 @@
     .side-foot{display:none}
     .main{padding:26px 16px 60px}
   }
+  /* right-click stat glossary */
+  .ghint{margin-top:7px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#4a5159}
+  .gloss{position:fixed;z-index:1000;width:330px;max-width:92vw;max-height:72vh;overflow:auto;background:#15161b;
+    border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
+  .gloss-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:11px;color:#7e858f;padding:5px 15px 9px;border-bottom:1px solid #23262c}
+  .gloss-row{display:flex;gap:12px;padding:7px 15px}
+  .gloss-row+.gloss-row{border-top:1px solid #14161b}
+  .gl-k{flex:0 0 60px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
+  .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
 </style>
 </head>
 <body>
@@ -147,6 +156,26 @@
       render();
     });
   }
+
+  const DEFS={
+    fpct:'Fielding percentage — (putouts + assists) / total chances', e:'Errors', te:'Throwing errors',
+    a:'Assists', po:'Putouts', dp:'Double plays turned', tp:'Triple plays turned',
+    tc:'Total chances (putouts + assists + errors)', rf:'Range factor — (putouts + assists) per 9 innings',
+    pb:'Passed balls (catchers)', sb:'Stolen bases allowed', cs:'Runners caught stealing',
+    csp:'Caught-stealing percentage', pk:'Pickoffs'
+  };
+  const GLOSS_EXTRA=[['#','Rank for the current sort'],['Team','Club name & logo']];
+  function glossRows(){return GLOSS_EXTRA.concat(COLS.map(c=>[c.l,DEFS[c.k]||'—']));}
+  function buildGloss(){return '<div class="gloss-h">Stat Glossary</div>'+glossRows().map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
+  let glossEl=null;
+  function closeGloss(){if(glossEl){glossEl.remove();glossEl=null;}}
+  function openGloss(x,y){closeGloss();glossEl=document.createElement('div');glossEl.className='gloss';glossEl.innerHTML=buildGloss();glossEl.addEventListener('mousedown',ev=>ev.stopPropagation());document.body.appendChild(glossEl);
+    const w=glossEl.offsetWidth,h=glossEl.offsetHeight;glossEl.style.left=Math.max(8,Math.min(x,innerWidth-w-10))+'px';glossEl.style.top=Math.max(8,Math.min(y,innerHeight-h-10))+'px';}
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.main')){e.preventDefault();openGloss(e.clientX,e.clientY);}});
+  document.addEventListener('click',closeGloss);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
+  window.addEventListener('scroll',closeGloss);
+  (function(){const ph=document.querySelector('.page-head');if(ph&&!ph.querySelector('.ghint')){const h=document.createElement('div');h.className='ghint';h.textContent='↳ right-click any stat for its definition';ph.appendChild(h);}})();
 
   (async function(){
     try{
