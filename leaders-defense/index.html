@@ -151,7 +151,7 @@
     const j=await r.json();
     const splits=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];
     const POSSET=new Set(POS.map(p=>p[0]));
-    let rows=splits.filter(sp=>sp.player&&sp.position&&POSSET.has(sp.position.abbreviation)&&ipd(sp.stat.innings)>=10).map(sp=>{const s=sp.stat;return {
+    let rows=splits.filter(sp=>sp.player&&sp.position&&POSSET.has(sp.position.abbreviation)&&ipd(sp.stat.innings)>=1).map(sp=>{const s=sp.stat;return {
       id:sp.player.id, name:sp.player.fullName, team:(sp.team&&sp.team.id)||0, pos:sp.position.abbreviation,
       inn:s.innings, g:+s.gamesPlayed||0, gs:+s.gamesStarted||0, po:+s.putOuts||0, a:+s.assists||0,
       e:+s.errors||0, te:+s.throwingErrors||0, dp:+s.doublePlays||0, fpct:s.fielding, rf:s.rangeFactorPer9Inn,
@@ -175,6 +175,12 @@
     if(na==null)return 1; if(nb==null)return -1;
     return (na-nb)*sortDir || (ipd(b.inn)-ipd(a.inn));
   }
+  // only count a player at a position if they've logged a real share of innings there
+  function qualify(rows){
+    const maxByPos={};
+    rows.forEach(r=>{const v=ipd(r.inn);if(v>(maxByPos[r.pos]||0))maxByPos[r.pos]=v;});
+    return rows.filter(r=>ipd(r.inn)>=Math.max(20,0.15*(maxByPos[r.pos]||0)));
+  }
   const cell=v=>v==null||v===''?'—':v;
   function playerCell(t){return `<span class="pl"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;}
 
@@ -185,18 +191,18 @@
       <th class="l rank">#</th><th class="l">Player</th>
       ${COLS.map(c=>`<th class="sortable${c.k===sortKey?' active':''}" data-k="${c.k}">${c.l}${c.k===sortKey?`<span class="arr">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}
     </tr></thead>`;
+    const mkrow=(t,rank)=>`<tr class="p"><td class="rank">${rank}</td><td class="l">${playerCell(t)}</td>${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(cell(t[c.k]))}</td>`).join('')}</tr>`;
     let body='';
     POS.forEach(([abbr,full])=>{
       const group=ROWS.filter(r=>r.pos===abbr).sort(cmp);
       if(!group.length)return;
-      const exp=expanded.has(abbr), show=exp?group:group.slice(0,10);
+      const exp=expanded.has(abbr);
       body+=`<tr class="grp"><td class="l" colspan="${nCols}">${esc(full)}<small>${group.length} qualified</small></td></tr>`;
-      body+=show.map((t,i)=>`<tr class="p">
-        <td class="rank">${i+1}</td>
-        <td class="l">${playerCell(t)}</td>
-        ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(cell(t[c.k]))}</td>`).join('')}
-      </tr>`).join('');
-      if(group.length>10)body+=`<tr class="more" data-pos="${abbr}"><td class="l" colspan="${nCols}">${exp?'▾  Show top 10':'▸  Show all '+group.length+' '+abbr}</td></tr>`;
+      body+=group.slice(0,10).map((t,i)=>mkrow(t,i+1)).join('');
+      if(group.length>10){
+        body+=`<tr class="more" data-pos="${abbr}"><td class="l" colspan="${nCols}">${exp?'▴  Show top 10':'▸  Show all '+group.length+' '+abbr}</td></tr>`;
+        if(exp)body+=group.slice(10).map((t,i)=>mkrow(t,i+11)).join('');
+      }
     });
     content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
     document.getElementById('sub').textContent=`${YEAR} Season · by position · sorted by ${col.l}${(col.k==='oaa'&&!hasOAA)?' (OAA unavailable for this season)':''}`;
@@ -226,9 +232,10 @@
     try{
       const now=new Date().getFullYear();let rows=[];YEAR=now;
       for(const y of [now,now-1,now-2]){rows=await fetchYear(y);if(rows.length){YEAR=y;break;}}
-      if(!rows.length){content().innerHTML='<div class="scroller"><div class="state">No fielding data.</div></div>';return;}
+      const q=qualify(rows);
+      if(!q.length){content().innerHTML='<div class="scroller"><div class="state">No fielding data.</div></div>';return;}
       if(!hasOAA){sortKey='fpct';sortDir=-1;}   // fall back if OAA didn't load
-      ROWS=rows;render();
+      ROWS=q;render();
     }catch(e){
       content().innerHTML='<div class="scroller"><div class="state">Couldn’t load fielders.</div></div>';
     }
