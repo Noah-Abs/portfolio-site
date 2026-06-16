@@ -49,14 +49,23 @@
       cursor: pointer;
     }
     .stadium-logo circle.bg {
-      fill: #111;
-      stroke: #444;
+      fill: #555;
+      stroke: #666;
       stroke-width: 1;
+      transition: all 0.3s;
+    }
+    .stadium-logo.visited circle.bg {
+      fill: #111;
+      stroke: #fff;
+      stroke-width: 1.5;
     }
     .stadium-label {
       fill: #181818;
       rx: 3;
       ry: 3;
+    }
+    .stadium-logo.visited .stadium-label {
+      fill: #1a1a1a;
     }
     .stadium-label-text {
       fill: #ccc;
@@ -64,10 +73,247 @@
       font-size: 8px;
       font-weight: 500;
     }
+    .stadium-logo.visited .stadium-label-text {
+      fill: #fff;
+    }
     .stadium-line {
       stroke: #444;
       stroke-width: 0.5;
     }
+    .stadium-logo.visited .stadium-line {
+      stroke: #888;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      width: 420px;
+      max-width: 92vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    .modal-header .team-abbr {
+      font-size: 11px;
+      color: #888;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .modal-close:hover { color: #fff; }
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .saved-visits {
+      margin-bottom: 20px;
+    }
+    .visit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+    .visit-item .visit-date {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 500;
+    }
+    .visit-item .visit-detail {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+    .visit-item .visit-remove {
+      background: none;
+      border: none;
+      color: #555;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+    }
+    .visit-item .visit-remove:hover { color: #e44; }
+
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .search-row select,
+    .search-row input {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+    }
+    .search-row select:focus,
+    .search-row input:focus {
+      border-color: #555;
+    }
+    .search-row select { flex: 0 0 90px; }
+    .search-row input { flex: 1; }
+    .search-btn {
+      background: #fff;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .search-btn:hover { background: #ddd; }
+    .search-btn:disabled { background: #444; color: #888; cursor: default; }
+
+    .game-list {
+      max-height: 260px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+    }
+    .game-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border: 1px solid #222;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .game-item:hover {
+      background: #1a1a1a;
+      border-color: #444;
+    }
+    .game-item .game-date {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 500;
+    }
+    .game-item .game-matchup {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+    .game-item .game-score {
+      font-size: 12px;
+      color: #aaa;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .bypass-btn {
+      width: 100%;
+      padding: 10px;
+      background: none;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #888;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .bypass-btn:hover {
+      border-color: #555;
+      color: #ccc;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-size: 12px;
+    }
+    .no-results {
+      text-align: center;
+      padding: 16px;
+      color: #555;
+      font-size: 12px;
+    }
+    .game-list::-webkit-scrollbar,
+    .modal-body::-webkit-scrollbar { width: 4px; }
+    .game-list::-webkit-scrollbar-track,
+    .modal-body::-webkit-scrollbar-track { background: transparent; }
+    .game-list::-webkit-scrollbar-thumb,
+    .modal-body::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .filter-row select {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      padding: 6px 8px;
+      outline: none;
+    }
+    .filter-row select:focus { border-color: #555; }
   </style>
 </head>
 <body>
@@ -126,55 +372,86 @@
       <path id="VA" d="M1002.9,369.2l-0.1-1.9l6.5-2.5l-0.8,3.2l-2.9,3.8l-0.4,4.6l0.5,3.4l-1.8,5l-2.2,1.9l-1.5-4.6l0.4-5.4l1.6-4.2L1002.9,369.2z M1005.2,397.5L947,410.1l-37.4,5.3l-6.7-0.4l-2.6,1.9l-7.3,0.2l-8.4,1l-8.9,1l8.5-4.9l0-2.1l1.5-2.1l10.6-11.5l3.9,4.5l3.8,1l2.5-1.1l2.2-1.3l2.5,1.3l3.9-1.4l1.9-4.6l2.6,0.5l2.9-2.1l1.8,0.5l2.8-3.7l0.3-2.1l-1-1.3l1-1.9l5.3-12.3l0.6-5.7l1.2-0.5l2.2,2.4l3.9-0.3l1.9-7.6l2.8-0.6l1-2.7l2.6-2.3l1.3-2.3l1.5-3.4l0.1-5.1l9.8,3.8c0.7,0.3,0.7-4.8,0.7-4.8l4.1,1.4l-0.5,2.6l8.2,2.9l1.3,1.8l-0.9,3.7l-1.3,1.3l-0.5,1.7l0.5,2.4l2,1.3l3.9,1.4l2.9,1l4.9,0.9l2.2,2.1l3.2,0.4l0.9,1.2l-0.4,4.7l1.4,1.1l-0.5,1.9l1.2,0.8l-0.2,1.4l-2.7-0.1l0.1,1.6l2.3,1.5l0.1,1.4l1.8,1.8l0.5,2.5l-2.6,1.4l1.6,1.5l5.8-1.7L1005.2,397.5z"/>
     </svg>
   </div>
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Stadium</h2>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
   <script>
     const stadiums = [
-      { team: 'SEA', name: 'T-Mobile Park', x: 280, y: 145, logo: 'sea', labelDir: 'right' },
-      { team: 'SF', name: 'Oracle Park', x: 210, y: 385, logo: 'sf', labelDir: 'right' },
-      { team: 'OAK', name: 'Sutter Health Park', x: 225, y: 355, logo: 'oak', labelDir: 'right' },
-      { team: 'LAD', name: 'Dodger Stadium', x: 235, y: 440, logo: 'lad', labelDir: 'right' },
-      { team: 'LAA', name: 'Angel Stadium', x: 250, y: 458, logo: 'laa', labelDir: 'right' },
-      { team: 'SD', name: 'Petco Park', x: 260, y: 482, logo: 'sd', labelDir: 'right' },
-      { team: 'ARI', name: 'Chase Field', x: 360, y: 465, logo: 'ari', labelDir: 'right' },
-      { team: 'COL', name: 'Coors Field', x: 470, y: 330, logo: 'col', labelDir: 'right' },
-      { team: 'TEX', name: 'Globe Life Field', x: 600, y: 490, logo: 'tex', labelDir: 'right' },
-      { team: 'HOU', name: 'Minute Maid Park', x: 635, y: 555, logo: 'hou', labelDir: 'right' },
-      { team: 'MIN', name: 'Target Field', x: 680, y: 225, logo: 'min', labelDir: 'right' },
-      { team: 'MIL', name: 'American Family Field', x: 765, y: 260, logo: 'mil', labelDir: 'left' },
-      { team: 'CHC', name: 'Wrigley Field', x: 772, y: 310, logo: 'chc', labelDir: 'left' },
-      { team: 'CWS', name: 'Guaranteed Rate Field', x: 780, y: 330, logo: 'chw', labelDir: 'left' },
-      { team: 'STL', name: 'Busch Stadium', x: 745, y: 395, logo: 'stl', labelDir: 'left' },
-      { team: 'KC', name: 'Kauffman Stadium', x: 665, y: 385, logo: 'kc', labelDir: 'right' },
-      { team: 'DET', name: 'Comerica Park', x: 840, y: 275, logo: 'det', labelDir: 'left' },
-      { team: 'CLE', name: 'Progressive Field', x: 875, y: 300, logo: 'cle', labelDir: 'left' },
-      { team: 'CIN', name: 'Great American Ball Park', x: 840, y: 370, logo: 'cin', labelDir: 'left' },
-      { team: 'PIT', name: 'PNC Park', x: 918, y: 318, logo: 'pit', labelDir: 'left' },
-      { team: 'ATL', name: 'Truist Park', x: 860, y: 470, logo: 'atl', labelDir: 'right' },
-      { team: 'MIA', name: 'loanDepot Park', x: 945, y: 635, logo: 'mia', labelDir: 'left' },
-      { team: 'TB', name: 'Tropicana Field', x: 895, y: 565, logo: 'tb', labelDir: 'left' },
-      { team: 'BAL', name: 'Camden Yards', x: 988, y: 338, logo: 'bal', labelDir: 'right' },
-      { team: 'WSH', name: 'Nationals Park', x: 978, y: 355, logo: 'wsh', labelDir: 'left' },
-      { team: 'PHI', name: 'Citizens Bank Park', x: 1000, y: 312, logo: 'phi', labelDir: 'right' },
-      { team: 'NYM', name: 'Citi Field', x: 1025, y: 282, logo: 'nym', labelDir: 'right' },
-      { team: 'NYY', name: 'Yankee Stadium', x: 1012, y: 268, logo: 'nyy', labelDir: 'right' },
-      { team: 'BOS', name: 'Fenway Park', x: 1060, y: 252, logo: 'bos', labelDir: 'right' },
-      { team: 'TOR', name: 'Rogers Centre', x: 900, y: 225, logo: 'tor', labelDir: 'right' },
+      { team: 'SEA', name: 'T-Mobile Park', x: 280, y: 145, logo: 'sea', labelDir: 'right', mlbId: 136 },
+      { team: 'SF', name: 'Oracle Park', x: 210, y: 385, logo: 'sf', labelDir: 'right', mlbId: 137 },
+      { team: 'OAK', name: 'Sutter Health Park', x: 225, y: 355, logo: 'oak', labelDir: 'right', mlbId: 133 },
+      { team: 'LAD', name: 'Dodger Stadium', x: 235, y: 440, logo: 'lad', labelDir: 'right', mlbId: 119 },
+      { team: 'LAA', name: 'Angel Stadium', x: 250, y: 458, logo: 'laa', labelDir: 'right', mlbId: 108 },
+      { team: 'SD', name: 'Petco Park', x: 260, y: 482, logo: 'sd', labelDir: 'right', mlbId: 135 },
+      { team: 'ARI', name: 'Chase Field', x: 360, y: 465, logo: 'ari', labelDir: 'right', mlbId: 109 },
+      { team: 'COL', name: 'Coors Field', x: 470, y: 330, logo: 'col', labelDir: 'right', mlbId: 115 },
+      { team: 'TEX', name: 'Globe Life Field', x: 600, y: 490, logo: 'tex', labelDir: 'right', mlbId: 140 },
+      { team: 'HOU', name: 'Minute Maid Park', x: 635, y: 555, logo: 'hou', labelDir: 'right', mlbId: 117 },
+      { team: 'MIN', name: 'Target Field', x: 680, y: 225, logo: 'min', labelDir: 'right', mlbId: 142 },
+      { team: 'MIL', name: 'American Family Field', x: 765, y: 260, logo: 'mil', labelDir: 'left', mlbId: 158 },
+      { team: 'CHC', name: 'Wrigley Field', x: 772, y: 310, logo: 'chc', labelDir: 'left', mlbId: 112 },
+      { team: 'CWS', name: 'Guaranteed Rate Field', x: 780, y: 330, logo: 'chw', labelDir: 'left', mlbId: 145 },
+      { team: 'STL', name: 'Busch Stadium', x: 745, y: 395, logo: 'stl', labelDir: 'left', mlbId: 138 },
+      { team: 'KC', name: 'Kauffman Stadium', x: 665, y: 385, logo: 'kc', labelDir: 'right', mlbId: 118 },
+      { team: 'DET', name: 'Comerica Park', x: 840, y: 275, logo: 'det', labelDir: 'left', mlbId: 116 },
+      { team: 'CLE', name: 'Progressive Field', x: 875, y: 300, logo: 'cle', labelDir: 'left', mlbId: 114 },
+      { team: 'CIN', name: 'Great American Ball Park', x: 840, y: 370, logo: 'cin', labelDir: 'left', mlbId: 113 },
+      { team: 'PIT', name: 'PNC Park', x: 918, y: 318, logo: 'pit', labelDir: 'left', mlbId: 134 },
+      { team: 'ATL', name: 'Truist Park', x: 860, y: 470, logo: 'atl', labelDir: 'right', mlbId: 144 },
+      { team: 'MIA', name: 'loanDepot Park', x: 945, y: 635, logo: 'mia', labelDir: 'left', mlbId: 146 },
+      { team: 'TB', name: 'Tropicana Field', x: 895, y: 565, logo: 'tb', labelDir: 'left', mlbId: 139 },
+      { team: 'BAL', name: 'Camden Yards', x: 988, y: 338, logo: 'bal', labelDir: 'right', mlbId: 110 },
+      { team: 'WSH', name: 'Nationals Park', x: 978, y: 355, logo: 'wsh', labelDir: 'left', mlbId: 120 },
+      { team: 'PHI', name: 'Citizens Bank Park', x: 1000, y: 312, logo: 'phi', labelDir: 'right', mlbId: 143 },
+      { team: 'NYM', name: 'Citi Field', x: 1025, y: 282, logo: 'nym', labelDir: 'right', mlbId: 121 },
+      { team: 'NYY', name: 'Yankee Stadium', x: 1012, y: 268, logo: 'nyy', labelDir: 'right', mlbId: 147 },
+      { team: 'BOS', name: 'Fenway Park', x: 1060, y: 252, logo: 'bos', labelDir: 'right', mlbId: 111 },
+      { team: 'TOR', name: 'Rogers Centre', x: 900, y: 225, logo: 'tor', labelDir: 'right', mlbId: 141 },
     ];
 
+    /* ---- localStorage helpers ---- */
+    const STORAGE_KEY = 'stadium-visits';
+    function loadVisits() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+    }
+    function saveVisits(v) { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); }
+    function getVisits(team) { return (loadVisits()[team] || []); }
+    function addVisit(team, visit) {
+      var all = loadVisits();
+      if (!all[team]) all[team] = [];
+      all[team].push(visit);
+      saveVisits(all);
+    }
+    function removeVisit(team, idx) {
+      var all = loadVisits();
+      if (all[team]) { all[team].splice(idx, 1); if (!all[team].length) delete all[team]; }
+      saveVisits(all);
+    }
+
+    /* ---- SVG rendering ---- */
     const svg = document.getElementById('us-map');
     const ns = 'http://www.w3.org/2000/svg';
     const defs = svg.querySelector('defs');
-
     const logoR = 12;
     const labelH = 16;
     const labelPad = 5;
     const gap = 4;
+    const groups = {};
 
-    stadiums.forEach(function (s, i) {
+    stadiums.forEach(function (s) {
       var g = document.createElementNS(ns, 'g');
       g.setAttribute('class', 'stadium-logo');
+      g.setAttribute('data-team', s.team);
       g.setAttribute('transform', 'translate(' + s.x + ',' + s.y + ')');
 
-      // per-marker clipPath
       var clipId = 'clip-' + s.team;
       var clip = document.createElementNS(ns, 'clipPath');
       clip.setAttribute('id', clipId);
@@ -185,7 +462,6 @@
       clip.appendChild(clipCircle);
       defs.appendChild(clip);
 
-      // measure label width
       var tempText = document.createElementNS(ns, 'text');
       tempText.setAttribute('font-size', '8');
       tempText.setAttribute('font-family', 'Inter, sans-serif');
@@ -200,7 +476,6 @@
       var labelX = dir === 1 ? lineX : lineX - labelW;
       var labelEndX = dir === 1 ? labelX + labelW : lineX;
 
-      // connecting line
       var line = document.createElementNS(ns, 'line');
       line.setAttribute('class', 'stadium-line');
       line.setAttribute('x1', dir * logoR);
@@ -209,7 +484,6 @@
       line.setAttribute('y2', 0);
       g.appendChild(line);
 
-      // label background
       var rect = document.createElementNS(ns, 'rect');
       rect.setAttribute('class', 'stadium-label');
       rect.setAttribute('x', labelX);
@@ -220,7 +494,6 @@
       rect.setAttribute('ry', 3);
       g.appendChild(rect);
 
-      // label text
       var text = document.createElementNS(ns, 'text');
       text.setAttribute('class', 'stadium-label-text');
       text.setAttribute('x', labelX + labelPad);
@@ -228,7 +501,6 @@
       text.textContent = s.name;
       g.appendChild(text);
 
-      // logo circle bg
       var circle = document.createElementNS(ns, 'circle');
       circle.setAttribute('class', 'bg');
       circle.setAttribute('cx', 0);
@@ -236,7 +508,6 @@
       circle.setAttribute('r', logoR);
       g.appendChild(circle);
 
-      // logo image
       var img = document.createElementNS(ns, 'image');
       img.setAttribute('href', 'https://a.espncdn.com/i/teamlogos/mlb/500/' + s.logo + '.png');
       img.setAttribute('x', -logoR + 1);
@@ -248,7 +519,255 @@
       g.appendChild(img);
 
       svg.appendChild(g);
+      groups[s.team] = g;
+
+      // click → open modal
+      g.addEventListener('click', function (e) { e.stopPropagation(); openModal(s); });
     });
+
+    /* mark visited on load */
+    function refreshVisited() {
+      var all = loadVisits();
+      stadiums.forEach(function (s) {
+        var g = groups[s.team];
+        if (all[s.team] && all[s.team].length) {
+          g.classList.add('visited');
+        } else {
+          g.classList.remove('visited');
+        }
+      });
+    }
+    refreshVisited();
+
+    /* ---- Modal ---- */
+    var overlay = document.getElementById('modal-overlay');
+    var modalTitle = document.getElementById('modal-title');
+    var modalBody = document.getElementById('modal-body');
+    var modalClose = document.getElementById('modal-close');
+    var currentStadium = null;
+
+    modalClose.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) closeModal(); });
+
+    function closeModal() {
+      overlay.classList.remove('active');
+      currentStadium = null;
+    }
+
+    function openModal(s) {
+      currentStadium = s;
+      modalTitle.innerHTML = s.name + '<span class="team-abbr">' + s.team + '</span>';
+      renderModalBody(s);
+      overlay.classList.add('active');
+    }
+
+    function renderModalBody(s) {
+      var visits = getVisits(s.team);
+      var html = '';
+
+      // saved visits
+      if (visits.length) {
+        html += '<div class="saved-visits">';
+        html += '<div class="modal-section-title">Games Attended</div>';
+        visits.forEach(function (v, i) {
+          var dateStr = v.bypass ? 'Date unknown' : formatDate(v.date);
+          var detail = v.matchup || (v.bypass ? 'Added manually' : '');
+          html += '<div class="visit-item">';
+          html += '<div><div class="visit-date">' + dateStr + '</div>';
+          if (detail) html += '<div class="visit-detail">' + detail + '</div>';
+          if (v.score) html += '<div class="visit-detail">' + v.score + '</div>';
+          html += '</div>';
+          html += '<button class="visit-remove" data-team="' + s.team + '" data-idx="' + i + '">&times;</button>';
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      // search section
+      html += '<div class="modal-section-title">Add a Game</div>';
+      html += '<div class="search-row">';
+      html += '<select id="search-year">';
+      var thisYear = new Date().getFullYear();
+      for (var y = thisYear; y >= 2000; y--) {
+        html += '<option value="' + y + '">' + y + '</option>';
+      }
+      html += '</select>';
+      html += '<select id="search-month">';
+      html += '<option value="">All months</option>';
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      months.forEach(function (m, i) {
+        html += '<option value="' + (i + 1) + '">' + m + '</option>';
+      });
+      html += '</select>';
+      html += '<button class="search-btn" id="search-btn">Search</button>';
+      html += '</div>';
+
+      // opponent filter (hidden until results)
+      html += '<div class="filter-row" id="filter-row" style="display:none"></div>';
+
+      html += '<div id="game-results"></div>';
+
+      html += '<button class="bypass-btn" id="bypass-btn">I don\'t remember the date</button>';
+
+      modalBody.innerHTML = html;
+
+      // event listeners
+      document.getElementById('search-btn').addEventListener('click', function () {
+        searchGames(s);
+      });
+      document.getElementById('bypass-btn').addEventListener('click', function () {
+        addVisit(s.team, { bypass: true, date: null, matchup: null, score: null });
+        refreshVisited();
+        renderModalBody(s);
+      });
+
+      // remove visit buttons
+      modalBody.querySelectorAll('.visit-remove').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          removeVisit(btn.dataset.team, parseInt(btn.dataset.idx));
+          refreshVisited();
+          renderModalBody(s);
+        });
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'Unknown';
+      var d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    /* ---- MLB Stats API game search ---- */
+    var cachedGames = {};
+
+    function searchGames(s) {
+      var year = document.getElementById('search-year').value;
+      var resultsDiv = document.getElementById('game-results');
+      var btn = document.getElementById('search-btn');
+      btn.disabled = true;
+      btn.textContent = '...';
+      resultsDiv.innerHTML = '<div class="loading">Loading games...</div>';
+
+      var cacheKey = s.mlbId + '-' + year;
+      if (cachedGames[cacheKey]) {
+        btn.disabled = false;
+        btn.textContent = 'Search';
+        renderGames(s, cachedGames[cacheKey]);
+        return;
+      }
+
+      // Fetch home games for this team (games at their stadium)
+      var url = 'https://statsapi.mlb.com/api/v1/schedule?teamId=' + s.mlbId +
+        '&season=' + year + '&sportId=1&gameType=R,P,W,D,L,F&hydrate=team,linescore';
+
+      fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var games = [];
+          (data.dates || []).forEach(function (dateObj) {
+            (dateObj.games || []).forEach(function (game) {
+              // only home games (at this stadium)
+              if (game.teams && game.teams.home && game.teams.home.team && game.teams.home.team.id === s.mlbId) {
+                var away = game.teams.away.team.name || '';
+                var homeScore = game.teams.home.score;
+                var awayScore = game.teams.away.score;
+                var score = (homeScore != null && awayScore != null) ? away + ' ' + awayScore + ', ' + game.teams.home.team.name + ' ' + homeScore : '';
+                games.push({
+                  date: dateObj.date,
+                  away: away,
+                  awayAbbr: game.teams.away.team.abbreviation || '',
+                  score: score,
+                  gameId: game.gamePk,
+                  matchup: away + ' at ' + game.teams.home.team.name
+                });
+              }
+            });
+          });
+          cachedGames[cacheKey] = games;
+          btn.disabled = false;
+          btn.textContent = 'Search';
+          renderGames(s, games);
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'Search';
+          resultsDiv.innerHTML = '<div class="no-results">Failed to load games. Try again.</div>';
+        });
+    }
+
+    function renderGames(s, allGames) {
+      var month = document.getElementById('search-month').value;
+      var filterRow = document.getElementById('filter-row');
+      var resultsDiv = document.getElementById('game-results');
+
+      // filter by month
+      var games = allGames;
+      if (month) {
+        games = allGames.filter(function (g) {
+          return parseInt(g.date.split('-')[1]) === parseInt(month);
+        });
+      }
+
+      // opponent filter
+      var opponents = [];
+      allGames.forEach(function (g) {
+        if (opponents.indexOf(g.awayAbbr) === -1) opponents.push(g.awayAbbr);
+      });
+      opponents.sort();
+
+      filterRow.style.display = 'flex';
+      filterRow.innerHTML = '<select id="filter-opponent"><option value="">All opponents</option>' +
+        opponents.map(function (o) { return '<option value="' + o + '">' + o + '</option>'; }).join('') +
+        '</select>';
+
+      var oppFilter = document.getElementById('filter-opponent');
+      oppFilter.addEventListener('change', function () {
+        var opp = oppFilter.value;
+        var filtered = games;
+        if (opp) filtered = games.filter(function (g) { return g.awayAbbr === opp; });
+        renderGameList(s, filtered, resultsDiv);
+      });
+
+      // also re-filter on month change
+      document.getElementById('search-month').addEventListener('change', function () {
+        renderGames(s, allGames);
+      });
+
+      renderGameList(s, games, resultsDiv);
+    }
+
+    function renderGameList(s, games, container) {
+      if (!games.length) {
+        container.innerHTML = '<div class="no-results">No home games found for this period.</div>';
+        return;
+      }
+
+      var html = '<div class="game-list">';
+      games.forEach(function (g) {
+        html += '<div class="game-item" data-game=\'' + JSON.stringify(g).replace(/'/g, '&#39;') + '\'>';
+        html += '<div><div class="game-date">' + formatDate(g.date) + '</div>';
+        html += '<div class="game-matchup">' + g.matchup + '</div></div>';
+        if (g.score) html += '<div class="game-score">' + g.score + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      container.innerHTML = html;
+
+      container.querySelectorAll('.game-item').forEach(function (el) {
+        el.addEventListener('click', function () {
+          var g = JSON.parse(el.dataset.game);
+          addVisit(s.team, {
+            bypass: false,
+            date: g.date,
+            matchup: g.matchup,
+            score: g.score,
+            gameId: g.gameId
+          });
+          refreshVisited();
+          renderModalBody(s);
+        });
+      });
+    }
   </script>
 </body>
 </html>
