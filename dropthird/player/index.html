@@ -33,31 +33,52 @@
   .back{display:inline-block;color:#7e858f;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;cursor:pointer}
   .back:hover{color:#fff}
 
+  /* header */
   .phead{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
-  .phead img{width:104px;height:104px;border-radius:50%;object-fit:cover;background:#15161b;border:1px solid #262a32;flex:0 0 auto}
+  .phead img{width:108px;height:108px;border-radius:50%;object-fit:cover;background:#15161b;border:2px solid #262a32;flex:0 0 auto}
   .pname{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:.96}
-  .pmeta{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+  .pmeta{margin-top:11px;display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-family:"Oswald",sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;
     color:#cfd4da;background:#15161b;border:1px solid #262a32;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:7px}
   .chip img{width:18px;height:18px;object-fit:contain}
   .chip b{color:#fff}
+  .hint-line{margin-top:18px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#565c66}
 
-  .sect{margin-top:32px}
-  .sect h2{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:24px;letter-spacing:1px}
-  .subh{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#7e858f;margin:16px 0 9px}
-  .sgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;background:#1b1e24;border:1px solid #1b1e24;border-radius:12px;overflow:hidden}
-  .stile{background:#0e1015;padding:11px 5px;text-align:center}
-  .stile b{display:block;font-family:"Oswald",sans-serif;font-weight:600;font-size:17px;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
-  .stile span{display:block;margin-top:4px;font-size:8.5px;letter-spacing:.5px;color:#7e858f;text-transform:uppercase}
-  .fldrow{display:flex;flex-wrap:wrap;gap:1px;background:#1b1e24;border:1px solid #1b1e24;border-radius:12px;overflow:hidden;margin-bottom:1px}
+  /* section */
+  .sect{margin-top:38px}
+  .sect h2{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:24px;letter-spacing:1px;display:flex;align-items:center;gap:12px}
+  .sect h2:before{content:"";width:4px;height:21px;background:#e23b34;border-radius:2px;display:inline-block}
+  .subh{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#7e858f;margin:20px 0 9px}
+
+  /* headline stats */
+  .hero{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 6px}
+  .hcard{background:#0e1015;border:1px solid #1b1e24;border-radius:13px;padding:16px 8px 14px;text-align:center}
+  .hcard .hv{font-family:"Oswald",sans-serif;font-weight:700;font-size:29px;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+  .hcard .hl{margin-top:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909a;font-weight:600}
+  .hcard .hc{margin-top:6px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#4a5059;font-variant-numeric:tabular-nums}
+
+  /* comparison table */
+  .tbl-wrap{overflow-x:auto;border:1px solid #1b1e24;border-radius:13px;background:#0e1015;-webkit-overflow-scrolling:touch}
+  table.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content;font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.stat th,table.stat td{padding:11px 13px;text-align:right;font-size:13.5px;color:#dfe3e8}
+  table.stat thead th{background:#15161b;color:#8a909a;font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #262a32;cursor:help}
+  table.stat th.splitcol{position:sticky;left:0;z-index:2;text-align:left;background:#0e1015;color:#fff;font-weight:600;
+    text-transform:uppercase;letter-spacing:1px;font-size:12.5px;min-width:98px;border-right:1px solid #1f232a}
+  table.stat thead th.splitcol{background:#15161b;z-index:3}
+  table.stat tbody tr+tr th,table.stat tbody tr+tr td{border-top:1px solid #15171c}
+  table.stat td.grp,table.stat th.grp{border-left:1px solid #2a2f37}
+  table.stat tbody tr:hover td{background:#13151a}
+  table.stat tbody tr:hover th.splitcol{background:#16181e}
   .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
-  @media(max-width:900px){.sgrid{grid-template-columns:repeat(6,1fr)}}
+
+  @media(max-width:900px){.hero{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:760px){
     body{flex-direction:column}
     .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
     .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}.tab{padding:9px 13px}.side-foot{display:none}
-    .main{padding:26px 16px 60px}.sgrid{grid-template-columns:repeat(4,1fr)}
+    .main{padding:26px 16px 60px}
   }
+  @media(max-width:560px){.hero{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -94,17 +115,60 @@
   const head=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${id}/headshot/67/current`;
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
 
-  const HIT=[['G','gamesPlayed'],['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['2B','doubles'],['3B','triples'],['HR','homeRuns'],['RBI','rbi'],['BB','baseOnBalls'],['IBB','intentionalWalks'],['SO','strikeOuts'],['HBP','hitByPitch'],['SB','stolenBases'],['CS','caughtStealing'],['SH','sacBunts'],['SF','sacFlies'],['GDP','groundIntoDoublePlay'],['TB','totalBases'],['AVG','avg'],['OBP','obp'],['SLG','slg'],['OPS','ops'],['BABIP','babip']];
-  const PIT=[['W','wins'],['L','losses'],['ERA','era'],['G','gamesPlayed'],['GS','gamesStarted'],['CG','completeGames'],['SHO','shutouts'],['SV','saves'],['HLD','holds'],['BS','blownSaves'],['IP','inningsPitched'],['H','hits'],['R','runs'],['ER','earnedRuns'],['HR','homeRuns'],['BB','baseOnBalls'],['IBB','intentionalWalks'],['SO','strikeOuts'],['HBP','hitBatsmen'],['WP','wildPitches'],['BK','balks'],['WHIP','whip'],['AVG','avg'],['K/9','strikeoutsPer9Inn'],['BB/9','walksPer9Inn'],['H/9','hitsPer9Inn'],['HR/9','homeRunsPer9'],['K/BB','strikeoutWalkRatio']];
-  const FLD=[['G','games'],['GS','gamesStarted'],['INN','innings'],['PO','putOuts'],['A','assists'],['E','errors'],['DP','doublePlays'],['FLD%','fielding'],['RF/9','rangeFactorPer9Inn']];
+  // [label, apiKey, full name (tooltip), groupStart?]  — groupStart=1 draws a divider before the rate-stat block
+  const HIT=[['G','gamesPlayed','Games'],['PA','plateAppearances','Plate Appearances'],['AB','atBats','At Bats'],
+    ['R','runs','Runs'],['H','hits','Hits'],['2B','doubles','Doubles'],['3B','triples','Triples'],['HR','homeRuns','Home Runs'],
+    ['RBI','rbi','Runs Batted In'],['BB','baseOnBalls','Walks'],['IBB','intentionalWalks','Intentional Walks'],
+    ['SO','strikeOuts','Strikeouts'],['HBP','hitByPitch','Hit By Pitch'],['SB','stolenBases','Stolen Bases'],
+    ['CS','caughtStealing','Caught Stealing'],['SH','sacBunts','Sacrifice Bunts'],['SF','sacFlies','Sacrifice Flies'],
+    ['GDP','groundIntoDoublePlay','Grounded Into Double Play'],['TB','totalBases','Total Bases'],
+    ['AVG','avg','Batting Average',1],['OBP','obp','On-Base Percentage'],['SLG','slg','Slugging Percentage'],
+    ['OPS','ops','On-Base Plus Slugging'],['BABIP','babip','Batting Avg on Balls in Play']];
+  const PIT=[['W','wins','Wins'],['L','losses','Losses'],['ERA','era','Earned Run Average'],['G','gamesPlayed','Games'],
+    ['GS','gamesStarted','Games Started'],['CG','completeGames','Complete Games'],['SHO','shutouts','Shutouts'],
+    ['SV','saves','Saves'],['HLD','holds','Holds'],['BS','blownSaves','Blown Saves'],['IP','inningsPitched','Innings Pitched'],
+    ['H','hits','Hits Allowed'],['R','runs','Runs Allowed'],['ER','earnedRuns','Earned Runs'],['HR','homeRuns','Home Runs Allowed'],
+    ['BB','baseOnBalls','Walks'],['IBB','intentionalWalks','Intentional Walks'],['SO','strikeOuts','Strikeouts'],
+    ['HBP','hitBatsmen','Hit Batsmen'],['WP','wildPitches','Wild Pitches'],['BK','balks','Balks'],
+    ['WHIP','whip','Walks + Hits per Inning Pitched',1],['AVG','avg','Opponent Batting Average'],
+    ['K/9','strikeoutsPer9Inn','Strikeouts per 9'],['BB/9','walksPer9Inn','Walks per 9'],['H/9','hitsPer9Inn','Hits per 9'],
+    ['HR/9','homeRunsPer9','Home Runs per 9'],['K/BB','strikeoutWalkRatio','Strikeout-to-Walk Ratio']];
+  const FLD=[['G','games','Games'],['GS','gamesStarted','Games Started'],['INN','innings','Innings'],
+    ['PO','putOuts','Putouts'],['A','assists','Assists'],['E','errors','Errors'],['DP','doublePlays','Double Plays'],
+    ['FLD%','fielding','Fielding Percentage',1],['RF/9','rangeFactorPer9Inn','Range Factor per 9']];
 
-  function tiles(fields,st){return fields.map(([l,k])=>{let v=st[k];if(v==null||v==='')v='–';return `<div class="stile"><b>${esc(v)}</b><span>${esc(l)}</span></div>`;}).join('');}
-  function grid(fields,st){return `<div class="sgrid">${tiles(fields,st)}</div>`;}
+  const HIT_HERO=[['AVG','avg'],['HR','homeRuns'],['RBI','rbi'],['R','runs'],['SB','stolenBases'],['OPS','ops']];
+  function pitHero(st){
+    const sv=+st.saves||0, hld=+st.holds||0, gs=+st.gamesStarted||0, g=+st.gamesPlayed||0;
+    const reliever=(sv+hld)>0 || (g>0 && gs < g/2);
+    return reliever
+      ? [['ERA','era'],['SV','saves'],['HLD','holds'],['IP','inningsPitched'],['SO','strikeOuts'],['WHIP','whip']]
+      : [['ERA','era'],['W-L','__wl__'],['IP','inningsPitched'],['SO','strikeOuts'],['WHIP','whip'],['K/9','strikeoutsPer9Inn']];
+  }
+
+  function val(st,k){if(k==='__wl__')return `${+st.wins||0}-${+st.losses||0}`;let v=st[k];return (v==null||v==='')?'–':v;}
+  function heroStrip(entries,sStat,cStat){
+    return `<div class="hero">`+entries.map(([l,k])=>{
+      const sv=val(sStat,k), cv=cStat?val(cStat,k):null;
+      return `<div class="hcard"><div class="hv">${esc(sv)}</div><div class="hl">${esc(l)}</div>`+
+        (cv!=null&&cv!=='–'?`<div class="hc">Career ${esc(cv)}</div>`:'')+`</div>`;
+    }).join('')+`</div>`;
+  }
+  function statTable(fields,rows){
+    if(!rows.length)return '';
+    const head='<tr><th class="splitcol"></th>'+fields.map(f=>
+      `<th class="${f[3]?'grp':''}" title="${esc(f[2]||f[0])}">${esc(f[0])}</th>`).join('')+'</tr>';
+    const body=rows.map(r=>`<tr><th class="splitcol">${esc(r.label)}</th>`+fields.map(f=>{
+      let v=r.stat[f[1]];if(v==null||v==='')v='–';return `<td class="${f[3]?'grp':''}">${esc(v)}</td>`;
+    }).join('')+'</tr>').join('');
+    return `<div class="tbl-wrap"><table class="stat"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  }
 
   function pick(stats,group,type){
     const g=(stats||[]).find(s=>s.group&&s.group.displayName===group&&s.type&&s.type.displayName===type);
     return g&&g.splits&&g.splits.length?g:null;
   }
+  const last=g=>g?g.splits[g.splits.length-1].stat:null;
 
   (async function(){
     if(!ID){document.getElementById('content').innerHTML='<div class="state">No player selected.</div>';return;}
@@ -129,31 +193,34 @@
       if(bio.height||bio.weight)chips.push(`<span class="chip">${esc(bio.height||'')}${bio.weight?' · '+bio.weight+' lb':''}</span>`);
 
       let html=`<div class="phead"><img src="${head(ID)}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'">
-        <div><h1 class="pname">${esc(bio.fullName)}</h1><div class="pmeta">${chips.join('')}</div></div></div>`;
+        <div><h1 class="pname">${esc(bio.fullName)}</h1><div class="pmeta">${chips.join('')}</div></div></div>
+        <div class="hint-line">Hover a column header for its full name · season & career shown side by side</div>`;
 
-      // hitting
       const hS=pick(stats,'hitting','season'), hC=pick(stats,'hitting','career');
       const pS=pick(stats,'pitching','season'), pC=pick(stats,'pitching','career');
       const fS=pick(stats,'fielding','season');
+
       if(hS||hC){
+        const s=last(hS), c=last(hC);
         html+=`<div class="sect"><h2>Hitting</h2>`;
-        if(hS)html+=`<div class="subh">${YEAR} Season</div>`+grid(HIT,hS.splits[hS.splits.length-1].stat);
-        if(hC)html+=`<div class="subh">Career</div>`+grid(HIT,hC.splits[hC.splits.length-1].stat);
-        html+=`</div>`;
+        if(s)html+=heroStrip(HIT_HERO,s,c);
+        const rows=[];if(s)rows.push({label:String(YEAR),stat:s});if(c)rows.push({label:'Career',stat:c});
+        html+=`<div class="subh">Full Batting Line</div>`+statTable(HIT,rows)+`</div>`;
       }
       if(pS||pC){
+        const s=last(pS), c=last(pC);
         html+=`<div class="sect"><h2>Pitching</h2>`;
-        if(pS)html+=`<div class="subh">${YEAR} Season</div>`+grid(PIT,pS.splits[pS.splits.length-1].stat);
-        if(pC)html+=`<div class="subh">Career</div>`+grid(PIT,pC.splits[pC.splits.length-1].stat);
-        html+=`</div>`;
+        if(s)html+=heroStrip(pitHero(s),s,c); else if(c)html+=heroStrip(pitHero(c),c,null);
+        const rows=[];if(s)rows.push({label:String(YEAR),stat:s});if(c)rows.push({label:'Career',stat:c});
+        html+=`<div class="subh">Full Pitching Line</div>`+statTable(PIT,rows)+`</div>`;
       }
       if(fS){
-        html+=`<div class="sect"><h2>Fielding · ${YEAR}</h2>`;
-        fS.splits.forEach(sp=>{const pos=(sp.position&&sp.position.abbreviation)||'';
-          html+=`<div class="subh">${esc(pos)}</div>`+grid(FLD,sp.stat);});
-        html+=`</div>`;
+        html+=`<div class="sect"><h2>Fielding</h2><div class="subh">${YEAR} Season · by position</div>`;
+        const rows=fS.splits.map(sp=>({label:(sp.position&&sp.position.abbreviation)||'POS',stat:sp.stat}));
+        html+=statTable(FLD,rows)+`</div>`;
       }
       if(!hS&&!hC&&!pS&&!pC&&!fS)html+=`<div class="state">No stats available for this player.</div>`;
+
       document.getElementById('content').innerHTML=html;
       document.title='DROPTHIRD — '+bio.fullName;
     }catch(e){
