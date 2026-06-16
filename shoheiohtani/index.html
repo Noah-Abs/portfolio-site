@@ -3,8 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title></title>
-<style>html,body{height:100%;margin:0;background:#fff}</style>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>Shohei Ohtani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f4f6f8;color:#1b1f24;font-family:"Roboto",Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px}
+  .card{width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+  .banner{position:relative;height:150px;background:linear-gradient(150deg,#2a5da8,#0a2342)}
+  .banner img{width:100%;height:100%;object-fit:cover;object-position:top center;opacity:.95}
+  .shot{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);width:92px;height:92px;border-radius:50%;
+    border:4px solid #fff;background:#dfe4ea;box-shadow:0 2px 6px rgba(0,0,0,.3);overflow:hidden}
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+  .body{padding:46px 20px 22px;text-align:center}
+  .name{font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:26px;line-height:1.05}
+  .sub{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px;color:#3a4450;font-size:14px;font-weight:500}
+  .sub .pos{color:#157f8c;font-weight:700}
+  .sub img{width:20px;height:20px;object-fit:contain}
+  .bio{margin-top:18px;text-align:left}
+  .brow{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-top:1px solid #eef1f4;font-size:13.5px}
+  .brow:last-child{border-bottom:1px solid #eef1f4}
+  .brow span{color:#8a939c;font-weight:500}
+  .brow b{color:#1b1f24;font-weight:700}
+  .state{padding:40px;text-align:center;color:#8a939c;font-size:13px}
+</style>
 </head>
-<body></body>
+<body>
+  <div id="card"><div class="state">Loading…</div></div>
+
+<script>
+  const ID=660271;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  // Ohtani entered MLB as an international free agent (not drafted)
+  const SIGNED='2017 · Los Angeles Angels';
+
+  (async function(){
+    let p=null;
+    try{p=(await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`).then(r=>r.json())).people[0];}catch(e){}
+    if(!p){document.getElementById('card').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
+
+    const tm=p.currentTeam;
+    const posAbbr=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+    const pos=posAbbr==='TWP'?'DH/P':posAbbr;
+    const bats=(p.batSide&&p.batSide.code)||'–', throws=(p.pitchHand&&p.pitchHand.code)||'–';
+    const banner=`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.png/w_640,q_auto:good/v1/people/${ID}/action/hero/current`;
+    const shot=`https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${ID}/headshot/67/current`;
+
+    const rows=[
+      ['Bats / Throws',`${bats} / ${throws}`],
+      ['Height',p.height||'–'],
+      ['Weight',p.weight?p.weight+' lbs':'–'],
+      ['Age',p.currentAge!=null?p.currentAge:'–'],
+      ['Signed',SIGNED],
+    ];
+
+    document.getElementById('card').innerHTML=`<div class="card">
+      <div class="banner"><img src="${banner}" onerror="this.style.display='none'">
+        <div class="shot"><img src="${shot}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'"></div></div>
+      <div class="body">
+        <div class="name">${esc(p.fullName)}</div>
+        <div class="sub"><span class="pos">${esc(pos)}</span> | ${tm?`<img src="${logo(tm.id)}" onerror="this.remove()">`:''}${esc(tm?tm.name:'')}</div>
+        <div class="bio">${rows.map(r=>`<div class="brow"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')}</div>
+      </div></div>`;
+    document.title='Shohei Ohtani';
+  })();
+</script>
+</body>
 </html>
