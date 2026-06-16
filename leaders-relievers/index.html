@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Starting Pitching</title>
+<title>DROPTHIRD — Reliever Leaders</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -14,14 +14,14 @@
   body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:row-reverse}
   .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
-    border-left:1px solid #1b1e24;padding:32px 18px;display:flex;flex-direction:column}
+    border-left:1px solid #1b1e24;padding:30px 18px;display:flex;flex-direction:column}
   .brand-link{text-decoration:none;color:inherit;display:block}
   .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
   .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
-  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
-  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
+  .nav{margin-top:26px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
   .nav-label:first-child{padding-top:0}
-  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:#aab0b9;
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:#aab0b9;
     text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
     border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
   .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
@@ -29,47 +29,47 @@
   .tab.active .dot{background:#e23b34}
   .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
   .tab:hover .dot{background:#fff}
-  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
   .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
-  .page{max-width:1060px;margin:0 auto;width:100%}
+  .page{max-width:1240px;margin:0 auto;width:100%}
   .page-head{margin-bottom:18px}
-  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
-  table{width:100%;border-collapse:collapse;font-size:14px;min-width:780px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:1080px}
   thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
-    color:#7e858f;text-align:right;padding:13px 11px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115}
+    color:#7e858f;text-align:right;padding:13px 10px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115;position:sticky;top:0}
   thead th.l{text-align:left}
   thead th.sortable{cursor:pointer;user-select:none}
   thead th.sortable:hover{color:#cfd4da}
   thead th.active{color:#fff}
   th .arr{font-size:9px;margin-left:3px}
-  tbody td{padding:11px 11px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#c7ccd3}
+  tbody td{padding:10px 10px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#c7ccd3}
   tbody td.l{text-align:left}
   tbody td.hl{color:#fff;font-weight:700}
   tbody tr:hover{background:#15171c}
-  .rank{color:#565d67;width:30px;text-align:right;font-weight:600}
-  .team{display:flex;align-items:center;gap:11px;min-width:178px}
-  .team img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
-  .team .nm{font-weight:500;color:#fff}
+  .rank{color:#565d67;width:34px;text-align:right;font-weight:600}
+  .pl{display:flex;align-items:center;gap:10px;min-width:200px}
+  .pl img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+  .pl .nm{font-weight:500;color:#fff}
   .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
-  @media(max-width:760px){
-    body{flex-direction:column}
-    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
-    .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
-    .tab{padding:10px 14px}
-    .side-foot{display:none}
-    .main{padding:26px 16px 60px}
-  }
-  /* right-click stat glossary */
   .ghint{margin-top:7px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#4a5159}
   .gloss{position:fixed;z-index:1000;width:330px;max-width:92vw;max-height:72vh;overflow:auto;background:#15161b;
     border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
   .gloss-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:11px;color:#7e858f;padding:5px 15px 9px;border-bottom:1px solid #23262c}
   .gloss-row{display:flex;gap:12px;padding:7px 15px}
   .gloss-row+.gloss-row{border-top:1px solid #14161b}
-  .gl-k{flex:0 0 60px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
+  .gl-k{flex:0 0 56px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
   .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}
+    .nav-label{width:100%;padding:6px 4px 2px}
+    .tab{padding:9px 13px}
+    .side-foot{display:none}
+    .main{padding:26px 16px 60px}
+  }
 </style>
 </head>
 <body>
@@ -81,12 +81,12 @@
       <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
       <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
       <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
-      <a class="tab active" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
       <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
       <div class="nav-label">Players</div>
       <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
       <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
-      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab active" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
       <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
     </nav>
     <div class="side-foot">2026 Season</div>
@@ -95,61 +95,77 @@
   <main class="main">
     <div class="page">
       <div class="page-head">
-        <h1 class="page-t">Starting Pitching</h1>
+        <h1 class="page-t">Reliever Leaders</h1>
         <p class="page-sub" id="sub">Loading…</p>
       </div>
-      <div id="content"><div class="scroller"><div class="state">Loading starting pitching…</div></div></div>
+      <div id="content"><div class="scroller"><div class="state">Loading relievers…</div></div></div>
     </div>
   </main>
 
 <script>
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
   const COLS=[
-    {k:'era', l:'ERA',  low:true},
-    {k:'whip',l:'WHIP', low:true},
-    {k:'r',   l:'R',    low:true},
-    {k:'ip',  l:'IP',   low:false},
-    {k:'so',  l:'SO',   low:false},
-    {k:'k9',  l:'K/9',  low:false},
-    {k:'bb',  l:'BB',   low:true},
-    {k:'hr',  l:'HR',   low:true},
-    {k:'avg', l:'AVG',  low:true},
+    {k:'w',  l:'W',   low:false},
+    {k:'l',  l:'L',   low:true},
+    {k:'era', l:'ERA', low:true},
+    {k:'g',  l:'G',   low:false},
+    {k:'sv', l:'SV',  low:false},
+    {k:'hld',l:'HLD', low:false},
+    {k:'bs', l:'BS',  low:true},
+    {k:'ip', l:'IP',  low:false},
+    {k:'h',  l:'H',   low:true},
+    {k:'er', l:'ER',  low:true},
+    {k:'hr', l:'HR',  low:true},
+    {k:'bb', l:'BB',  low:true},
+    {k:'so', l:'SO',  low:false},
+    {k:'whip',l:'WHIP',low:true},
+    {k:'avg',l:'AVG', low:true},
+    {k:'k9', l:'K/9', low:false},
   ];
-  let TEAMS=[], YEAR, sortKey='era', sortDir=1;
+  const DEFS={
+    w:'Wins', l:'Losses', era:'Earned run average — earned runs per 9 innings', g:'Games (appearances)',
+    sv:'Saves', hld:'Holds — protected a lead in relief without finishing', bs:'Blown saves',
+    ip:'Innings pitched (in relief)', h:'Hits allowed', er:'Earned runs allowed', hr:'Home runs allowed',
+    bb:'Walks allowed', so:'Strikeouts', whip:'Walks + hits per inning pitched', avg:'Opponent batting average',
+    k9:'Strikeouts per 9 innings'
+  };
+  let ROWS=[], YEAR, sortKey='era', sortDir=1;
   const numv=(t,k)=>parseFloat(t[k])||0;
   const content=()=>document.getElementById('content');
 
   async function fetchYear(y){
-    const r=await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?season=${y}&sportIds=1&group=pitching&stats=statSplits&sitCodes=sp`);
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/stats?stats=statSplits&group=pitching&sitCodes=rp&season=${y}&sportIds=1&playerPool=all&limit=2000`);
     if(!r.ok)return [];
     const j=await r.json();
-    const splits=(j.stats||[]).flatMap(g=>g.splits||[]);
-    return splits.filter(sp=>sp.team).map(sp=>{const s=sp.stat;return {
-      id:sp.team.id, name:sp.team.name,
-      era:s.era, whip:s.whip, r:+s.runs||0, ip:s.inningsPitched, so:+s.strikeOuts||0,
-      k9:s.strikeoutsPer9Inn, bb:+s.baseOnBalls||0, hr:+s.homeRuns||0, avg:s.avg
+    const splits=(j.stats||[]).flatMap(g=>g.splits||[]).filter(sp=>sp.player);
+    return splits.filter(sp=>ipd(sp.stat.inningsPitched)>=10).map(sp=>{const s=sp.stat;return {
+      id:sp.player.id, name:sp.player.fullName, team:(sp.team&&sp.team.id)||0,
+      w:+s.wins||0, l:+s.losses||0, era:s.era, g:+s.gamesPitched||0, sv:+s.saves||0, hld:+s.holds||0,
+      bs:+s.blownSaves||0, ip:s.inningsPitched, h:+s.hits||0, er:+s.earnedRuns||0, hr:+s.homeRuns||0,
+      bb:+s.baseOnBalls||0, so:+s.strikeOuts||0, whip:s.whip, avg:s.avg, k9:s.strikeoutsPer9Inn
     };});
   }
 
-  function teamCell(t){
-    return `<span class="team"><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;
+  function playerCell(t){
+    return `<span class="pl"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;
   }
 
   function render(){
     const col=COLS.find(c=>c.k===sortKey);
-    const ts=[...TEAMS].sort((a,b)=>(numv(a,sortKey)-numv(b,sortKey))*sortDir||(numv(b,'ip')-numv(a,'ip')));
+    const ts=[...ROWS].sort((a,b)=>(numv(a,sortKey)-numv(b,sortKey))*sortDir||(numv(b,'ip')-numv(a,'ip')));
     const head=`<thead><tr>
-      <th class="l rank">#</th><th class="l">Team</th>
+      <th class="l rank">#</th><th class="l">Player</th>
       ${COLS.map(c=>`<th class="sortable${c.k===sortKey?' active':''}" data-k="${c.k}">${c.l}${c.k===sortKey?`<span class="arr">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}
     </tr></thead>`;
     const body=ts.map((t,i)=>`<tr>
       <td class="rank">${i+1}</td>
-      <td class="l">${teamCell(t)}</td>
+      <td class="l">${playerCell(t)}</td>
       ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(t[c.k])}</td>`).join('')}
     </tr>`).join('');
     content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
-    document.getElementById('sub').textContent=`${YEAR} Season · starters · sorted by ${col.l}`;
+    document.getElementById('sub').textContent=`${YEAR} Season · relievers (10+ IP) · sorted by ${col.l}`;
     content().querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k;
       if(k===sortKey)sortDir*=-1;
@@ -158,12 +174,7 @@
     });
   }
 
-  const DEFS={
-    era:'Earned run average (starters) — earned runs per 9 innings', whip:'Walks + hits allowed per inning pitched',
-    r:'Runs allowed', ip:'Innings pitched', so:'Strikeouts', k9:'Strikeouts per 9 innings',
-    bb:'Walks allowed', hr:'Home runs allowed', avg:'Opponent batting average'
-  };
-  const GLOSS_EXTRA=[['#','Rank for the current sort'],['Team','Club name & logo']];
+  const GLOSS_EXTRA=[['#','Rank for the current sort'],['Player','Name & team']];
   function glossRows(){return GLOSS_EXTRA.concat(COLS.map(c=>[c.l,DEFS[c.k]||'—']));}
   function buildGloss(){return '<div class="gloss-h">Stat Glossary</div>'+glossRows().map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
   let glossEl=null;
@@ -174,16 +185,16 @@
   document.addEventListener('click',closeGloss);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
   window.addEventListener('scroll',closeGloss);
-  (function(){const ph=document.querySelector('.page-head');if(ph&&!ph.querySelector('.ghint')){const h=document.createElement('div');h.className='ghint';h.textContent='↳ right-click any stat for its definition';ph.appendChild(h);}})();
+  (function(){const ph=document.querySelector('.page-head');if(ph){const h=document.createElement('div');h.className='ghint';h.textContent='↳ right-click any stat for its definition';ph.appendChild(h);}})();
 
   (async function(){
     try{
-      const now=new Date().getFullYear();let teams=[];YEAR=now;
-      for(const y of [now,now-1,now-2]){teams=await fetchYear(y);if(teams.length){YEAR=y;break;}}
-      if(!teams.length){content().innerHTML='<div class="scroller"><div class="state">No data.</div></div>';return;}
-      TEAMS=teams;render();
+      const now=new Date().getFullYear();let rows=[];YEAR=now;
+      for(const y of [now,now-1,now-2]){rows=await fetchYear(y);if(rows.length){YEAR=y;break;}}
+      if(!rows.length){content().innerHTML='<div class="scroller"><div class="state">No reliever data.</div></div>';return;}
+      ROWS=rows;render();
     }catch(e){
-      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load starting pitching.</div></div>';
+      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load relievers.</div></div>';
     }
   })();
 </script>

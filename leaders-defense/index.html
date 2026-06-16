@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Defense Leaders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
+    border-left:1px solid #1b1e24;padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
+  .nav{margin-top:26px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:#aab0b9;
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
+  .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
+  .tab.active .dot{background:#e23b34}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:#fff}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1180px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
+  .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:920px}
+  thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
+    color:#7e858f;text-align:right;padding:13px 10px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115;position:sticky;top:0;z-index:2}
+  thead th.l{text-align:left}
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{color:#cfd4da}
+  thead th.active{color:#fff}
+  th .arr{font-size:9px;margin-left:3px}
+  tbody td{padding:10px 10px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#c7ccd3}
+  tbody td.l{text-align:left}
+  tbody td.hl{color:#fff;font-weight:700}
+  tbody tr.p:hover{background:#15171c}
+  .rank{color:#565d67;width:34px;text-align:right;font-weight:600}
+  .pl{display:flex;align-items:center;gap:10px;min-width:190px}
+  .pl img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+  .pl .nm{font-weight:500;color:#fff}
+  tr.grp td{background:#0d0f13;color:#fff;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;
+    letter-spacing:2.5px;font-size:12.5px;padding:14px 12px 9px;border-bottom:1px solid #23262c}
+  tr.grp td small{color:#565d67;letter-spacing:1px;margin-left:8px;font-weight:500}
+  tr.more td{color:#8a9099;cursor:pointer;font-weight:600;letter-spacing:1px;text-transform:uppercase;font-size:11px;padding:9px 12px;text-align:left}
+  tr.more:hover td{color:#fff;background:#15171c}
+  .pos{color:#7e858f;font-size:12px}
+  .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+  .ghint{margin-top:7px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#4a5159}
+  .gloss{position:fixed;z-index:1000;width:340px;max-width:92vw;max-height:72vh;overflow:auto;background:#15161b;
+    border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
+  .gloss-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:11px;color:#7e858f;padding:5px 15px 9px;border-bottom:1px solid #23262c}
+  .gloss-row{display:flex;gap:12px;padding:7px 15px}
+  .gloss-row+.gloss-row{border-top:1px solid #14161b}
+  .gl-k{flex:0 0 50px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
+  .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}
+    .nav-label{width:100%;padding:6px 4px 2px}
+    .tab{padding:9px 13px}
+    .side-foot{display:none}
+    .main{padding:26px 16px 60px}
+  }
+</style>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab active" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <h1 class="page-t">Defense Leaders</h1>
+        <p class="page-sub" id="sub">Loading…</p>
+      </div>
+      <div id="content"><div class="scroller"><div class="state">Loading fielders…</div></div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
+  const POS=[['C','Catcher'],['1B','First Base'],['2B','Second Base'],['3B','Third Base'],['SS','Shortstop'],['LF','Left Field'],['CF','Center Field'],['RF','Right Field']];
+  const COLS=[
+    {k:'oaa', l:'OAA', low:false},
+    {k:'frp', l:'FRP', low:false},
+    {k:'inn', l:'INN', low:false},
+    {k:'g',   l:'G',   low:false},
+    {k:'gs',  l:'GS',  low:false},
+    {k:'po',  l:'PO',  low:false},
+    {k:'a',   l:'A',   low:false},
+    {k:'e',   l:'E',   low:true},
+    {k:'te',  l:'TE',  low:true},
+    {k:'dp',  l:'DP',  low:false},
+    {k:'fpct',l:'FLD%',low:false},
+    {k:'rf',  l:'RF/9',low:false},
+  ];
+  const DEFS={
+    oaa:'Outs Above Average — Statcast range/defense metric (Baseball Savant)',
+    frp:'Fielding Runs Prevented — runs saved vs. average (Baseball Savant)',
+    inn:'Innings played at the position', g:'Games at the position', gs:'Games started',
+    po:'Putouts', a:'Assists', e:'Errors', te:'Throwing errors', dp:'Double plays turned',
+    fpct:'Fielding percentage — (PO + A) / (PO + A + E)', rf:'Range factor — (PO + A) per 9 innings'
+  };
+  let ROWS=[], YEAR, sortKey='oaa', sortDir=-1, expanded=new Set(), hasOAA=false;
+  const content=()=>document.getElementById('content');
+
+  function parseCSV(text){
+    const lines=text.replace(/^﻿/,'').trim().split(/\r?\n/);
+    const pl=l=>{const o=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];
+      if(q){if(ch==='"'){if(l[i+1]==='"'){c+='"';i++;}else q=false;}else c+=ch;}
+      else{if(ch==='"')q=true;else if(ch===','){o.push(c);c='';}else c+=ch;}}o.push(c);return o;};
+    const head=pl(lines[0]);return {head,rows:lines.slice(1).map(pl)};
+  }
+
+  async function fetchYear(y){
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=fielding&playerPool=all&season=${y}&sportIds=1&limit=4000`);
+    if(!r.ok)return [];
+    const j=await r.json();
+    const splits=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];
+    const POSSET=new Set(POS.map(p=>p[0]));
+    let rows=splits.filter(sp=>sp.player&&sp.position&&POSSET.has(sp.position.abbreviation)&&ipd(sp.stat.innings)>=10).map(sp=>{const s=sp.stat;return {
+      id:sp.player.id, name:sp.player.fullName, team:(sp.team&&sp.team.id)||0, pos:sp.position.abbreviation,
+      inn:s.innings, g:+s.gamesPlayed||0, gs:+s.gamesStarted||0, po:+s.putOuts||0, a:+s.assists||0,
+      e:+s.errors||0, te:+s.throwingErrors||0, dp:+s.doublePlays||0, fpct:s.fielding, rf:s.rangeFactorPer9Inn,
+      oaa:null, frp:null
+    };});
+    try{
+      const cr=await fetch(`https://baseballsavant.mlb.com/leaderboard/outs_above_average?type=Fielder&year=${y}&min=1&csv=true`);
+      if(cr.ok){const {head,rows:cr2}=parseCSV(await cr.text());
+        const iId=head.indexOf('player_id'), iO=head.indexOf('outs_above_average'), iF=head.indexOf('fielding_runs_prevented');
+        const map={};cr2.forEach(c=>{const id=+c[iId];if(id)map[id]={oaa:c[iO]===''?null:+c[iO], frp:(iF>=0&&c[iF]!=='')?+c[iF]:null};});
+        rows.forEach(p=>{const o=map[p.id];if(o){p.oaa=o.oaa;p.frp=o.frp;if(o.oaa!=null)hasOAA=true;}});
+      }
+    }catch(e){}
+    return rows;
+  }
+
+  const num=(t,k)=>{const v=t[k];return (v==null||v==='')?null:parseFloat(v);};
+  function cmp(a,b){
+    const na=num(a,sortKey), nb=num(b,sortKey);
+    if(na==null&&nb==null)return (ipd(b.inn))-(ipd(a.inn));
+    if(na==null)return 1; if(nb==null)return -1;
+    return (na-nb)*sortDir || (ipd(b.inn)-ipd(a.inn));
+  }
+  const cell=v=>v==null||v===''?'—':v;
+  function playerCell(t){return `<span class="pl"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;}
+
+  function render(){
+    const col=COLS.find(c=>c.k===sortKey);
+    const nCols=COLS.length+2;
+    const head=`<thead><tr>
+      <th class="l rank">#</th><th class="l">Player</th>
+      ${COLS.map(c=>`<th class="sortable${c.k===sortKey?' active':''}" data-k="${c.k}">${c.l}${c.k===sortKey?`<span class="arr">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}
+    </tr></thead>`;
+    let body='';
+    POS.forEach(([abbr,full])=>{
+      const group=ROWS.filter(r=>r.pos===abbr).sort(cmp);
+      if(!group.length)return;
+      const exp=expanded.has(abbr), show=exp?group:group.slice(0,10);
+      body+=`<tr class="grp"><td class="l" colspan="${nCols}">${esc(full)}<small>${group.length} qualified</small></td></tr>`;
+      body+=show.map((t,i)=>`<tr class="p">
+        <td class="rank">${i+1}</td>
+        <td class="l">${playerCell(t)}</td>
+        ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(cell(t[c.k]))}</td>`).join('')}
+      </tr>`).join('');
+      if(group.length>10)body+=`<tr class="more" data-pos="${abbr}"><td class="l" colspan="${nCols}">${exp?'▾  Show top 10':'▸  Show all '+group.length+' '+abbr}</td></tr>`;
+    });
+    content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
+    document.getElementById('sub').textContent=`${YEAR} Season · by position · sorted by ${col.l}${(col.k==='oaa'&&!hasOAA)?' (OAA unavailable for this season)':''}`;
+    content().querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
+      const k=th.dataset.k;
+      if(k===sortKey)sortDir*=-1;
+      else{sortKey=k;const c=COLS.find(x=>x.k===k);sortDir=c.low?1:-1;}
+      render();
+    });
+    content().querySelectorAll('tr.more').forEach(tr=>tr.onclick=()=>{const p=tr.dataset.pos;expanded.has(p)?expanded.delete(p):expanded.add(p);render();});
+  }
+
+  const GLOSS_EXTRA=[['#','Rank within the position'],['Player','Name & team']];
+  function glossRows(){return GLOSS_EXTRA.concat(COLS.map(c=>[c.l,DEFS[c.k]||'—']));}
+  function buildGloss(){return '<div class="gloss-h">Stat Glossary</div>'+glossRows().map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
+  let glossEl=null;
+  function closeGloss(){if(glossEl){glossEl.remove();glossEl=null;}}
+  function openGloss(x,y){closeGloss();glossEl=document.createElement('div');glossEl.className='gloss';glossEl.innerHTML=buildGloss();glossEl.addEventListener('mousedown',ev=>ev.stopPropagation());document.body.appendChild(glossEl);
+    const w=glossEl.offsetWidth,h=glossEl.offsetHeight;glossEl.style.left=Math.max(8,Math.min(x,innerWidth-w-10))+'px';glossEl.style.top=Math.max(8,Math.min(y,innerHeight-h-10))+'px';}
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.main')){e.preventDefault();openGloss(e.clientX,e.clientY);}});
+  document.addEventListener('click',closeGloss);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
+  window.addEventListener('scroll',closeGloss);
+  (function(){const ph=document.querySelector('.page-head');if(ph){const h=document.createElement('div');h.className='ghint';h.textContent='↳ right-click any stat for its definition · click a column to re-rank every position';ph.appendChild(h);}})();
+
+  (async function(){
+    try{
+      const now=new Date().getFullYear();let rows=[];YEAR=now;
+      for(const y of [now,now-1,now-2]){rows=await fetchYear(y);if(rows.length){YEAR=y;break;}}
+      if(!rows.length){content().innerHTML='<div class="scroller"><div class="state">No fielding data.</div></div>';return;}
+      if(!hasOAA){sortKey='fpct';sortDir=-1;}   // fall back if OAA didn't load
+      ROWS=rows;render();
+    }catch(e){
+      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load fielders.</div></div>';
+    }
+  })();
+</script>
+</body>
+</html>
