@@ -11,20 +11,40 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:row-reverse}
 
-  header{padding:40px 24px 6px;text-align:center}
-  .back{position:absolute;top:26px;left:24px;color:#7e858f;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase}
-  .back:hover{color:#fff}
-  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(34px,7vw,64px);line-height:.95;letter-spacing:2px}
-  .sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:7px;font-size:13px;color:#7e858f}
+  /* ===== persistent side rail (right) ===== */
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;background:#0e0f13;
+    border-left:1px solid #1b1e24;padding:32px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
+  .nav{margin-top:32px;display:flex;flex-direction:column;gap:6px}
+  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:#aab0b9;
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
+  .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
+  .tab.active .dot{background:#e23b34}
+  .tab.soon{color:#5b626c;cursor:default}
+  .tab.soon:hover{background:transparent;border-color:transparent;color:#5b626c}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:#fff}
+  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
 
-  .wrap{max-width:1000px;margin:22px auto 0;padding:0 14px 70px;width:100%}
-  .tabs{display:flex;gap:8px;margin-bottom:16px;justify-content:center}
-  .tab{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;
+  /* ===== main / standings ===== */
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1000px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
+
+  .vtabs{display:flex;gap:8px;margin-bottom:16px}
+  .vtab{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;
     color:#9098a2;background:#15161b;border:1px solid #262a32;border-radius:10px;padding:9px 18px;cursor:pointer;transition:.15s}
-  .tab:hover{color:#fff;border-color:#3b454f}
-  .tab.on{background:#fff;color:#0b0c0e;border-color:#fff}
+  .vtab:hover{color:#fff;border-color:#3b454f}
+  .vtab.on{background:#fff;color:#0b0c0e;border-color:#fff}
 
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
   table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
@@ -60,22 +80,41 @@
   .sec .scroller{border-radius:13px}
   tr.wc-cut td{border-bottom:2px solid #3a4350}
   tr.wc-out td .nm,tr.wc-out td.rank{opacity:.62}
+
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
+    .tab{padding:10px 14px}
+    .side-foot{display:none}
+    .main{padding:26px 16px 60px}
+  }
 </style>
 </head>
 <body>
-  <a class="back" href="/homescreen/">← Back</a>
-  <header>
-    <h1 class="brand">Standings</h1>
-    <p class="sub" id="sub">Loading…</p>
-  </header>
+  <aside class="side">
+    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <a class="tab active" href="/standings/"><span class="dot"></span>Standings</a>
+      <a class="tab soon" href="#"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="/startrate/"><span class="dot"></span>Starter Rating</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
 
-  <div class="wrap">
-    <div class="tabs">
-      <button class="tab on" id="tabFlat">Overall</button>
-      <button class="tab" id="tabDiv">Divisions</button>
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <h1 class="page-t">Standings</h1>
+        <p class="page-sub" id="sub">Loading…</p>
+      </div>
+      <div class="vtabs">
+        <button class="vtab" id="tabFlat">Overall</button>
+        <button class="vtab on" id="tabDiv">Divisions</button>
+      </div>
+      <div id="content"><div class="scroller"><div class="state">Loading standings…</div></div></div>
     </div>
-    <div id="content"><div class="scroller"><div class="state">Loading standings…</div></div></div>
-  </div>
+  </main>
 
 <script>
   const DIV={200:'AL West',201:'AL East',202:'AL Central',203:'NL West',204:'NL East',205:'NL Central'};
@@ -185,7 +224,6 @@
     document.getElementById('tabFlat').classList.toggle('on',mode==='flat');
     document.getElementById('tabDiv').classList.toggle('on',mode==='div');
     document.getElementById('sub').textContent = `${YEAR} Standings · ${mode==='div'?'divisions & wild card':'by '+({w:'record',pct:'win%',diff:'run diff',l10:'last 10',streak:'streak'}[sortKey])}`;
-    // wire header sort + division switch
     document.querySelectorAll('thead th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k; if(k===sortKey)sortDir*=-1; else{sortKey=k;sortDir=-1;} render();
     });

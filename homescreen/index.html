@@ -14,55 +14,66 @@
   body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:row-reverse}
 
-  /* side tab rail (right side) */
-  .side{flex:0 0 250px;min-height:100vh;background:#0e0f13;border-left:1px solid #1b1e24;
-    padding:34px 18px;display:flex;flex-direction:column}
-  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:28px;letter-spacing:1px;line-height:1;color:#fff}
+  /* ===== persistent side rail (right) ===== */
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;background:#0e0f13;
+    border-left:1px solid #1b1e24;padding:32px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
   .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
-  .nav{margin-top:34px;display:flex;flex-direction:column;gap:6px}
-  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;
-    color:#aab0b9;text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+  .nav{margin-top:32px;display:flex;flex-direction:column;gap:6px}
+  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:#aab0b9;
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
     border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
   .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
+  .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
+  .tab.active .dot{background:#e23b34}
   .tab.soon{color:#5b626c;cursor:default}
   .tab.soon:hover{background:transparent;border-color:transparent;color:#5b626c}
   .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
   .tab:hover .dot{background:#fff}
-  .tab.soon .dot{background:#2a2f37}
+  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
 
-  /* main panel */
-  .main{flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:40px 28px;position:relative;overflow:hidden}
-  .hero{text-align:center;position:relative;z-index:1}
-  .hero-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(54px,9vw,120px);line-height:.9;letter-spacing:3px;color:#fff}
-  .hero-s{margin-top:14px;font-weight:300;letter-spacing:4px;text-transform:uppercase;font-size:clamp(12px,2vw,15px);color:#6b7280}
+  /* ===== home hero ===== */
+  .main{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;overflow:hidden}
   .ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none}
-  .ghost span{font-family:"Anton",sans-serif;font-size:34vh;letter-spacing:4px;color:#0f1115;text-transform:uppercase;white-space:nowrap}
+  .ghost span{font-family:"Anton",sans-serif;font-size:38vh;letter-spacing:6px;color:#0e1014;text-transform:uppercase;white-space:nowrap}
+  .hero{position:relative;z-index:1;text-align:center}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-weight:600;text-transform:uppercase;letter-spacing:3px;
+    font-size:11px;color:#cfd4da;border:1px solid #2a2f37;border-radius:999px;padding:7px 15px;margin-bottom:26px}
+  .badge i{width:7px;height:7px;border-radius:50%;background:#46c77e}
+  .hero-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(56px,9.5vw,128px);line-height:.88;letter-spacing:3px;color:#fff}
+  .rule{width:70px;height:4px;background:#e23b34;border-radius:2px;margin:24px auto 22px}
+  .hero-s{font-weight:300;letter-spacing:5px;text-transform:uppercase;font-size:clamp(12px,2vw,16px);color:#7e858f}
 
   @media(max-width:760px){
     body{flex-direction:column}
-    .side{flex:0 0 auto;min-height:0;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:22px 16px}
-    .nav{flex-direction:row;flex-wrap:wrap;margin-top:18px;gap:8px}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
     .tab{padding:10px 14px}
-    .main{padding:48px 22px}
-    .ghost span{font-size:26vh}
+    .side-foot{display:none}
+    .main{padding:56px 22px;min-height:60vh}
+    .ghost span{font-size:24vh}
   }
 </style>
 </head>
 <body>
   <aside class="side">
-    <div class="brand">DROPTHIRD</div>
-    <div class="brand-sub">Statistics</div>
+    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
     <nav class="nav">
       <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
       <a class="tab soon" href="#"><span class="dot"></span>Starting Pitching</a>
       <a class="tab" href="/startrate/"><span class="dot"></span>Starter Rating</a>
     </nav>
+    <div class="side-foot">2026 Season</div>
   </aside>
+
   <main class="main">
     <div class="ghost"><span>DROPTHIRD</span></div>
     <div class="hero">
-      <div class="hero-t">DROPTHIRD</div>
-      <div class="hero-s">Select a section to begin</div>
+      <div class="badge"><i></i>2026 Season · Live</div>
+      <h1 class="hero-t">DROPTHIRD</h1>
+      <div class="rule"></div>
+      <p class="hero-s">Baseball, by the numbers</p>
     </div>
   </main>
 </body>
