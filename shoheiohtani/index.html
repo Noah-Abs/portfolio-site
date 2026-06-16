@@ -28,22 +28,53 @@
   .brow span{color:#8a939c;font-weight:500}
   .brow b{color:#1b1f24;font-weight:700}
   .state{padding:40px;text-align:center;color:#8a939c;font-size:13px}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+  .box{width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+  .box-h{text-align:center;font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:18px;padding:14px 14px 0}
+  .box-h .yr{color:#157f8c}
+  .box-h:after{content:"";display:block;width:64px;border-bottom:3px dotted #157f8c;margin:8px auto 0}
+  .sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e7ebef;margin-top:14px;border-top:1px solid #e7ebef}
+  .stile{background:#fff;padding:13px 4px;text-align:center}
+  .stile b{display:block;font-family:"Roboto",sans-serif;font-weight:700;font-size:17px;color:#1b1f24;line-height:1;font-variant-numeric:tabular-nums}
+  .stile span{display:block;margin-top:5px;font-size:9px;letter-spacing:.5px;color:#8a939c;text-transform:uppercase;font-weight:700}
 </style>
 </head>
 <body>
-  <div id="card"><div class="state">Loading…</div></div>
+  <div class="row" id="row"><div class="state">Loading…</div></div>
 
 <script>
-  const ID=660271;
+  const ID=660271, YEAR=2026;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   // Ohtani entered MLB as an international free agent (not drafted)
   const SIGNED='2017 · Los Angeles Angels';
+  const fmtAvg=v=>String(v).replace(/^0(?=\.)/,'');
+
+  // [label, apiKey, 'avg' to strip leading zero]
+  const HIT=[['G','gamesPlayed'],['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['2B','doubles'],
+    ['3B','triples'],['HR','homeRuns'],['RBI','rbi'],['BB','baseOnBalls'],['SO','strikeOuts'],['SB','stolenBases'],
+    ['AVG','avg','avg'],['OBP','obp','avg'],['SLG','slg','avg'],['OPS','ops','avg']];
+  const PIT=[['W','wins'],['L','losses'],['ERA','era'],['G','gamesPlayed'],['GS','gamesStarted'],['SV','saves'],
+    ['IP','inningsPitched'],['H','hits'],['R','runs'],['ER','earnedRuns'],['HR','homeRuns'],['BB','baseOnBalls'],
+    ['SO','strikeOuts'],['WHIP','whip'],['K/9','strikeoutsPer9Inn'],['BB/9','walksPer9Inn']];
+
+  const seasonStat=j=>{try{return j.stats[0].splits[0].stat;}catch(e){return null;}};
+  function statBox(title,fields,stat){
+    const tiles=stat?fields.map(f=>{let v=stat[f[1]];
+      if(v==null||v==='')v='–';else if(f[2]==='avg')v=fmtAvg(v);
+      return `<div class="stile"><b>${esc(v)}</b><span>${esc(f[0])}</span></div>`;}).join('')
+      :'<div class="state" style="grid-column:1/-1;background:#fff">No '+YEAR+' data</div>';
+    return `<div class="box"><div class="box-h"><span class="yr">${YEAR}</span> ${esc(title)}</div><div class="sgrid">${tiles}</div></div>`;
+  }
 
   (async function(){
-    let p=null;
-    try{p=(await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`).then(r=>r.json())).people[0];}catch(e){}
-    if(!p){document.getElementById('card').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
+    const [pj,hj,pij]=await Promise.all([
+      fetch(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=hitting&season=${YEAR}`).then(r=>r.json()).catch(()=>null),
+      fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=pitching&season=${YEAR}`).then(r=>r.json()).catch(()=>null),
+    ]);
+    const p=pj&&pj.people&&pj.people[0];
+    if(!p){document.getElementById('row').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
 
     const tm=p.currentTeam;
     const posAbbr=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
@@ -60,7 +91,7 @@
       ['Signed',SIGNED],
     ];
 
-    document.getElementById('card').innerHTML=`<div class="card">
+    const card=`<div class="card">
       <div class="banner"><img src="${banner}" onerror="this.style.display='none'">
         <div class="shot"><img src="${shot}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'"></div></div>
       <div class="body">
@@ -68,6 +99,8 @@
         <div class="sub"><span class="pos">${esc(pos)}</span> | ${tm?`<img src="${logo(tm.id)}" onerror="this.remove()">`:''}${esc(tm?tm.name:'')}</div>
         <div class="bio">${rows.map(r=>`<div class="brow"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')}</div>
       </div></div>`;
+
+    document.getElementById('row').innerHTML=card+statBox('Pitching',PIT,seasonStat(pij))+statBox('Hitting',HIT,seasonStat(hj));
     document.title='Shohei Ohtani';
   })();
 </script>
