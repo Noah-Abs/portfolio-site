@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Clubs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
+    border-left:1px solid #1b1e24;padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:#aab0b9;
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
+  .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
+  .tab.active .dot{background:#e23b34}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:#fff}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1080px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:22px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+  .club{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:150px;padding:20px 12px;
+    background:#15161b;border:1px solid #262a32;border-radius:16px;text-decoration:none;color:#fff;text-align:center;
+    transition:background .15s,border-color .15s,transform .15s}
+  .club img{width:62px;height:62px;object-fit:contain}
+  .club .nm{font-family:"Oswald",sans-serif;font-weight:600;font-size:13px;letter-spacing:.5px;line-height:1.2;color:#dce5ef}
+  a.club{cursor:pointer}
+  a.club:hover{background:#181a20;border-color:#3b454f;transform:translateY(-3px)}
+  .club.off{opacity:.5;cursor:default}
+  .club.off .soon{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#565d67;margin-top:-4px}
+  .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
+  @media(max-width:980px){.grid{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}
+    .tab{padding:9px 13px}.side-foot{display:none}
+    .main{padding:26px 16px 60px}
+    .grid{grid-template-columns:repeat(3,1fr)}
+  }
+  @media(max-width:460px){.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab active" href="/clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <h1 class="page-t">Clubs</h1>
+        <p class="page-sub">All 30 teams · pick a club</p>
+      </div>
+      <div id="grid"><div class="state">Loading teams…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const LIVE=new Set([119]);   // teams with a live page (Dodgers for now)
+
+  (async function(){
+    try{
+      const now=new Date().getFullYear();let teams=[];
+      for(const y of [now,now-1]){
+        const j=await fetch(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${y}`).then(r=>r.json());
+        teams=(j.teams||[]).filter(t=>t.active!==false&&t.sport&&t.sport.id===1);
+        if(teams.length>=30){teams=teams.slice(0,30);break;}
+      }
+      teams.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+      document.getElementById('grid').className='grid';
+      document.getElementById('grid').innerHTML=teams.map(t=>{
+        const inner=`<img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span>`;
+        return LIVE.has(t.id)
+          ? `<a class="club" href="/team/?id=${t.id}">${inner}</a>`
+          : `<div class="club off">${inner}<span class="soon">soon</span></div>`;
+      }).join('');
+    }catch(e){
+      document.getElementById('grid').innerHTML='<div class="state">Couldn’t load teams.</div>';
+    }
+  })();
+</script>
+</body>
+</html>
