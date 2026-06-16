@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>Shohei Ohtani — Statcast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f4f6f8;color:#1b1f24;font-family:"Roboto",system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:22px 16px 70px}
+  .wrap{max-width:1320px;margin:0 auto}
+  .topbar{display:flex;align-items:center;gap:14px;border-bottom:2px solid #d7dde2;padding-bottom:14px;margin-bottom:22px}
+  .mlb{font-family:"Roboto",sans-serif;font-weight:900;font-size:22px;letter-spacing:-.5px;color:#0a2342}
+  .mlb span{color:#d6273a}
+  .crumb{font-size:13px;color:#5a636d;letter-spacing:.3px}
+
+  .grid3{display:grid;grid-template-columns:340px 1fr 420px;gap:18px;align-items:start}
+  .panel{background:#fff;border:1px solid #e2e7ec;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .panel-h{text-align:center;padding:14px 14px 6px;font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:18px;color:#1b1f24}
+  .panel-h .yr{color:#0e6e8c}
+  .panel-h:after{content:"";display:block;width:64px;height:0;border-bottom:3px dotted #0e6e8c;margin:7px auto 0}
+  .panel-b{padding:14px 16px 18px}
+
+  /* player card */
+  .pc-photo{display:block;width:100%;height:200px;object-fit:cover;object-position:top center;border-radius:10px 10px 0 0;background:#dfe4ea}
+  .pc-name{font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:27px;text-align:center;margin-top:12px}
+  .pc-sub{text-align:center;color:#3a4450;font-size:14px;margin-top:2px}
+  .pc-sub b{color:#0e6e8c}
+  .pc-bio{text-align:center;color:#6b757f;font-size:12.5px;margin-top:3px}
+  table.std{width:100%;border-collapse:collapse;margin-top:14px;font-variant-numeric:tabular-nums}
+  table.std th,table.std td{font-size:12px;padding:5px 4px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap}
+  table.std th{color:#8a939c;font-weight:700;font-size:10.5px;text-transform:uppercase}
+  table.std td:first-child,table.std th:first-child{text-align:left;color:#1b1f24;font-weight:500}
+  table.std tr.career td{background:#f0f3f6;font-weight:700;border-top:2px solid #d7dde2}
+
+  /* percentile rankings */
+  .pr-scale{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#9aa3ac;letter-spacing:1px;
+    margin:2px 0 6px;padding:0 50px 0 152px}
+  .pr-grp{font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:14px;color:#0e6e8c;border-bottom:1px solid #e7ebef;
+    margin:14px 0 8px;padding-bottom:3px;letter-spacing:.5px}
+  .pr-grp:first-child{margin-top:4px}
+  .pr-row{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .pr-label{flex:0 0 140px;font-size:12.5px;color:#333;text-align:right;line-height:1.1}
+  .pr-track{position:relative;flex:1;height:6px;background:#e9edf0;border-radius:4px}
+  .pr-fill{position:absolute;left:0;top:0;height:100%;border-radius:4px}
+  .pr-bub{position:absolute;top:50%;transform:translate(-50%,-50%);min-width:25px;height:25px;border-radius:13px;padding:0 3px;
+    display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;color:#fff;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.28);z-index:2}
+  .pr-val{flex:0 0 44px;font-size:12.5px;font-weight:700;color:#1b1f24;text-align:left;font-variant-numeric:tabular-nums}
+  .pr-note{font-size:11px;color:#9aa3ac;margin-top:14px;text-align:center;line-height:1.4}
+
+  /* spray chart */
+  .spray-legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:#4a5460}
+  .spray-legend span{display:inline-flex;align-items:center;gap:5px}
+  .spray-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+  /* pitch arsenal (lower) */
+  .section{margin-top:26px;background:#fff;border:1px solid #e2e7ec;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  table.ars{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  table.ars th,table.ars td{font-size:12.5px;padding:9px 12px;text-align:right;border-bottom:1px solid #eef1f4;white-space:nowrap}
+  table.ars thead th{color:#8a939c;font-weight:700;font-size:10.5px;text-transform:uppercase;background:#fafbfc}
+  table.ars td:first-child,table.ars th:first-child{text-align:left}
+  table.ars .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:middle}
+  table.ars tbody tr:hover td{background:#f7f9fb}
+  .state{color:#8a939c;text-align:center;padding:34px;font-size:13px}
+  @media(max-width:1180px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="mlb">DROP<span>THIRD</span></div>
+      <div class="crumb">Statcast · Player Page</div>
+    </div>
+    <div id="app"><div class="state">Loading Shohei Ohtani…</div></div>
+  </div>
+
+<script>
+  const ID=660271, YEAR=new Date().getFullYear();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const headshot=`https://img.mlbstatic.com/mlb-photos/image/upload/w_426,q_auto:best/v1/people/${ID}/headshot/silo/current`;
+  const num=v=>(v==null||v===''||isNaN(+v))?null:+v;
+  const d3=v=>{const n=num(v);return n==null?'–':n.toFixed(3).replace(/^0(?=\.)/,'').replace(/^-0(?=\.)/,'-');};
+  const d1=v=>{const n=num(v);return n==null?'–':n.toFixed(1);};
+  const SAV='https://baseballsavant.mlb.com';
+
+  function parseCSV(text){
+    const lines=text.replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(l=>l.length);
+    const rows=lines.map(l=>{const out=[];let cur='',q=false;
+      for(let i=0;i<l.length;i++){const ch=l[i];
+        if(q){if(ch==='"'){if(l[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
+        else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}
+      out.push(cur);return out;});
+    const hdr=rows.shift();return rows.map(r=>{const o={};hdr.forEach((h,i)=>o[h]=r[i]);return o;});
+  }
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const csv=u=>fetch(u).then(r=>r.ok?r.text():'').then(t=>t?parseCSV(t):[]).catch(()=>[]);
+  const find=(rows,id)=>rows.find(o=>+o.player_id===id)||null;
+
+  // diverging blue→gray→red scale like Statcast percentiles
+  function pctColor(p){
+    const lo=[60,108,178], mid=[156,160,166], hi=[214,39,58];
+    const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+    const c=p<=50?mix(lo,mid,p/50):mix(mid,hi,(p-50)/50);
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
+
+  function stdTable(yby,career,seasons){
+    const cols=[['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['HR','homeRuns'],['SB','stolenBases'],
+      ['AVG','avg'],['OBP','obp'],['SLG','slg'],['OPS','ops']];
+    const rate=new Set(['avg','obp','slg','ops']);
+    const cell=(st,k)=>rate.has(k)?d3(st[k]):(st[k]!=null?st[k]:'–');
+    const recent=yby.slice(-3);
+    let h='<table class="std"><thead><tr><th>Season</th>'+cols.map(c=>`<th>${c[0]}</th>`).join('')+'</tr></thead><tbody>';
+    recent.forEach(sp=>{h+=`<tr><td>${esc(sp.season)}</td>`+cols.map(c=>`<td>${esc(cell(sp.stat,c[1]))}</td>`).join('')+'</tr>';});
+    if(career)h+=`<tr class="career"><td>${seasons} Seasons</td>`+cols.map(c=>`<td>${esc(cell(career,c[1]))}</td>`).join('')+'</tr>';
+    return h+'</tbody></table>';
+  }
+
+  const PR_GROUPS=[
+    ['Batting',[
+      {l:'xwOBA',pk:'xwoba',raw:x=>x.xst&&x.xst.est_woba,fmt:d3},
+      {l:'xBA',pk:'xba',raw:x=>x.xst&&x.xst.est_ba,fmt:d3},
+      {l:'xSLG',pk:'xslg',raw:x=>x.xst&&x.xst.est_slg,fmt:d3},
+      {l:'Avg Exit Velocity',pk:'exit_velocity',raw:x=>x.cu&&x.cu.exit_velocity_avg,fmt:d1},
+      {l:'Barrel %',pk:'brl_percent',raw:x=>x.cu&&x.cu.barrel_batted_rate,fmt:d1},
+      {l:'Hard-Hit %',pk:'hard_hit_percent',raw:x=>x.cu&&x.cu.hard_hit_percent,fmt:d1},
+      {l:'Bat Speed',pk:'bat_speed',raw:x=>x.cu&&x.cu.avg_swing_speed,fmt:d1},
+      {l:'Squared-Up %',pk:'squared_up_rate',raw:x=>x.cu&&x.cu.squared_up_per_swing,fmt:d1},
+      {l:'Chase %',pk:'chase_percent',raw:x=>x.cu&&x.cu.oz_swing_percent,fmt:d1},
+      {l:'Whiff %',pk:'whiff_percent',raw:x=>x.cu&&x.cu.whiff_percent,fmt:d1},
+      {l:'K %',pk:'k_percent',raw:x=>x.cu&&x.cu.k_percent,fmt:d1},
+      {l:'BB %',pk:'bb_percent',raw:x=>x.cu&&x.cu.bb_percent,fmt:d1},
+    ]],
+    ['Running',[
+      {l:'Sprint Speed',pk:'sprint_speed',raw:x=>x.spd&&x.spd.sprint_speed,fmt:d1},
+    ]],
+  ];
+  function percentilePanel(x){
+    if(!x.pct)return '<div class="state">Percentile data unavailable.</div>';
+    let h='<div class="pr-scale"><span>POOR</span><span>AVERAGE</span><span>GREAT</span></div>';
+    PR_GROUPS.forEach(([grp,rows])=>{
+      const built=rows.map(r=>{
+        const p=num(x.pct[r.pk]); if(p==null)return '';
+        const col=pctColor(p), raw=r.fmt(r.raw(x));
+        return `<div class="pr-row"><div class="pr-label">${esc(r.l)}</div>
+          <div class="pr-track"><div class="pr-fill" style="width:${p}%;background:${col}"></div>
+            <div class="pr-bub" style="left:${p}%;background:${col}">${p}</div></div>
+          <div class="pr-val">${esc(raw)}</div></div>`;
+      }).filter(Boolean).join('');
+      if(built)h+=`<div class="pr-grp">${grp}</div>`+built;
+    });
+    h+='<div class="pr-note">Percentiles vs. qualified MLB hitters · '+YEAR+' season</div>';
+    return h;
+  }
+
+  function sprayPanel(rows){
+    const EV={single:'#f59e0b',double:'#8b5cf6',triple:'#eab308',home_run:'#ec4899'};
+    const pts=rows.filter(r=>EV[r.events]&&num(r.hc_x)!=null&&num(r.hc_y)!=null);
+    const dots=pts.map(r=>`<circle cx="${(+r.hc_x).toFixed(1)}" cy="${(+r.hc_y).toFixed(1)}" r="2.7" fill="${EV[r.events]}" fill-opacity=".9"/>`).join('');
+    const field=`
+      <path d="M125,200 L33,108 A 96 96 0 0 1 217,108 Z" fill="#d7ead2"/>
+      <path d="M125,200 L33,108 A 96 96 0 0 1 217,108" fill="none" stroke="#9cc49a" stroke-width="1.4"/>
+      <path d="M125,200 L92,167 L125,134 L158,167 Z" fill="#e6d3ad"/>
+      <line x1="125" y1="200" x2="40" y2="115" stroke="#fff" stroke-width="1.4"/>
+      <line x1="125" y1="200" x2="210" y2="115" stroke="#fff" stroke-width="1.4"/>
+      <circle cx="125" cy="167" r="2.4" fill="#cdb789"/>
+      <rect x="122" y="197" width="6" height="6" fill="#fff" transform="rotate(45 125 200)"/>`;
+    return `<svg viewBox="0 0 250 210" style="width:100%;height:auto;display:block">${field}${dots}</svg>
+      <div class="spray-legend">
+        <span><i style="background:#f59e0b"></i>Single</span><span><i style="background:#8b5cf6"></i>Double</span>
+        <span><i style="background:#eab308"></i>Triple</span><span><i style="background:#ec4899"></i>Home Run</span></div>
+      <div class="pr-note">${pts.length} batted-ball hits · ${YEAR}</div>`;
+  }
+
+  const PCOL={FF:'#d6273a',FA:'#d6273a',SI:'#f0663b',FC:'#f0973b',FS:'#23a06a',CH:'#2fb673',SC:'#2fb673',
+    SL:'#3b82f0',ST:'#5b8def',SV:'#6b6bf0',CU:'#9b5cf0',KC:'#b05cf0',CS:'#9b5cf0',SL2:'#3b82f0',KN:'#8a909a',EP:'#8a909a',SV2:'#6b6bf0'};
+  function arsenalSection(arsSplits,savRows){
+    if(!arsSplits||!arsSplits.length)return '';
+    const savMap={};(savRows||[]).forEach(r=>{if(+r.player_id===ID)savMap[r.pitch_type]=r;});
+    const ps=arsSplits.map(s=>s.stat).filter(p=>p&&p.type).sort((a,b)=>(b.percentage||0)-(a.percentage||0));
+    const head=`<thead><tr><th>Pitch</th><th>Usage</th><th>Velo</th><th>Whiff%</th><th>K%</th><th>Put-Away%</th><th>BAA</th><th>xwOBA</th><th>Hard-Hit%</th></tr></thead>`;
+    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},col=PCOL[code]||'#6b727c';
+      return `<tr><td><span class="pdot" style="background:${col}"></span>${esc(p.type.description||code)}</td>
+        <td>${d1((p.percentage||0)*100)}%</td><td>${p.averageSpeed!=null?(+p.averageSpeed).toFixed(1):'–'}</td>
+        <td>${d1(sv.whiff_percent)}</td><td>${d1(sv.k_percent)}</td><td>${d1(sv.put_away)}</td>
+        <td>${d3(sv.ba)}</td><td>${d3(sv.est_woba)}</td><td>${d1(sv.hard_hit_percent)}</td></tr>`;}).join('');
+    return `<div class="section"><div class="panel-h"><span class="yr">${YEAR}</span> Pitch Arsenal</div>
+      <div style="overflow-x:auto"><table class="ars">${head}<tbody>${body}</tbody></table></div></div>`;
+  }
+
+  (async function(){
+    const enc=encodeURIComponent;
+    const [bio,sj,pctR,cuR,xstR,spdR,sprayR,arsJ,arsSav]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=yearByYear,career&group=hitting`),
+      csv(`${SAV}/leaderboard/percentile-rankings?type=batter&csv=true`),
+      csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=batter&filter=&min=q&selections=exit_velocity_avg,barrel_batted_rate,hard_hit_percent,sweet_spot_percent,avg_swing_speed,squared_up_per_swing,k_percent,bb_percent,whiff_percent,oz_swing_percent&chart=false&x=exit_velocity_avg&csv=true`),
+      csv(`${SAV}/leaderboard/expected_statistics?type=batter&year=${YEAR}&position=&team=&min=1&csv=true`),
+      csv(`${SAV}/leaderboard/sprint_speed?type=batter&year=${YEAR}&min=1&csv=true`),
+      csv(`${SAV}/statcast_search/csv?all=true&type=details&player_type=batter&batters_lookup%5B%5D=${ID}&hfSea=${YEAR}%7C&hfBBT=&hfBBL=`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=pitchArsenal&group=pitching&season=${YEAR}`),
+      csv(`${SAV}/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`),
+    ]);
+
+    const person=bio&&bio.people&&bio.people[0];
+    const tm=person&&person.currentTeam;
+    const ybyG=(sj&&sj.stats||[]).find(s=>s.type&&s.type.displayName==='yearByYear'&&s.group&&s.group.displayName==='hitting');
+    const careerG=(sj&&sj.stats||[]).find(s=>s.type&&s.type.displayName==='career'&&s.group&&s.group.displayName==='hitting');
+    const yby=(ybyG&&ybyG.splits||[]).filter(sp=>sp.stat);
+    const career=careerG&&careerG.splits&&careerG.splits[0]&&careerG.splits[0].stat;
+    const seasons=new Set(yby.map(s=>s.season)).size;
+
+    const x={pct:find(pctR,ID),cu:find(cuR,ID),xst:find(xstR,ID),spd:find(spdR,ID)};
+    const arsSplits=((arsJ&&arsJ.stats||[]).find(s=>s.type&&s.type.displayName==='pitchArsenal')||{}).splits||[];
+
+    const pos=person&&person.primaryPosition&&person.primaryPosition.abbreviation;
+    const bt=[person&&person.batSide&&person.batSide.code,person&&person.pitchHand&&person.pitchHand.code].filter(Boolean).join('/');
+    const bio2=[person&&person.height,person&&person.weight?person.weight+' lbs':null,person&&person.currentAge?'Age '+person.currentAge:null].filter(Boolean).join(' · ');
+
+    const card=`<div class="panel">
+      <img class="pc-photo" src="${headshot}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/240'">
+      <div class="panel-b" style="padding-top:0">
+        <div class="pc-name">${esc(person?person.fullName:'Shohei Ohtani')}</div>
+        <div class="pc-sub"><b>${esc(pos||'TWP')}</b> | ${esc(tm?tm.name:'Los Angeles Dodgers')}</div>
+        <div class="pc-bio">Bats/Throws: ${esc(bt||'L/R')}${bio2?' · '+esc(bio2):''}</div>
+        ${stdTable(yby,career,seasons)}
+      </div></div>`;
+
+    const pctPanel=`<div class="panel"><div class="panel-h"><span class="yr">${YEAR}</span> MLB Percentile Rankings</div>
+      <div class="panel-b">${percentilePanel(x)}</div></div>`;
+
+    const sprayP=`<div class="panel"><div class="panel-h"><span class="yr">${YEAR}</span> Hits Spray Chart</div>
+      <div class="panel-b">${sprayPanel(sprayR)}</div></div>`;
+
+    document.getElementById('app').innerHTML=
+      `<div class="grid3">${card}${pctPanel}${sprayP}</div>`+arsenalSection(arsSplits,arsSav);
+    document.title='Shohei Ohtani — Statcast';
+  })();
+</script>
+</body>
+</html>
