@@ -32,6 +32,9 @@
   .row{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
   .box{flex:0 1 330px;min-width:0;max-width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column}
   .arsbox,.row.fill .arsbox{flex:1 1 340px;max-width:none}
+  .row.top{align-items:flex-start}
+  .stack{display:flex;flex-direction:column;gap:16px;flex:0 1 330px;min-width:0;max-width:330px}
+  .stack .box{flex:0 0 auto;width:100%;max-width:none}
   .arsbox .ascroll{flex:1}
   .arsbox .atbl{height:100%}
   .box-h{text-align:center;font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:18px;padding:15px 14px 0}
@@ -187,23 +190,27 @@
     }
     await Promise.all(fx);
 
-    const pitcherOnly=!!pStat&&!hStat, isFill=pitcherOnly&&arsSplits.length;
+    const pitcherOnly=!!pStat&&!hStat, hitterOnly=!!hStat&&!pStat, isFill=pitcherOnly&&arsSplits.length;
     const items=[card];
     let pageMaxW, rowClass, foot='';
+    const advBoxes=()=>{const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
+      foot=`<div class="footnote">OPS+, wRC+, WAR, DRS and Max EV aren’t available from the free MLB/Statcast feeds, so they show “—”.</div>`;
+      return advancedBoxes(hStat,cu,xs,spd,bsr,oaa);};
     if(isFill){
       if(pStat)items.push(statBox('Pitching',PIT,pStat));
       items.push(`<div class="box arsbox">${arsenalInner(arsSplits,savRows)}</div>`);
       pageMaxW=1400; rowClass='row fill';
+    }else if(hitterOnly){
+      // hitter: card | 2026 Hitting | advanced boxes stacked on the right
+      items.push(statBox('Hitting',HIT,hStat));
+      items.push(`<div class="stack">${advBoxes().join('')}</div>`);
+      pageMaxW=3*330+2*16; rowClass='row top';
     }else{
       const nBox=1+(pStat?1:0)+(hStat?1:0);
       if(pStat)items.push(statBox('Pitching',PIT,pStat));
       if(hStat)items.push(statBox('Hitting',HIT,hStat));
       if(arsSplits.length)items.push(`<div class="arsenal">${arsenalInner(arsSplits,savRows)}</div>`);
-      if(hStat){
-        const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
-        items.push(...advancedBoxes(hStat,cu,xs,spd,bsr,oaa));
-        foot=`<div class="footnote">OPS+, wRC+, WAR, DRS and Max EV aren’t available from the free MLB/Statcast feeds, so they show “—”.</div>`;
-      }
+      if(hStat)items.push(...advBoxes());
       pageMaxW=nBox*330+(nBox-1)*16; rowClass='row';
     }
     document.getElementById('app').innerHTML=`<div class="page" style="max-width:${pageMaxW}px"><div class="${rowClass}">${items.join('')}</div>${foot}</div>`;
