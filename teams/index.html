@@ -19,26 +19,47 @@
   .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(34px,7vw,64px);line-height:.95;letter-spacing:2px}
   .sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:7px;font-size:13px;color:#7e858f}
 
-  .wrap{max-width:1000px;margin:26px auto 0;padding:0 14px 70px;width:100%}
+  .wrap{max-width:1000px;margin:22px auto 0;padding:0 14px 70px;width:100%}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;justify-content:center}
+  .tab{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;
+    color:#9098a2;background:#15161b;border:1px solid #262a32;border-radius:10px;padding:9px 18px;cursor:pointer;transition:.15s}
+  .tab:hover{color:#fff;border-color:#3b454f}
+  .tab.on{background:#fff;color:#0b0c0e;border-color:#fff}
+
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
   table{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
   thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
-    color:#7e858f;text-align:right;padding:13px 12px;border-bottom:1px solid #23262c;white-space:nowrap;position:sticky;top:0;background:#101115}
+    color:#7e858f;text-align:right;padding:13px 12px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115}
   thead th.l{text-align:left}
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{color:#cfd4da}
+  thead th.active{color:#fff}
+  th .arr{font-size:9px;margin-left:3px}
   tbody td{padding:11px 12px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   tbody td.l{text-align:left}
-  tbody tr:last-child td{border-bottom:0}
   tbody tr:hover{background:#15171c}
   .rank{color:#565d67;width:30px;text-align:right;font-weight:600}
-  .team{display:flex;align-items:center;gap:11px;min-width:190px}
-  .team img{width:27px;height:27px;object-fit:contain;flex:0 0 auto}
+  .team{display:flex;align-items:center;gap:11px;min-width:180px}
+  .team img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
   .team .nm{font-weight:500;color:#fff}
+  .clinch{color:#46c77e;font-size:11px;font-weight:700;margin-left:5px}
   .wl{font-weight:600}
   .pct{color:#c7ccd3}
+  .gb{color:#aeb4bd}
   .pos{color:#46c77e;font-weight:600}.neg{color:#e0556a;font-weight:600}.zero{color:#8a8f98}
   .stw{color:#46c77e}.stl{color:#e0556a}
   .divc{color:#8a8f98;font-size:12.5px;letter-spacing:.5px}
   .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+
+  /* division / wild-card sections */
+  .sec{margin-top:18px}
+  .sec:first-child{margin-top:0}
+  .sec-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2.5px;font-size:13px;
+    color:#fff;padding:0 4px 9px}
+  .sec-h.wc{color:#ffd24a}
+  .sec .scroller{border-radius:13px}
+  tr.wc-cut td{border-bottom:2px solid #3a4350}
+  tr.wc-out td .nm,tr.wc-out td.rank{opacity:.62}
 </style>
 </head>
 <body>
@@ -49,77 +70,139 @@
   </header>
 
   <div class="wrap">
-    <div class="scroller">
-      <table>
-        <thead><tr>
-          <th class="l">#</th>
-          <th class="l">Team</th>
-          <th>Record</th>
-          <th>Pct</th>
-          <th>Diff</th>
-          <th>L10</th>
-          <th>Streak</th>
-          <th class="l">Division</th>
-        </tr></thead>
-        <tbody id="rows"><tr><td class="state" colspan="8">Loading standings…</td></tr></tbody>
-      </table>
+    <div class="tabs">
+      <button class="tab on" id="tabFlat">Overall</button>
+      <button class="tab" id="tabDiv">Divisions</button>
     </div>
+    <div id="content"><div class="scroller"><div class="state">Loading standings…</div></div></div>
   </div>
 
 <script>
   const DIV={200:'AL West',201:'AL East',202:'AL Central',203:'NL West',204:'NL East',205:'NL Central'};
+  const DIV_ORDER=[201,202,200,204,205,203];
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let TEAMS=[], YEAR, mode='flat', sortKey='pct', sortDir=-1;
+
+  const pctv=t=>parseFloat(t.pct)||0;
+  const l10w=t=>{const m=/^(\d+)/.exec(t.l10);return m?+m[1]:0;};
+  const stkv=t=>{const m=/^([WL])(\d+)/.exec(t.streak);return m?(m[1]==='W'?1:-1)*(+m[2]):0;};
+  const sorters={w:t=>t.w,pct:pctv,diff:t=>t.rd,l10:l10w,streak:stkv};
+  const games=(a,b)=>((a.w-b.w)+(b.l-a.l))/2;
 
   async function fetchYear(y){
     const r=await fetch(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`);
-    if(!r.ok) return [];
-    const j=await r.json();
-    const out=[];
+    if(!r.ok)return [];
+    const j=await r.json();const out=[];
     (j.records||[]).forEach(g=>{
-      const div=DIV[g.division&&g.division.id]||'';
+      const dId=g.division&&g.division.id, div=DIV[dId]||'';
       (g.teamRecords||[]).forEach(t=>{
         const l10=((t.records&&t.records.splitRecords)||[]).find(x=>x.type==='lastTen');
         out.push({id:t.team.id,name:t.team.name,w:+t.wins||0,l:+t.losses||0,
           pct:t.winningPercentage||'.000',rd:(t.runDifferential==null?0:+t.runDifferential),
-          l10:l10?`${l10.wins}-${l10.losses}`:'—',streak:(t.streak&&t.streak.streakCode)||'—',div});
+          l10:l10?`${l10.wins}-${l10.losses}`:'—',streak:(t.streak&&t.streak.streakCode)||'—',
+          divId:dId,div,league:(dId<=202?'AL':'NL'),divRank:+t.divisionRank||9,
+          gb:t.gamesBack,clinch:(t.clinchIndicator||'').replace('-','')});
       });
     });
     return out;
   }
 
-  function render(teams,year){
-    teams.sort((a,b)=>(parseFloat(b.pct)-parseFloat(a.pct))||(b.rd-a.rd)||(b.w-a.w));
-    document.getElementById('sub').textContent=`${year} Standings · by win%`;
-    document.getElementById('rows').innerHTML=teams.map((t,i)=>{
-      const rdc=t.rd>0?'pos':t.rd<0?'neg':'zero', rds=(t.rd>0?'+':'')+t.rd;
-      const stc=/^W/.test(t.streak)?'stw':/^L/.test(t.streak)?'stl':'';
-      const pct=String(t.pct).replace(/^0/,'');
-      return `<tr>
+  function teamCell(t){
+    return `<span class="team"><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span>${t.clinch?`<span class="clinch">${esc(t.clinch)}</span>`:''}</span>`;
+  }
+  function statCells(t){
+    const rdc=t.rd>0?'pos':t.rd<0?'neg':'zero',rds=(t.rd>0?'+':'')+t.rd;
+    const stc=/^W/.test(t.streak)?'stw':/^L/.test(t.streak)?'stl':'';
+    return `<td class="${rdc}">${esc(rds)}</td><td>${esc(t.l10)}</td><td class="${stc}">${esc(t.streak)}</td>`;
+  }
+  const showpct=p=>String(p).replace(/^0/,'');
+
+  function renderFlat(){
+    const arr=k=>sortKey===k?`<span class="arr">${sortDir<0?'▼':'▲'}</span>`:'';
+    const act=k=>sortKey===k?' active':'';
+    const ts=[...TEAMS].sort((a,b)=>(sorters[sortKey](a)-sorters[sortKey](b))*sortDir||(pctv(b)-pctv(a)));
+    const head=`<thead><tr>
+      <th class="l rank">#</th>
+      <th class="l">Team</th>
+      <th class="sortable${act('w')}" data-k="w">Record${arr('w')}</th>
+      <th class="sortable${act('pct')}" data-k="pct">Pct${arr('pct')}</th>
+      <th class="sortable${act('diff')}" data-k="diff">Diff${arr('diff')}</th>
+      <th class="sortable${act('l10')}" data-k="l10">L10${arr('l10')}</th>
+      <th class="sortable${act('streak')}" data-k="streak">Streak${arr('streak')}</th>
+      <th class="l sortable" data-mode="div">Division</th>
+    </tr></thead>`;
+    const body=ts.map((t,i)=>`<tr>
+      <td class="rank">${i+1}</td>
+      <td class="l">${teamCell(t)}</td>
+      <td class="wl">${t.w}-${t.l}</td>
+      <td class="pct">${esc(showpct(t.pct))}</td>
+      ${statCells(t)}
+      <td class="l divc">${esc(t.div)}</td>
+    </tr>`).join('');
+    return `<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
+  }
+
+  function miniTable(teams,gbLabel,gbFn,markCut){
+    const head=`<thead><tr><th class="l rank">#</th><th class="l">Team</th><th>Record</th><th>Pct</th><th>${gbLabel}</th><th>Diff</th><th>L10</th><th>Streak</th></tr></thead>`;
+    const body=teams.map((t,i)=>{
+      const cut=(markCut&&i===2)?' class="wc-cut"':'';
+      const out=(markCut&&i>2)?' wc-out':'';
+      return `<tr${cut?cut:(out?` class="${out.trim()}"`:'')}>
         <td class="rank">${i+1}</td>
-        <td class="l"><span class="team"><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span></td>
+        <td class="l">${teamCell(t)}</td>
         <td class="wl">${t.w}-${t.l}</td>
-        <td class="pct">${esc(pct)}</td>
-        <td class="${rdc}">${esc(rds)}</td>
-        <td>${esc(t.l10)}</td>
-        <td class="${stc}">${esc(t.streak)}</td>
-        <td class="l divc">${esc(t.div)}</td>
+        <td class="pct">${esc(showpct(t.pct))}</td>
+        <td class="gb">${gbFn(t,i)}</td>
+        ${statCells(t)}
       </tr>`;
     }).join('');
+    return `<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
   }
+
+  function renderDiv(){
+    let html='';
+    DIV_ORDER.forEach(d=>{
+      const ts=TEAMS.filter(t=>t.divId===d).sort((a,b)=>a.divRank-b.divRank||pctv(b)-pctv(a));
+      html+=`<div class="sec"><div class="sec-h">${esc(DIV[d])}</div>`+
+        miniTable(ts,'GB',t=>{const g=t.gb;return (!g||g==='-'||g==='—')?'—':esc(g);},false)+`</div>`;
+    });
+    ['AL','NL'].forEach(lg=>{
+      const divs=lg==='AL'?[201,202,200]:[204,205,203];
+      const leader={};
+      divs.forEach(d=>{const top=TEAMS.filter(t=>t.divId===d).sort((a,b)=>a.divRank-b.divRank||pctv(b)-pctv(a))[0];if(top)leader[top.id]=1;});
+      const wc=TEAMS.filter(t=>t.league===lg&&!leader[t.id]).sort((a,b)=>pctv(b)-pctv(a)||(b.rd-a.rd));
+      const cut=wc[2]||wc[wc.length-1];
+      const gbFn=(t,i)=>{const lead=cut?games(t,cut):0;return lead>0?('+'+lead.toFixed(1)):lead<0?Math.abs(lead).toFixed(1):'—';};
+      html+=`<div class="sec"><div class="sec-h wc">Wild Card · ${lg==='AL'?'American League':'National League'}</div>`+
+        miniTable(wc,'WCGB',gbFn,true)+`</div>`;
+    });
+    return html;
+  }
+
+  function render(){
+    document.getElementById('content').innerHTML = mode==='div'?renderDiv():renderFlat();
+    document.getElementById('tabFlat').classList.toggle('on',mode==='flat');
+    document.getElementById('tabDiv').classList.toggle('on',mode==='div');
+    document.getElementById('sub').textContent = `${YEAR} Standings · ${mode==='div'?'divisions & wild card':'by '+({w:'record',pct:'win%',diff:'run diff',l10:'last 10',streak:'streak'}[sortKey])}`;
+    // wire header sort + division switch
+    document.querySelectorAll('thead th[data-k]').forEach(th=>th.onclick=()=>{
+      const k=th.dataset.k; if(k===sortKey)sortDir*=-1; else{sortKey=k;sortDir=-1;} render();
+    });
+    document.querySelectorAll('thead th[data-mode]').forEach(th=>th.onclick=()=>{mode='div';render();});
+  }
+
+  document.getElementById('tabFlat').onclick=()=>{mode='flat';render();};
+  document.getElementById('tabDiv').onclick=()=>{mode='div';render();};
 
   (async function(){
     try{
-      const now=new Date().getFullYear();
-      let teams=[], used=now;
-      for(const y of [now,now-1,now-2]){
-        teams=await fetchYear(y);
-        if(teams.length){ used=y; break; }
-      }
-      if(!teams.length){ document.getElementById('rows').innerHTML='<tr><td class="state" colspan="8">No standings available.</td></tr>'; return; }
-      render(teams,used);
+      const now=new Date().getFullYear();let teams=[];YEAR=now;
+      for(const y of [now,now-1,now-2]){teams=await fetchYear(y);if(teams.length){YEAR=y;break;}}
+      if(!teams.length){document.getElementById('content').innerHTML='<div class="scroller"><div class="state">No standings available.</div></div>';return;}
+      TEAMS=teams;render();
     }catch(e){
-      document.getElementById('rows').innerHTML='<tr><td class="state" colspan="8">Couldn’t load standings.</td></tr>';
+      document.getElementById('content').innerHTML='<div class="scroller"><div class="state">Couldn’t load standings.</div></div>';
     }
   })();
 </script>
