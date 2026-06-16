@@ -57,18 +57,20 @@
   .hcard .hl{margin-top:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909a;font-weight:600}
   .hcard .hc{margin-top:6px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#4a5059;font-variant-numeric:tabular-nums}
 
-  /* comparison table */
-  .tbl-wrap{overflow-x:auto;border:1px solid #1b1e24;border-radius:13px;background:#0e1015;-webkit-overflow-scrolling:touch}
-  table.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content;font-variant-numeric:tabular-nums;white-space:nowrap}
-  table.stat th,table.stat td{padding:11px 13px;text-align:right;font-size:13.5px;color:#dfe3e8}
-  table.stat thead th{background:#15161b;color:#8a909a;font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #262a32;cursor:help}
-  table.stat th.splitcol{position:sticky;left:0;z-index:2;text-align:left;background:#0e1015;color:#fff;font-weight:600;
-    text-transform:uppercase;letter-spacing:1px;font-size:12.5px;min-width:98px;border-right:1px solid #1f232a}
-  table.stat thead th.splitcol{background:#15161b;z-index:3}
-  table.stat tbody tr+tr th,table.stat tbody tr+tr td{border-top:1px solid #15171c}
-  table.stat td.grp,table.stat th.grp{border-left:1px solid #2a2f37}
-  table.stat tbody tr:hover td{background:#13151a}
-  table.stat tbody tr:hover th.splitcol{background:#16181e}
+  /* comparison tables (vertical — no horizontal scroll) */
+  .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:9px}
+  .vgrid.one{grid-template-columns:minmax(0,540px)}
+  table.vstat{width:100%;border-collapse:separate;border-spacing:0;background:#0e1015;border:1px solid #1b1e24;
+    border-radius:13px;overflow:hidden;font-variant-numeric:tabular-nums}
+  table.vstat th,table.vstat td{padding:9px 14px;font-size:13.5px;text-align:right;color:#dfe3e8}
+  table.vstat thead th{background:#15161b;color:#8a909a;font-weight:600;font-size:11px;letter-spacing:.5px;
+    text-transform:uppercase;border-bottom:1px solid #262a32}
+  table.vstat th.lbl{text-align:left;color:#fff;font-weight:600;text-transform:uppercase;letter-spacing:1px;
+    font-size:12.5px;white-space:nowrap;width:1%}
+  table.vstat tbody th.lbl{cursor:help}
+  table.vstat tbody tr+tr th,table.vstat tbody tr+tr td{border-top:1px solid #15171c}
+  table.vstat tbody tr:hover td,table.vstat tbody tr:hover th.lbl{background:#13151a}
+  @media(max-width:680px){.vgrid{grid-template-columns:1fr}.vgrid.one{grid-template-columns:1fr}}
   .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
 
   @media(max-width:900px){.hero{grid-template-columns:repeat(3,1fr)}}
@@ -154,14 +156,17 @@
         (cv!=null&&cv!=='–'?`<div class="hc">Career ${esc(cv)}</div>`:'')+`</div>`;
     }).join('')+`</div>`;
   }
-  function statTable(fields,rows){
-    if(!rows.length)return '';
-    const head='<tr><th class="splitcol"></th>'+fields.map(f=>
-      `<th class="${f[3]?'grp':''}" title="${esc(f[2]||f[0])}">${esc(f[0])}</th>`).join('')+'</tr>';
-    const body=rows.map(r=>`<tr><th class="splitcol">${esc(r.label)}</th>`+fields.map(f=>{
-      let v=r.stat[f[1]];if(v==null||v==='')v='–';return `<td class="${f[3]?'grp':''}">${esc(v)}</td>`;
-    }).join('')+'</tr>').join('');
-    return `<div class="tbl-wrap"><table class="stat"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  function vtable(fields,cols){
+    const head='<tr><th class="lbl"></th>'+cols.map(c=>`<th>${esc(c.label)}</th>`).join('')+'</tr>';
+    const body=fields.map(f=>`<tr><th class="lbl" title="${esc(f[2]||f[0])}">${esc(f[0])}</th>`+
+      cols.map(c=>{let v=c.stat[f[1]];if(v==null||v==='')v='–';return `<td>${esc(v)}</td>`;}).join('')+'</tr>').join('');
+    return `<table class="vstat"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  }
+  function statBlock(fields,cols){
+    if(!cols.length)return '';
+    if(fields.length>12){const mid=Math.ceil(fields.length/2);
+      return `<div class="vgrid">${vtable(fields.slice(0,mid),cols)}${vtable(fields.slice(mid),cols)}</div>`;}
+    return `<div class="vgrid one">${vtable(fields,cols)}</div>`;
   }
 
   function pick(stats,group,type){
@@ -204,20 +209,20 @@
         const s=last(hS), c=last(hC);
         html+=`<div class="sect"><h2>Hitting</h2>`;
         if(s)html+=heroStrip(HIT_HERO,s,c);
-        const rows=[];if(s)rows.push({label:String(YEAR),stat:s});if(c)rows.push({label:'Career',stat:c});
-        html+=`<div class="subh">Full Batting Line</div>`+statTable(HIT,rows)+`</div>`;
+        const cols=[];if(s)cols.push({label:String(YEAR),stat:s});if(c)cols.push({label:'Career',stat:c});
+        html+=`<div class="subh">Full Batting Line</div>`+statBlock(HIT,cols)+`</div>`;
       }
       if(pS||pC){
         const s=last(pS), c=last(pC);
         html+=`<div class="sect"><h2>Pitching</h2>`;
         if(s)html+=heroStrip(pitHero(s),s,c); else if(c)html+=heroStrip(pitHero(c),c,null);
-        const rows=[];if(s)rows.push({label:String(YEAR),stat:s});if(c)rows.push({label:'Career',stat:c});
-        html+=`<div class="subh">Full Pitching Line</div>`+statTable(PIT,rows)+`</div>`;
+        const cols=[];if(s)cols.push({label:String(YEAR),stat:s});if(c)cols.push({label:'Career',stat:c});
+        html+=`<div class="subh">Full Pitching Line</div>`+statBlock(PIT,cols)+`</div>`;
       }
       if(fS){
         html+=`<div class="sect"><h2>Fielding</h2><div class="subh">${YEAR} Season · by position</div>`;
-        const rows=fS.splits.map(sp=>({label:(sp.position&&sp.position.abbreviation)||'POS',stat:sp.stat}));
-        html+=statTable(FLD,rows)+`</div>`;
+        const cols=fS.splits.map(sp=>({label:(sp.position&&sp.position.abbreviation)||'POS',stat:sp.stat}));
+        html+=statBlock(FLD,cols)+`</div>`;
       }
       if(!hS&&!hC&&!pS&&!pC&&!fS)html+=`<div class="state">No stats available for this player.</div>`;
 
