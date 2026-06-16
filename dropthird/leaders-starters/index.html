@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Reliever Leaders</title>
+<title>DROPTHIRD — Starting Pitcher Leaders</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -36,7 +36,7 @@
   .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
-  table{width:100%;border-collapse:collapse;font-size:14px;min-width:1080px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:1040px}
   thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
     color:#7e858f;text-align:right;padding:13px 10px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115;position:sticky;top:0}
   thead th.l{text-align:left}
@@ -75,21 +75,21 @@
 </head>
 <body>
   <aside class="side">
-    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
     <nav class="nav">
       <div class="nav-label">Teams</div>
-      <a class="tab" href="/clubs/"><span class="dot"></span>Clubs</a>
-      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
-      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
-      <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
-      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
-      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
-      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
       <div class="nav-label">Players</div>
-      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
-      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
-      <a class="tab active" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
-      <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab active" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
     </nav>
     <div class="side-foot">2026 Season</div>
   </aside>
@@ -97,10 +97,10 @@
   <main class="main">
     <div class="page">
       <div class="page-head">
-        <h1 class="page-t">Reliever Leaders</h1>
+        <h1 class="page-t">Starting Pitcher Leaders</h1>
         <p class="page-sub" id="sub">Loading…</p>
       </div>
-      <div id="content"><div class="scroller"><div class="state">Loading relievers…</div></div></div>
+      <div id="content"><div class="scroller"><div class="state">Loading starters…</div></div></div>
     </div>
   </main>
 
@@ -112,12 +112,10 @@
     {k:'w',  l:'W',   low:false},
     {k:'l',  l:'L',   low:true},
     {k:'era', l:'ERA', low:true},
-    {k:'g',  l:'G',   low:false},
-    {k:'sv', l:'SV',  low:false},
-    {k:'hld',l:'HLD', low:false},
-    {k:'bs', l:'BS',  low:true},
+    {k:'gs', l:'GS',  low:false},
     {k:'ip', l:'IP',  low:false},
     {k:'h',  l:'H',   low:true},
+    {k:'r',  l:'R',   low:true},
     {k:'er', l:'ER',  low:true},
     {k:'hr', l:'HR',  low:true},
     {k:'bb', l:'BB',  low:true},
@@ -125,33 +123,33 @@
     {k:'whip',l:'WHIP',low:true},
     {k:'avg',l:'AVG', low:true},
     {k:'k9', l:'K/9', low:false},
+    {k:'bb9',l:'BB/9',low:true},
   ];
   const DEFS={
-    w:'Wins', l:'Losses', era:'Earned run average — earned runs per 9 innings', g:'Games (appearances)',
-    sv:'Saves', hld:'Holds — protected a lead in relief without finishing', bs:'Blown saves',
-    ip:'Innings pitched (in relief)', h:'Hits allowed', er:'Earned runs allowed', hr:'Home runs allowed',
-    bb:'Walks allowed', so:'Strikeouts', whip:'Walks + hits per inning pitched', avg:'Opponent batting average',
-    k9:'Strikeouts per 9 innings'
+    w:'Wins', l:'Losses', era:'Earned run average — earned runs per 9 innings', gs:'Games started',
+    ip:'Innings pitched (as a starter)', h:'Hits allowed', r:'Runs allowed', er:'Earned runs allowed',
+    hr:'Home runs allowed', bb:'Walks allowed', so:'Strikeouts', whip:'Walks + hits per inning pitched',
+    avg:'Opponent batting average', k9:'Strikeouts per 9 innings', bb9:'Walks per 9 innings'
   };
   let ROWS=[], YEAR, sortKey='era', sortDir=1;
   const numv=(t,k)=>parseFloat(t[k])||0;
   const content=()=>document.getElementById('content');
 
   async function fetchYear(y){
-    const r=await fetch(`https://statsapi.mlb.com/api/v1/stats?stats=statSplits&group=pitching&sitCodes=rp&season=${y}&sportIds=1&playerPool=all&limit=2000`);
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/stats?stats=statSplits&group=pitching&sitCodes=sp&season=${y}&sportIds=1&playerPool=all&limit=2000`);
     if(!r.ok)return [];
     const j=await r.json();
     const splits=(j.stats||[]).flatMap(g=>g.splits||[]).filter(sp=>sp.player);
-    return splits.filter(sp=>ipd(sp.stat.inningsPitched)>=10).map(sp=>{const s=sp.stat;return {
+    return splits.filter(sp=>ipd(sp.stat.inningsPitched)>=20).map(sp=>{const s=sp.stat;return {
       id:sp.player.id, name:sp.player.fullName, team:(sp.team&&sp.team.id)||0,
-      w:+s.wins||0, l:+s.losses||0, era:s.era, g:+s.gamesPitched||0, sv:+s.saves||0, hld:+s.holds||0,
-      bs:+s.blownSaves||0, ip:s.inningsPitched, h:+s.hits||0, er:+s.earnedRuns||0, hr:+s.homeRuns||0,
-      bb:+s.baseOnBalls||0, so:+s.strikeOuts||0, whip:s.whip, avg:s.avg, k9:s.strikeoutsPer9Inn
+      w:+s.wins||0, l:+s.losses||0, era:s.era, gs:+s.gamesStarted||0, ip:s.inningsPitched,
+      h:+s.hits||0, r:+s.runs||0, er:+s.earnedRuns||0, hr:+s.homeRuns||0, bb:+s.baseOnBalls||0,
+      so:+s.strikeOuts||0, whip:s.whip, avg:s.avg, k9:s.strikeoutsPer9Inn, bb9:s.walksPer9Inn
     };});
   }
 
   function playerCell(t){
-    return `<a class="pl" href="/player/?id=${t.id}"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></a>`;
+    return `<a class="pl" href="../player/?id=${t.id}"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></a>`;
   }
 
   function render(){
@@ -167,7 +165,7 @@
       ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(t[c.k])}</td>`).join('')}
     </tr>`).join('');
     content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
-    document.getElementById('sub').textContent=`${YEAR} Season · relievers (10+ IP) · sorted by ${col.l}`;
+    document.getElementById('sub').textContent=`${YEAR} Season · starters (20+ IP) · sorted by ${col.l}`;
     content().querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k;
       if(k===sortKey)sortDir*=-1;
@@ -193,10 +191,10 @@
     try{
       const now=new Date().getFullYear();let rows=[];YEAR=now;
       for(const y of [now,now-1,now-2]){rows=await fetchYear(y);if(rows.length){YEAR=y;break;}}
-      if(!rows.length){content().innerHTML='<div class="scroller"><div class="state">No reliever data.</div></div>';return;}
+      if(!rows.length){content().innerHTML='<div class="scroller"><div class="state">No starter data.</div></div>';return;}
       ROWS=rows;render();
     }catch(e){
-      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load relievers.</div></div>';
+      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load starters.</div></div>';
     }
   })();
 </script>

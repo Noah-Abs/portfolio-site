@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Team Defense</title>
+<title>DROPTHIRD — Starting Pitching</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -31,25 +31,25 @@
   .tab:hover .dot{background:#fff}
   .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
   .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
-  .page{max-width:1180px;margin:0 auto;width:100%}
+  .page{max-width:1060px;margin:0 auto;width:100%}
   .page-head{margin-bottom:18px}
   .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
-  table{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:780px}
   thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
-    color:#7e858f;text-align:right;padding:13px 10px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115}
+    color:#7e858f;text-align:right;padding:13px 11px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115}
   thead th.l{text-align:left}
   thead th.sortable{cursor:pointer;user-select:none}
   thead th.sortable:hover{color:#cfd4da}
   thead th.active{color:#fff}
   th .arr{font-size:9px;margin-left:3px}
-  tbody td{padding:11px 10px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#c7ccd3}
+  tbody td{padding:11px 11px;border-bottom:1px solid #16181d;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#c7ccd3}
   tbody td.l{text-align:left}
   tbody td.hl{color:#fff;font-weight:700}
   tbody tr:hover{background:#15171c}
   .rank{color:#565d67;width:30px;text-align:right;font-weight:600}
-  .team{display:flex;align-items:center;gap:11px;min-width:170px}
+  .team{display:flex;align-items:center;gap:11px;min-width:178px}
   .team img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
   .team .nm{font-weight:500;color:#fff}
   .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
@@ -74,21 +74,21 @@
 </head>
 <body>
   <aside class="side">
-    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
     <nav class="nav">
       <div class="nav-label">Teams</div>
-      <a class="tab" href="/clubs/"><span class="dot"></span>Clubs</a>
-      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
-      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
-      <a class="tab active" href="/team-defense/"><span class="dot"></span>Team Defense</a>
-      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
-      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
-      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab active" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
       <div class="nav-label">Players</div>
-      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
-      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
-      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
-      <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
     </nav>
     <div class="side-foot">2026 Season</div>
   </aside>
@@ -96,47 +96,40 @@
   <main class="main">
     <div class="page">
       <div class="page-head">
-        <h1 class="page-t">Team Defense</h1>
+        <h1 class="page-t">Starting Pitching</h1>
         <p class="page-sub" id="sub">Loading…</p>
       </div>
-      <div id="content"><div class="scroller"><div class="state">Loading team defense…</div></div></div>
+      <div id="content"><div class="scroller"><div class="state">Loading starting pitching…</div></div></div>
     </div>
   </main>
 
 <script>
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  // k = field, l = header label, low = lower is better
   const COLS=[
-    {k:'fpct',l:'FLD%', low:false},
-    {k:'e',   l:'E',    low:true},
-    {k:'te',  l:'TE',   low:true},
-    {k:'a',   l:'A',    low:false},
-    {k:'po',  l:'PO',   low:false},
-    {k:'dp',  l:'DP',   low:false},
-    {k:'tp',  l:'TP',   low:false},
-    {k:'tc',  l:'TC',   low:false},
-    {k:'rf',  l:'RF/9', low:false},
-    {k:'pb',  l:'PB',   low:true},
-    {k:'sb',  l:'SB',   low:true},
-    {k:'cs',  l:'CS',   low:false},
-    {k:'csp', l:'CS%',  low:false},
-    {k:'pk',  l:'PK',   low:false},
+    {k:'era', l:'ERA',  low:true},
+    {k:'whip',l:'WHIP', low:true},
+    {k:'r',   l:'R',    low:true},
+    {k:'ip',  l:'IP',   low:false},
+    {k:'so',  l:'SO',   low:false},
+    {k:'k9',  l:'K/9',  low:false},
+    {k:'bb',  l:'BB',   low:true},
+    {k:'hr',  l:'HR',   low:true},
+    {k:'avg', l:'AVG',  low:true},
   ];
-  let TEAMS=[], YEAR, sortKey='fpct', sortDir=-1;   // dir 1 = ascending, -1 = descending
+  let TEAMS=[], YEAR, sortKey='era', sortDir=1;
   const numv=(t,k)=>parseFloat(t[k])||0;
   const content=()=>document.getElementById('content');
 
   async function fetchYear(y){
-    const r=await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?season=${y}&sportIds=1&group=fielding&stats=season`);
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?season=${y}&sportIds=1&group=pitching&stats=statSplits&sitCodes=sp`);
     if(!r.ok)return [];
     const j=await r.json();
-    const splits=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];
+    const splits=(j.stats||[]).flatMap(g=>g.splits||[]);
     return splits.filter(sp=>sp.team).map(sp=>{const s=sp.stat;return {
       id:sp.team.id, name:sp.team.name,
-      fpct:s.fielding, e:+s.errors||0, te:+s.throwingErrors||0, a:+s.assists||0, po:+s.putOuts||0,
-      dp:+s.doublePlays||0, tp:+s.triplePlays||0, tc:+s.chances||0, rf:s.rangeFactorPer9Inn,
-      pb:+s.passedBall||0, sb:+s.stolenBases||0, cs:+s.caughtStealing||0, csp:s.caughtStealingPercentage, pk:+s.pickoffs||0
+      era:s.era, whip:s.whip, r:+s.runs||0, ip:s.inningsPitched, so:+s.strikeOuts||0,
+      k9:s.strikeoutsPer9Inn, bb:+s.baseOnBalls||0, hr:+s.homeRuns||0, avg:s.avg
     };});
   }
 
@@ -146,7 +139,7 @@
 
   function render(){
     const col=COLS.find(c=>c.k===sortKey);
-    const ts=[...TEAMS].sort((a,b)=>(numv(a,sortKey)-numv(b,sortKey))*sortDir||(numv(b,'fpct')-numv(a,'fpct')));
+    const ts=[...TEAMS].sort((a,b)=>(numv(a,sortKey)-numv(b,sortKey))*sortDir||(numv(b,'ip')-numv(a,'ip')));
     const head=`<thead><tr>
       <th class="l rank">#</th><th class="l">Team</th>
       ${COLS.map(c=>`<th class="sortable${c.k===sortKey?' active':''}" data-k="${c.k}">${c.l}${c.k===sortKey?`<span class="arr">${sortDir>0?'▲':'▼'}</span>`:''}</th>`).join('')}
@@ -157,7 +150,7 @@
       ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(t[c.k])}</td>`).join('')}
     </tr>`).join('');
     content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
-    document.getElementById('sub').textContent=`${YEAR} Season · sorted by ${col.l}`;
+    document.getElementById('sub').textContent=`${YEAR} Season · starters · sorted by ${col.l}`;
     content().querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k;
       if(k===sortKey)sortDir*=-1;
@@ -167,11 +160,9 @@
   }
 
   const DEFS={
-    fpct:'Fielding percentage — (putouts + assists) / total chances', e:'Errors', te:'Throwing errors',
-    a:'Assists', po:'Putouts', dp:'Double plays turned', tp:'Triple plays turned',
-    tc:'Total chances (putouts + assists + errors)', rf:'Range factor — (putouts + assists) per 9 innings',
-    pb:'Passed balls (catchers)', sb:'Stolen bases allowed', cs:'Runners caught stealing',
-    csp:'Caught-stealing percentage', pk:'Pickoffs'
+    era:'Earned run average (starters) — earned runs per 9 innings', whip:'Walks + hits allowed per inning pitched',
+    r:'Runs allowed', ip:'Innings pitched', so:'Strikeouts', k9:'Strikeouts per 9 innings',
+    bb:'Walks allowed', hr:'Home runs allowed', avg:'Opponent batting average'
   };
   const GLOSS_EXTRA=[['#','Rank for the current sort'],['Team','Club name & logo']];
   function glossRows(){return GLOSS_EXTRA.concat(COLS.map(c=>[c.l,DEFS[c.k]||'—']));}
@@ -190,10 +181,10 @@
     try{
       const now=new Date().getFullYear();let teams=[];YEAR=now;
       for(const y of [now,now-1,now-2]){teams=await fetchYear(y);if(teams.length){YEAR=y;break;}}
-      if(!teams.length){content().innerHTML='<div class="scroller"><div class="state">No team defense data.</div></div>';return;}
+      if(!teams.length){content().innerHTML='<div class="scroller"><div class="state">No data.</div></div>';return;}
       TEAMS=teams;render();
     }catch(e){
-      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load team defense.</div></div>';
+      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load starting pitching.</div></div>';
     }
   })();
 </script>

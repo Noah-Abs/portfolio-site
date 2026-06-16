@@ -76,28 +76,28 @@
 </head>
 <body>
   <aside class="side">
-    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
     <nav class="nav">
       <div class="nav-label">Teams</div>
-      <a class="tab active" href="/clubs/"><span class="dot"></span>Clubs</a>
-      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
-      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
-      <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
-      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
-      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
-      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab active" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
       <div class="nav-label">Players</div>
-      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
-      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
-      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
-      <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
     </nav>
     <div class="side-foot">2026 Season</div>
   </aside>
 
   <main class="main">
     <div class="page">
-      <a class="back" href="/clubs/">← All clubs</a>
+      <a class="back" href="../clubs/">← All clubs</a>
       <div id="content"><div class="state">Loading team…</div></div>
     </div>
   </main>
@@ -166,7 +166,7 @@
         const g=groups[ty];if(!g||!g.length)return;
         g.sort((a,b)=>(+a.jerseyNumber||999)-(+b.jerseyNumber||999));
         rost+=`<div class="rgrp"><div class="rgrp-h">${label} · ${g.length}</div><div class="rlist">`+
-          g.map(p=>`<a class="rp" href="/player/?id=${(p.person&&p.person.id)||''}"><span class="num">${p.jerseyNumber?'#'+esc(p.jerseyNumber):''}</span><span class="rn">${esc(p.person&&p.person.fullName)}</span><span class="rpos">${esc(p.position&&p.position.abbreviation)}</span></a>`).join('')+
+          g.map(p=>`<a class="rp" href="../player/?id=${(p.person&&p.person.id)||''}"><span class="num">${p.jerseyNumber?'#'+esc(p.jerseyNumber):''}</span><span class="rn">${esc(p.person&&p.person.fullName)}</span><span class="rpos">${esc(p.position&&p.position.abbreviation)}</span></a>`).join('')+
           `</div></div>`;
       });
       rost+=`</div>`;
