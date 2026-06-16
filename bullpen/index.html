@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Team Pitching</title>
+<title>DROPTHIRD — Bullpen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -13,8 +13,6 @@
   html,body{height:100%}
   body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:row-reverse}
-
-  /* ===== persistent side rail (right) ===== */
   .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;background:#0e0f13;
     border-left:1px solid #1b1e24;padding:32px 18px;display:flex;flex-direction:column}
   .brand-link{text-decoration:none;color:inherit;display:block}
@@ -27,21 +25,16 @@
   .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
   .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
   .tab.active .dot{background:#e23b34}
-  .tab.soon{color:#5b626c;cursor:default}
-  .tab.soon:hover{background:transparent;border-color:transparent;color:#5b626c}
   .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
   .tab:hover .dot{background:#fff}
   .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
-
-  /* ===== main / table ===== */
   .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
-  .page{max-width:1060px;margin:0 auto;width:100%}
+  .page{max-width:1100px;margin:0 auto;width:100%}
   .page-head{margin-bottom:18px}
   .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:#7e858f}
-
   .scroller{overflow-x:auto;border:1px solid #1b1e24;border-radius:16px;background:#101115}
-  table{width:100%;border-collapse:collapse;font-size:14px;min-width:780px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:840px}
   thead th{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1px;font-size:11px;
     color:#7e858f;text-align:right;padding:13px 11px;border-bottom:1px solid #23262c;white-space:nowrap;background:#101115}
   thead th.l{text-align:left}
@@ -58,7 +51,6 @@
   .team img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
   .team .nm{font-weight:500;color:#fff}
   .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
-
   @media(max-width:760px){
     body{flex-direction:column}
     .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
@@ -75,9 +67,9 @@
     <nav class="nav">
       <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
       <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
-      <a class="tab active" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
       <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
-      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab active" href="/bullpen/"><span class="dot"></span>Bullpen</a>
     </nav>
     <div class="side-foot">2026 Season</div>
   </aside>
@@ -85,44 +77,44 @@
   <main class="main">
     <div class="page">
       <div class="page-head">
-        <h1 class="page-t">Team Pitching</h1>
+        <h1 class="page-t">Bullpen</h1>
         <p class="page-sub" id="sub">Loading…</p>
       </div>
-      <div id="content"><div class="scroller"><div class="state">Loading team pitching…</div></div></div>
+      <div id="content"><div class="scroller"><div class="state">Loading bullpens…</div></div></div>
     </div>
   </main>
 
 <script>
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  // k = field, l = header label, low = lower is better
   const COLS=[
     {k:'era', l:'ERA',  low:true},
     {k:'whip',l:'WHIP', low:true},
     {k:'r',   l:'R',    low:true},
+    {k:'ip',  l:'IP',   low:false},
     {k:'so',  l:'SO',   low:false},
     {k:'k9',  l:'K/9',  low:false},
     {k:'bb',  l:'BB',   low:true},
     {k:'hr',  l:'HR',   low:true},
     {k:'avg', l:'AVG',  low:true},
     {k:'sv',  l:'SV',   low:false},
-    {k:'sho', l:'SHO',  low:false},
-    {k:'ip',  l:'IP',   low:false},
+    {k:'hld', l:'HLD',  low:false},
+    {k:'bs',  l:'BS',   low:true},
   ];
-  let TEAMS=[], YEAR, sortKey='era', sortDir=1;   // dir 1 = ascending, -1 = descending
+  let TEAMS=[], YEAR, sortKey='era', sortDir=1;
   const numv=(t,k)=>parseFloat(t[k])||0;
   const content=()=>document.getElementById('content');
 
   async function fetchYear(y){
-    const r=await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?season=${y}&sportIds=1&group=pitching&stats=season`);
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/teams/stats?season=${y}&sportIds=1&group=pitching&stats=statSplits&sitCodes=rp`);
     if(!r.ok)return [];
     const j=await r.json();
-    const splits=(j.stats&&j.stats[0]&&j.stats[0].splits)||[];
+    const splits=(j.stats||[]).flatMap(g=>g.splits||[]);
     return splits.filter(sp=>sp.team).map(sp=>{const s=sp.stat;return {
       id:sp.team.id, name:sp.team.name,
-      era:s.era, whip:s.whip, r:+s.runs||0, so:+s.strikeOuts||0, k9:s.strikeoutsPer9Inn,
-      bb:+s.baseOnBalls||0, hr:+s.homeRuns||0, avg:s.avg, sv:+s.saves||0,
-      sho:+s.shutouts||0, ip:s.inningsPitched
+      era:s.era, whip:s.whip, r:+s.runs||0, ip:s.inningsPitched, so:+s.strikeOuts||0,
+      k9:s.strikeoutsPer9Inn, bb:+s.baseOnBalls||0, hr:+s.homeRuns||0, avg:s.avg,
+      sv:+s.saves||0, hld:+s.holds||0, bs:+s.blownSaves||0
     };});
   }
 
@@ -143,7 +135,7 @@
       ${COLS.map(c=>`<td class="${c.k===sortKey?'hl':''}">${esc(t[c.k])}</td>`).join('')}
     </tr>`).join('');
     content().innerHTML=`<div class="scroller"><table>${head}<tbody>${body}</tbody></table></div>`;
-    document.getElementById('sub').textContent=`${YEAR} Season · sorted by ${col.l}`;
+    document.getElementById('sub').textContent=`${YEAR} Season · relievers · sorted by ${col.l}`;
     content().querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k;
       if(k===sortKey)sortDir*=-1;
@@ -156,10 +148,10 @@
     try{
       const now=new Date().getFullYear();let teams=[];YEAR=now;
       for(const y of [now,now-1,now-2]){teams=await fetchYear(y);if(teams.length){YEAR=y;break;}}
-      if(!teams.length){content().innerHTML='<div class="scroller"><div class="state">No team pitching data.</div></div>';return;}
+      if(!teams.length){content().innerHTML='<div class="scroller"><div class="state">No data.</div></div>';return;}
       TEAMS=teams;render();
     }catch(e){
-      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load team pitching.</div></div>';
+      content().innerHTML='<div class="scroller"><div class="state">Couldn’t load bullpens.</div></div>';
     }
   })();
 </script>
