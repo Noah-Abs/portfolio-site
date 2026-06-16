@@ -63,6 +63,15 @@
   .rp .rn{font-weight:500;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rp .rpos{font-size:11px;letter-spacing:1px;color:#7e858f}
   .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
+  .ghint{margin:-4px 0 4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#4a5159}
+  .gloss{position:fixed;z-index:1000;width:340px;max-width:92vw;max-height:74vh;overflow:auto;background:#15161b;
+    border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
+  .gloss-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:14px;color:#fff;padding:8px 15px 9px;border-bottom:1px solid #23262c}
+  .gloss-sub{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#e23b34;padding:12px 15px 5px}
+  .gloss-row{display:flex;gap:12px;padding:6px 15px}
+  .gloss-row+.gloss-row{border-top:1px solid #14161b}
+  .gl-k{flex:0 0 64px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
+  .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
   @media(max-width:820px){.cards{grid-template-columns:1fr}.rlist{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:760px){
     body{flex-direction:column}
@@ -98,6 +107,7 @@
   <main class="main">
     <div class="page">
       <a class="back" href="../clubs/">← All clubs</a>
+      <div class="ghint">↳ right-click anywhere for the stat glossary</div>
       <div id="content"><div class="state">Loading team…</div></div>
     </div>
   </main>
@@ -174,6 +184,28 @@
     document.getElementById('content').innerHTML=head+cards+rost;
     document.title='DROPTHIRD — '+t.name;
   }
+
+  // ---- right-click stat glossary ----
+  const GLOSS=[
+    ['Record',[['W-L','Wins–losses'],['PCT','Winning percentage'],['GB','Games back of the division lead'],
+      ['Streak','Current win (W) or loss (L) streak'],['Run diff','Runs scored minus runs allowed'],['L10','Record over the last 10 games'],
+      ['Rank','Place in the division standings']]],
+    ['Team Batting',[['R','Runs scored'],['HR','Home runs'],['RBI','Runs batted in'],['AVG','Batting average (hits ÷ at-bats)'],
+      ['OBP','On-base percentage'],['SLG','Slugging percentage'],['OPS','On-base plus slugging (OBP + SLG)'],['SB','Stolen bases']]],
+    ['Team Pitching',[['ERA','Earned run average (earned runs per 9 IP)'],['WHIP','Walks + hits per inning pitched'],['SO','Strikeouts'],
+      ['K/9','Strikeouts per 9 innings'],['BB','Walks issued'],['HR','Home runs allowed'],['SV','Saves'],['SHO','Shutouts']]]
+  ];
+  function buildGloss(){return '<div class="gloss-h">Stat Glossary</div>'+GLOSS.map(([title,rows])=>
+    `<div class="gloss-sub">${esc(title)}</div>`+rows.map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('')).join('');}
+  let glossEl=null;
+  function closeGloss(){if(glossEl){glossEl.remove();glossEl=null;}}
+  function openGloss(x,y){closeGloss();glossEl=document.createElement('div');glossEl.className='gloss';glossEl.innerHTML=buildGloss();
+    glossEl.addEventListener('mousedown',ev=>ev.stopPropagation());document.body.appendChild(glossEl);
+    const w=glossEl.offsetWidth,h=glossEl.offsetHeight;glossEl.style.left=Math.max(8,Math.min(x,innerWidth-w-10))+'px';glossEl.style.top=Math.max(8,Math.min(y,innerHeight-h-10))+'px';}
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.main')){e.preventDefault();openGloss(e.clientX,e.clientY);}});
+  document.addEventListener('click',closeGloss);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
+  window.addEventListener('scroll',closeGloss,true);
 
   (async function(){
     try{

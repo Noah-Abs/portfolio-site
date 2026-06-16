@@ -76,6 +76,16 @@
   table.stat tbody tr:hover td{background:#13151a}
   table.stat tbody tr:hover th.splitcol{background:#16181e}
   .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:middle}
+
+  /* right-click stat glossary */
+  .gloss{position:fixed;z-index:1000;width:340px;max-width:92vw;max-height:74vh;overflow:auto;background:#15161b;
+    border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
+  .gloss-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:14px;color:#fff;padding:8px 15px 9px;border-bottom:1px solid #23262c}
+  .gloss-sub{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#e23b34;padding:12px 15px 5px}
+  .gloss-row{display:flex;gap:12px;padding:6px 15px}
+  .gloss-row+.gloss-row{border-top:1px solid #14161b}
+  .gl-k{flex:0 0 72px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
+  .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
   .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
 
   @media(max-width:900px){.hero{grid-template-columns:repeat(3,1fr)}}
@@ -215,6 +225,46 @@
   }
   const last=g=>g?g.splits[g.splits.length-1].stat:null;
 
+  // ---- right-click stat glossary ----
+  const HAS={hit:false,pit:false,fld:false,ars:false};
+  const HIT_DEF={G:'Games played',PA:'Plate appearances',AB:'At-bats',R:'Runs scored',H:'Hits','2B':'Doubles','3B':'Triples',
+    HR:'Home runs',RBI:'Runs batted in',BB:'Walks drawn',IBB:'Intentional walks',SO:'Strikeouts',HBP:'Hit by pitch',
+    SB:'Stolen bases',CS:'Caught stealing',SH:'Sacrifice bunts',SF:'Sacrifice flies',GDP:'Grounded into double play',
+    TB:'Total bases',AVG:'Batting average (hits ÷ at-bats)',OBP:'On-base percentage',SLG:'Slugging pct (total bases ÷ AB)',
+    OPS:'On-base plus slugging (OBP + SLG)',BABIP:'Batting average on balls in play'};
+  const PIT_DEF={W:'Wins',L:'Losses',ERA:'Earned run average (earned runs per 9 IP)',G:'Games pitched',GS:'Games started',
+    CG:'Complete games',SHO:'Shutouts',SV:'Saves',HLD:'Holds',BS:'Blown saves',IP:'Innings pitched',H:'Hits allowed',
+    R:'Runs allowed',ER:'Earned runs',HR:'Home runs allowed',BB:'Walks issued',IBB:'Intentional walks',SO:'Strikeouts',
+    HBP:'Hit batsmen',WP:'Wild pitches',BK:'Balks',WHIP:'Walks + hits per inning pitched',AVG:'Opponent batting average',
+    'K/9':'Strikeouts per 9 innings','BB/9':'Walks per 9 innings','H/9':'Hits per 9 innings','HR/9':'Home runs per 9 innings',
+    'K/BB':'Strikeout-to-walk ratio'};
+  const FLD_DEF={G:'Games at the position',GS:'Games started',INN:'Innings played in the field',PO:'Putouts',A:'Assists',
+    E:'Errors',DP:'Double plays turned','FLD%':'Fielding pct ((PO+A) ÷ (PO+A+E))','RF/9':'Range factor per 9 innings'};
+  const ARS_GLOSS=[['Pitch','Pitch type thrown'],['USE%','Share of total pitches thrown'],['VELO','Average velocity (mph)'],
+    ['WHIFF%','Swing-and-miss rate (whiffs ÷ swings)'],['K%','Strikeout rate when throwing this pitch'],
+    ['PUT-AWAY%','Two-strike strikeout rate'],['BAA','Opponent batting average vs the pitch'],
+    ['xwOBA','Expected wOBA — contact quality allowed'],['HARD%','Hard-hit rate (95+ mph exit velocity)']];
+  function glossGroup(title,rows){return `<div class="gloss-sub">${esc(title)}</div>`+
+    rows.map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
+  function buildGloss(){
+    let out='<div class="gloss-h">Stat Glossary</div>';
+    if(HAS.hit)out+=glossGroup('Hitting',HIT.map(f=>[f[0],HIT_DEF[f[0]]||f[2]]));
+    if(HAS.pit)out+=glossGroup('Pitching',PIT.map(f=>[f[0],PIT_DEF[f[0]]||f[2]]));
+    if(HAS.ars)out+=glossGroup('Pitch Arsenal',ARS_GLOSS);
+    if(HAS.fld)out+=glossGroup('Fielding',FLD.map(f=>[f[0],FLD_DEF[f[0]]||f[2]]));
+    if(!HAS.hit&&!HAS.pit&&!HAS.fld&&!HAS.ars)out+=glossGroup('Hitting',HIT.map(f=>[f[0],HIT_DEF[f[0]]||f[2]]));
+    return out;
+  }
+  let glossEl=null;
+  function closeGloss(){if(glossEl){glossEl.remove();glossEl=null;}}
+  function openGloss(x,y){closeGloss();glossEl=document.createElement('div');glossEl.className='gloss';glossEl.innerHTML=buildGloss();
+    glossEl.addEventListener('mousedown',ev=>ev.stopPropagation());document.body.appendChild(glossEl);
+    const w=glossEl.offsetWidth,h=glossEl.offsetHeight;glossEl.style.left=Math.max(8,Math.min(x,innerWidth-w-10))+'px';glossEl.style.top=Math.max(8,Math.min(y,innerHeight-h-10))+'px';}
+  document.addEventListener('contextmenu',e=>{if(e.target.closest('.main')){e.preventDefault();openGloss(e.clientX,e.clientY);}});
+  document.addEventListener('click',closeGloss);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
+  window.addEventListener('scroll',closeGloss,true);
+
   (async function(){
     if(!ID){document.getElementById('content').innerHTML='<div class="state">No player selected.</div>';return;}
     try{
@@ -239,11 +289,12 @@
 
       let html=`<div class="phead"><img src="${head(ID)}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'">
         <div><h1 class="pname">${esc(bio.fullName)}</h1><div class="pmeta">${chips.join('')}</div></div></div>
-        <div class="hint-line">Hover a column header for its full name · season & career shown side by side</div>`;
+        <div class="hint-line">Right-click anywhere for the stat glossary · hover a column header for its full name</div>`;
 
       const hS=pick(stats,'hitting','season'), hC=pick(stats,'hitting','career');
       const pS=pick(stats,'pitching','season'), pC=pick(stats,'pitching','career');
       const fS=pick(stats,'fielding','season');
+      HAS.hit=!!(hS||hC); HAS.pit=!!(pS||pC); HAS.fld=!!fS;
 
       if(hS||hC){
         const s=last(hS), c=last(hC);
@@ -271,7 +322,7 @@
               const PID=ci('player_id'),PT=ci('pitch_type'),WH=ci('whiff_percent'),K=ci('k_percent'),PAW=ci('put_away'),BA=ci('ba'),XW=ci('est_woba'),HH=ci('hard_hit_percent');
               rows.forEach(r=>{if(+r[PID]===ID)savMap[r[PT]]={whiff:r[WH],k:r[K],putaway:r[PAW],ba:r[BA],xwoba:r[XW],hard:r[HH]};});
             }catch(e){}
-            html+=arsenalSection(aSplits,savMap,YEAR);
+            html+=arsenalSection(aSplits,savMap,YEAR);HAS.ars=true;
           }
         }catch(e){}
       }
