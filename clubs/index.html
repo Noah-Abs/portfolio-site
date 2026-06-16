@@ -92,7 +92,7 @@
 <script>
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const LIVE=new Set([119]);   // teams with a live page (Dodgers for now)
+  const LIVE=null;   // null = all teams live
 
   (async function(){
     try{
@@ -106,7 +106,7 @@
       document.getElementById('grid').className='grid';
       document.getElementById('grid').innerHTML=teams.map(t=>{
         const inner=`<img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span>`;
-        return LIVE.has(t.id)
+        return (!LIVE || LIVE.has(t.id))
           ? `<a class="club" href="/team/?id=${t.id}">${inner}</a>`
           : `<div class="club off">${inner}<span class="soon">soon</span></div>`;
       }).join('');
