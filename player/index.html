@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
+    border-left:1px solid #1b1e24;padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:#aab0b9;
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:#fff}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1080px;margin:0 auto;width:100%}
+  .back{display:inline-block;color:#7e858f;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;cursor:pointer}
+  .back:hover{color:#fff}
+
+  .phead{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .phead img{width:104px;height:104px;border-radius:50%;object-fit:cover;background:#15161b;border:1px solid #262a32;flex:0 0 auto}
+  .pname{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:.96}
+  .pmeta{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:"Oswald",sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;
+    color:#cfd4da;background:#15161b;border:1px solid #262a32;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:7px}
+  .chip img{width:18px;height:18px;object-fit:contain}
+  .chip b{color:#fff}
+
+  .sect{margin-top:32px}
+  .sect h2{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:24px;letter-spacing:1px}
+  .subh{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#7e858f;margin:16px 0 9px}
+  .sgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;background:#1b1e24;border:1px solid #1b1e24;border-radius:12px;overflow:hidden}
+  .stile{background:#0e1015;padding:11px 5px;text-align:center}
+  .stile b{display:block;font-family:"Oswald",sans-serif;font-weight:600;font-size:17px;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+  .stile span{display:block;margin-top:4px;font-size:8.5px;letter-spacing:.5px;color:#7e858f;text-transform:uppercase}
+  .fldrow{display:flex;flex-wrap:wrap;gap:1px;background:#1b1e24;border:1px solid #1b1e24;border-radius:12px;overflow:hidden;margin-bottom:1px}
+  .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
+  @media(max-width:900px){.sgrid{grid-template-columns:repeat(6,1fr)}}
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}.tab{padding:9px 13px}.side-foot{display:none}
+    .main{padding:26px 16px 60px}.sgrid{grid-template-columns:repeat(4,1fr)}
+  }
+</style>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="/homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="/clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="/standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="/team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="/team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="/team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="/starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="/bullpen/"><span class="dot"></span>Bullpen</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="/leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="/leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="/leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="/leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <a class="back" onclick="history.length>1?history.back():location.href='/clubs/'">← Back</a>
+      <div id="content"><div class="state">Loading player…</div></div>
+    </div>
+  </main>
+
+<script>
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ID=(+new URLSearchParams(location.search).get('id'))||0;
+  const head=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${id}/headshot/67/current`;
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+
+  const HIT=[['G','gamesPlayed'],['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['2B','doubles'],['3B','triples'],['HR','homeRuns'],['RBI','rbi'],['BB','baseOnBalls'],['IBB','intentionalWalks'],['SO','strikeOuts'],['HBP','hitByPitch'],['SB','stolenBases'],['CS','caughtStealing'],['SH','sacBunts'],['SF','sacFlies'],['GDP','groundIntoDoublePlay'],['TB','totalBases'],['AVG','avg'],['OBP','obp'],['SLG','slg'],['OPS','ops'],['BABIP','babip']];
+  const PIT=[['W','wins'],['L','losses'],['ERA','era'],['G','gamesPlayed'],['GS','gamesStarted'],['CG','completeGames'],['SHO','shutouts'],['SV','saves'],['HLD','holds'],['BS','blownSaves'],['IP','inningsPitched'],['H','hits'],['R','runs'],['ER','earnedRuns'],['HR','homeRuns'],['BB','baseOnBalls'],['IBB','intentionalWalks'],['SO','strikeOuts'],['HBP','hitBatsmen'],['WP','wildPitches'],['BK','balks'],['WHIP','whip'],['AVG','avg'],['K/9','strikeoutsPer9Inn'],['BB/9','walksPer9Inn'],['H/9','hitsPer9Inn'],['HR/9','homeRunsPer9'],['K/BB','strikeoutWalkRatio']];
+  const FLD=[['G','games'],['GS','gamesStarted'],['INN','innings'],['PO','putOuts'],['A','assists'],['E','errors'],['DP','doublePlays'],['FLD%','fielding'],['RF/9','rangeFactorPer9Inn']];
+
+  function tiles(fields,st){return fields.map(([l,k])=>{let v=st[k];if(v==null||v==='')v='–';return `<div class="stile"><b>${esc(v)}</b><span>${esc(l)}</span></div>`;}).join('');}
+  function grid(fields,st){return `<div class="sgrid">${tiles(fields,st)}</div>`;}
+
+  function pick(stats,group,type){
+    const g=(stats||[]).find(s=>s.group&&s.group.displayName===group&&s.type&&s.type.displayName===type);
+    return g&&g.splits&&g.splits.length?g:null;
+  }
+
+  (async function(){
+    if(!ID){document.getElementById('content').innerHTML='<div class="state">No player selected.</div>';return;}
+    try{
+      const now=new Date().getFullYear();
+      const bio=(await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`).then(r=>r.json())).people[0];
+      let stats=null,YEAR=now;
+      for(const y of [now,now-1,now-2]){
+        const j=await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season,career&group=hitting,pitching,fielding&season=${y}`).then(r=>r.json());
+        const any=(j.stats||[]).some(s=>s.type&&s.type.displayName==='season'&&s.splits&&s.splits.length);
+        if(any){stats=j.stats;YEAR=y;break;}
+        if(!stats)stats=j.stats;
+      }
+      const tm=bio.currentTeam;
+      const chips=[];
+      if(tm)chips.push(`<span class="chip"><img src="${logo(tm.id)}" onerror="this.remove()">${esc(tm.name)}</span>`);
+      if(bio.primaryNumber)chips.push(`<span class="chip">#${esc(bio.primaryNumber)}</span>`);
+      if(bio.primaryPosition)chips.push(`<span class="chip"><b>${esc(bio.primaryPosition.abbreviation)}</b></span>`);
+      const bt=[bio.batSide&&bio.batSide.code,bio.pitchHand&&bio.pitchHand.code].filter(Boolean);
+      if(bt.length)chips.push(`<span class="chip">B/T ${esc(bt.join('/'))}</span>`);
+      if(bio.currentAge)chips.push(`<span class="chip">Age ${esc(bio.currentAge)}</span>`);
+      if(bio.height||bio.weight)chips.push(`<span class="chip">${esc(bio.height||'')}${bio.weight?' · '+bio.weight+' lb':''}</span>`);
+
+      let html=`<div class="phead"><img src="${head(ID)}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'">
+        <div><h1 class="pname">${esc(bio.fullName)}</h1><div class="pmeta">${chips.join('')}</div></div></div>`;
+
+      // hitting
+      const hS=pick(stats,'hitting','season'), hC=pick(stats,'hitting','career');
+      const pS=pick(stats,'pitching','season'), pC=pick(stats,'pitching','career');
+      const fS=pick(stats,'fielding','season');
+      if(hS||hC){
+        html+=`<div class="sect"><h2>Hitting</h2>`;
+        if(hS)html+=`<div class="subh">${YEAR} Season</div>`+grid(HIT,hS.splits[hS.splits.length-1].stat);
+        if(hC)html+=`<div class="subh">Career</div>`+grid(HIT,hC.splits[hC.splits.length-1].stat);
+        html+=`</div>`;
+      }
+      if(pS||pC){
+        html+=`<div class="sect"><h2>Pitching</h2>`;
+        if(pS)html+=`<div class="subh">${YEAR} Season</div>`+grid(PIT,pS.splits[pS.splits.length-1].stat);
+        if(pC)html+=`<div class="subh">Career</div>`+grid(PIT,pC.splits[pC.splits.length-1].stat);
+        html+=`</div>`;
+      }
+      if(fS){
+        html+=`<div class="sect"><h2>Fielding · ${YEAR}</h2>`;
+        fS.splits.forEach(sp=>{const pos=(sp.position&&sp.position.abbreviation)||'';
+          html+=`<div class="subh">${esc(pos)}</div>`+grid(FLD,sp.stat);});
+        html+=`</div>`;
+      }
+      if(!hS&&!hC&&!pS&&!pC&&!fS)html+=`<div class="state">No stats available for this player.</div>`;
+      document.getElementById('content').innerHTML=html;
+      document.title='DROPTHIRD — '+bio.fullName;
+    }catch(e){
+      document.getElementById('content').innerHTML='<div class="state">Couldn’t load this player.</div>';
+    }
+  })();
+</script>
+</body>
+</html>

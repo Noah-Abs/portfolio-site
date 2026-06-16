@@ -49,7 +49,8 @@
   tbody td.hl{color:#fff;font-weight:700}
   tbody tr:hover{background:#15171c}
   .rank{color:#565d67;width:34px;text-align:right;font-weight:600}
-  .pl{display:flex;align-items:center;gap:10px;min-width:200px}
+  .pl{display:flex;align-items:center;gap:10px;min-width:200px;text-decoration:none;color:inherit}
+  .pl:hover .nm{color:#cfe0ff;text-decoration:underline}
   .pl img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
   .pl .nm{font-weight:500;color:#fff}
   .state{text-align:center;color:#7e858f;padding:50px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
@@ -148,7 +149,7 @@
   }
 
   function playerCell(t){
-    return `<span class="pl"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;
+    return `<a class="pl" href="/player/?id=${t.id}"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></a>`;
   }
 
   function render(){

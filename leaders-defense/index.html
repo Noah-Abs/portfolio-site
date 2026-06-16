@@ -49,7 +49,8 @@
   tbody td.hl{color:#fff;font-weight:700}
   tbody tr.p:hover{background:#15171c}
   .rank{color:#565d67;width:34px;text-align:right;font-weight:600}
-  .pl{display:flex;align-items:center;gap:10px;min-width:190px}
+  .pl{display:flex;align-items:center;gap:10px;min-width:190px;text-decoration:none;color:inherit}
+  .pl:hover .nm{color:#cfe0ff;text-decoration:underline}
   .pl img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
   .pl .nm{font-weight:500;color:#fff}
   tr.grp td{background:#0d0f13;color:#fff;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;
@@ -183,7 +184,7 @@
     return rows.filter(r=>ipd(r.inn)>=Math.max(20,0.15*(maxByPos[r.pos]||0)));
   }
   const cell=v=>v==null||v===''?'—':v;
-  function playerCell(t){return `<span class="pl"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></span>`;}
+  function playerCell(t){return `<a class="pl" href="/player/?id=${t.id}"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span></a>`;}
 
   function render(){
     const col=COLS.find(c=>c.k===sortKey);
