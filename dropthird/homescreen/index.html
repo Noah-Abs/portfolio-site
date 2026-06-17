@@ -11,29 +11,29 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:row-reverse}
 
   /* ===== persistent side rail (right) ===== */
-  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
-    border-left:1px solid #1b1e24;padding:32px 18px;display:flex;flex-direction:column}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);
+    border-left:1px solid var(--border,#1b1e24);padding:32px 18px;display:flex;flex-direction:column}
   .brand-link{text-decoration:none;color:inherit;display:block}
-  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
-  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
   .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
-  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
   .nav-label:first-child{padding-top:0}
-  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:#aab0b9;
+  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:var(--text3,#aab0b9);
     text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
     border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
-  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
-  .tab.active{background:#15161b;color:#fff;border-color:#2f3540}
-  .tab.active .dot{background:#e23b34}
-  .tab.soon{color:#5b626c;cursor:default}
-  .tab.soon:hover{background:transparent;border-color:transparent;color:#5b626c}
-  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
-  .tab:hover .dot{background:#fff}
-  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#e23b34)}
+  .tab.soon{color:var(--muted,#5b626c);cursor:default}
+  .tab.soon:hover{background:transparent;border-color:transparent;color:var(--muted,#5b626c)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
 
   /* ===== home hero ===== */
   .main{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;overflow:hidden}
@@ -41,15 +41,15 @@
   .ghost span{font-family:"Anton",sans-serif;font-size:38vh;letter-spacing:6px;color:#0e1014;text-transform:uppercase;white-space:nowrap}
   .hero{position:relative;z-index:1;text-align:center}
   .badge{display:inline-flex;align-items:center;gap:8px;font-weight:600;text-transform:uppercase;letter-spacing:3px;
-    font-size:11px;color:#cfd4da;border:1px solid #2a2f37;border-radius:999px;padding:7px 15px;margin-bottom:26px}
+    font-size:11px;color:var(--text2,#cfd4da);border:1px solid var(--border2,#2a2f37);border-radius:999px;padding:7px 15px;margin-bottom:26px}
   .badge i{width:7px;height:7px;border-radius:50%;background:#46c77e}
-  .hero-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(56px,9.5vw,128px);line-height:.88;letter-spacing:3px;color:#fff}
-  .rule{width:70px;height:4px;background:#e23b34;border-radius:2px;margin:24px auto 22px}
-  .hero-s{font-weight:300;letter-spacing:5px;text-transform:uppercase;font-size:clamp(12px,2vw,16px);color:#7e858f}
+  .hero-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(56px,9.5vw,128px);line-height:.88;letter-spacing:3px;color:var(--text,#fff)}
+  .rule{width:70px;height:4px;background:var(--accent,#e23b34);border-radius:2px;margin:24px auto 22px}
+  .hero-s{font-weight:300;letter-spacing:5px;text-transform:uppercase;font-size:clamp(12px,2vw,16px);color:var(--muted,#7e858f)}
 
   @media(max-width:760px){
     body{flex-direction:column}
-    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
     .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
     .tab{padding:10px 14px}
     .side-foot{display:none}
@@ -57,6 +57,7 @@
     .ghost span{font-size:24vh}
   }
 </style>
+<script src="/settings.js"></script>
 </head>
 <body>
   <aside class="side">
