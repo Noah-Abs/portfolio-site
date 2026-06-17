@@ -36,7 +36,6 @@
   .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
 
-  /* team header */
   .team-head{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-bottom:30px;
     background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:16px;padding:22px 24px}
   .team-logo{width:80px;height:80px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))}
@@ -46,11 +45,40 @@
     color:var(--text2,#cfd4da);background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);border-radius:8px;padding:6px 11px}
   .chip b{color:var(--text,#fff)}.chip .pos{color:#46c77e}.chip .neg{color:#e0556a}
 
-  /* trends area (to be populated) */
-  .trends{display:flex;flex-direction:column;gap:18px}
-  .panel{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:16px;padding:20px 22px}
-  .panel-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:13px;color:var(--text,#fff);margin-bottom:8px}
-  .panel-note{color:var(--muted,#7e858f);font-size:13px;letter-spacing:.5px;line-height:1.5}
+  .section{margin-top:34px}
+  .section-h{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:22px;letter-spacing:1px;line-height:1}
+  .section-sub{margin-top:5px;margin-bottom:16px;font-weight:500;text-transform:uppercase;letter-spacing:3px;font-size:11px;color:var(--muted,#7e858f)}
+
+  /* record split cards */
+  .splitgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+  .scard{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:14px 15px}
+  .scard .lbl{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f)}
+  .scard .wl{font-family:"Oswald",sans-serif;font-weight:600;font-size:26px;line-height:1;margin-top:7px;font-variant-numeric:tabular-nums}
+  .scard .pct{font-size:12px;color:var(--text2,#aeb4bd);margin-top:3px;font-variant-numeric:tabular-nums}
+  .scard .meter{height:5px;border-radius:3px;background:#1b1e24;margin-top:11px;overflow:hidden}
+  .scard .meter i{display:block;height:100%;border-radius:3px}
+
+  /* stat tiles */
+  .tilegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+  .tile{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:14px 14px 13px;text-align:center}
+  .tile .tv{font-family:"Oswald",sans-serif;font-weight:600;font-size:25px;line-height:1;font-variant-numeric:tabular-nums}
+  .tile .tl{margin-top:7px;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);line-height:1.3}
+  .tile .tm{margin-top:3px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#4a5159)}
+
+  /* inning bar chart */
+  .chartwrap{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:18px 18px 16px;margin-top:12px}
+  .chart-h{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);margin-bottom:16px}
+  .chart{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;align-items:end;height:150px;padding-bottom:22px}
+  .bar{position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+  .bar .bv{text-align:center;font-size:10.5px;margin-bottom:5px;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums}
+  .bar .fill{width:100%;border-radius:5px 5px 0 0;min-height:4px;transition:height .35s}
+  .bar .bl{position:absolute;bottom:-20px;width:100%;text-align:center;font-size:10px;letter-spacing:.5px;color:var(--muted2,#4a5159)}
+
+  .legend{margin-top:30px;background:var(--panel2,#13151a);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:15px 18px}
+  .legend h4{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);margin-bottom:9px}
+  .legend p{font-size:12px;line-height:1.55;color:var(--text2,#aeb4bd);letter-spacing:.3px}
+  .legend p+p{margin-top:5px}.legend b{color:var(--text,#fff);font-weight:600}
+
   .state{color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
   @media(max-width:760px){
     body{flex-direction:column}
@@ -58,6 +86,7 @@
     .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}
     .tab{padding:9px 13px}.side-foot{display:none}
     .main{padding:26px 16px 60px}
+    .chart{gap:5px}
   }
 </style>
 <script src="/settings.js"></script>
@@ -88,63 +117,166 @@
     <div class="page">
       <div class="page-head">
         <h1 class="page-t">Team Trends</h1>
-        <p class="page-sub">2026 Season</p>
+        <p class="page-sub">Splits &amp; situational performance</p>
       </div>
-      <div id="team"><div class="state">Loading team…</div></div>
-      <div class="trends">
-        <div class="panel">
-          <div class="panel-h">Trends</div>
-          <div class="panel-note">Trend modules will appear here.</div>
-        </div>
-      </div>
+      <div id="content"><div class="state">Loading trends…</div></div>
     </div>
   </main>
 
 <script>
+  const TEAM_ID=119;          // Los Angeles Dodgers
+  const CLOSE_MAX=2, BLOW_MIN=5;
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const showp=p=>String(p==null?'':p).replace(/^0/,'');
+  const showp=p=>(p==null||p==='')?'–':String(p).replace(/^0(?=\.)/,'');
   const ord=n=>n+(['th','st','nd','rd'][(n%100>>3^1&&n%10)||0]||'th');
-  const TEAM_ID=119; // Los Angeles Dodgers
+  async function getJSON(u){try{const r=await fetch(u);return r.ok?r.json():null;}catch(e){return null;}}
 
-  async function getJSON(u){const r=await fetch(u);return r.ok?r.json():null;}
+  // colour ramp: positive delta = good. goodHigh=true → higher is better.
+  function ramp(v,base,goodHigh,thr){
+    if(v==null||isNaN(v))return '#33373f';
+    const d=goodHigh?(v-base):(base-v);
+    if(d>=thr)return '#46c77e';
+    if(d<=-thr)return '#e0556a';
+    return '#6f7884';
+  }
+  const pctStr=(w,l)=>{const g=w+l;return g?showp((w/g).toFixed(3)):'–';};
 
-  async function loadTeam(y){
-    const team=await getJSON(`https://statsapi.mlb.com/api/v1/teams/${TEAM_ID}?season=${y}`).catch(()=>null);
-    const t=team&&team.teams&&team.teams[0];
-    if(!t)return null;
-    const st=await getJSON(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`);
-    let rec=null;((st&&st.records)||[]).forEach(g=>(g.teamRecords||[]).forEach(r=>{if(r.team&&r.team.id===TEAM_ID)rec=r;}));
-    return {t,rec};
+  function smap(j){const m={};(j&&j.stats&&j.stats[0]&&j.stats[0].splits||[]).forEach(s=>{if(s.split&&s.split.code)m[s.split.code]=s.stat||{};});return m;}
+  const ipOuts=ip=>{const a=String(ip==null?'':ip).split('.');return (+a[0]||0)*3+(+(a[1]||0));};
+
+  async function resolveSeason(){
+    const now=new Date().getFullYear();
+    for(const y of [now,now-1,now-2]){
+      const st=await getJSON(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`);
+      let rec=null;((st&&st.records)||[]).forEach(g=>(g.teamRecords||[]).forEach(r=>{if(r.team&&r.team.id===TEAM_ID)rec=r;}));
+      if(rec)return {y,rec};
+    }
+    return null;
   }
 
-  function renderTeam(d){
-    const {t,rec}=d;
-    const div=(t.division&&t.division.name)||'';
-    let meta='';
+  // ---------- renderers ----------
+  function renderHeader(t,rec){
+    const div=(t.division&&t.division.name)||'';let meta='';
     if(rec){
       const rd=rec.runDifferential;
-      meta+=`<span class="chip"><b>${rec.wins}-${rec.losses}</b> · ${esc(showp(rec.winningPercentage))}</span>`;
+      meta+=`<span class="chip"><b>${rec.wins}-${rec.losses}</b> · ${showp(rec.winningPercentage)}</span>`;
       meta+=`<span class="chip">${esc(div)} · <b>${ord(+rec.divisionRank||0)}</b></span>`;
       if(rec.gamesBack&&rec.gamesBack!=='-')meta+=`<span class="chip">${esc(rec.gamesBack)} GB</span>`;
       if(rec.streak&&rec.streak.streakCode)meta+=`<span class="chip">Streak <b>${esc(rec.streak.streakCode)}</b></span>`;
       if(rd!=null)meta+=`<span class="chip">Run diff <b class="${rd>0?'pos':rd<0?'neg':''}">${rd>0?'+':''}${rd}</b></span>`;
-    } else if(div){ meta+=`<span class="chip">${esc(div)}</span>`; }
-    document.getElementById('team').innerHTML=`<div class="team-head">
+    }
+    return `<div class="team-head">
       <img class="team-logo" src="${logo(t.id)}" onerror="this.style.visibility='hidden'">
       <div><h2 class="team-name">${esc(t.name)}</h2><div class="team-meta">${meta}</div></div>
     </div>`;
-    document.title='DROPTHIRD — '+t.name+' Trends';
+  }
+
+  function recordCard(label,w,l,note){
+    if(w==null){return `<div class="scard"><div class="lbl">${esc(label)}</div><div class="wl">–</div><div class="pct">no data</div></div>`;}
+    const g=w+l, pc=g?w/g:0, col=pc>=.5?'#46c77e':'#e0556a';
+    return `<div class="scard"><div class="lbl">${esc(label)}${note?` · <span style="color:#4a5159">${esc(note)}</span>`:''}</div>
+      <div class="wl">${w}<span style="color:#4a5159">–</span>${l}</div>
+      <div class="pct">${pctStr(w,l)}${g?'':' '}</div>
+      <div class="meter"><i style="width:${Math.round(pc*100)}%;background:${col}"></i></div></div>`;
+  }
+  function tile(value,label,metric,col){
+    return `<div class="tile"><div class="tv" style="color:${col||'#fff'}">${value}</div><div class="tl">${esc(label)}</div>${metric?`<div class="tm">${esc(metric)}</div>`:''}</div>`;
+  }
+  function chart(title,items,fmt,colFn){
+    const vals=items.map(i=>i.v).filter(v=>v!=null&&!isNaN(v));
+    const max=vals.length?Math.max.apply(null,vals):1, min=vals.length?Math.min.apply(null,vals):0;
+    const lo=Math.max(0,min-(max-min)*0.35||0);   // baseline a bit below min so differences read
+    const span=(max-lo)||1;
+    const bars=items.map(i=>{
+      const v=i.v, h=(v==null||isNaN(v))?0:Math.max(5,Math.round((v-lo)/span*100));
+      return `<div class="bar"><span class="bv">${(v==null||isNaN(v))?'–':fmt(v)}</span><span class="fill" style="height:${h}%;background:${colFn(v)}"></span><span class="bl">${esc(i.label)}</span></div>`;
+    }).join('');
+    return `<div class="chartwrap"><div class="chart-h">${esc(title)}</div><div class="chart">${bars}</div></div>`;
   }
 
   (async function(){
+    const box=document.getElementById('content');
     try{
-      const now=new Date().getFullYear();let d=null;
-      for(const y of [now,now-1,now-2]){d=await loadTeam(y);if(d){break;}}
-      if(!d){document.getElementById('team').innerHTML='<div class="state">Team not found.</div>';return;}
-      renderTeam(d);
+      const seas=await resolveSeason();
+      if(!seas){box.innerHTML='<div class="state">Season data unavailable.</div>';return;}
+      const Y=seas.y, rec=seas.rec, t=rec.team||{id:TEAM_ID,name:'Team'};
+      const base=`https://statsapi.mlb.com/api/v1/teams/${TEAM_ID}`;
+      const inn=['i01','i02','i03','i04','i05','i06','i07','i08','i09'];
+      const [hitJ,pitJ,pLog,hLog,shJ,spJ,teamJ]=await Promise.all([
+        getJSON(`${base}/stats?stats=statSplits&group=hitting&season=${Y}&sitCodes=h,a,vl,vr,risp,lc,sah,sbh,${inn.join(',')}`),
+        getJSON(`${base}/stats?stats=statSplits&group=pitching&season=${Y}&sitCodes=h,a,vl,vr,${inn.join(',')}`),
+        getJSON(`${base}/stats?stats=gameLog&group=pitching&season=${Y}`),
+        getJSON(`${base}/stats?stats=gameLog&group=hitting&season=${Y}`),
+        getJSON(`${base}/stats?stats=season&group=hitting&season=${Y}`),
+        getJSON(`${base}/stats?stats=season&group=pitching&season=${Y}`),
+        getJSON(`${base}?season=${Y}`)
+      ]);
+      const team=(teamJ&&teamJ.teams&&teamJ.teams[0])||t;
+      const H=smap(hitJ), P=smap(pitJ);
+      const seasonOPS=parseFloat((shJ&&shJ.stats&&shJ.stats[0]&&shJ.stats[0].splits&&shJ.stats[0].splits[0]&&shJ.stats[0].splits[0].stat.ops))||0.730;
+      const seasonERA=parseFloat((spJ&&spJ.stats&&spJ.stats[0]&&spJ.stats[0].splits&&spJ.stats[0].splits[0]&&spJ.stats[0].splits[0].stat.era))||4.00;
+      const seasonOPSA=parseFloat((spJ&&spJ.stats&&spJ.stats[0]&&spJ.stats[0].splits&&spJ.stats[0].splits[0]&&spJ.stats[0].splits[0].stat.ops))||0.710;
+
+      // ---- record splits ----
+      const sr={};((rec.records&&rec.records.splitRecords)||[]).forEach(x=>sr[x.type]=x);
+      const ov={w:rec.wins,l:rec.losses};
+      const win=sr.winners||{wins:null,losses:null};
+      const losing=(win.wins!=null)?{w:ov.w-win.wins,l:ov.l-win.losses}:{w:null,l:null};
+      const rc=(label,r,note)=>recordCard(label, r&&r.wins!=null?r.wins:null, r&&r.losses!=null?r.losses:null, note);
+      const recHTML=
+        rc('Home',sr.home)+rc('Away',sr.away)+
+        rc('Day',sr.day)+rc('Night',sr.night)+
+        rc('vs Winning Teams',sr.winners)+
+        recordCard('vs Losing Teams',losing.w,losing.l)+
+        rc('vs Lefties',sr.left,'LH starter')+rc('vs Righties',sr.right,'RH starter')+
+        rc('Extra Innings',sr.extraInning)+rc('One-Run Games',sr.oneRun);
+
+      // ---- offense (OPS) ----
+      const opsV=c=>parseFloat(H[c]&&H[c].ops);
+      const opsCol=c=>ramp(opsV(c),seasonOPS,true,0.025);
+      const offTiles=[
+        ['h','Home'],['a','Away'],['vl','vs LHP'],['vr','vs RHP'],
+        ['risp','RISP'],['lc','High Leverage'],['sah','Leading'],['sbh','Trailing']
+      ].map(([c,l])=>tile(showp(H[c]&&H[c].ops), l, c==='lc'?'late & close':(c==='risp'?'scoring pos.':''), opsCol(c))).join('');
+      const offInn=chart('OPS by inning', inn.map((c,i)=>({label:i+1, v:opsV(c)})), v=>showp(v.toFixed(3)), v=>ramp(v,seasonOPS,true,0.025));
+
+      // ---- pitching (ERA) ----
+      // close / blowout ERA from game log (by final margin)
+      const scored={};((hLog&&hLog.stats&&hLog.stats[0]&&hLog.stats[0].splits)||[]).forEach(s=>{if(s.game)scored[s.game.gamePk]=+s.stat.runs;});
+      let close={er:0,outs:0}, blow={er:0,outs:0};
+      ((pLog&&pLog.stats&&pLog.stats[0]&&pLog.stats[0].splits)||[]).forEach(s=>{
+        if(!s.game)return;const rs=scored[s.game.gamePk];if(rs==null)return;
+        const m=Math.abs(rs-(+s.stat.runs)), er=+s.stat.earnedRuns, o=ipOuts(s.stat.inningsPitched);
+        if(m<=CLOSE_MAX){close.er+=er;close.outs+=o;} if(m>=BLOW_MIN){blow.er+=er;blow.outs+=o;}
+      });
+      const eraOf=b=>b.outs?(b.er*9/(b.outs/3)):null;
+      const fmtERA=v=>(v==null||isNaN(v))?'–':v.toFixed(2);
+      const eraCol=v=>ramp(v,seasonERA,false,0.35);
+      const opsaCol=v=>ramp(v,seasonOPSA,false,0.025);
+      const closeERA=eraOf(close), blowERA=eraOf(blow);
+      const pitTiles=
+        tile(fmtERA(parseFloat(P.h&&P.h.era)),'Home','ERA',eraCol(parseFloat(P.h&&P.h.era)))+
+        tile(fmtERA(parseFloat(P.a&&P.a.era)),'Away','ERA',eraCol(parseFloat(P.a&&P.a.era)))+
+        tile(fmtERA(closeERA),`Close · ≤${CLOSE_MAX}R`,'ERA',eraCol(closeERA))+
+        tile(fmtERA(blowERA),`Blowout · ≥${BLOW_MIN}R`,'ERA',eraCol(blowERA))+
+        tile(showp(P.vl&&P.vl.ops),'vs LHH','OPS allowed',opsaCol(parseFloat(P.vl&&P.vl.ops)))+
+        tile(showp(P.vr&&P.vr.ops),'vs RHH','OPS allowed',opsaCol(parseFloat(P.vr&&P.vr.ops)));
+      const pitInn=chart('ERA by inning', inn.map((c,i)=>({label:i+1, v:parseFloat(P[c]&&P[c].era)})), fmtERA, eraCol);
+
+      box.innerHTML=
+        renderHeader(team,rec)+
+        `<div class="section"><h3 class="section-h">Record Splits</h3><div class="section-sub">Win–loss by situation · ${Y}</div><div class="splitgrid">${recHTML}</div></div>`+
+        `<div class="section"><h3 class="section-h">Offense Splits</h3><div class="section-sub">OPS · higher is better</div><div class="tilegrid">${offTiles}</div>${offInn}</div>`+
+        `<div class="section"><h3 class="section-h">Pitching Splits</h3><div class="section-sub">ERA · lower is better</div><div class="tilegrid">${pitTiles}</div>${pitInn}</div>`+
+        `<div class="legend"><h4>How to read this</h4>
+          <p><b>vs Lefties / Righties</b> (record) splits by the opposing <b>starter's</b> hand. <b>High Leverage</b> = late &amp; close situations.</p>
+          <p><b>Close</b> = games decided by ≤${CLOSE_MAX} runs · <b>Blowout</b> = decided by ≥${BLOW_MIN} runs (final margin).</p>
+          <p>ERA isn't tracked by batter handedness, so <b>vs LHH / vs RHH</b> show opponent <b>OPS allowed</b> instead. Green beats the team's season rate, red trails it.</p>
+        </div>`;
+      document.title='DROPTHIRD — '+(team.name||'Team')+' Trends';
     }catch(e){
-      document.getElementById('team').innerHTML='<div class="state">Couldn’t load this team.</div>';
+      box.innerHTML='<div class="state">Couldn’t load trends.</div>';
     }
   })();
 </script>
