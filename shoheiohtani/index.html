@@ -127,17 +127,52 @@
         ['Baserunning',sgn1(bsr.runner_runs)],['Sprint Speed',d1(spd.sprint_speed)]]),
     ];
   }
-  function arsenalInner(splits,savRows){
+  function arsenalInner(splits,savRows,amap){
+    amap=amap||{};
     const savMap={};(savRows||[]).forEach(r=>{if(+r.player_id===ID)savMap[r.pitch_type]=r;});
     const ps=splits.map(s=>s.stat).filter(p=>p&&p.type).sort((a,b)=>(b.percentage||0)-(a.percentage||0));
-    const head='<tr><th>Pitch Type</th><th>Usage</th><th>Velo</th><th>Whiff%</th><th>K%</th><th>Put-Away%</th><th>BA</th><th>xwOBA</th><th>Hard-Hit%</th></tr>';
-    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},col=PCOL[code]||'#6b727c';
+    const head='<tr><th>Pitch Type</th><th>Usage</th><th>Velo</th><th>Spin</th><th>V-Break</th><th>H-Break</th><th>Whiff%</th><th>Put-Away%</th><th>BA</th><th>xwOBA</th><th>Hard-Hit%</th></tr>';
+    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},ex=amap[code]||{},col=PCOL[code]||'#6b727c';
       return `<tr><td><span class="pdot" style="background:${col}"></span>${esc(p.type.description||code)}</td>
         <td>${d1((p.percentage||0)*100)}%</td><td>${p.averageSpeed!=null?(+p.averageSpeed).toFixed(1):'–'}</td>
-        <td>${d1(sv.whiff_percent)}</td><td>${d1(sv.k_percent)}</td><td>${d1(sv.put_away)}</td>
+        <td>${ex.spin?Math.round(+ex.spin):'–'}</td><td>${d1(ex.vbreak)}</td><td>${d1(ex.hbreak)}</td>
+        <td>${d1(sv.whiff_percent)}</td><td>${d1(sv.put_away)}</td>
         <td>${d3(sv.ba)}</td><td>${d3(sv.est_woba)}</td><td>${d1(sv.hard_hit_percent)}</td></tr>`;}).join('');
     return `<div class="box-h"><span class="yr">${YEAR}</span> Pitch Arsenal</div>
       <div class="ascroll"><table class="atbl"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  }
+  function arsenalsMap(paSpin,paBz,paBx){
+    const m={};
+    const add=(rows,key)=>{const row=(rows||[]).find(o=>+o.pitcher===ID);if(!row)return;
+      for(const col in row){const mt=col.match(/^([a-z]{2})_avg_(?:spin|break_z|break_x)$/);
+        if(mt&&row[col]!==''&&row[col]!=null){const c=mt[1].toUpperCase();(m[c]=m[c]||{})[key]=row[col];}}};
+    add(paSpin,'spin');add(paBz,'vbreak');add(paBx,'hbreak');return m;
+  }
+  function pitcherStatcast(rows){
+    const FB={FF:1,SI:1,FC:1};let n=0,ext=0,en=0,rz=0,zn=0,rx=0,xn=0,csw=0,fbMax=null;
+    (rows||[]).forEach(r=>{n++;
+      const e=parseFloat(r.release_extension);if(!isNaN(e)){ext+=e;en++;}
+      const z=parseFloat(r.release_pos_z);if(!isNaN(z)){rz+=z;zn++;}
+      const x=parseFloat(r.release_pos_x);if(!isNaN(x)){rx+=x;xn++;}
+      const d=r.description;if(d==='called_strike'||d==='swinging_strike'||d==='swinging_strike_blocked')csw++;
+      if(FB[r.pitch_type]){const v=parseFloat(r.release_speed);if(!isNaN(v)&&(fbMax==null||v>fbMax))fbMax=v;}});
+    if(!n)return {};
+    return {extension:en?ext/en:null,relZ:zn?rz/zn:null,relX:xn?rx/xn:null,csw:100*csw/n,fbMax};
+  }
+  function weightedPutaway(savRows){let num=0,den=0;
+    (savRows||[]).forEach(r=>{if(+r.player_id===ID){const w=parseFloat(r.pitches)||0,pa=parseFloat(r.put_away);if(!isNaN(pa)){num+=pa*w;den+=w;}}});
+    return den?num/den:null;}
+  function pitcherBoxes(cu,xs,sc,wpa){
+    cu=cu||{};xs=xs||{};sc=sc||{};const ft=v=>v!=null?d1(v)+"'":'–';
+    return [
+      renderBox('Velocity & Release',[['Avg FB Velo',d1(cu.fastball_avg_speed)],['Max FB Velo',sc.fbMax!=null?d1(sc.fbMax):'–'],
+        ['Extension',ft(sc.extension)],['Release Ht',ft(sc.relZ)],['Release Side',ft(sc.relX)]]),
+      renderBox('Plate Discipline',[['Chase%',d1(cu.oz_swing_percent)],['Whiff%',d1(cu.whiff_percent)],
+        ['CSW%',sc.csw!=null?d1(sc.csw):'–'],['Put-Away%',wpa!=null?d1(wpa):'–']]),
+      renderBox('Batted Ball',[['GB%',d1(cu.groundballs_percent)],['FB%',d1(cu.flyballs_percent)],
+        ['Hard-Hit%',d1(cu.hard_hit_percent)],['Barrel%',d1(cu.barrel_batted_rate)]]),
+      renderBox('Expected (Allowed)',[['xERA',d1(cu.xera)],['xBA',d3(xs.est_ba)],['xSLG',d3(xs.est_slg)],['xwOBA',d3(xs.est_woba)]]),
+    ];
   }
 
   (async function(){
@@ -177,10 +212,18 @@
     const pStat=seasonStat(pij), hStat=seasonStat(hj);
     const arsSplits=((arsJ&&arsJ.stats||[]).find(s=>s.type&&s.type.displayName==='pitchArsenal')||{}).splits||[];
 
-    // stage 2: leaderboard data this page needs (arsenal for pitchers, advanced stats for hitters)
-    let savRows=[],cuR=[],xsR=[],spdR=[],bsrR=[],oaaR=[];
+    // stage 2: leaderboard data this page needs (arsenal/advanced for pitchers, advanced stats for hitters)
+    let savRows=[],cuR=[],xsR=[],spdR=[],bsrR=[],oaaR=[],pcuR=[],pxsR=[],paSp=[],paBz=[],paBx=[],scR=[];
     const fx=[];
     if(arsSplits.length)fx.push(csv(`${SAV}/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>savRows=r));
+    if(pStat){
+      fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=pitcher&filter=&min=1&selections=xera,whiff_percent,k_percent,oz_swing_percent,barrel_batted_rate,hard_hit_percent,groundballs_percent,flyballs_percent,fastball_avg_speed&chart=false&x=xera&csv=true`).then(r=>pcuR=r));
+      fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>pxsR=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_spin&csv=true`).then(r=>paSp=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_break_z&csv=true`).then(r=>paBz=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_break_x&csv=true`).then(r=>paBx=r));
+      fx.push(csv(`${SAV}/statcast_search/csv?all=true&type=details&player_type=pitcher&pitchers_lookup%5B%5D=${ID}&hfSea=${YEAR}%7C`).then(r=>scR=r));
+    }
     if(hStat){
       fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=batter&filter=&min=1&selections=exit_velocity_avg,exit_velocity_max,barrel_batted_rate,hard_hit_percent,sweet_spot_percent,oz_swing_percent,whiff_percent,bb_percent&chart=false&x=exit_velocity_avg&csv=true`).then(r=>cuR=r));
       fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=batter&year=${YEAR}&min=1&csv=true`).then(r=>xsR=r));
@@ -190,30 +233,33 @@
     }
     await Promise.all(fx);
 
-    const pitcherOnly=!!pStat&&!hStat, hitterOnly=!!hStat&&!pStat, isFill=pitcherOnly&&arsSplits.length;
-    const items=[card];
-    let pageMaxW, rowClass, foot='';
+    const pitcherOnly=!!pStat&&!hStat, hitterOnly=!!hStat&&!pStat;
+    let foot='';
+    const amap=pStat?arsenalsMap(paSp,paBz,paBx):{};
+    const arsHTML=arsSplits.length?arsenalInner(arsSplits,savRows,amap):'';
+    const pBoxes=pStat?pitcherBoxes(find(pcuR,ID),find(pxsR,ID),pitcherStatcast(scR),weightedPutaway(savRows)):[];
     const advBoxes=()=>{const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
       foot=`<div class="footnote">OPS+, wRC+, WAR, DRS and Max EV aren’t available from the free MLB/Statcast feeds, so they show “—”.</div>`;
       return advancedBoxes(hStat,cu,xs,spd,bsr,oaa);};
-    if(isFill){
-      if(pStat)items.push(statBox('Pitching',PIT,pStat));
-      items.push(`<div class="box arsbox">${arsenalInner(arsSplits,savRows)}</div>`);
-      pageMaxW=1400; rowClass='row fill';
+    let html;
+    if(pitcherOnly){
+      // card | Pitching | arsenal (in line); advanced pitching boxes below
+      const fill=`<div class="row fill">${card}${statBox('Pitching',PIT,pStat)}${arsHTML?`<div class="box arsbox">${arsHTML}</div>`:''}</div>`;
+      const adv=pBoxes.length?`<div class="row" style="margin-top:16px">${pBoxes.join('')}</div>`:'';
+      html=`<div class="page" style="max-width:1400px">${fill}${adv}</div>`;
     }else if(hitterOnly){
-      // hitter: card | 2026 Hitting | advanced boxes stacked on the right
-      items.push(statBox('Hitting',HIT,hStat));
-      items.push(`<div class="stack">${advBoxes().join('')}</div>`);
-      pageMaxW=3*330+2*16; rowClass='row top';
+      const stack=`<div class="stack">${advBoxes().join('')}</div>`;
+      html=`<div class="page" style="max-width:${3*330+2*16}px"><div class="row top">${card}${statBox('Hitting',HIT,hStat)}${stack}</div>${foot}</div>`;
     }else{
-      const nBox=1+(pStat?1:0)+(hStat?1:0);
+      const nBox=1+(pStat?1:0)+(hStat?1:0), items=[card];
       if(pStat)items.push(statBox('Pitching',PIT,pStat));
       if(hStat)items.push(statBox('Hitting',HIT,hStat));
-      if(arsSplits.length)items.push(`<div class="arsenal">${arsenalInner(arsSplits,savRows)}</div>`);
+      if(arsHTML)items.push(`<div class="arsenal">${arsHTML}</div>`);
+      if(pStat)items.push(...pBoxes);
       if(hStat)items.push(...advBoxes());
-      pageMaxW=nBox*330+(nBox-1)*16; rowClass='row';
+      html=`<div class="page" style="max-width:${nBox*330+(nBox-1)*16}px"><div class="row">${items.join('')}</div>${foot}</div>`;
     }
-    document.getElementById('app').innerHTML=`<div class="page" style="max-width:${pageMaxW}px"><div class="${rowClass}">${items.join('')}</div>${foot}</div>`;
+    document.getElementById('app').innerHTML=html;
     document.title=p.fullName;
   })();
 </script>
