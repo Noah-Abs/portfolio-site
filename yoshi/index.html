@@ -60,7 +60,7 @@
   <div id="app"><div class="state">Loading…</div></div>
 
 <script>
-  const ID=808967, YEAR=2026;
+  const ID=(+new URLSearchParams(location.search).get('id'))||808967, YEAR=2026;
   // how each player entered pro ball (API exposes no clean "signed by" field)
   const META={
     660271:['Signed','2017 · Los Angeles Angels'],
@@ -191,7 +191,7 @@
     const bats=(p.batSide&&p.batSide.code)||'–', throws=(p.pitchHand&&p.pitchHand.code)||'–';
     const banner=`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.png/w_640,q_auto:good/v1/people/${ID}/action/hero/current`;
     const shot=`https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${ID}/headshot/67/current`;
-    const entry=META[ID]||['Drafted',p.draftYear?String(p.draftYear):'–'];
+    const entry=META[ID]||(p.draftYear?['Drafted',String(p.draftYear)]:(p.mlbDebutDate?['MLB Debut',p.mlbDebutDate.slice(0,4)]:['—','—']));
 
     const bioRows=[
       ['Bats / Throws',`${bats} / ${throws}`],
