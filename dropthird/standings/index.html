@@ -83,37 +83,6 @@
   tr.wc-cut td{border-bottom:2px solid #3a4350}
   tr.wc-out td .nm,tr.wc-out td.rank{opacity:.62}
 
-  /* ===== postseason: seeding + bracket ===== */
-  .ps-note{color:var(--muted,#7e858f);font-size:12px;letter-spacing:.6px;margin:-4px 0 14px;text-transform:uppercase}
-  .lg-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:21px;color:var(--text,#fff);margin:30px 0 13px}
-  .lg-h:first-of-type{margin-top:2px}
-  .seedwrap{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .seedcol{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:13px 15px}
-  .seedcol h4{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:var(--text,#fff);margin-bottom:8px}
-  .seedcol.wc h4{color:#ffd24a}
-  .seed-row{display:flex;align-items:center;gap:10px;padding:8px 2px;border-top:1px solid var(--panel2,#16181d)}
-  .seed-row:first-of-type{border-top:0}
-  .seed-row .seed{flex:0 0 auto;width:21px;height:21px;border-radius:6px;background:var(--panel2,#15161b);border:1px solid var(--border2,#2a2f37);
-    font-family:"Oswald",sans-serif;font-weight:700;font-size:11px;color:var(--text2,#cfd4da);display:flex;align-items:center;justify-content:center}
-  .seed-row img{width:25px;height:25px;object-fit:contain;flex:0 0 auto}
-  .seed-row .nm{flex:1;min-width:0;font-weight:500;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
-  .seed-row .dv{color:var(--muted2,#5b626c);font-size:10.5px;letter-spacing:.5px;white-space:nowrap}
-  .seed-row .rec{color:var(--text2,#aeb4bd);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .seed-row.tbd{opacity:.5}
-  .bracket{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;margin-top:8px}
-  .round{flex:1 1 0;min-width:218px;display:flex;flex-direction:column;justify-content:center;gap:16px}
-  .round-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:11px;color:var(--muted,#7e858f);text-align:center}
-  .matchup{background:var(--panel,#101115);border:1px solid var(--border2,#23272f);border-radius:12px;padding:9px 11px}
-  .matchup .vs{font-size:9px;letter-spacing:2px;color:var(--muted2,#4a5159);text-align:center;padding:2px 0}
-  .matchup .cap{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#4a5159);text-align:center;margin-top:6px;border-top:1px solid var(--panel2,#16181d);padding-top:6px}
-  .ws{margin-top:26px;background:linear-gradient(180deg,#16171c,#101115);border:1px solid #2f3540;border-radius:14px;padding:17px 18px;text-align:center}
-  .ws h4{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:17px;color:#ffd24a;margin-bottom:11px}
-  .ws .row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
-  .ws .side{font-weight:600;color:var(--text,#fff);letter-spacing:.5px}
-  .ws .side .lg{font-size:11px;color:var(--muted,#7e858f);letter-spacing:1.5px;margin-right:6px}
-  .ws .at{color:var(--muted2,#4a5159);font-size:11px;letter-spacing:2px}
-  @media(max-width:640px){.seedwrap{grid-template-columns:1fr}}
-
   @media(max-width:760px){
     body{flex-direction:column}
     .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
@@ -141,6 +110,7 @@
       <div class="nav-label">Teams</div>
       <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
       <a class="tab active" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
       <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
       <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
       <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
@@ -165,7 +135,6 @@
       <div class="vtabs">
         <button class="vtab" id="tabFlat">Overall</button>
         <button class="vtab on" id="tabDiv">Divisions</button>
-        <button class="vtab" id="tabPost">Postseason</button>
       </div>
       <div id="content"><div class="scroller"><div class="state">Loading standings…</div></div></div>
     </div>
@@ -274,64 +243,11 @@
     return html;
   }
 
-  // ===== postseason picture (if the season ended today) =====
-  function leaguePic(lg){
-    const divs=lg==='AL'?[201,202,200]:[204,205,203];
-    const leaders=divs.map(d=>TEAMS.filter(t=>t.divId===d).sort((a,b)=>a.divRank-b.divRank||pctv(b)-pctv(a))[0]).filter(Boolean);
-    leaders.sort((a,b)=>pctv(b)-pctv(a)||(b.rd-a.rd));               // seeds 1-3 by record
-    const lead={};leaders.forEach(t=>lead[t.id]=1);
-    const wc=TEAMS.filter(t=>t.league===lg&&!lead[t.id]).sort((a,b)=>pctv(b)-pctv(a)||(b.rd-a.rd)).slice(0,3); // seeds 4-6
-    const seeds={};leaders.forEach((t,i)=>seeds[i+1]=t);wc.forEach((t,i)=>seeds[i+4]=t);
-    return {leaders,wc,seeds};
-  }
-  function seedRow(seed,t,divLabel,tbd){
-    if(!t)return `<div class="seed-row tbd"><span class="seed">${seed||'·'}</span><span class="nm">${esc(tbd||'TBD')}</span></div>`;
-    return `<div class="seed-row"><span class="seed">${seed}</span>`+
-      `<img src="${logo(t.id)}" onerror="this.style.visibility='hidden'">`+
-      `<span class="nm">${esc(t.name)}${t.clinch?` <span class="clinch">${esc(t.clinch)}</span>`:''}</span>`+
-      (divLabel?`<span class="dv">${esc(divLabel)}</span>`:'')+
-      `<span class="rec">${t.w}-${t.l}</span></div>`;
-  }
-  function matchup(aSeed,a,bSeed,b,aTbd,bTbd,cap){
-    return `<div class="matchup">${seedRow(aSeed,a,'',aTbd)}<div class="vs">vs</div>${seedRow(bSeed,b,'',bTbd)}${cap?`<div class="cap">${esc(cap)}</div>`:''}</div>`;
-  }
-  function seedingBlock(lg){
-    const {leaders,wc}=leaguePic(lg);
-    const lead=`<div class="seedcol"><h4>Division Leaders</h4>${leaders.map((t,i)=>seedRow(i+1,t,t.div,null)).join('')||'<div class="seed-row tbd"><span class="nm">—</span></div>'}</div>`;
-    const wcb=`<div class="seedcol wc"><h4>Wild Card</h4>${wc.map((t,i)=>seedRow(i+4,t,t.div,null)).join('')||'<div class="seed-row tbd"><span class="nm">—</span></div>'}</div>`;
-    return `<div class="seedwrap">${lead}${wcb}</div>`;
-  }
-  function bracket(lg){
-    const {seeds}=leaguePic(lg);
-    const wcRound=`<div class="round"><div class="round-h">Wild Card</div>`+
-      matchup(4,seeds[4],5,seeds[5],null,null,seeds[4]?`${seeds[4].name} hosts`:'')+
-      matchup(3,seeds[3],6,seeds[6],null,null,seeds[3]?`${seeds[3].name} hosts`:'')+`</div>`;
-    const dsRound=`<div class="round"><div class="round-h">Division Series</div>`+
-      matchup(1,seeds[1],null,null,null,'Winner of WC 4 / 5','First-round bye')+
-      matchup(2,seeds[2],null,null,null,'Winner of WC 3 / 6','First-round bye')+`</div>`;
-    const csRound=`<div class="round"><div class="round-h">${lg==='AL'?'ALCS':'NLCS'}</div>`+
-      matchup(null,null,null,null,'Division Series winner','Division Series winner',`→ ${lg} pennant`)+`</div>`;
-    return `<div class="bracket">${wcRound}${dsRound}${csRound}</div>`;
-  }
-  function renderPost(){
-    let html=`<div class="ps-note">If the season ended today · top 6 in each league. Division winners take seeds 1–3, wild cards 4–6.</div>`;
-    ['AL','NL'].forEach(lg=>{
-      html+=`<div class="lg-h">${lg==='AL'?'American League':'National League'}</div>`+seedingBlock(lg)+bracket(lg);
-    });
-    html+=`<div class="ws"><h4>World Series</h4><div class="row">`+
-      `<span class="side"><span class="lg">AL</span>Champion</span><span class="at">vs</span>`+
-      `<span class="side"><span class="lg">NL</span>Champion</span></div></div>`;
-    return html;
-  }
-
   function render(){
-    document.getElementById('content').innerHTML = mode==='post'?renderPost():mode==='div'?renderDiv():renderFlat();
+    document.getElementById('content').innerHTML = mode==='div'?renderDiv():renderFlat();
     document.getElementById('tabFlat').classList.toggle('on',mode==='flat');
     document.getElementById('tabDiv').classList.toggle('on',mode==='div');
-    document.getElementById('tabPost').classList.toggle('on',mode==='post');
-    document.getElementById('sub').textContent = mode==='post'
-      ? `${YEAR} Postseason · if the season ended today`
-      : `${YEAR} Standings · ${mode==='div'?'divisions & wild card':'by '+({w:'record',pct:'win%',diff:'run diff',l10:'last 10',streak:'streak'}[sortKey])}`;
+    document.getElementById('sub').textContent = `${YEAR} Standings · ${mode==='div'?'divisions & wild card':'by '+({w:'record',pct:'win%',diff:'run diff',l10:'last 10',streak:'streak'}[sortKey])}`;
     document.querySelectorAll('thead th[data-k]').forEach(th=>th.onclick=()=>{
       const k=th.dataset.k; if(k===sortKey)sortDir*=-1; else{sortKey=k;sortDir=-1;} render();
     });
@@ -340,17 +256,13 @@
 
   document.getElementById('tabFlat').onclick=()=>{mode='flat';render();};
   document.getElementById('tabDiv').onclick=()=>{mode='div';render();};
-  document.getElementById('tabPost').onclick=()=>{mode='post';render();};
 
   const GLOSS_ROWS=[
     ['#','Rank (overall list is by win%)'],['Team','Club name & logo'],['Record','Wins–Losses'],
     ['Pct','Winning percentage'],['GB','Games behind the division leader'],
     ['WCGB','Games behind the last wild-card spot (+ = ahead of the cut line)'],
     ['Diff','Run differential (runs scored − runs allowed)'],['L10','Record over the last 10 games'],
-    ['Streak','Current win (W) or loss (L) streak'],['Division','MLB division'],
-    ['Seed','Postseason seed (1–3 = division winners by record, 4–6 = wild cards)'],
-    ['Bye','Top two seeds skip the Wild Card round and open in the Division Series'],
-    ['Host','In the best-of-3 Wild Card round the higher seed hosts every game']
+    ['Streak','Current win (W) or loss (L) streak'],['Division','MLB division']
   ];
   function buildGloss(){return '<div class="gloss-h">Stat Glossary</div>'+GLOSS_ROWS.map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
   let glossEl=null;

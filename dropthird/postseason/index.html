@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Postseason</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side-rail{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);
+    border-left:1px solid var(--border,#1b1e24);padding:32px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:13px 15px;border-radius:11px;color:var(--text3,#aab0b9);
+    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
+    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:20px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1180px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:20px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+
+  /* ===== bracket ===== */
+  .po{display:flex;align-items:stretch;justify-content:center;gap:2px;overflow-x:auto;padding:6px 0 18px;min-height:540px}
+  .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;padding:0 4px}
+  .po-head span{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(16px,2vw,26px);letter-spacing:1.5px;color:var(--muted,#69707b)}
+  .pside{display:flex;align-items:stretch}
+  .round{display:flex;flex-direction:column;min-width:156px;padding:0 9px}
+  .round-h{height:18px;margin-bottom:10px;font-family:"Oswald",sans-serif;font-weight:600;font-size:10px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--muted2,#4a5159);text-align:center}
+  .games{flex:1;display:flex;flex-direction:column}
+  .game{flex:1;display:flex;align-items:center;position:relative}
+  .gbox{width:100%;background:var(--panel,#101115);border:1px solid var(--border2,#23272f);border-radius:9px;overflow:hidden}
+  .gbox.empty{border-style:dashed;background:transparent}
+  .slot{display:flex;align-items:center;gap:8px;padding:0 8px;height:33px}
+  .slot+.slot{border-top:1px solid var(--panel2,#16181d)}
+  .sd{width:16px;text-align:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:11px;color:var(--muted,#7e858f);flex:0 0 auto}
+  .slot img{width:21px;height:21px;object-fit:contain;flex:0 0 auto}
+  .snm{flex:1;min-width:0;font-weight:500;font-size:13px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .src{font-size:11px;color:var(--muted,#7e858f);font-variant-numeric:tabular-nums}
+  .slot.blank .snm{color:var(--muted2,#444a52);font-size:11px;letter-spacing:1px;text-transform:uppercase}
+  .slot.blank .sd{color:var(--muted2,#2f343b)}
+
+  /* connectors — line colour */
+  .pside .round.out .game::after,.pside .round.in .game::before,.pside .round.lead .game::after{content:'';position:absolute}
+  /* left side (NL) flows right */
+  .pside.l .round.out .game::after{left:100%;width:11px;box-sizing:border-box}
+  .pside.l .round.out .game:nth-child(odd)::after{top:50%;height:50%;border-top:2px solid var(--border2,#2a313c);border-right:2px solid var(--border2,#2a313c)}
+  .pside.l .round.out .game:nth-child(even)::after{bottom:50%;height:50%;border-bottom:2px solid var(--border2,#2a313c);border-right:2px solid var(--border2,#2a313c)}
+  .pside.l .round.in .game::before{right:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
+  .pside.l .round.lead .game::after{left:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
+  /* right side (AL) flows left (mirror) */
+  .pside.r .round.out .game::after{right:100%;width:11px;box-sizing:border-box}
+  .pside.r .round.out .game:nth-child(odd)::after{top:50%;height:50%;border-top:2px solid var(--border2,#2a313c);border-left:2px solid var(--border2,#2a313c)}
+  .pside.r .round.out .game:nth-child(even)::after{bottom:50%;height:50%;border-bottom:2px solid var(--border2,#2a313c);border-left:2px solid var(--border2,#2a313c)}
+  .pside.r .round.in .game::before{left:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
+  .pside.r .round.lead .game::after{right:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
+
+  /* world series centre */
+  .center{display:flex;align-items:center;padding:0 6px}
+  .ws{width:170px;background:linear-gradient(180deg,#17181d,#0e0f13);border:1px solid #2f3540;border-radius:12px;overflow:hidden;box-shadow:0 10px 36px rgba(0,0,0,.5)}
+  .ws-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:13px;color:#ffd24a;text-align:center;padding:9px 6px;border-bottom:1px solid #23262c}
+  .ws .slot{height:38px}
+
+  .state{text-align:center;color:var(--muted,#7e858f);padding:60px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+
+  @media(max-width:980px){
+    .po{justify-content:flex-start}
+    .lgmark{font-size:30px}
+  }
+  @media(max-width:760px){
+    body{flex-direction:column}
+    .side-rail{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
+    .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
+    .tab{padding:10px 14px}.side-foot{display:none}
+    .main{padding:26px 16px 60px}
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side-rail">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab active" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <h1 class="page-t">Postseason</h1>
+        <p class="page-sub" id="sub">If the season ended today</p>
+      </div>
+      <div id="content"><div class="state">Loading bracket…</div></div>
+    </div>
+  </main>
+
+<script>
+  const DIV={200:'AL West',201:'AL East',202:'AL Central',203:'NL West',204:'NL East',205:'NL Central'};
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const pctv=t=>parseFloat(t.pct)||0;
+  let TEAMS=[], YEAR;
+
+  async function fetchYear(y){
+    const r=await fetch(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`);
+    if(!r.ok)return [];
+    const j=await r.json();const out=[];
+    (j.records||[]).forEach(g=>{const dId=g.division&&g.division.id;
+      (g.teamRecords||[]).forEach(t=>out.push({id:t.team.id,name:t.team.name,w:+t.wins||0,l:+t.losses||0,
+        pct:t.winningPercentage||'.000',rd:(t.runDifferential==null?0:+t.runDifferential),
+        divId:dId,div:DIV[dId]||'',league:(dId<=202?'AL':'NL'),divRank:+t.divisionRank||9}));
+    });
+    return out;
+  }
+
+  function leaguePic(lg){
+    const divs=lg==='AL'?[201,202,200]:[204,205,203];
+    const leaders=divs.map(d=>TEAMS.filter(t=>t.divId===d).sort((a,b)=>a.divRank-b.divRank||pctv(b)-pctv(a))[0]).filter(Boolean);
+    leaders.sort((a,b)=>pctv(b)-pctv(a)||(b.rd-a.rd));            // seeds 1-3 by record
+    const lead={};leaders.forEach(t=>lead[t.id]=1);
+    const wc=TEAMS.filter(t=>t.league===lg&&!lead[t.id]).sort((a,b)=>pctv(b)-pctv(a)||(b.rd-a.rd)).slice(0,3); // 4-6
+    const seeds={};leaders.forEach((t,i)=>seeds[i+1]=t);wc.forEach((t,i)=>seeds[i+4]=t);
+    return seeds;
+  }
+
+  function slot(seed,t,blank){
+    if(!t)return `<div class="slot blank"><span class="sd">${seed||''}</span><span class="snm">${esc(blank||'')}</span></div>`;
+    return `<div class="slot"><span class="sd">${seed}</span><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'">`+
+      `<span class="snm">${esc(t.name)}</span></div>`;
+  }
+  const game=(slots,empty)=>`<div class="game"><div class="gbox${empty?' empty':''}">${slots}</div></div>`;
+  const blankGame=()=>game(slot('',null,'')+slot('',null,''),true);
+  const roundCol=(label,games,cls)=>`<div class="round ${cls}"><div class="round-h">${esc(label)}</div><div class="games">${games}</div></div>`;
+
+  function wcGames(s){
+    return game(slot(1,s[1])+slot('',null,'Bye'))+
+           game(slot(4,s[4])+slot(5,s[5]))+
+           game(slot(3,s[3])+slot(6,s[6]))+
+           game(slot(2,s[2])+slot('',null,'Bye'));
+  }
+  function sideNL(){
+    const s=leaguePic('NL');
+    return `<div class="pside l">`+
+      roundCol('Wild Card',wcGames(s),'out')+
+      roundCol('Division Series',blankGame()+blankGame(),'out in')+
+      roundCol('Pennant',blankGame(),'lead in')+`</div>`;
+  }
+  function sideAL(){
+    const s=leaguePic('AL');
+    return `<div class="pside r">`+
+      roundCol('Pennant',blankGame(),'lead in')+
+      roundCol('Division Series',blankGame()+blankGame(),'out in')+
+      roundCol('Wild Card',wcGames(s),'out')+`</div>`;
+  }
+  function worldSeries(){
+    return `<div class="center"><div class="ws"><div class="ws-h">World Series</div><div class="gbox">`+
+      slot('NL',null,'Champion')+slot('AL',null,'Champion')+`</div></div></div>`;
+  }
+
+  function render(){
+    document.getElementById('content').innerHTML=
+      `<div class="po-head"><span>National League</span><span>American League</span></div>`+
+      `<div class="po">${sideNL()}${worldSeries()}${sideAL()}</div>`;
+  }
+
+  (async function(){
+    try{
+      const now=new Date().getFullYear();let teams=[];YEAR=now;
+      for(const y of [now,now-1,now-2]){teams=await fetchYear(y);if(teams.length){YEAR=y;break;}}
+      if(!teams.length){document.getElementById('content').innerHTML='<div class="state">No standings available.</div>';return;}
+      TEAMS=teams;
+      document.getElementById('sub').textContent=`If the season ended today · ${YEAR}`;
+      render();
+    }catch(e){
+      document.getElementById('content').innerHTML='<div class="state">Couldn’t load the bracket.</div>';
+    }
+  })();
+</script>
+</body>
+</html>
