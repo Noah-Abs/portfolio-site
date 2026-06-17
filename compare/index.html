@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Head-to-Head</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
+    min-height:100vh;padding:36px 20px 80px}
+  .wrap{max-width:880px;margin:0 auto}
+  .head{text-align:center;margin-bottom:24px}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:13px;color:var(--muted,#6b7280)}
+  .brand a{color:inherit;text-decoration:none}
+  .title{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(34px,6vw,60px);letter-spacing:1px;line-height:1;margin-top:6px}
+  .sub{margin-top:8px;font-weight:300;letter-spacing:4px;text-transform:uppercase;font-size:12px;color:var(--muted,#7e858f)}
+
+  .catbar{display:flex;gap:8px;justify-content:center;margin:22px 0 26px}
+  .cat{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:13px;
+    color:#9098a2;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);border-radius:10px;padding:10px 20px;cursor:pointer;transition:.15s}
+  .cat:hover{color:var(--text,#fff);border-color:#3b454f}
+  .cat.on{background:var(--text,#fff);color:var(--bg,#0b0c0e);border-color:var(--text,#fff)}
+
+  .picker{display:grid;grid-template-columns:1fr 44px 1fr;gap:12px;align-items:start}
+  .vsmid{align-self:center;text-align:center;font-family:"Anton",sans-serif;font-size:20px;color:var(--muted2,#4a5159);letter-spacing:1px}
+  .sidecard{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:14px}
+  .sidelbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2,#4a5159);margin-bottom:9px}
+  .searchwrap{position:relative}
+  .search,.teamsel{width:100%;background:var(--panel2,#15161b);color:var(--text,#fff);border:1px solid var(--border2,#2f3540);border-radius:9px;
+    padding:10px 12px;font-family:"Oswald",sans-serif;font-size:14px;font-weight:500;outline:none}
+  .search:focus,.teamsel:focus{border-color:var(--accent,#4aa3ff)}
+  .teamsel{appearance:none;-webkit-appearance:none;color-scheme:dark;cursor:pointer}
+  .results{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);
+    border-radius:10px;max-height:280px;overflow-y:auto;box-shadow:0 14px 40px rgba(0,0,0,.6);display:none}
+  .results.show{display:block}
+  .ritem{display:flex;align-items:center;gap:10px;padding:9px 11px;cursor:pointer;border-top:1px solid var(--border,#1b1e24)}
+  .ritem:first-child{border-top:0}
+  .ritem:hover,.ritem.hi{background:#1b1e24}
+  .ritem img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#1b1e24;flex:0 0 auto}
+  .ritem .rn{flex:1;min-width:0;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ritem .rm{font-size:11px;color:var(--muted,#7e858f);letter-spacing:.5px;white-space:nowrap}
+  .rempty{padding:12px;color:var(--muted,#7e858f);font-size:13px;text-align:center}
+
+  .chosen{display:flex;align-items:center;gap:11px;margin-top:11px;padding:10px;background:var(--panel2,#13151a);border:1px solid var(--border2,#23272f);border-radius:10px}
+  .chosen img{width:42px;height:42px;border-radius:50%;object-fit:cover;background:#1b1e24;flex:0 0 auto}
+  .chosen img.tlogo{border-radius:0;object-fit:contain}
+  .chosen .cn{flex:1;min-width:0}
+  .chosen .cn b{display:block;font-weight:600;font-size:15px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chosen .cn span{font-size:11px;color:var(--muted,#7e858f);letter-spacing:.5px;text-transform:uppercase}
+  .chosen .x{color:var(--muted2,#4a5159);cursor:pointer;font-size:18px;padding:0 4px;flex:0 0 auto}
+  .chosen .x:hover{color:#e0556a}
+
+  .period{display:flex;align-items:center;gap:7px;margin-top:11px;flex-wrap:wrap}
+  .seg{display:flex;border:1px solid var(--border2,#2a2f37);border-radius:8px;overflow:hidden}
+  .seg button{background:var(--panel2,#15161b);color:#9098a2;border:0;padding:7px 14px;font-family:"Oswald",sans-serif;font-weight:600;
+    font-size:11.5px;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+  .seg button.on{background:var(--accent,#4aa3ff);color:#06121f}
+  .yrsel{background:var(--panel2,#15161b);color:var(--text,#fff);border:1px solid var(--border2,#2a2f37);border-radius:8px;
+    padding:7px 10px;font-family:"Oswald",sans-serif;font-size:12.5px;font-weight:600;color-scheme:dark;cursor:pointer}
+
+  /* ===== comparison output ===== */
+  .out{margin-top:30px}
+  .vsbar{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin-bottom:6px}
+  .vscol{display:flex;align-items:center;gap:12px}
+  .vscol.b{flex-direction:row-reverse;text-align:right}
+  .vscol img{width:58px;height:58px;border-radius:50%;object-fit:cover;background:#1b1e24;flex:0 0 auto}
+  .vscol img.tlogo{border-radius:0;object-fit:contain}
+  .vscol .nm{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:.5px;font-size:clamp(16px,2.2vw,24px);line-height:1.04}
+  .vscol .pd{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent,#4aa3ff);margin-top:3px}
+  .vsx{font-family:"Anton",sans-serif;color:var(--muted2,#4a5159);font-size:18px}
+
+  .tbl{margin-top:14px;border:1px solid var(--border,#1b1e24);border-radius:14px;overflow:hidden;background:var(--panel,#101115)}
+  .trow{display:grid;grid-template-columns:1fr 128px 1fr;align-items:center;border-top:1px solid var(--panel2,#16181d)}
+  .trow:first-child{border-top:0}
+  .trow .v{padding:11px 18px;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text2,#c7ccd3)}
+  .trow .va{text-align:right}
+  .trow .vb{text-align:left}
+  .trow .lab{text-align:center;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);padding:6px}
+  .trow .v.win{color:#46c77e;font-weight:700}
+  .secrow{background:var(--panel2,#15161b);text-align:center;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;
+    letter-spacing:2px;font-size:11px;color:var(--muted,#7e858f);padding:8px;border-top:1px solid var(--border,#1b1e24)}
+  .note{margin-top:14px;font-size:11.5px;color:var(--muted2,#5b626c);letter-spacing:.3px;line-height:1.5;text-align:center}
+  .state{text-align:center;color:var(--muted,#7e858f);padding:30px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
+
+  @media(max-width:640px){
+    .picker{grid-template-columns:1fr;gap:10px}
+    .vsmid{display:none}
+    .trow{grid-template-columns:1fr 92px 1fr}
+    .trow .v{font-size:15px;padding:9px 12px}
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand"><a href="/dropthird/homescreen/">DROPTHIRD</a></div>
+      <h1 class="title">Head-to-Head</h1>
+      <div class="sub">Compare any two · same position</div>
+    </div>
+
+    <div class="catbar">
+      <button class="cat on" data-cat="hitting">Hitters</button>
+      <button class="cat" data-cat="pitching">Pitchers</button>
+      <button class="cat" data-cat="team">Teams</button>
+    </div>
+
+    <div class="picker">
+      <div class="sidecard" id="cardA"></div>
+      <div class="vsmid">VS</div>
+      <div class="sidecard" id="cardB"></div>
+    </div>
+
+    <div class="out" id="out"></div>
+  </div>
+
+<script>
+  const NOW=new Date().getFullYear();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const headshot=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/w_120,q_auto:best/v1/people/${id}/headshot/67/current`;
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const showp=p=>(p==null||p==='')?'–':String(p).replace(/^0(?=\.)/,'');
+  const ipToOuts=ip=>{const a=String(ip==null?'':ip).split('.');return (+a[0]||0)*3+(+(a[1]||0));};
+  const outsToIp=o=>Math.floor(o/3)+'.'+(o%3);
+
+  // stat definitions: [label, field, fmt, lowerBetter]  fmt: 0=int, 'avg'=.xxx, 'dec2', 'ip'
+  const HIT=[['G','gamesPlayed',0],['PA','plateAppearances',0],['AB','atBats',0],['R','runs',0],['H','hits',0],
+    ['2B','doubles',0],['3B','triples',0],['HR','homeRuns',0],['RBI','rbi',0],['SB','stolenBases',0],
+    ['BB','baseOnBalls',0],['SO','strikeOuts',0,true],['BA','avg','avg'],['OBP','obp','avg'],['SLG','slg','avg'],['OPS','ops','avg']];
+  const PIT=[['W','wins',0],['L','losses',0,true],['ERA','era','dec2',true],['G','gamesPlayed',0],['GS','gamesStarted',0],
+    ['SV','saves',0],['IP','inningsPitched','ip'],['H','hits',0,true],['R','runs',0,true],['ER','earnedRuns',0,true],
+    ['HR','homeRuns',0,true],['BB','baseOnBalls',0,true],['SO','strikeOuts',0],['WHIP','whip','dec2',true],
+    ['K/9','strikeoutsPer9Inn','dec2'],['BB/9','walksPer9Inn','dec2',true]];
+  const TEAM=[{section:'Record'},['W','W',0],['L','L',0,true],['Win%','winPct','avg'],
+    {section:'Batting'},['R','R',0],['HR','HR',0],['SB','SB',0],['BA','BA','avg'],['OBP','OBP','avg'],['SLG','SLG','avg'],['OPS','OPS','avg'],
+    {section:'Pitching'},['ERA','ERA','dec2',true],['WHIP','WHIP','dec2',true],['SO','SO',0],['SV','SV',0],['R Allowed','RA',0,true],['HR Allowed','HRA',0,true]];
+
+  function fmt(v,kind){
+    if(v==null||v===''||(typeof v==='number'&&isNaN(v)))return '–';
+    if(kind==='avg')return showp((+v).toFixed(3));
+    if(kind==='dec2')return (+v).toFixed(2);
+    if(kind==='ip')return String(v);
+    return (typeof v==='number')?String(Math.round(v)):String(v);
+  }
+  const numOf=v=>{const n=parseFloat(v);return isNaN(n)?null:n;};
+
+  // ---------- state ----------
+  let CAT='hitting', TEAMS=[], token=0;
+  const S={A:blank(),B:blank()};
+  function blank(){return {id:null,name:'',meta:'',isTeam:false,mode:'career',season:null,seasons:[]};}
+  const group=()=>CAT==='pitching'?'pitching':'hitting';
+
+  // ---------- player search ----------
+  async function search(q){
+    const r=await j(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(q)}`);
+    let ppl=(r&&r.people)||[];
+    ppl=ppl.filter(p=>{const pos=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+      return CAT==='pitching' ? (pos==='P'||pos==='TWP') : (pos&&pos!=='P');});
+    return ppl.slice(0,12);
+  }
+
+  // ---------- fetch a side's stat object ----------
+  async function fetchStat(side){
+    if(side.isTeam){
+      const y=side.season;
+      const [hj,pj,st]=await Promise.all([
+        j(`https://statsapi.mlb.com/api/v1/teams/${side.id}/stats?stats=season&group=hitting&season=${y}`),
+        j(`https://statsapi.mlb.com/api/v1/teams/${side.id}/stats?stats=season&group=pitching&season=${y}`),
+        j(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`)
+      ]);
+      const h=(hj&&hj.stats&&hj.stats[0]&&hj.stats[0].splits&&hj.stats[0].splits[0]&&hj.stats[0].splits[0].stat)||{};
+      const p=(pj&&pj.stats&&pj.stats[0]&&pj.stats[0].splits&&pj.stats[0].splits[0]&&pj.stats[0].splits[0].stat)||{};
+      let rec=null;((st&&st.records)||[]).forEach(g=>(g.teamRecords||[]).forEach(t=>{if(t.team&&t.team.id===side.id)rec=t;}));
+      return {W:rec?rec.wins:null,L:rec?rec.losses:null,winPct:rec?rec.winningPercentage:null,
+        R:h.runs,HR:h.homeRuns,SB:h.stolenBases,BA:h.avg,OBP:h.obp,SLG:h.slg,OPS:h.ops,
+        ERA:p.era,WHIP:p.whip,SO:p.strikeOuts,SV:p.saves,RA:p.runs,HRA:p.homeRuns};
+    }
+    const g=group();
+    if(side.mode==='career'){
+      const r=await j(`https://statsapi.mlb.com/api/v1/people/${side.id}/stats?stats=career&group=${g}`);
+      const sp=(r&&r.stats&&r.stats[0]&&r.stats[0].splits)||[];
+      if(!sp.length)return null;
+      const tot=sp.find(s=>!s.team);return (tot||sp[sp.length-1]).stat;   // career aggregate row
+    }
+    const r=await j(`https://statsapi.mlb.com/api/v1/people/${side.id}/stats?stats=season&group=${g}&season=${side.season}`);
+    const sp=(r&&r.stats&&r.stats[0]&&r.stats[0].splits)||[];
+    if(!sp.length)return null;
+    const tot=sp.find(s=>!s.team);            // traded mid-season → API provides a no-team combined total
+    if(tot)return tot.stat;
+    if(sp.length===1)return sp[0].stat;
+    return g==='hitting'?aggHit(sp):aggPit(sp);
+  }
+  function aggHit(sp){
+    const k=['gamesPlayed','plateAppearances','atBats','runs','hits','doubles','triples','homeRuns','rbi','stolenBases','baseOnBalls','strikeOuts','hitByPitch','sacFlies'];
+    const s={};k.forEach(x=>s[x]=0);
+    sp.forEach(o=>{const st=o.stat||{};k.forEach(x=>s[x]+=(+st[x]||0));});
+    const TB=s.hits+s.doubles+2*s.triples+3*s.homeRuns, obpDen=s.atBats+s.baseOnBalls+s.hitByPitch+s.sacFlies;
+    s.avg=s.atBats?s.hits/s.atBats:0; s.obp=obpDen?(s.hits+s.baseOnBalls+s.hitByPitch)/obpDen:0;
+    s.slg=s.atBats?TB/s.atBats:0; s.ops=s.obp+s.slg; return s;
+  }
+  function aggPit(sp){
+    const k=['wins','losses','saves','gamesPlayed','gamesStarted','hits','runs','earnedRuns','homeRuns','baseOnBalls','strikeOuts'];
+    const s={};k.forEach(x=>s[x]=0);let outs=0;
+    sp.forEach(o=>{const st=o.stat||{};k.forEach(x=>s[x]+=(+st[x]||0));outs+=ipToOuts(st.inningsPitched);});
+    const ip=outs/3;
+    s.era=ip?9*s.earnedRuns/ip:0; s.whip=ip?(s.baseOnBalls+s.hits)/ip:0;
+    s.strikeoutsPer9Inn=ip?9*s.strikeOuts/ip:0; s.walksPer9Inn=ip?9*s.baseOnBalls/ip:0;
+    s.inningsPitched=outsToIp(outs); return s;
+  }
+
+  // ---------- render comparison ----------
+  function defsFor(){return CAT==='team'?TEAM:CAT==='pitching'?PIT:HIT;}
+  function vsCol(side,cls){
+    const img=side.isTeam?`<img class="tlogo" src="${logo(side.id)}" onerror="this.style.visibility='hidden'">`
+      :`<img src="${headshot(side.id)}" onerror="this.style.visibility='hidden'">`;
+    const pd=side.isTeam?side.season:(side.mode==='career'?'Career':side.season);
+    return `<div class="vscol ${cls}">${img}<div><div class="nm">${esc(side.name)}</div><div class="pd">${esc(pd)}</div></div></div>`;
+  }
+  function renderCompare(a,b){
+    const defs=defsFor();let rows='';
+    defs.forEach(d=>{
+      if(d.section){rows+=`<div class="secrow">${esc(d.section)}</div>`;return;}
+      const [lab,field,kind,low]=d;
+      const av=a?a[field]:null, bv=b?b[field]:null;
+      const an=numOf(av), bn=numOf(bv);
+      let aw='',bw='';
+      if(an!=null&&bn!=null&&an!==bn){const aBetter=low?an<bn:an>bn; if(aBetter)aw='win';else bw='win';}
+      rows+=`<div class="trow"><div class="v va ${aw}">${fmt(av,kind)}</div><div class="lab">${esc(lab)}</div><div class="v vb ${bw}">${fmt(bv,kind)}</div></div>`;
+    });
+    const note=CAT==='team'
+      ? 'Team season totals from the MLB Stats API. W-L from final standings (may be blank for very old seasons).'
+      : 'Career vs. single-season counting stats differ in scale by design — rate stats (AVG/OBP/SLG/OPS, ERA/WHIP) are the apples-to-apples lines. OPS+, WAR and similar derived metrics aren’t in the free feed.';
+    return `<div class="vsbar">${vsCol(S.A,'a')}<div class="vsx">VS</div>${vsCol(S.B,'b')}</div>`+
+      `<div class="tbl">${rows}</div><div class="note">${note}</div>`;
+  }
+
+  let cmpToken=0;
+  async function maybeCompare(){
+    const out=document.getElementById('out');
+    const ready=s=>s.id!=null && (s.isTeam? s.season!=null : (s.mode==='career'||s.season!=null));
+    if(!ready(S.A)||!ready(S.B)){out.innerHTML='';return;}
+    const my=++cmpToken;
+    out.innerHTML='<div class="state">Comparing…</div>';
+    const [a,b]=await Promise.all([fetchStat(S.A),fetchStat(S.B)]);
+    if(my!==cmpToken)return;
+    if(!a&&!b){out.innerHTML='<div class="state">No stats for these selections.</div>';return;}
+    out.innerHTML=renderCompare(a,b);
+    syncURL();
+  }
+
+  // ---------- side card UI ----------
+  function periodHTML(side){
+    if(side.isTeam){
+      const opts=side.seasons.map(y=>`<option value="${y}"${y==side.season?' selected':''}>${y}</option>`).join('');
+      return `<div class="period"><select class="yrsel season">${opts}</select></div>`;
+    }
+    const opts=side.seasons.map(y=>`<option value="${y}"${y==side.season?' selected':''}>${y}</option>`).join('');
+    return `<div class="period">
+      <div class="seg"><button class="mc${side.mode==='career'?' on':''}" data-m="career">Career</button><button class="ms${side.mode==='season'?' on':''}" data-m="season">Season</button></div>
+      <select class="yrsel season" ${side.mode==='season'?'':'style="display:none"'}>${opts}</select></div>`;
+  }
+  function chosenHTML(side){
+    const img=side.isTeam?`<img class="tlogo" src="${logo(side.id)}" onerror="this.style.visibility='hidden'">`
+      :`<img src="${headshot(side.id)}" onerror="this.style.visibility='hidden'">`;
+    return `<div class="chosen">${img}<div class="cn"><b>${esc(side.name)}</b><span>${esc(side.meta)}</span></div>${side.isTeam?'':'<div class="x" title="Clear">×</div>'}</div>`;
+  }
+  function teamSelectHTML(side){
+    const opts=TEAMS.map(t=>`<option value="${t.id}"${t.id===side.id?' selected':''}>${esc(t.name)}</option>`).join('');
+    return `<select class="teamsel">${side.id?'':'<option value="">Choose a team…</option>'}${opts}</select>`;
+  }
+  function buildSide(key){
+    const side=S[key], card=document.getElementById('card'+key);
+    let html=`<div class="sidelbl">Side ${key}</div>`;
+    if(CAT==='team'){
+      html+=teamSelectHTML(side);
+      if(side.id!=null)html+=periodHTML(side);
+    }else{
+      html+=`<div class="searchwrap"><input class="search" placeholder="Search ${CAT==='pitching'?'pitcher':'hitter'}…" autocomplete="off"><div class="results"></div></div>`;
+      if(side.id!=null)html+=chosenHTML(side)+periodHTML(side);
+    }
+    card.innerHTML=html;
+    bindSide(key);
+  }
+  function bindSide(key){
+    const side=S[key], card=document.getElementById('card'+key);
+    const sel=card.querySelector('.teamsel');
+    if(sel&&CAT==='team'){
+      sel.onchange=async()=>{const id=+sel.value;if(!id)return;const t=TEAMS.find(x=>x.id===id);
+        side.id=id;side.isTeam=true;side.name=t?t.name:'Team';side.meta='';
+        side.seasons=await teamSeasons(id);side.season=side.seasons[0]||NOW;buildSide(key);maybeCompare();};
+    }
+    const input=card.querySelector('.search');
+    if(input){
+      const box=card.querySelector('.results');let t=null,items=[],hi=-1;
+      const close=()=>{box.classList.remove('show');box.innerHTML='';hi=-1;};
+      input.oninput=()=>{const q=input.value.trim();clearTimeout(t);if(q.length<2){close();return;}
+        t=setTimeout(async()=>{const res=await search(q);items=res;
+          if(!res.length){box.innerHTML='<div class="rempty">No matches</div>';box.classList.add('show');return;}
+          box.innerHTML=res.map((p,i)=>{const pos=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+            const yrs=`${(p.mlbDebutDate||'').slice(0,4)}${p.active?'–':(p.lastPlayedDate?'–'+p.lastPlayedDate.slice(0,4):'')}`;
+            return `<div class="ritem" data-i="${i}"><img src="${headshot(p.id)}" onerror="this.style.visibility='hidden'"><span class="rn">${esc(p.fullName)}</span><span class="rm">${esc(pos)} · ${esc(yrs)}</span></div>`;}).join('');
+          box.classList.add('show');
+          box.querySelectorAll('.ritem').forEach(el=>el.onclick=()=>choose(key,items[+el.dataset.i]));
+        },230);};
+      input.onkeydown=e=>{const els=[...box.querySelectorAll('.ritem')];if(!els.length)return;
+        if(e.key==='ArrowDown'){hi=Math.min(hi+1,els.length-1);}else if(e.key==='ArrowUp'){hi=Math.max(hi-1,0);}
+        else if(e.key==='Enter'){if(hi>=0&&items[hi]){choose(key,items[hi]);}return;}else return;
+        e.preventDefault();els.forEach((el,i)=>el.classList.toggle('hi',i===hi));};
+      input.onblur=()=>setTimeout(close,150);
+    }
+    card.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+      side.mode=b.dataset.m; if(side.mode==='season'&&!side.season)side.season=side.seasons[0]||NOW; buildSide(key);maybeCompare();});
+    const ysel=card.querySelector('.season');
+    if(ysel)ysel.onchange=()=>{side.season=+ysel.value;maybeCompare();};
+    const x=card.querySelector('.chosen .x');
+    if(x)x.onclick=()=>{S[key]=blank();buildSide(key);document.getElementById('out').innerHTML='';};
+  }
+
+  async function choose(key,p){
+    const side=S[key];side.id=p.id;side.isTeam=false;side.name=p.fullName;
+    const pos=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+    const yrs=`${(p.mlbDebutDate||'').slice(0,4)}${p.active?'–present':(p.lastPlayedDate?'–'+p.lastPlayedDate.slice(0,4):'')}`;
+    side.meta=`${pos} · ${yrs}`;
+    side.seasons=await playerSeasons(p.id);side.mode='career';side.season=side.seasons[0]||null;
+    buildSide(key);maybeCompare();
+  }
+  async function playerSeasons(id){
+    const r=await j(`https://statsapi.mlb.com/api/v1/people/${id}/stats?stats=yearByYear&group=${group()}`);
+    const sp=(r&&r.stats&&r.stats[0]&&r.stats[0].splits)||[];
+    return [...new Set(sp.map(s=>+s.season))].sort((a,b)=>b-a);
+  }
+  async function teamSeasons(id){
+    const r=await j(`https://statsapi.mlb.com/api/v1/teams/${id}/stats?stats=yearByYear&group=hitting`);
+    const sp=(r&&r.stats&&r.stats[0]&&r.stats[0].splits)||[];
+    const ys=[...new Set(sp.map(s=>+s.season))].sort((a,b)=>b-a);
+    return ys.length?ys:[NOW];
+  }
+
+  // ---------- category switch ----------
+  function setCat(c){
+    if(c===CAT)return;CAT=c;S.A=blank();S.B=blank();
+    document.querySelectorAll('.cat').forEach(b=>b.classList.toggle('on',b.dataset.cat===c));
+    document.getElementById('out').innerHTML='';
+    buildSide('A');buildSide('B');
+  }
+  document.querySelectorAll('.cat').forEach(b=>b.onclick=()=>setCat(b.dataset.cat));
+
+  // ---------- url state (shareable) ----------
+  function syncURL(){try{const u=new URL(location.href);u.search='';const q=u.searchParams;
+    q.set('cat',CAT);
+    const enc=(k,s)=>{if(s.id==null)return;q.set(k,s.id);q.set(k+'p',s.isTeam?s.season:(s.mode==='career'?'career':s.season));};
+    enc('a',S.A);enc('b',S.B);history.replaceState(null,'',u);}catch(e){}}
+
+  // ---------- init ----------
+  (async function(){
+    const tj=await j(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${NOW}`);
+    TEAMS=(((tj&&tj.teams)||[]).filter(t=>t.sport&&t.sport.id===1).map(t=>({id:t.id,name:t.name}))).sort((a,b)=>a.name.localeCompare(b.name));
+    const q=new URLSearchParams(location.search), c=q.get('cat');
+    if(c==='pitching'||c==='team'){CAT=c;document.querySelectorAll('.cat').forEach(b=>b.classList.toggle('on',b.dataset.cat===c));}
+    buildSide('A');buildSide('B');
+    // restore from URL
+    for(const key of ['A','B']){const id=+q.get(key.toLowerCase());if(!id)continue;const pr=q.get(key.toLowerCase()+'p');
+      if(CAT==='team'){const t=TEAMS.find(x=>x.id===id);if(!t)continue;S[key]={id,isTeam:true,name:t.name,meta:'',mode:'season',season:+pr||NOW,seasons:await teamSeasons(id)};}
+      else{const r=await j(`https://statsapi.mlb.com/api/v1/people/${id}?hydrate=currentTeam`);const p=r&&r.people&&r.people[0];if(!p)continue;
+        const pos=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+        S[key]={id,isTeam:false,name:p.fullName,meta:`${pos}`,mode:pr==='career'?'career':'season',season:pr==='career'?null:(+pr||null),seasons:await playerSeasons(id)};
+        if(S[key].mode==='season'&&!S[key].season)S[key].season=S[key].seasons[0]||null;}
+      buildSide(key);}
+    maybeCompare();
+  })();
+</script>
+</body>
+</html>
