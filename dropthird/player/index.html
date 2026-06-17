@@ -5,339 +5,265 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Player</title>
+<title>Player</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{background:#0b0c0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
-    min-height:100vh;display:flex;flex-direction:row-reverse}
-  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:#0e0f13;
-    border-left:1px solid #1b1e24;padding:30px 18px;display:flex;flex-direction:column}
-  .brand-link{text-decoration:none;color:inherit;display:block}
-  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:#fff}
-  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:#6b7280}
-  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
-  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#474d56;padding:14px 15px 5px}
-  .nav-label:first-child{padding-top:0}
-  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:#aab0b9;
-    text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;
-    border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
-  .tab:hover{background:#15161b;color:#fff;border-color:#262a32}
-  .tab .dot{width:6px;height:6px;border-radius:50%;background:#2a2f37;margin-right:12px;flex:0 0 auto;transition:background .15s}
-  .tab:hover .dot{background:#fff}
-  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:#3a4048;text-transform:uppercase}
-  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
-  .page{max-width:1080px;margin:0 auto;width:100%}
-  .back{display:inline-block;color:#7e858f;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px;cursor:pointer}
-  .back:hover{color:#fff}
-
-  /* header */
-  .phead{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
-  .phead img{width:108px;height:108px;border-radius:50%;object-fit:cover;background:#15161b;border:2px solid #262a32;flex:0 0 auto}
-  .pname{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,4.6vw,50px);letter-spacing:1px;line-height:.96}
-  .pmeta{margin-top:11px;display:flex;flex-wrap:wrap;gap:8px}
-  .chip{font-family:"Oswald",sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;
-    color:#cfd4da;background:#15161b;border:1px solid #262a32;border-radius:8px;padding:6px 11px;display:inline-flex;align-items:center;gap:7px}
-  .chip img{width:18px;height:18px;object-fit:contain}
-  .chip b{color:#fff}
-  .hint-line{margin-top:18px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#565c66}
-
-  /* section */
-  .sect{margin-top:38px}
-  .sect h2{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:24px;letter-spacing:1px;display:flex;align-items:center;gap:12px}
-  .sect h2:before{content:"";width:4px;height:21px;background:#e23b34;border-radius:2px;display:inline-block}
-  .subh{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#7e858f;margin:20px 0 9px}
-
-  /* headline stats */
-  .hero{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0 6px}
-  .hcard{background:#0e1015;border:1px solid #1b1e24;border-radius:13px;padding:16px 8px 14px;text-align:center}
-  .hcard .hv{font-family:"Oswald",sans-serif;font-weight:700;font-size:29px;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
-  .hcard .hl{margin-top:8px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8a909a;font-weight:600}
-  .hcard .hc{margin-top:6px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:#4a5059;font-variant-numeric:tabular-nums}
-
-  /* comparison tables — read across; long lines split into two stacked tables so they fit with no scrollbar */
-  .tbl-wrap{overflow-x:auto;border:1px solid #1b1e24;border-radius:13px;background:#0e1015;-webkit-overflow-scrolling:touch;
-    scrollbar-width:thin;scrollbar-color:#2a2f37 transparent}
-  .tbl-wrap+.tbl-wrap{margin-top:10px}
-  .tbl-wrap::-webkit-scrollbar{height:8px}
-  .tbl-wrap::-webkit-scrollbar-track{background:transparent}
-  .tbl-wrap::-webkit-scrollbar-thumb{background:#262a32;border-radius:8px}
-  .tbl-wrap::-webkit-scrollbar-thumb:hover{background:#363d47}
-  table.stat{border-collapse:separate;border-spacing:0;width:100%;font-variant-numeric:tabular-nums;white-space:nowrap}
-  table.stat th,table.stat td{padding:11px 12px;text-align:right;font-size:13.5px;color:#dfe3e8}
-  table.stat thead th{background:#15161b;color:#8a909a;font-weight:600;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid #262a32;cursor:help}
-  table.stat th.splitcol{position:sticky;left:0;z-index:2;text-align:left;background:#0e1015;color:#fff;font-weight:600;
-    text-transform:uppercase;letter-spacing:1px;font-size:12.5px;min-width:92px;border-right:1px solid #1f232a}
-  table.stat thead th.splitcol{background:#15161b;z-index:3}
-  table.stat tbody tr+tr th,table.stat tbody tr+tr td{border-top:1px solid #15171c}
-  table.stat td.grp,table.stat th.grp{border-left:1px solid #2a2f37}
-  table.stat tbody tr:hover td{background:#13151a}
-  table.stat tbody tr:hover th.splitcol{background:#16181e}
+  body{background:#f4f6f8;color:#1b1f24;font-family:"Roboto",Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px}
+  .back{display:inline-block;margin:0 0 14px;color:#5a636d;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+  .back:hover{color:#157f8c}
+  .card{flex:0 1 330px;min-width:0;max-width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+  .banner{position:relative;height:150px;background:linear-gradient(150deg,#2a5da8,#0a2342)}
+  .banner img{width:100%;height:100%;object-fit:cover;object-position:top center;opacity:.95}
+  .shot{position:absolute;left:50%;bottom:-34px;transform:translateX(-50%);width:92px;height:92px;border-radius:50%;
+    border:4px solid #fff;background:#dfe4ea;box-shadow:0 2px 6px rgba(0,0,0,.3);overflow:hidden}
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+  .body{padding:46px 20px 22px;text-align:center}
+  .name{font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:26px;line-height:1.05}
+  .sub{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px;color:#3a4450;font-size:14px;font-weight:500}
+  .sub .pos{color:#157f8c;font-weight:700}
+  .sub img{width:20px;height:20px;object-fit:contain}
+  .bio{margin-top:18px;text-align:left}
+  .brow{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-top:1px solid #eef1f4;font-size:13.5px}
+  .brow:last-child{border-bottom:1px solid #eef1f4}
+  .brow span{color:#8a939c;font-weight:500}
+  .brow b{color:#1b1f24;font-weight:700}
+  .state{padding:40px;text-align:center;color:#8a939c;font-size:13px}
+  .page{margin:0 auto}
+  .row{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
+  .box{flex:0 1 330px;min-width:0;max-width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;display:flex;flex-direction:column}
+  .arsbox,.row.fill .arsbox{flex:1 1 340px;max-width:none}
+  .row.top{align-items:flex-start}
+  .stack{display:flex;flex-direction:column;gap:16px;flex:0 1 330px;min-width:0;max-width:330px}
+  .stack .box{flex:0 0 auto;width:100%;max-width:none}
+  .arsbox .ascroll{flex:1}
+  .arsbox .atbl{height:100%}
+  .box-h{text-align:center;font-family:"Roboto Condensed",sans-serif;font-weight:700;font-size:18px;padding:15px 14px 0}
+  .box-h .yr{color:#157f8c}
+  .box-h:after{content:"";display:block;width:64px;border-bottom:3px dotted #157f8c;margin:9px auto 0}
+  .slist{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;margin-top:12px}
+  .scell{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:0 16px;border-top:1px solid #eef1f4;font-size:13.5px}
+  .scell.col2{border-left:1px solid #eef1f4}
+  .scell span{color:#6b757f;font-weight:500;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scell b{color:#1b1f24;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .footnote{margin:12px 2px 0;font-size:11px;color:#9aa3ac;text-align:left}
+  .arsenal{flex:0 0 100%;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+  .ascroll{overflow-x:auto}
+  .atbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .atbl th,.atbl td{padding:10px 14px;font-size:13px;text-align:right;border-top:1px solid #eef1f4;white-space:nowrap}
+  .atbl thead th{color:#8a939c;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;border-top:none;border-bottom:1px solid #e2e7ec;background:#fafbfc}
+  .atbl td:first-child,.atbl th:first-child{text-align:left;font-weight:600}
+  .atbl tbody tr:hover td{background:#f7f9fb}
   .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:9px;vertical-align:middle}
-
-  /* right-click stat glossary */
-  .gloss{position:fixed;z-index:1000;width:340px;max-width:92vw;max-height:74vh;overflow:auto;background:#15161b;
-    border:1px solid #2f3540;border-radius:12px;padding:8px 0;box-shadow:0 18px 55px rgba(0,0,0,.65)}
-  .gloss-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:14px;color:#fff;padding:8px 15px 9px;border-bottom:1px solid #23262c}
-  .gloss-sub{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:#e23b34;padding:12px 15px 5px}
-  .gloss-row{display:flex;gap:12px;padding:6px 15px}
-  .gloss-row+.gloss-row{border-top:1px solid #14161b}
-  .gl-k{flex:0 0 72px;font-weight:700;color:#fff;font-size:13px;font-family:"Oswald",sans-serif}
-  .gl-d{color:#aeb4bd;font-size:12.5px;line-height:1.36}
-  .state{color:#7e858f;letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 4px}
-
-  @media(max-width:900px){.hero{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:760px){
-    body{flex-direction:column}
-    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid #1b1e24;padding:20px 16px}
-    .nav{flex-direction:row;flex-wrap:wrap;margin-top:14px;gap:8px}.tab{padding:9px 13px}.side-foot{display:none}
-    .main{padding:26px 16px 60px}
-  }
-  @media(max-width:560px){.hero{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
-  <aside class="side">
-    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
-    <nav class="nav">
-      <div class="nav-label">Teams</div>
-      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
-      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
-      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
-      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
-      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
-      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
-      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
-      <div class="nav-label">Players</div>
-      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
-      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
-      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
-      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
-    </nav>
-    <div class="side-foot">2026 Season</div>
-  </aside>
-
-  <main class="main">
-    <div class="page">
-      <a class="back" onclick="history.length>1?history.back():location.href='../clubs/'">← Back</a>
-      <div id="content"><div class="state">Loading player…</div></div>
-    </div>
-  </main>
+  <a class="back" onclick="history.length>1?history.back():location.href='/dropthird/clubs/'">← Back</a>
+  <div id="app"><div class="state">Loading…</div></div>
 
 <script>
+  const ID=(+new URLSearchParams(location.search).get('id'))||660271, YEAR=2026;
+  // how each player entered pro ball (API exposes no clean "signed by" field)
+  const META={
+    660271:['Signed','2017 · Los Angeles Angels'],
+    605141:['Drafted','2011 · Boston Red Sox'],
+    808967:['Signed','2024 · Los Angeles Dodgers'],
+  };
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const ID=(+new URLSearchParams(location.search).get('id'))||0;
-  const head=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${id}/headshot/67/current`;
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const num=v=>(v==null||v===''||isNaN(+v))?null:+v;
+  const fmtAvg=v=>String(v).replace(/^0(?=\.)/,'');
+  const d1=v=>{const n=num(v);return n==null?'–':n.toFixed(1);};
+  const d3=v=>{const n=num(v);return n==null?'–':n.toFixed(3).replace(/^0(?=\.)/,'');};
+  const SAV='https://baseballsavant.mlb.com';
 
-  // [label, apiKey, full name (tooltip), groupStart?]  — groupStart=1 draws a divider before the rate-stat block
-  const HIT=[['G','gamesPlayed','Games'],['PA','plateAppearances','Plate Appearances'],['AB','atBats','At Bats'],
-    ['R','runs','Runs'],['H','hits','Hits'],['2B','doubles','Doubles'],['3B','triples','Triples'],['HR','homeRuns','Home Runs'],
-    ['RBI','rbi','Runs Batted In'],['BB','baseOnBalls','Walks'],['IBB','intentionalWalks','Intentional Walks'],
-    ['SO','strikeOuts','Strikeouts'],['HBP','hitByPitch','Hit By Pitch'],['SB','stolenBases','Stolen Bases'],
-    ['CS','caughtStealing','Caught Stealing'],['SH','sacBunts','Sacrifice Bunts'],['SF','sacFlies','Sacrifice Flies'],
-    ['GDP','groundIntoDoublePlay','Grounded Into Double Play'],['TB','totalBases','Total Bases'],
-    ['AVG','avg','Batting Average',1],['OBP','obp','On-Base Percentage'],['SLG','slg','Slugging Percentage'],
-    ['OPS','ops','On-Base Plus Slugging'],['BABIP','babip','Batting Avg on Balls in Play']];
-  const PIT=[['W','wins','Wins'],['L','losses','Losses'],['ERA','era','Earned Run Average'],['G','gamesPlayed','Games'],
-    ['GS','gamesStarted','Games Started'],['CG','completeGames','Complete Games'],['SHO','shutouts','Shutouts'],
-    ['SV','saves','Saves'],['HLD','holds','Holds'],['BS','blownSaves','Blown Saves'],['IP','inningsPitched','Innings Pitched'],
-    ['H','hits','Hits Allowed'],['R','runs','Runs Allowed'],['ER','earnedRuns','Earned Runs'],['HR','homeRuns','Home Runs Allowed'],
-    ['BB','baseOnBalls','Walks'],['IBB','intentionalWalks','Intentional Walks'],['SO','strikeOuts','Strikeouts'],
-    ['HBP','hitBatsmen','Hit Batsmen'],['WP','wildPitches','Wild Pitches'],['BK','balks','Balks'],
-    ['WHIP','whip','Walks + Hits per Inning Pitched',1],['AVG','avg','Opponent Batting Average'],
-    ['K/9','strikeoutsPer9Inn','Strikeouts per 9'],['BB/9','walksPer9Inn','Walks per 9'],['H/9','hitsPer9Inn','Hits per 9'],
-    ['HR/9','homeRunsPer9','Home Runs per 9'],['K/BB','strikeoutWalkRatio','Strikeout-to-Walk Ratio']];
-  const FLD=[['G','games','Games'],['GS','gamesStarted','Games Started'],['INN','innings','Innings'],
-    ['PO','putOuts','Putouts'],['A','assists','Assists'],['E','errors','Errors'],['DP','doublePlays','Double Plays'],
-    ['FLD%','fielding','Fielding Percentage',1],['RF/9','rangeFactorPer9Inn','Range Factor per 9']];
+  const HIT=[['G','gamesPlayed'],['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['2B','doubles'],
+    ['3B','triples'],['HR','homeRuns'],['RBI','rbi'],['BB','baseOnBalls'],['SO','strikeOuts'],['SB','stolenBases'],
+    ['AVG','avg','avg'],['OBP','obp','avg'],['SLG','slg','avg'],['OPS','ops','avg']];
+  const PIT=[['W','wins'],['L','losses'],['ERA','era'],['G','gamesPlayed'],['GS','gamesStarted'],['SV','saves'],
+    ['IP','inningsPitched'],['H','hits'],['R','runs'],['ER','earnedRuns'],['HR','homeRuns'],['BB','baseOnBalls'],
+    ['SO','strikeOuts'],['WHIP','whip'],['K/9','strikeoutsPer9Inn'],['BB/9','walksPer9Inn']];
+  const PCOL={FF:'#d6273a',FA:'#d6273a',SI:'#f0663b',FC:'#f0973b',FS:'#23a06a',CH:'#2fb673',SC:'#2fb673',
+    SL:'#3b82f0',ST:'#5b8def',SV:'#6b6bf0',CU:'#9b5cf0',KC:'#b05cf0',CS:'#9b5cf0',KN:'#8a909a',EP:'#8a909a'};
 
-  const HIT_HERO=[['AVG','avg'],['HR','homeRuns'],['RBI','rbi'],['R','runs'],['SB','stolenBases'],['OPS','ops']];
-  function pitHero(st){
-    const sv=+st.saves||0, hld=+st.holds||0, gs=+st.gamesStarted||0, g=+st.gamesPlayed||0;
-    const reliever=(sv+hld)>0 || (g>0 && gs < g/2);
-    return reliever
-      ? [['ERA','era'],['SV','saves'],['HLD','holds'],['IP','inningsPitched'],['SO','strikeOuts'],['WHIP','whip']]
-      : [['ERA','era'],['W-L','__wl__'],['IP','inningsPitched'],['SO','strikeOuts'],['WHIP','whip'],['K/9','strikeoutsPer9Inn']];
-  }
-
-  function val(st,k){if(k==='__wl__')return `${+st.wins||0}-${+st.losses||0}`;let v=st[k];return (v==null||v==='')?'–':v;}
-  function heroStrip(entries,sStat,cStat){
-    return `<div class="hero">`+entries.map(([l,k])=>{
-      const sv=val(sStat,k), cv=cStat?val(cStat,k):null;
-      return `<div class="hcard"><div class="hv">${esc(sv)}</div><div class="hl">${esc(l)}</div>`+
-        (cv!=null&&cv!=='–'?`<div class="hc">Career ${esc(cv)}</div>`:'')+`</div>`;
-    }).join('')+`</div>`;
-  }
-  function statTable(fields,rows){
-    const head='<tr><th class="splitcol"></th>'+fields.map(f=>
-      `<th class="${f[3]?'grp':''}" title="${esc(f[2]||f[0])}">${esc(f[0])}</th>`).join('')+'</tr>';
-    const body=rows.map(r=>`<tr><th class="splitcol">${esc(r.label)}</th>`+fields.map(f=>{
-      let v=r.stat[f[1]];if(v==null||v==='')v='–';return `<td class="${f[3]?'grp':''}">${esc(v)}</td>`;
-    }).join('')+'</tr>').join('');
-    return `<div class="tbl-wrap"><table class="stat"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
-  }
-  function statBlock(fields,rows){
-    if(!rows.length)return '';
-    if(fields.length>14){const mid=Math.ceil(fields.length/2);
-      return statTable(fields.slice(0,mid),rows)+statTable(fields.slice(mid),rows);}
-    return statTable(fields,rows);
-  }
-
-  // ---- pitch arsenal ----
-  const PCOL={FF:'#e23b34',FA:'#e23b34',FT:'#ef6a3c',SI:'#ef6a3c',FC:'#f0a13b',
-    FS:'#23c08a',CH:'#2fb673',SC:'#2fb673',
-    SL:'#3b82f0',ST:'#5b8def',SV:'#6b6bf0',
-    CU:'#9b5cf0',KC:'#b05cf0',CS:'#9b5cf0',KN:'#8a909a',EP:'#8a909a'};
-  const arPct=v=>(v==null||v===''||isNaN(+v))?'–':(+v).toFixed(1);
-  const arAvg=v=>(v==null||v===''||isNaN(+v))?'–':(+v).toFixed(3).replace(/^0(?=\.)/,'');
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const csv=u=>fetch(u).then(r=>r.ok?r.text():'').then(t=>t?parseCSV(t):[]).catch(()=>[]);
+  const find=(rows,id,key)=>rows.find(o=>+o[key||'player_id']===id)||null;
+  const seasonStat=jj=>{try{return jj.stats[0].splits[0].stat;}catch(e){return null;}};
   function parseCSV(text){
-    const lines=text.replace(/\r/g,'').split('\n').filter(l=>l.length);
+    const lines=text.replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(l=>l.length);
     const rows=lines.map(l=>{const out=[];let cur='',q=false;
       for(let i=0;i<l.length;i++){const ch=l[i];
         if(q){if(ch==='"'){if(l[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}
         else{if(ch==='"')q=true;else if(ch===','){out.push(cur);cur='';}else cur+=ch;}}
       out.push(cur);return out;});
-    const hdr=rows.shift();return {hdr,rows};
+    const hdr=rows.shift();return rows.map(r=>{const o={};hdr.forEach((h,i)=>o[h]=r[i]);return o;});
   }
-  function arsenalSection(splits,savMap,year){
+
+  function renderBox(title,rows){
+    const gr=Math.max(1,Math.ceil(rows.length/2));
+    const cells=rows.map((r,i)=>`<div class="scell${i>=gr?' col2':''}"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
+    return `<div class="box"><div class="box-h"><span class="yr">${YEAR}</span> ${esc(title)}</div><div class="slist" style="grid-template-rows:repeat(${gr},1fr)">${cells}</div></div>`;
+  }
+  function statBox(title,fields,stat){
+    return renderBox(title,fields.map(f=>{let v=stat[f[1]];
+      if(v==null||v==='')v='–';else if(f[2]==='avg')v=fmtAvg(v);return [f[0],v];}));
+  }
+  const sgn0=v=>{const n=num(v);return n==null?'–':(n>0?'+':'')+Math.round(n);};
+  const sgn1=v=>{const n=num(v);return n==null?'–':(n>0?'+':'')+(Math.round(n*10)/10);};
+  function advancedBoxes(hStat,cu,xs,spd,bsr,oaa){
+    cu=cu||{};xs=xs||{};spd=spd||{};bsr=bsr||{};oaa=oaa||{};
+    const iso=(num(hStat.slg)!=null&&num(hStat.avg)!=null)?num(hStat.slg)-num(hStat.avg):null;
+    return [
+      renderBox('Advanced',[
+        ['OPS+','—'],['wRC+','—'],['WAR','—'],
+        ['ISO',iso!=null?d3(iso):'–'],['BABIP',d3(hStat.babip)],['BB%',d1(cu.bb_percent)]]),
+      renderBox('Quality of Contact',[
+        ['Avg EV',d1(cu.exit_velocity_avg)],['Max EV',num(cu.exit_velocity_max)!=null?d1(cu.exit_velocity_max):'—'],['Barrel%',d1(cu.barrel_batted_rate)],
+        ['Hard-Hit%',d1(cu.hard_hit_percent)],['Sweet-Spot%',d1(cu.sweet_spot_percent)]]),
+      renderBox('Expected & Discipline',[
+        ['xBA',d3(xs.est_ba)],['xSLG',d3(xs.est_slg)],['xwOBA',d3(xs.est_woba)],
+        ['Chase%',d1(cu.oz_swing_percent)],['Whiff%',d1(cu.whiff_percent)]]),
+      renderBox('Fielding & Baserunning',[
+        ['OAA',sgn0(oaa.outs_above_average)],['DRS','—'],
+        ['Baserunning',sgn1(bsr.runner_runs)],['Sprint Speed',d1(spd.sprint_speed)]]),
+    ];
+  }
+  function arsenalInner(splits,savRows,amap){
+    amap=amap||{};
+    const savMap={};(savRows||[]).forEach(r=>{if(+r.player_id===ID)savMap[r.pitch_type]=r;});
     const ps=splits.map(s=>s.stat).filter(p=>p&&p.type).sort((a,b)=>(b.percentage||0)-(a.percentage||0));
-    const COLS=[['USE%','Share of total pitches thrown'],['VELO','Average velocity (mph)'],
-      ['WHIFF%','Swing-and-miss rate'],['K%','Strikeout rate on this pitch'],['PUT-AWAY%','2-strike strikeout rate'],
-      ['BAA','Opponent batting average'],['xwOBA','Expected wOBA — quality of contact allowed'],['HARD%','Hard-hit rate (95+ mph exit velo)']];
-    const head='<tr><th class="splitcol">Pitch</th>'+COLS.map(c=>`<th title="${esc(c[1])}">${esc(c[0])}</th>`).join('')+'</tr>';
-    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},col=PCOL[code]||'#6b727c';
-      return `<tr><th class="splitcol"><span class="pdot" style="background:${col}"></span>${esc(p.type.description||code)}</th>`+
-        `<td>${arPct((p.percentage||0)*100)}</td>`+
-        `<td>${p.averageSpeed!=null?(+p.averageSpeed).toFixed(1):'–'}</td>`+
-        `<td>${arPct(sv.whiff)}</td><td>${arPct(sv.k)}</td><td>${arPct(sv.putaway)}</td>`+
-        `<td>${arAvg(sv.ba)}</td><td>${arAvg(sv.xwoba)}</td><td>${arPct(sv.hard)}</td></tr>`;
-    }).join('');
-    return `<div class="sect"><h2>Pitch Arsenal</h2><div class="subh">${year} Season · pitch mix, velocity &amp; Statcast results</div>`+
-      `<div class="tbl-wrap"><table class="stat"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>`;
+    const head='<tr><th>Pitch Type</th><th>Usage</th><th>Velo</th><th>Spin</th><th>V-Break</th><th>H-Break</th><th>Whiff%</th><th>Put-Away%</th><th>BA</th><th>xwOBA</th><th>Hard-Hit%</th></tr>';
+    const body=ps.map(p=>{const code=p.type.code,sv=savMap[code]||{},ex=amap[code]||{},col=PCOL[code]||'#6b727c';
+      return `<tr><td><span class="pdot" style="background:${col}"></span>${esc(p.type.description||code)}</td>
+        <td>${d1((p.percentage||0)*100)}%</td><td>${p.averageSpeed!=null?(+p.averageSpeed).toFixed(1):'–'}</td>
+        <td>${ex.spin?Math.round(+ex.spin):'–'}</td><td>${d1(ex.vbreak)}</td><td>${d1(ex.hbreak)}</td>
+        <td>${d1(sv.whiff_percent)}</td><td>${d1(sv.put_away)}</td>
+        <td>${d3(sv.ba)}</td><td>${d3(sv.est_woba)}</td><td>${d1(sv.hard_hit_percent)}</td></tr>`;}).join('');
+    return `<div class="box-h"><span class="yr">${YEAR}</span> Pitch Arsenal</div>
+      <div class="ascroll"><table class="atbl"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
   }
-
-  function pick(stats,group,type){
-    const g=(stats||[]).find(s=>s.group&&s.group.displayName===group&&s.type&&s.type.displayName===type);
-    return g&&g.splits&&g.splits.length?g:null;
+  function arsenalsMap(paSpin,paBz,paBx){
+    const m={};
+    const add=(rows,key)=>{const row=(rows||[]).find(o=>+o.pitcher===ID);if(!row)return;
+      for(const col in row){const mt=col.match(/^([a-z]{2})_avg_(?:spin|break_z|break_x)$/);
+        if(mt&&row[col]!==''&&row[col]!=null){const c=mt[1].toUpperCase();(m[c]=m[c]||{})[key]=row[col];}}};
+    add(paSpin,'spin');add(paBz,'vbreak');add(paBx,'hbreak');return m;
   }
-  const last=g=>g?g.splits[g.splits.length-1].stat:null;
-
-  // ---- right-click stat glossary ----
-  const HAS={hit:false,pit:false,fld:false,ars:false};
-  const HIT_DEF={G:'Games played',PA:'Plate appearances',AB:'At-bats',R:'Runs scored',H:'Hits','2B':'Doubles','3B':'Triples',
-    HR:'Home runs',RBI:'Runs batted in',BB:'Walks drawn',IBB:'Intentional walks',SO:'Strikeouts',HBP:'Hit by pitch',
-    SB:'Stolen bases',CS:'Caught stealing',SH:'Sacrifice bunts',SF:'Sacrifice flies',GDP:'Grounded into double play',
-    TB:'Total bases',AVG:'Batting average (hits ÷ at-bats)',OBP:'On-base percentage',SLG:'Slugging pct (total bases ÷ AB)',
-    OPS:'On-base plus slugging (OBP + SLG)',BABIP:'Batting average on balls in play'};
-  const PIT_DEF={W:'Wins',L:'Losses',ERA:'Earned run average (earned runs per 9 IP)',G:'Games pitched',GS:'Games started',
-    CG:'Complete games',SHO:'Shutouts',SV:'Saves',HLD:'Holds',BS:'Blown saves',IP:'Innings pitched',H:'Hits allowed',
-    R:'Runs allowed',ER:'Earned runs',HR:'Home runs allowed',BB:'Walks issued',IBB:'Intentional walks',SO:'Strikeouts',
-    HBP:'Hit batsmen',WP:'Wild pitches',BK:'Balks',WHIP:'Walks + hits per inning pitched',AVG:'Opponent batting average',
-    'K/9':'Strikeouts per 9 innings','BB/9':'Walks per 9 innings','H/9':'Hits per 9 innings','HR/9':'Home runs per 9 innings',
-    'K/BB':'Strikeout-to-walk ratio'};
-  const FLD_DEF={G:'Games at the position',GS:'Games started',INN:'Innings played in the field',PO:'Putouts',A:'Assists',
-    E:'Errors',DP:'Double plays turned','FLD%':'Fielding pct ((PO+A) ÷ (PO+A+E))','RF/9':'Range factor per 9 innings'};
-  const ARS_GLOSS=[['Pitch','Pitch type thrown'],['USE%','Share of total pitches thrown'],['VELO','Average velocity (mph)'],
-    ['WHIFF%','Swing-and-miss rate (whiffs ÷ swings)'],['K%','Strikeout rate when throwing this pitch'],
-    ['PUT-AWAY%','Two-strike strikeout rate'],['BAA','Opponent batting average vs the pitch'],
-    ['xwOBA','Expected wOBA — contact quality allowed'],['HARD%','Hard-hit rate (95+ mph exit velocity)']];
-  function glossGroup(title,rows){return `<div class="gloss-sub">${esc(title)}</div>`+
-    rows.map(x=>`<div class="gloss-row"><span class="gl-k">${esc(x[0])}</span><span class="gl-d">${esc(x[1])}</span></div>`).join('');}
-  function buildGloss(){
-    let out='<div class="gloss-h">Stat Glossary</div>';
-    if(HAS.hit)out+=glossGroup('Hitting',HIT.map(f=>[f[0],HIT_DEF[f[0]]||f[2]]));
-    if(HAS.pit)out+=glossGroup('Pitching',PIT.map(f=>[f[0],PIT_DEF[f[0]]||f[2]]));
-    if(HAS.ars)out+=glossGroup('Pitch Arsenal',ARS_GLOSS);
-    if(HAS.fld)out+=glossGroup('Fielding',FLD.map(f=>[f[0],FLD_DEF[f[0]]||f[2]]));
-    if(!HAS.hit&&!HAS.pit&&!HAS.fld&&!HAS.ars)out+=glossGroup('Hitting',HIT.map(f=>[f[0],HIT_DEF[f[0]]||f[2]]));
-    return out;
+  function pitcherStatcast(rows){
+    const FB={FF:1,SI:1,FC:1};let n=0,ext=0,en=0,rz=0,zn=0,rx=0,xn=0,csw=0,fbMax=null;
+    (rows||[]).forEach(r=>{n++;
+      const e=parseFloat(r.release_extension);if(!isNaN(e)){ext+=e;en++;}
+      const z=parseFloat(r.release_pos_z);if(!isNaN(z)){rz+=z;zn++;}
+      const x=parseFloat(r.release_pos_x);if(!isNaN(x)){rx+=x;xn++;}
+      const d=r.description;if(d==='called_strike'||d==='swinging_strike'||d==='swinging_strike_blocked')csw++;
+      if(FB[r.pitch_type]){const v=parseFloat(r.release_speed);if(!isNaN(v)&&(fbMax==null||v>fbMax))fbMax=v;}});
+    if(!n)return {};
+    return {extension:en?ext/en:null,relZ:zn?rz/zn:null,relX:xn?rx/xn:null,csw:100*csw/n,fbMax};
   }
-  let glossEl=null;
-  function closeGloss(){if(glossEl){glossEl.remove();glossEl=null;}}
-  function openGloss(x,y){closeGloss();glossEl=document.createElement('div');glossEl.className='gloss';glossEl.innerHTML=buildGloss();
-    glossEl.addEventListener('mousedown',ev=>ev.stopPropagation());document.body.appendChild(glossEl);
-    const w=glossEl.offsetWidth,h=glossEl.offsetHeight;glossEl.style.left=Math.max(8,Math.min(x,innerWidth-w-10))+'px';glossEl.style.top=Math.max(8,Math.min(y,innerHeight-h-10))+'px';}
-  document.addEventListener('contextmenu',e=>{if(e.target.closest('.main')){e.preventDefault();openGloss(e.clientX,e.clientY);}});
-  document.addEventListener('click',closeGloss);
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGloss();});
-  window.addEventListener('scroll',closeGloss,true);
+  function weightedPutaway(savRows){let num=0,den=0;
+    (savRows||[]).forEach(r=>{if(+r.player_id===ID){const w=parseFloat(r.pitches)||0,pa=parseFloat(r.put_away);if(!isNaN(pa)){num+=pa*w;den+=w;}}});
+    return den?num/den:null;}
+  function pitcherBoxes(cu,xs,sc,wpa){
+    cu=cu||{};xs=xs||{};sc=sc||{};const ft=v=>v!=null?d1(v)+"'":'–';
+    return [
+      renderBox('Velocity & Release',[['Avg FB Velo',d1(cu.fastball_avg_speed)],['Max FB Velo',sc.fbMax!=null?d1(sc.fbMax):'–'],
+        ['Extension',ft(sc.extension)],['Release Ht',ft(sc.relZ)],['Release Side',ft(sc.relX)]]),
+      renderBox('Plate Discipline',[['Chase%',d1(cu.oz_swing_percent)],['Whiff%',d1(cu.whiff_percent)],
+        ['CSW%',sc.csw!=null?d1(sc.csw):'–'],['Put-Away%',wpa!=null?d1(wpa):'–']]),
+      renderBox('Batted Ball',[['GB%',d1(cu.groundballs_percent)],['FB%',d1(cu.flyballs_percent)],
+        ['Hard-Hit%',d1(cu.hard_hit_percent)],['Barrel%',d1(cu.barrel_batted_rate)]]),
+      renderBox('Expected (Allowed)',[['xERA',d1(cu.xera)],['xBA',d3(xs.est_ba)],['xSLG',d3(xs.est_slg)],['xwOBA',d3(xs.est_woba)]]),
+    ];
+  }
 
   (async function(){
-    if(!ID){document.getElementById('content').innerHTML='<div class="state">No player selected.</div>';return;}
-    try{
-      const now=new Date().getFullYear();
-      const bio=(await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`).then(r=>r.json())).people[0];
-      let stats=null,YEAR=now;
-      for(const y of [now,now-1,now-2]){
-        const j=await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season,career&group=hitting,pitching,fielding&season=${y}`).then(r=>r.json());
-        const any=(j.stats||[]).some(s=>s.type&&s.type.displayName==='season'&&s.splits&&s.splits.length);
-        if(any){stats=j.stats;YEAR=y;break;}
-        if(!stats)stats=j.stats;
-      }
-      const tm=bio.currentTeam;
-      const chips=[];
-      if(tm)chips.push(`<span class="chip"><img src="${logo(tm.id)}" onerror="this.remove()">${esc(tm.name)}</span>`);
-      if(bio.primaryNumber)chips.push(`<span class="chip">#${esc(bio.primaryNumber)}</span>`);
-      if(bio.primaryPosition)chips.push(`<span class="chip"><b>${esc(bio.primaryPosition.abbreviation)}</b></span>`);
-      const bt=[bio.batSide&&bio.batSide.code,bio.pitchHand&&bio.pitchHand.code].filter(Boolean);
-      if(bt.length)chips.push(`<span class="chip">B/T ${esc(bt.join('/'))}</span>`);
-      if(bio.currentAge)chips.push(`<span class="chip">Age ${esc(bio.currentAge)}</span>`);
-      if(bio.height||bio.weight)chips.push(`<span class="chip">${esc(bio.height||'')}${bio.weight?' · '+bio.weight+' lb':''}</span>`);
+    const [pj,hj,pij,arsJ]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=hitting&season=${YEAR}`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=pitching&season=${YEAR}`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=pitchArsenal&group=pitching&season=${YEAR}`),
+    ]);
+    const p=pj&&pj.people&&pj.people[0];
+    if(!p){document.getElementById('app').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
 
-      let html=`<div class="phead"><img src="${head(ID)}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'">
-        <div><h1 class="pname">${esc(bio.fullName)}</h1><div class="pmeta">${chips.join('')}</div></div></div>
-        <div class="hint-line">Right-click anywhere for the stat glossary · hover a column header for its full name</div>`;
+    const tm=p.currentTeam;
+    const posAbbr=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
+    const pos=posAbbr==='TWP'?'DH/P':posAbbr;
+    const bats=(p.batSide&&p.batSide.code)||'–', throws=(p.pitchHand&&p.pitchHand.code)||'–';
+    const banner=`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.png/w_640,q_auto:good/v1/people/${ID}/action/hero/current`;
+    const shot=`https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${ID}/headshot/67/current`;
+    const entry=META[ID]||(p.draftYear?['Drafted',String(p.draftYear)]:(p.mlbDebutDate?['MLB Debut',p.mlbDebutDate.slice(0,4)]:['—','—']));
 
-      const hS=pick(stats,'hitting','season'), hC=pick(stats,'hitting','career');
-      const pS=pick(stats,'pitching','season'), pC=pick(stats,'pitching','career');
-      const fS=pick(stats,'fielding','season');
-      HAS.hit=!!(hS||hC); HAS.pit=!!(pS||pC); HAS.fld=!!fS;
+    const bioRows=[
+      ['Bats / Throws',`${bats} / ${throws}`],
+      ['Height',p.height||'–'],
+      ['Weight',p.weight?p.weight+' lbs':'–'],
+      ['Age',p.currentAge!=null?p.currentAge:'–'],
+      [entry[0],entry[1]],
+    ];
+    const card=`<div class="card">
+      <div class="banner"><img src="${banner}" onerror="this.style.display='none'">
+        <div class="shot"><img src="${shot}" onerror="this.src='https://midfield.mlbstatic.com/v1/people/${ID}/spots/120'"></div></div>
+      <div class="body">
+        <div class="name">${esc(p.fullName)}</div>
+        <div class="sub"><span class="pos">${esc(pos)}</span> | ${tm?`<img src="${logo(tm.id)}" onerror="this.remove()">`:''}${esc(tm?tm.name:'')}</div>
+        <div class="bio">${bioRows.map(r=>`<div class="brow"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')}</div>
+      </div></div>`;
 
-      if(hS||hC){
-        const s=last(hS), c=last(hC);
-        html+=`<div class="sect"><h2>Hitting</h2>`;
-        if(s)html+=heroStrip(HIT_HERO,s,c);
-        const cols=[];if(s)cols.push({label:String(YEAR),stat:s});if(c)cols.push({label:'Career',stat:c});
-        html+=`<div class="subh">Full Batting Line</div>`+statBlock(HIT,cols)+`</div>`;
-      }
-      if(pS||pC){
-        const s=last(pS), c=last(pC);
-        html+=`<div class="sect"><h2>Pitching</h2>`;
-        if(s)html+=heroStrip(pitHero(s),s,c); else if(c)html+=heroStrip(pitHero(c),c,null);
-        const cols=[];if(s)cols.push({label:String(YEAR),stat:s});if(c)cols.push({label:'Career',stat:c});
-        html+=`<div class="subh">Full Pitching Line</div>`+statBlock(PIT,cols)+`</div>`;
-      }
-      if(pS||pC){
-        try{
-          const aj=await fetch(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=pitchArsenal&group=pitching&season=${YEAR}`).then(r=>r.json());
-          const aSplits=((aj.stats||[]).find(s=>s.type&&s.type.displayName==='pitchArsenal')||{}).splits||[];
-          if(aSplits.length){
-            let savMap={};
-            try{
-              const txt=(await fetch(`https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>r.text())).replace(/^﻿/,'');
-              const {hdr,rows}=parseCSV(txt);const ci=n=>hdr.indexOf(n);
-              const PID=ci('player_id'),PT=ci('pitch_type'),WH=ci('whiff_percent'),K=ci('k_percent'),PAW=ci('put_away'),BA=ci('ba'),XW=ci('est_woba'),HH=ci('hard_hit_percent');
-              rows.forEach(r=>{if(+r[PID]===ID)savMap[r[PT]]={whiff:r[WH],k:r[K],putaway:r[PAW],ba:r[BA],xwoba:r[XW],hard:r[HH]};});
-            }catch(e){}
-            html+=arsenalSection(aSplits,savMap,YEAR);HAS.ars=true;
-          }
-        }catch(e){}
-      }
-      if(fS){
-        html+=`<div class="sect"><h2>Fielding</h2><div class="subh">${YEAR} Season · by position</div>`;
-        const cols=fS.splits.map(sp=>({label:(sp.position&&sp.position.abbreviation)||'POS',stat:sp.stat}));
-        html+=statBlock(FLD,cols)+`</div>`;
-      }
-      if(!hS&&!hC&&!pS&&!pC&&!fS)html+=`<div class="state">No stats available for this player.</div>`;
+    const pStat=seasonStat(pij), hStat=seasonStat(hj);
+    const arsSplits=((arsJ&&arsJ.stats||[]).find(s=>s.type&&s.type.displayName==='pitchArsenal')||{}).splits||[];
 
-      document.getElementById('content').innerHTML=html;
-      document.title='DROPTHIRD — '+bio.fullName;
-    }catch(e){
-      document.getElementById('content').innerHTML='<div class="state">Couldn’t load this player.</div>';
+    // stage 2: leaderboard data this page needs (arsenal/advanced for pitchers, advanced stats for hitters)
+    let savRows=[],cuR=[],xsR=[],spdR=[],bsrR=[],oaaR=[],pcuR=[],pxsR=[],paSp=[],paBz=[],paBx=[],scR=[];
+    const fx=[];
+    if(arsSplits.length)fx.push(csv(`${SAV}/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>savRows=r));
+    if(pStat){
+      fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=pitcher&filter=&min=1&selections=xera,whiff_percent,k_percent,oz_swing_percent,barrel_batted_rate,hard_hit_percent,groundballs_percent,flyballs_percent,fastball_avg_speed&chart=false&x=xera&csv=true`).then(r=>pcuR=r));
+      fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>pxsR=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_spin&csv=true`).then(r=>paSp=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_break_z&csv=true`).then(r=>paBz=r));
+      fx.push(csv(`${SAV}/leaderboard/pitch-arsenals?year=${YEAR}&min=1&type=avg_break_x&csv=true`).then(r=>paBx=r));
+      fx.push(csv(`${SAV}/statcast_search/csv?all=true&type=details&player_type=pitcher&pitchers_lookup%5B%5D=${ID}&hfSea=${YEAR}%7C`).then(r=>scR=r));
     }
+    if(hStat){
+      fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=batter&filter=&min=1&selections=exit_velocity_avg,exit_velocity_max,barrel_batted_rate,hard_hit_percent,sweet_spot_percent,oz_swing_percent,whiff_percent,bb_percent&chart=false&x=exit_velocity_avg&csv=true`).then(r=>cuR=r));
+      fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=batter&year=${YEAR}&min=1&csv=true`).then(r=>xsR=r));
+      fx.push(csv(`${SAV}/leaderboard/sprint_speed?type=batter&year=${YEAR}&min=1&csv=true`).then(r=>spdR=r));
+      fx.push(csv(`${SAV}/leaderboard/baserunning?type=runner&year=${YEAR}&csv=true`).then(r=>bsrR=r));
+      fx.push(csv(`${SAV}/leaderboard/outs_above_average?type=Fielder&startYear=${YEAR}&endYear=${YEAR}&split=no&team=&range=year&min=q&csv=true`).then(r=>oaaR=r));
+    }
+    await Promise.all(fx);
+
+    const pitcherOnly=!!pStat&&!hStat, hitterOnly=!!hStat&&!pStat;
+    let foot='';
+    const amap=pStat?arsenalsMap(paSp,paBz,paBx):{};
+    const arsHTML=arsSplits.length?arsenalInner(arsSplits,savRows,amap):'';
+    const pBoxes=pStat?pitcherBoxes(find(pcuR,ID),find(pxsR,ID),pitcherStatcast(scR),weightedPutaway(savRows)):[];
+    const advBoxes=()=>{const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
+      foot=`<div class="footnote">OPS+, wRC+, WAR, DRS and Max EV aren’t available from the free MLB/Statcast feeds, so they show “—”.</div>`;
+      return advancedBoxes(hStat,cu,xs,spd,bsr,oaa);};
+    let html;
+    if(pitcherOnly){
+      // card | Pitching | arsenal (in line); advanced pitching boxes below
+      const fill=`<div class="row fill">${card}${statBox('Pitching',PIT,pStat)}${arsHTML?`<div class="box arsbox">${arsHTML}</div>`:''}</div>`;
+      const adv=pBoxes.length?`<div class="row" style="margin-top:16px">${pBoxes.join('')}</div>`:'';
+      html=`<div class="page" style="max-width:1400px">${fill}${adv}</div>`;
+    }else if(hitterOnly){
+      const stack=`<div class="stack">${advBoxes().join('')}</div>`;
+      html=`<div class="page" style="max-width:${3*330+2*16}px"><div class="row top">${card}${statBox('Hitting',HIT,hStat)}${stack}</div>${foot}</div>`;
+    }else{
+      const nBox=1+(pStat?1:0)+(hStat?1:0), items=[card];
+      if(pStat)items.push(statBox('Pitching',PIT,pStat));
+      if(hStat)items.push(statBox('Hitting',HIT,hStat));
+      if(arsHTML)items.push(`<div class="arsenal">${arsHTML}</div>`);
+      if(pStat)items.push(...pBoxes);
+      if(hStat)items.push(...advBoxes());
+      html=`<div class="page" style="max-width:${nBox*330+(nBox-1)*16}px"><div class="row">${items.join('')}</div>${foot}</div>`;
+    }
+    document.getElementById('app').innerHTML=html;
+    document.title=p.fullName;
   })();
 </script>
 </body>

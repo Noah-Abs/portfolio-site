@@ -11,6 +11,8 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#f4f6f8;color:#1b1f24;font-family:"Roboto",Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:24px}
+  .back{display:inline-block;margin:0 0 14px;color:#5a636d;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+  .back:hover{color:#157f8c}
   .card{flex:0 1 330px;min-width:0;max-width:330px;background:#fff;border:1px solid #e2e7ec;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
   .banner{position:relative;height:150px;background:linear-gradient(150deg,#2a5da8,#0a2342)}
   .banner img{width:100%;height:100%;object-fit:cover;object-position:top center;opacity:.95}
@@ -57,6 +59,7 @@
 </style>
 </head>
 <body>
+  <a class="back" onclick="history.length>1?history.back():location.href='/dropthird/clubs/'">← Back</a>
   <div id="app"><div class="state">Loading…</div></div>
 
 <script>
