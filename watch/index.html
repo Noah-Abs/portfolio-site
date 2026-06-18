@@ -8,86 +8,101 @@
 <title>DROPTHIRD — Watch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
+  :root{--bg:#0b0c0e;--bg2:#0e0f13;--panel:#101115;--panel2:#15161b;--border:#1b1e24;--border2:#262a32;--text:#fff;--text2:#cfd4da;--muted:#7e858f;--muted2:#474d56;--accent:#4aa3ff}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
-  body{background:#070a0e;color:#fff;font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased}
-  .viewer{height:100vh;display:flex;flex-direction:column}
+  body{background:var(--bg);color:var(--text);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased}
+  .viewer{height:100vh;display:flex;flex-direction:column;gap:9px;padding:9px}
 
   /* ---------- top: 3 columns ---------- */
-  .top{flex:1;min-height:0;display:grid;grid-template-columns:clamp(208px,19vw,330px) 1fr clamp(208px,19vw,330px);gap:0}
-  .side{background:#0d1118;border-right:1px solid #1a2230;display:flex;flex-direction:column;min-height:0}
-  .side.home{border-right:0;border-left:1px solid #1a2230}
+  .top{flex:1;min-height:0;display:grid;grid-template-columns:clamp(206px,18.5vw,322px) 1fr clamp(206px,18.5vw,322px);gap:9px}
+  .side{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
   .side-hd{padding:11px 15px;display:flex;align-items:center;justify-content:space-between;gap:8px;background:#2a3a55}
   .side-hd .team{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(15px,1.5vw,23px);letter-spacing:.5px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-  .side-hd .role{font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(9px,.8vw,12px);letter-spacing:2px;text-transform:uppercase;opacity:.92;flex:0 0 auto;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-  .feat{padding:13px 15px;display:flex;align-items:baseline;gap:9px;border-bottom:1px solid #1a2230;background:rgba(255,255,255,.018)}
+  .side-hd .role{font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(9px,.8vw,12px);letter-spacing:2px;text-transform:uppercase;opacity:.95;flex:0 0 auto;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .feat{padding:13px 15px;display:flex;align-items:baseline;gap:9px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
   .feat .num{font-family:"Anton",sans-serif;font-size:clamp(20px,2.1vw,34px);line-height:1;color:#5b6b86}
   .feat .fname{font-family:"Oswald",sans-serif;font-weight:600;font-size:clamp(15px,1.5vw,24px);line-height:1;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .feat .fpos{font-weight:600;font-size:clamp(10px,.9vw,13px);letter-spacing:1px;color:#8a93a3;flex:0 0 auto}
-  .lu-hd{padding:9px 15px 5px;font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(9px,.8vw,11px);letter-spacing:2.5px;text-transform:uppercase;color:#5b6b86}
+  .feat .fpos{font-weight:600;font-size:clamp(10px,.9vw,13px);letter-spacing:1px;color:var(--muted);flex:0 0 auto}
+  .lu-hd{padding:10px 15px 5px;font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(9px,.8vw,11px);letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2)}
   .lu{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;padding-bottom:6px}
   .lu-row{flex:1 1 0;min-height:clamp(28px,4vh,54px);display:flex;align-items:center;gap:11px;padding:0 15px;font-size:clamp(12px,1.2vw,18px);border-top:1px solid #131a26}
   .lu-row:first-child{border-top:0}
   .lu-row .lu-n{width:1.4em;text-align:center;font-weight:700;color:#5b6b86;font-variant-numeric:tabular-nums;flex:0 0 auto}
   .lu-row .lu-p{width:2.4em;font-weight:600;font-size:.82em;letter-spacing:.5px;color:#7e90ad;flex:0 0 auto}
-  .lu-row .lu-name{font-weight:500;color:#e7ecf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lu-row .lu-name{font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .lu-row.atbat{background:rgba(255,210,74,.16);box-shadow:inset 3px 0 0 #ffd24a}
   .lu-row.atbat .lu-name{color:#fff;font-weight:700}
   .lu-empty{padding:14px 15px;color:#5b6b86;font-size:12px;letter-spacing:1px;text-transform:uppercase}
 
-  /* ---------- center: video ---------- */
-  .video{position:relative;background:#000;min-width:0;overflow:hidden}
+  /* ---------- center: video / sign-in ---------- */
+  .video{position:relative;background:#000;min-width:0;overflow:hidden;border:1px solid var(--border);border-radius:16px}
   .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none}
-  .video.hasvid iframe{display:block}
-  .vph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#2c3949;text-align:center}
-  .vph svg{width:clamp(46px,5vw,74px);height:auto;opacity:.5}
-  .vph b{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:clamp(13px,1.3vw,18px);color:#3a4a5e}
-  .vph small{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#26303d}
-  .video.hasvid .vph{display:none}
+  .video.hasvid iframe{display:block}.video.hasvid .vph{display:none}
+  .vph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:20px}
+  .signin{background:var(--panel);border:1px solid var(--border2);border-radius:18px;padding:clamp(22px,3vw,40px) clamp(26px,3.4vw,52px);
+    display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 18px 60px rgba(0,0,0,.5);min-width:min(340px,80vw)}
+  .si-title{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:clamp(20px,2.4vw,32px)}
+  .si-sub{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:-8px}
+  .gbtn{min-height:44px;display:flex;justify-content:center}
+  .gbtn-real{display:inline-flex;align-items:center;gap:11px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:999px;
+    font-family:"Roboto","Oswald",system-ui,sans-serif;font-weight:600;font-size:15px;padding:11px 22px;cursor:pointer;transition:box-shadow .15s,background .15s}
+  .gbtn-real:hover{background:#f7f8f8;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .gbtn-real svg{width:18px;height:18px;flex:0 0 auto}
+  .gacct{display:none;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--border2);border-radius:12px;padding:9px 15px 9px 9px}
+  .gacct img{width:38px;height:38px;border-radius:50%;flex:0 0 auto}
+  .gacct .gn{font-weight:600;font-size:15px}.gacct .ge{font-size:12px;color:var(--muted)}
+  .si-hint{font-size:11.5px;letter-spacing:1px;color:var(--muted2);text-transform:uppercase}
+  .vph-vid{font-size:11.5px;letter-spacing:1px;color:var(--muted2)}
+  .vph-vid code{color:var(--muted);font-family:ui-monospace,monospace}
 
-  /* ---------- bottom: scoreboard strip ---------- */
-  .strip{position:relative;flex:0 0 auto;height:clamp(124px,21vh,196px);background:#0b0f16;border-top:1px solid #1a2230;
-    display:flex;align-items:center;gap:clamp(16px,2.4vw,46px);padding:0 clamp(16px,2.4vw,40px)}
+  /* ---------- bottom: scoreboard strip of boxes ---------- */
+  .strip{position:relative;flex:0 0 auto;height:clamp(130px,22vh,210px);display:flex;align-items:stretch;gap:9px}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:clamp(8px,1.2vh,14px) clamp(12px,1.6vw,22px);display:flex;flex-direction:column}
+  .box-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(8px,.78vw,11px);letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px;flex:0 0 auto}
+  .box-body{flex:1;display:flex;align-items:center}
 
-  .lscore{flex:0 0 auto}
-  .lscore table{border-collapse:collapse;font-variant-numeric:tabular-nums}
-  .lscore th,.lscore td{text-align:center;padding:clamp(2px,.5vh,6px) clamp(5px,.7vw,12px);font-size:clamp(11px,1.15vw,19px);line-height:1.1}
-  .lscore th{font-weight:600;color:#5b6b86;font-size:clamp(9px,.9vw,14px);font-family:"Oswald",sans-serif}
-  .lscore td{color:#cfd9e6;font-weight:500}
-  .lscore td.ab{font-family:"Anton",sans-serif;text-align:left;color:#fff;font-size:clamp(13px,1.35vw,22px);padding-right:clamp(8px,1vw,16px);letter-spacing:.5px}
-  .lscore .t{font-weight:700;color:#fff}
-  .lscore th.t{color:#8a93a3}
-  .lscore tr+tr td{border-top:1px solid #131a26}
-  .lscore col.sep,.lscore .rhe{border-left:1px solid #243044}
+  .lscore-box{flex:1 1 auto;min-width:0}
+  .lscore-box .box-body{justify-content:flex-start}
+  .lscore{width:100%}
+  .lscore table{border-collapse:collapse;font-variant-numeric:tabular-nums;width:100%}
+  .lscore th,.lscore td{text-align:center;padding:clamp(3px,.8vh,9px) clamp(6px,.9vw,16px);font-size:clamp(13px,1.35vw,23px);line-height:1.1}
+  .lscore th{font-weight:600;color:var(--muted);font-size:clamp(10px,1vw,15px);font-family:"Oswald",sans-serif}
+  .lscore td{color:var(--text2);font-weight:500}
+  .lscore td.ab{font-family:"Anton",sans-serif;text-align:left;color:#fff;font-size:clamp(15px,1.6vw,27px);padding-right:clamp(10px,1.2vw,20px);letter-spacing:.5px}
+  .lscore .t{font-weight:700;color:#fff}.lscore th.t{color:var(--muted)}
+  .lscore tr+tr td{border-top:1px solid #161b24}
+  .lscore .rhe{border-left:1px solid #243044}
 
-  .count{display:flex;align-items:flex-end;gap:clamp(12px,1.6vw,30px);flex:0 0 auto}
+  .count-box .box-body{gap:clamp(14px,1.8vw,34px)}
   .c-item{display:flex;flex-direction:column;align-items:center;line-height:1}
-  .c-item .lab{font-weight:600;font-size:clamp(9px,.85vw,13px);letter-spacing:2px;text-transform:uppercase;color:#8a93a3;margin-bottom:3px}
-  .c-item .val{font-family:"Anton",sans-serif;font-size:clamp(34px,6vh,84px);line-height:.92}
+  .c-item .lab{font-weight:600;font-size:clamp(9px,.85vw,13px);letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .c-item .val{font-family:"Anton",sans-serif;font-size:clamp(32px,5.6vh,80px);line-height:.9}
   .val.b{color:#4aa3ff}.val.s{color:#ffd24a}.val.o{color:#e0556a}
 
-  .diamond{position:relative;width:clamp(54px,8vh,88px);height:clamp(54px,8vh,88px);flex:0 0 auto}
+  .sit-box .box-body{gap:clamp(14px,1.8vw,30px)}
+  .diamond{position:relative;width:clamp(50px,7.4vh,84px);height:clamp(50px,7.4vh,84px);flex:0 0 auto}
   .diamond i{position:absolute;width:32%;height:32%;border:clamp(2px,.3vh,3px) solid #36465c;background:transparent;transform:rotate(45deg);border-radius:3px}
   .diamond .bs2{top:0;left:34%}.diamond .bs1{top:34%;right:0}.diamond .bs3{top:34%;left:0}
   .diamond i.on{background:#ffd24a;border-color:#ffd24a;box-shadow:0 0 12px rgba(255,210,74,.55)}
-
   .inn{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto}
-  .inn .innno{font-family:"Anton",sans-serif;font-size:clamp(30px,5.4vh,72px);line-height:.85}
+  .inn .innno{font-family:"Anton",sans-serif;font-size:clamp(30px,5.2vh,70px);line-height:.85}
   .inn .arr{width:0;height:0;border-left:clamp(7px,.9vw,12px) solid transparent;border-right:clamp(7px,.9vw,12px) solid transparent}
   .inn .arr.up{border-bottom:clamp(9px,1.2vh,15px) solid #46c77e}
   .inn .arr.dn{border-top:clamp(9px,1.2vh,15px) solid #46c77e}
 
-  /* ---------- pitch flash ---------- */
-  .flash{position:absolute;inset:0;z-index:10;background:rgba(7,10,14,.975);display:flex;align-items:center;justify-content:space-between;
-    padding:0 clamp(28px,6vw,90px);opacity:0;pointer-events:none;transition:opacity .1s}
+  /* ---------- pitch flash (covers the whole strip) ---------- */
+  .flash{position:absolute;inset:0;z-index:10;background:rgba(7,10,14,.975);border:1px solid var(--border2);border-radius:16px;
+    display:flex;align-items:center;justify-content:space-between;padding:0 clamp(28px,6vw,90px);opacity:0;pointer-events:none;transition:opacity .1s}
   .flash.show{opacity:1}
   .flash .ptype{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(26px,5.2vw,76px);line-height:.95;letter-spacing:1px;max-width:62%}
   .flash .pvelo{text-align:right;flex:0 0 auto}
   .flash .pvelo b{font-family:"Anton",sans-serif;font-size:clamp(46px,9vw,128px);line-height:.85;color:#ffd24a}
-  .flash .pvelo small{display:block;font-weight:600;font-size:clamp(12px,1.4vw,22px);letter-spacing:3px;text-transform:uppercase;color:#8a93a3;margin-top:2px}
+  .flash .pvelo small{display:block;font-weight:600;font-size:clamp(12px,1.4vw,22px);letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 
-  .load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#5b6b86;letter-spacing:3px;text-transform:uppercase;font-size:14px}
+  .load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);letter-spacing:3px;text-transform:uppercase;font-size:14px}
 </style>
 </head>
 <body>
@@ -103,8 +118,14 @@
       <main class="video" id="video">
         <iframe id="vid" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
         <div class="vph" id="vph">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>
-          <b>Video</b><small>add ?video=URL to embed a stream</small>
+          <div class="signin">
+            <div class="si-title">Watch</div>
+            <div class="si-sub">Sign in to continue</div>
+            <div class="gbtn" id="gbtn"></div>
+            <div class="gacct" id="gacct"></div>
+            <div class="si-hint" id="ghint"></div>
+          </div>
+          <div class="vph-vid">…or add <code>?video=URL</code> to embed a stream here</div>
         </div>
       </main>
 
@@ -117,14 +138,16 @@
     </div>
 
     <div class="strip" id="strip">
-      <div class="lscore" id="lscore"></div>
-      <div class="count">
+      <div class="box lscore-box"><div class="box-h">Line Score</div><div class="box-body"><div class="lscore" id="lscore"></div></div></div>
+      <div class="box count-box"><div class="box-h">Count</div><div class="box-body">
         <div class="c-item"><span class="lab">Balls</span><span class="val b" id="balls">0</span></div>
         <div class="c-item"><span class="lab">Strikes</span><span class="val s" id="strikes">0</span></div>
         <div class="c-item"><span class="lab">Outs</span><span class="val o" id="outs">0</span></div>
-      </div>
-      <div class="diamond"><i class="bs2" id="bs2"></i><i class="bs1" id="bs1"></i><i class="bs3" id="bs3"></i></div>
-      <div class="inn"><span class="arr up" id="arrUp"></span><span class="innno" id="innNo">–</span><span class="arr dn" id="arrDn"></span></div>
+      </div></div>
+      <div class="box sit-box"><div class="box-h">Bases · Inning</div><div class="box-body">
+        <div class="diamond"><i class="bs2" id="bs2"></i><i class="bs1" id="bs1"></i><i class="bs3" id="bs3"></i></div>
+        <div class="inn"><span class="arr up" id="arrUp"></span><span class="innno" id="innNo">–</span><span class="arr dn" id="arrDn"></span></div>
+      </div></div>
       <div class="flash" id="flash"><div class="ptype" id="fType"></div><div class="pvelo"><b id="fVelo"></b><small>mph</small></div></div>
     </div>
   </div>
@@ -136,18 +159,40 @@
   const lastName=f=>{const p=String(f||'').trim().split(' ');return p.length>1?p.slice(1).join(' '):(p[0]||'');};
   const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
   const ptDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const PARAMS=new URLSearchParams(location.search);
 
   let PK=0, GAME=null, busy=false, lastPitchKey=null, flashTimer=null;
 
+  /* ---------- Google sign-in ----------
+     Real in-page sign-in needs a Google OAuth client ID whose authorized origins
+     include this domain. Provide it via ?gclient=YOUR_ID or set GCLIENT below.    */
+  const GCLIENT = PARAMS.get('gclient') || '';
+  const GLOGO='<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+  function onCred(r){try{const p=JSON.parse(atob(r.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    document.getElementById('gbtn').style.display='none';document.getElementById('ghint').style.display='none';
+    const a=document.getElementById('gacct');a.style.display='flex';
+    a.innerHTML=`<img src="${esc(p.picture||'')}" referrerpolicy="no-referrer" onerror="this.style.display='none'"><div><div class="gn">${esc(p.name||'Signed in')}</div><div class="ge">${esc(p.email||'')}</div></div>`;
+  }catch(e){}}
+  function initGoogle(){
+    const btn=document.getElementById('gbtn'), hint=document.getElementById('ghint');
+    if(!GCLIENT){
+      btn.innerHTML=`<button class="gbtn-real">${GLOGO}Sign in with Google</button>`;
+      btn.querySelector('button').onclick=()=>window.open('https://accounts.google.com/','_blank','noopener');
+      hint.textContent='Add ?gclient=YOUR_ID for in-page sign-in';return;
+    }
+    if(!(window.google&&google.accounts&&google.accounts.id))return setTimeout(initGoogle,300);
+    google.accounts.id.initialize({client_id:GCLIENT,callback:onCred});
+    google.accounts.id.renderButton(btn,{theme:'filled_black',size:'large',shape:'pill',text:'signin_with',width:260});
+    google.accounts.id.prompt();
+  }
+
   async function pickGame(){
-    let pk=+new URLSearchParams(location.search).get('pk');
-    if(pk)return pk;
+    let pk=+PARAMS.get('pk'); if(pk)return pk;
     const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${ptDate()}`);
     const games=(((sch&&sch.dates)||[])[0]||{}).games||[];
     const live=games.find(g=>g.status&&g.status.abstractGameState==='Live');
     return ((live||games[0])||{}).gamePk||0;
   }
-
   function featInfo(team,id){
     const bx=GAME.liveData.boxscore.teams[team];
     const pl=bx&&bx.players&&bx.players['ID'+id];
@@ -155,12 +200,10 @@
     return {num:(pl&&pl.jerseyNumber)||(gp&&gp.primaryNumber)||'',
             pos:(pl&&pl.position&&pl.position.abbreviation)||(gp&&gp.primaryPosition&&gp.primaryPosition.abbreviation)||''};
   }
-
-  function renderSide(team){             // team = 'away' | 'home'
+  function renderSide(team){
     const ls=GAME.liveData.linescore||{}, isTop=!!ls.isTopInning;
     const batting=(isTop&&team==='away')||(!isTop&&team==='home');
-    const t=GAME.gameData.teams[team]||{};
-    const cap=team.charAt(0).toUpperCase()+team.slice(1);
+    const t=GAME.gameData.teams[team]||{}, cap=team.charAt(0).toUpperCase()+team.slice(1);
     document.getElementById('team'+cap).textContent=t.teamName||t.name||'—';
     document.getElementById('role'+cap).textContent=batting?'Batting':'Pitching';
     document.querySelector('.side.'+team+' .side-hd').style.background=TEAMCOLOR[t.id]||'#2a3a55';
@@ -178,16 +221,14 @@
       html+=`<div class="lu-row${id===batterId?' atbat':''}"><span class="lu-n">${i+1}</span><span class="lu-p">${esc(ps)}</span><span class="lu-name">${esc(nm)}</span></div>`;});
     document.getElementById('lu'+cap).innerHTML=html||'<div class="lu-empty">Lineup not posted</div>';
   }
-
   function renderStrip(){
     const ls=GAME.liveData.linescore||{};
     const a=GAME.gameData.teams.away||{}, h=GAME.gameData.teams.home||{};
-    const innings=ls.innings||[], n=Math.max(9,innings.length);
-    const teams=ls.teams||{};
-    let head='<tr><th></th>';for(let i=1;i<=n;i++)head+=`<th>${i}</th>`;head+='<th class="t">R</th><th class="t">H</th><th class="t">E</th></tr>';
+    const innings=ls.innings||[], n=Math.max(9,innings.length), teams=ls.teams||{};
+    let head='<tr><th></th>';for(let i=1;i<=n;i++)head+=`<th>${i}</th>`;head+='<th class="t rhe">R</th><th class="t">H</th><th class="t">E</th></tr>';
     const row=(abv,side)=>{let r=`<tr><td class="ab">${esc(abv||'')}</td>`;
       for(let i=1;i<=n;i++){const inn=innings.find(x=>x.num===i);const v=inn&&inn[side]&&inn[side].runs;r+=`<td>${v==null?'–':v}</td>`;}
-      const tt=teams[side]||{};r+=`<td class="t">${tt.runs==null?0:tt.runs}</td><td class="t">${tt.hits==null?0:tt.hits}</td><td class="t">${tt.errors==null?0:tt.errors}</td></tr>`;return r;};
+      const tt=teams[side]||{};r+=`<td class="t rhe">${tt.runs==null?0:tt.runs}</td><td class="t">${tt.hits==null?0:tt.hits}</td><td class="t">${tt.errors==null?0:tt.errors}</td></tr>`;return r;};
     document.getElementById('lscore').innerHTML=`<table>${head}${row(a.abbreviation,'away')}${row(h.abbreviation,'home')}</table>`;
     document.getElementById('balls').textContent=ls.balls||0;
     document.getElementById('strikes').textContent=ls.strikes||0;
@@ -199,7 +240,6 @@
     document.getElementById('arrUp').style.visibility=isTop?'visible':'hidden';
     document.getElementById('arrDn').style.visibility=isTop?'hidden':'visible';
   }
-
   function flash(type,velo){
     document.getElementById('fType').textContent=String(type||'Pitch').toUpperCase();
     document.getElementById('fVelo').textContent=velo!=null?Math.round(velo):'';
@@ -212,31 +252,28 @@
     if(!cp)return;
     const pitches=(cp.playEvents||[]).filter(e=>e.isPitch);
     if(!pitches.length)return;
-    const last=pitches[pitches.length-1];
-    const key=cp.atBatIndex+':'+(last.pitchNumber||pitches.length);
-    if(lastPitchKey===null){lastPitchKey=key;return;}        // first load — don't flash retroactively
+    const last=pitches[pitches.length-1], key=cp.atBatIndex+':'+(last.pitchNumber||pitches.length);
+    if(lastPitchKey===null){lastPitchKey=key;return;}
     if(key!==lastPitchKey){lastPitchKey=key;
       flash(last.details&&last.details.type&&last.details.type.description,last.pitchData&&last.pitchData.startSpeed);}
   }
-
   function render(){renderSide('away');renderSide('home');renderStrip();}
 
   async function poll(){
     if(busy||!PK)return; busy=true;
-    const f=await j(`https://statsapi.mlb.com/api/v1.1/game/${PK}/feed/live`);
-    busy=false;
+    const f=await j(`https://statsapi.mlb.com/api/v1.1/game/${PK}/feed/live`); busy=false;
     if(!f||!f.gameData)return;
     GAME=f; const load=document.getElementById('load'); if(load)load.remove();
     render(); checkPitch();
   }
 
   (async function(){
-    const v=new URLSearchParams(location.search).get('video');
+    const v=PARAMS.get('video');
     if(v){const vid=document.getElementById('vid');vid.src=v;document.getElementById('video').classList.add('hasvid');}
+    initGoogle();
     PK=await pickGame();
     if(!PK){document.getElementById('load').textContent='No game found today.';return;}
-    await poll();
-    setInterval(poll,3000);
+    await poll(); setInterval(poll,3000);
   })();
 </script>
 </body>
