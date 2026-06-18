@@ -13,7 +13,7 @@
   html,body{height:100%}
   body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 18px;
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 64px 12px 18px;
     background:var(--bg2,#0e0f13);border-bottom:1px solid var(--border,#1b1e24)}
   .ico{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#262a32);background:var(--panel2,#15161b);
     color:var(--text3,#aab0b9);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;transition:.15s}
@@ -80,6 +80,18 @@
   .sizer::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--accent,#4aa3ff);cursor:pointer;border:3px solid var(--bg2,#0e0f13);box-shadow:0 2px 9px rgba(0,0,0,.55)}
   .sizer::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--accent,#4aa3ff);cursor:pointer;border:3px solid var(--bg2,#0e0f13)}
   .sizescale{display:flex;justify-content:space-between;margin-top:7px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#474d56)}
+  .sizer:disabled{opacity:.4;cursor:not-allowed}
+  .panel-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .panel-row span{font-size:13.5px;color:var(--text2,#cfd4da)}
+  .panel-hint{margin-top:11px;font-size:11.5px;color:var(--muted,#7e858f);line-height:1.45}
+  .ghtg{width:46px;height:25px;border-radius:13px;background:var(--border2,#262a32);position:relative;cursor:pointer;border:none;flex:0 0 auto;transition:background .18s}
+  .ghtg::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .18s}
+  .ghtg.on{background:var(--accent,#4aa3ff)}.ghtg.on::after{left:24px}
+  .grip{position:absolute;right:0;bottom:0;z-index:6;width:calc(22px*var(--s,1));height:calc(22px*var(--s,1));display:flex;align-items:flex-end;justify-content:flex-end;
+    padding:2px 3px;color:#7e90ad;font-size:calc(13px*var(--s,1));line-height:1;cursor:nwse-resize;opacity:0;transition:opacity .14s;touch-action:none;user-select:none}
+  .ghc:hover .grip{opacity:.85}.grip:hover{color:#cfe0ff}
+  @media(hover:none){.grip{opacity:.55}}
+  body.resizing{cursor:nwse-resize;user-select:none}
   .panel{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:88vw;z-index:40;background:var(--bg2,#0e0f13);
     border-left:1px solid var(--border,#1b1e24);box-shadow:-18px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column}
   .panel.open{transform:none}
@@ -114,9 +126,11 @@
   <div class="panel" id="panel">
     <div class="panel-h"><b>Display</b><span class="panel-x" id="panelX">✕</span></div>
     <div class="panel-sec">
-      <div class="panel-lbl">Card size <b id="sizeVal">100%</b></div>
+      <div class="panel-row"><span>Fit all to one screen</span><button class="ghtg" id="autofitTg" aria-label="Fit to screen"></button></div>
+      <div class="panel-lbl" style="margin-top:15px">Card size <b id="sizeVal">100%</b></div>
       <input type="range" id="sizeRange" class="sizer" min="0.8" max="2.5" step="0.05" value="1">
       <div class="sizescale"><span>Compact</span><span>Huge · TV</span></div>
+      <div class="panel-hint">…or just drag any card's bottom-right corner ⤢ to resize.</div>
     </div>
     <div class="panel-note">Hide a game and it disappears completely — the rest grow to fill the screen, and a fast score won't spoil what's still on your TV. Tap a row to toggle.</div>
     <div class="plist" id="plist"></div>
@@ -154,6 +168,7 @@
       <div class="gh-hdr"><div class="gh-hr pit"><span class="gh-nm"></span><span class="gh-st"></span></div><div class="gh-hr bat"><span class="gh-nm"></span><span class="gh-st"></span></div></div>
       <div class="gh-body">${panel(a,'away')}<div class="gh-c"></div>${panel(h,'home')}</div>
       <div class="gh-dia"><span class="dia"><i class="d2"></i><i class="d1"></i><i class="d3"></i></span></div>
+      <span class="grip" title="Drag to resize">⤢</span>
     </div>`;
   }
 
@@ -208,9 +223,12 @@
         :(games.length?'<div class="state">All games hidden — open ⚙ to show some.</div>':'<div class="state">No games scheduled today.</div>');
       grid.querySelectorAll('.ghc').forEach(c=>{const pk=+c.dataset.pk;
         c.querySelector('.eye').onclick=(e)=>{e.stopPropagation();HIDDEN.add(pk);saveHidden();ensure(GAMES);buildPanel();};
-        c.onclick=()=>{location.href=`../games/?pk=${pk}&src=hub`;};});
+        const grip=c.querySelector('.grip');if(grip){grip.onclick=e=>e.stopPropagation();grip.addEventListener('pointerdown',startResize);}
+        c.onclick=()=>{if(Date.now()-lastResize<300)return;location.href=`../games/?pk=${pk}&src=hub`;};});
     }
     vis.forEach(g=>{const c=grid.querySelector(`.ghc[data-pk="${g.gamePk}"]`);if(c)paint(c,g);});
+    const sig=vis.map(g=>g.gamePk+':'+((g.status||{}).abstractGameState||'')).join(',');
+    if(sig!==lastFitSig){lastFitSig=sig;fit();}
   }
   function repaint(){GAMES.forEach(g=>{const c=document.querySelector(`.ghc[data-pk="${g.gamePk}"]`);if(c)paint(c,g);});}
 
@@ -258,14 +276,38 @@
   document.getElementById('filterBtn').onclick=openPanel;
   document.getElementById('panelX').onclick=closePanel; scrim.onclick=closePanel;
 
-  // card size (drag to scale every card up/down — persists)
-  const sizeRange=document.getElementById('sizeRange'), sizeVal=document.getElementById('sizeVal');
-  const applySize=s=>{document.body.style.setProperty('--s',s);sizeVal.textContent=Math.round(s*100)+'%';};
-  let SIZE=parseFloat(localStorage.getItem('dt-gh-size'));
-  if(!(SIZE>=0.8&&SIZE<=2.5))SIZE=1.15;
-  sizeRange.value=SIZE; applySize(SIZE);
-  sizeRange.oninput=()=>{SIZE=parseFloat(sizeRange.value);applySize(SIZE);};
-  sizeRange.onchange=()=>{try{localStorage.setItem('dt-gh-size',SIZE);}catch(e){}};
+  // ---- card sizing: auto-fit everything to one screen, OR size it yourself (slider / corner-drag) ----
+  const sizeRange=document.getElementById('sizeRange'), sizeVal=document.getElementById('sizeVal'), autofitTg=document.getElementById('autofitTg');
+  let SIZE=parseFloat(localStorage.getItem('dt-gh-size')); if(!(SIZE>=0.8&&SIZE<=2.5))SIZE=1.15;
+  let AUTOFIT=(localStorage.getItem('dt-gh-autofit')||'1')!=='0';
+  let lastResize=0, lastFitSig='';
+  const applySize=s=>{document.body.style.setProperty('--s',s);if(sizeVal)sizeVal.textContent=Math.round(s*100)+'%';if(sizeRange)sizeRange.value=Math.max(0.8,Math.min(2.5,s));};
+  const persistSize=()=>{try{localStorage.setItem('dt-gh-size',SIZE);}catch(e){}};
+  const saveAutofit=()=>{try{localStorage.setItem('dt-gh-autofit',AUTOFIT?'1':'0');}catch(e){}};
+  const reflectAutofit=()=>{autofitTg.classList.toggle('on',AUTOFIT);sizeRange.disabled=AUTOFIT;};
+  function fit(){
+    if(!AUTOFIT)return;
+    const grid=document.getElementById('grid'), tb=document.querySelector('.topbar');
+    if(!grid||!grid.querySelector('.ghc'))return;
+    const avail=window.innerHeight-(tb?tb.offsetHeight:56)-22;
+    if(avail<90)return;
+    let lo=0.6,hi=2.6;
+    for(let i=0;i<11;i++){const mid=(lo+hi)/2;document.body.style.setProperty('--s',mid);if(grid.scrollHeight<=avail)lo=mid;else hi=mid;}
+    SIZE=Math.max(0.8,Math.min(2.5,lo)); applySize(lo);
+  }
+  function startResize(e){
+    e.preventDefault(); e.stopPropagation();
+    const sx=e.clientX, sy=e.clientY, start=SIZE;
+    AUTOFIT=false; saveAutofit(); reflectAutofit(); document.body.classList.add('resizing');
+    const move=ev=>{const d=((ev.clientX-sx)+(ev.clientY-sy))/2; SIZE=Math.max(0.8,Math.min(2.5,start+d/260)); applySize(SIZE); lastResize=Date.now();};
+    const up=()=>{document.body.classList.remove('resizing'); document.removeEventListener('pointermove',move); document.removeEventListener('pointerup',up); persistSize(); lastResize=Date.now();};
+    document.addEventListener('pointermove',move); document.addEventListener('pointerup',up);
+  }
+  applySize(SIZE); reflectAutofit();
+  sizeRange.oninput=()=>{AUTOFIT=false; reflectAutofit(); SIZE=parseFloat(sizeRange.value); applySize(SIZE);};
+  sizeRange.onchange=()=>{AUTOFIT=false; saveAutofit(); reflectAutofit(); persistSize();};
+  autofitTg.onclick=()=>{AUTOFIT=!AUTOFIT; saveAutofit(); reflectAutofit(); if(AUTOFIT)fit(); else{applySize(SIZE); persistSize();}};
+  window.addEventListener('resize',()=>{if(AUTOFIT)fit();});
 
   (async function(){
     const tj=await j(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${new Date().getFullYear()}`);
