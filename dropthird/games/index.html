@@ -518,10 +518,11 @@
     const live=g&&g.status&&g.status.abstractGameState==='Live';
     const src=new URLSearchParams(location.search).get('src');
     view.innerHTML=
-      `<div class="back" id="back">${src==='hub'?'← GameHub':'← All games'}</div>`+scoreboard()+
+      `<div class="back" id="back">${src==='watch'?'← Watch':src==='hub'?'← GameHub':'← All games'}</div>`+scoreboard()+
       `<div class="gdtabs"><button class="gdtab" data-t="summary">Summary</button><button class="gdtab" data-t="plays">Plays</button><button class="gdtab" data-t="box">Box Score</button></div>`+
       `<div id="gdc"></div>`;
     document.getElementById('back').onclick=()=>{stopPoll();
+      if(src==='watch'){location.href='/watch/';return;}
       if(src==='hub'){location.href='../gamehub/';return;}
       const u=new URL(location.href);u.searchParams.delete('pk');u.searchParams.delete('tab');u.searchParams.delete('src');history.replaceState(null,'',u);loadList();};
     view.querySelectorAll('.gdtab').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
