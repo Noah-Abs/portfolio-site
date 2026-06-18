@@ -37,7 +37,10 @@
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
 
   /* ===== bracket ===== */
-  .po{display:flex;align-items:stretch;justify-content:center;gap:2px;overflow-x:auto;padding:6px 0 18px;min-height:540px}
+  .po-fit{width:100%;overflow:hidden}
+  .po-sizer{margin:0 auto}
+  .po-scale{width:max-content;transform-origin:top left}
+  .po{display:flex;align-items:stretch;gap:2px;padding:6px 0 18px;min-height:540px}
   .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;padding:0 4px}
   .po-head span{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(16px,2vw,26px);letter-spacing:1.5px;color:var(--muted,#69707b)}
   .pside{display:flex;align-items:stretch}
@@ -167,35 +170,53 @@
   const roundCol=(label,games,cls)=>`<div class="round ${cls}"><div class="round-h">${esc(label)}</div><div class="games">${games}</div></div>`;
 
   function wcGames(s){
-    return game(slot(1,s[1])+slot('',null,'Bye'))+
-           game(slot(4,s[4])+slot(5,s[5]))+
-           game(slot(3,s[3])+slot(6,s[6]))+
-           game(slot(2,s[2])+slot('',null,'Bye'));
+    return game(slot(4,s[4])+slot(5,s[5]))+
+           game(slot(3,s[3])+slot(6,s[6]));
+  }
+  function dsGames(s){
+    return game(slot(1,s[1])+slot('',null,'WC 4 / 5'))+
+           game(slot(2,s[2])+slot('',null,'WC 3 / 6'));
   }
   function sideNL(){
     const s=leaguePic('NL');
     return `<div class="pside l">`+
-      roundCol('Wild Card',wcGames(s),'out')+
-      roundCol('Division Series',blankGame()+blankGame(),'out in')+
+      roundCol('Wild Card',wcGames(s),'lead')+
+      roundCol('Division Series',dsGames(s),'out in')+
       roundCol('Pennant',blankGame(),'lead in')+`</div>`;
   }
   function sideAL(){
     const s=leaguePic('AL');
     return `<div class="pside r">`+
       roundCol('Pennant',blankGame(),'lead in')+
-      roundCol('Division Series',blankGame()+blankGame(),'out in')+
-      roundCol('Wild Card',wcGames(s),'out')+`</div>`;
+      roundCol('Division Series',dsGames(s),'out in')+
+      roundCol('Wild Card',wcGames(s),'lead')+`</div>`;
   }
   function worldSeries(){
     return `<div class="center"><div class="ws"><div class="ws-h">World Series</div><div class="gbox">`+
       slot('NL',null,'Champion')+slot('AL',null,'Champion')+`</div></div></div>`;
   }
 
+  function fitBracket(){
+    const fit=document.querySelector('.po-fit'),sizer=document.querySelector('.po-sizer'),sc=document.querySelector('.po-scale');
+    if(!fit||!sizer||!sc)return;
+    sc.style.transform='none';sizer.style.width='';sizer.style.height='';
+    const w=sc.offsetWidth,h=sc.offsetHeight,avail=fit.clientWidth;
+    if(!w)return;
+    const k=Math.min(1,avail/w);
+    sc.style.transform='scale('+k+')';
+    sizer.style.width=(w*k)+'px';sizer.style.height=(h*k)+'px';
+  }
   function render(){
     document.getElementById('content').innerHTML=
+      `<div class="po-fit"><div class="po-sizer"><div class="po-scale">`+
       `<div class="po-head"><span>National League</span><span>American League</span></div>`+
-      `<div class="po">${sideNL()}${worldSeries()}${sideAL()}</div>`;
+      `<div class="po">${sideNL()}${worldSeries()}${sideAL()}</div>`+
+      `</div></div></div>`;
+    fitBracket();
+    setTimeout(fitBracket,250);
+    if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitBracket);
   }
+  window.addEventListener('resize',fitBracket);
 
   (async function(){
     try{
