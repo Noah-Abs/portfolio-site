@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — GameHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 18px;
+    background:var(--bg2,#0e0f13);border-bottom:1px solid var(--border,#1b1e24)}
+  .ico{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#262a32);background:var(--panel2,#15161b);
+    color:var(--text3,#aab0b9);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;transition:.15s}
+  .ico:hover{color:var(--text,#fff);border-color:#3b454f}
+  .ico svg{width:20px;height:20px}
+  .tb-mid{flex:1;min-width:0;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .tb-title{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:22px;line-height:1}
+  .tb-meta{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f)}
+  .tb-meta .live{color:#46c77e}.tb-meta .pause{color:#e0a23a}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#46c77e;margin-right:5px;vertical-align:middle;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:12px;padding:16px 18px 60px;max-width:1400px;margin:0 auto}
+  .ghc{position:relative;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:13px 14px;overflow:hidden}
+  .ghc .eye{position:absolute;top:9px;right:9px;width:26px;height:26px;border:0;background:none;color:var(--muted2,#4a5159);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:7px}
+  .ghc .eye:hover{color:var(--text2,#cfd4da);background:var(--panel2,#15161b)}
+  .ghc .eye svg{width:17px;height:17px}
+  .teams{display:flex;flex-direction:column;gap:7px}
+  .trow{display:flex;align-items:center;gap:10px}
+  .trow img{width:30px;height:30px;object-fit:contain;flex:0 0 auto}
+  .trow .abv{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:.5px;color:var(--text2,#cfd4da)}
+  .trow .sc{margin-left:auto;font-family:"Oswald",sans-serif;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;color:var(--muted,#7e858f)}
+  .trow.lead .abv{color:var(--text,#fff)}.trow.lead .sc{color:var(--text,#fff)}
+
+  .mid{margin-top:11px;padding-top:11px;border-top:1px solid var(--panel2,#16181d);min-height:30px}
+  .mid .live{display:flex;align-items:center;gap:7px;font-family:"Oswald",sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--accent,#4aa3ff)}
+  .mid .lvdot{width:7px;height:7px;border-radius:50%;background:#46c77e;animation:pulse 1.4s infinite}
+  .mid .sit{display:flex;align-items:center;gap:12px;margin-top:8px}
+  .bases{position:relative;width:38px;height:26px;flex:0 0 auto}
+  .base{position:absolute;width:12px;height:12px;background:var(--panel2,#15161b);border:1px solid var(--border2,#2a2f37);transform:rotate(45deg)}
+  .b2{top:0;left:13px}.b1{top:11px;left:23px}.b3{top:11px;left:3px}
+  .base.on{background:#ffd24a;border-color:#ffd24a}
+  .cnt{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;color:var(--text,#fff)}
+  .outs{display:flex;gap:4px}
+  .out{width:8px;height:8px;border-radius:50%;background:var(--border2,#2a2f37)}
+  .out.on{background:#e0556a}
+  .mp{margin-top:6px;font-size:12.5px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mp span{display:inline-block;width:18px;font-weight:700;font-size:10px;letter-spacing:1px;color:var(--muted,#7e858f);text-transform:uppercase}
+  .fin{font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--text2,#cfd4da)}
+  .prev{font-size:13px;letter-spacing:.5px;color:var(--muted,#7e858f)}
+
+  .ghc.hidden .mid,.ghc.hidden .trow .sc{visibility:hidden}
+  .mask{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    background:rgba(11,12,14,.86);backdrop-filter:blur(3px)}
+  .ghc.hidden .mask{display:flex}
+  .mask .mh{font-family:"Oswald",sans-serif;font-weight:600;letter-spacing:2px;text-transform:uppercase;font-size:11px;color:var(--muted,#7e858f)}
+  .mask .mt{font-weight:600;color:var(--text2,#cfd4da);font-size:14px}
+  .mask button{border:1px solid var(--border2,#2f3540);background:var(--panel2,#15161b);color:var(--text2,#cfd4da);
+    font-family:"Oswald",sans-serif;font-weight:600;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border-radius:8px;cursor:pointer}
+  .mask button:hover{color:var(--text,#fff);border-color:#3b454f}
+
+  /* exclude panel */
+  .panel{position:fixed;top:0;right:0;bottom:0;width:320px;max-width:88vw;z-index:40;background:var(--bg2,#0e0f13);
+    border-left:1px solid var(--border,#1b1e24);box-shadow:-18px 0 50px rgba(0,0,0,.5);transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column}
+  .panel.open{transform:none}
+  .panel-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border,#1b1e24)}
+  .panel-h b{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:17px}
+  .panel-x{cursor:pointer;color:var(--muted,#7e858f);font-size:20px;line-height:1}.panel-x:hover{color:#fff}
+  .panel-note{padding:11px 18px;font-size:11.5px;color:var(--muted,#7e858f);line-height:1.5;border-bottom:1px solid var(--border,#1b1e24)}
+  .plist{flex:1;overflow-y:auto;padding:6px 0}
+  .pgame{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;border-top:1px solid var(--panel2,#16181d)}
+  .pgame:first-child{border-top:0}.pgame:hover{background:var(--panel2,#15161b)}
+  .pgame img{width:18px;height:18px;object-fit:contain;flex:0 0 auto}
+  .pgame .pn{flex:1;min-width:0;font-size:13px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pgame.hid .pn{color:var(--muted2,#4a5159)}
+  .pgame .tg{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid var(--border2,#2a2f37);color:var(--muted,#7e858f)}
+  .pgame.hid .tg{color:#e0a23a;border-color:rgba(224,162,58,.4)}
+  .scrim{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.4);display:none}.scrim.open{display:block}
+
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:60px 10px;grid-column:1/-1}
+  @media(max-width:600px){.tb-title{font-size:18px}.grid{padding:12px 12px 50px;gap:10px}}
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <a class="ico" href="../homescreen/" title="Back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></a>
+    <div class="tb-mid"><span class="tb-title">GameHub</span><span class="tb-meta" id="meta"></span></div>
+    <button class="ico" id="filterBtn" title="Hide games" aria-label="Hide games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20C5 20 1 12 1 12a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
+  </div>
+  <div class="grid" id="grid"><div class="state">Loading games…</div></div>
+
+  <div class="scrim" id="scrim"></div>
+  <div class="panel" id="panel">
+    <div class="panel-h"><b>Hide Games</b><span class="panel-x" id="panelX">✕</span></div>
+    <div class="panel-note">Hidden games are masked so a live update doesn't spoil a game you're watching on a delay. Un-hide when your TV catches up.</div>
+    <div class="plist" id="plist"></div>
+  </div>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  // Pacific-time helpers
+  const ptParts=()=>{const f=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:false});
+    const p=f.formatToParts(new Date());const h=+(p.find(x=>x.type==='hour').value)%24,m=+(p.find(x=>x.type==='minute').value);return {h,m,mins:h*60+m};};
+  const ptDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const ptClock=()=>new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'}).format(new Date());
+  const inWindow=()=>{const t=ptParts().mins;return t>=600 && t<(23*60+45);};   // 10:00 AM – 11:45 PM PT
+  const gameTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'});}catch(e){return '';}};
+
+  let ABBR={}, GAMES=[], busy=false;
+  const HIDDEN=new Set(JSON.parse(localStorage.getItem('dt-gh-hidden')||'[]'));
+  const PEEK=new Set();
+  const saveHidden=()=>{try{localStorage.setItem('dt-gh-hidden',JSON.stringify([...HIDDEN]));}catch(e){}};
+  const abv=t=>ABBR[t.id]||String(t.name||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+
+  function cardHTML(g){
+    const a=g.teams.away.team, h=g.teams.home.team;
+    const row=(t)=>`<div class="trow" data-s="${t===a?'away':'home'}"><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="abv">${esc(abv(t))}</span><span class="sc"></span></div>`;
+    return `<div class="ghc" data-pk="${g.gamePk}">
+      <button class="eye" title="Hide">${EYE}</button>
+      <div class="teams">${row(a)}${row(h)}</div>
+      <div class="mid"></div>
+      <div class="mask"><div class="mh">Hidden</div><div class="mt">${esc(abv(a))} @ ${esc(abv(h))}</div><button class="reveal">Peek</button></div>
+    </div>`;
+  }
+
+  function paint(card,g){
+    const pk=g.gamePk, masked=HIDDEN.has(pk)&&!PEEK.has(pk);
+    card.classList.toggle('hidden',masked);
+    const ls=g.linescore||{}, st=g.status||{}, abst=st.abstractGameState;
+    const aS=g.teams.away.score, hS=g.teams.home.score;
+    const ar=card.querySelector('.trow[data-s="away"]'), hr=card.querySelector('.trow[data-s="home"]');
+    ar.querySelector('.sc').textContent=(aS==null?'':aS); hr.querySelector('.sc').textContent=(hS==null?'':hS);
+    ar.classList.toggle('lead',aS!=null&&hS!=null&&aS>hS); hr.classList.toggle('lead',aS!=null&&hS!=null&&hS>aS);
+    let mid='';
+    if(abst==='Live'){
+      const inn=((ls.inningState||'').replace('Middle','Mid').replace('Bottom','Bot'))+' '+(ls.currentInning||'');
+      const on=b=>(ls.offense&&ls.offense[b])?'on':'';
+      const bases=`<span class="bases"><i class="base b2 ${on('second')}"></i><i class="base b1 ${on('first')}"></i><i class="base b3 ${on('third')}"></i></span>`;
+      const o=ls.outs||0, outs=[0,1,2].map(i=>`<i class="out ${i<o?'on':''}"></i>`).join('');
+      const bat=ls.offense&&ls.offense.batter&&ls.offense.batter.fullName, pit=ls.defense&&ls.defense.pitcher&&ls.defense.pitcher.fullName;
+      const isMid=/Mid|End/.test(inn);
+      mid=`<div class="live"><span class="lvdot"></span>${esc(inn.trim())}</div>`+
+        (isMid?'':`<div class="sit">${bases}<span class="cnt">${ls.balls||0}-${ls.strikes||0}</span><span class="outs">${outs}</span></div>`+
+          `${bat?`<div class="mp"><span>AB</span>${esc(bat)}</div>`:''}${pit?`<div class="mp"><span>P</span>${esc(pit)}</div>`:''}`);
+    }else if(abst==='Final'){
+      const ei=(ls.currentInning&&ls.currentInning!==9)?' · '+ls.currentInning:'';
+      mid=`<div class="fin">Final${ei}</div>`;
+    }else{
+      const ds=st.detailedState||'';
+      mid=`<div class="prev">${ds==='Warmup'||ds==='Pre-Game'?esc(ds)+' · ':''}${esc(gameTime(g))}${/Postponed|Delayed|Suspended/.test(ds)?' · '+esc(ds):''}</div>`;
+    }
+    card.querySelector('.mid').innerHTML=mid;
+  }
+
+  function ensure(games){
+    const grid=document.getElementById('grid');
+    const want=games.map(g=>g.gamePk).join(',');
+    if(grid.dataset.want!==want){
+      grid.dataset.want=want;
+      grid.innerHTML=games.length?games.map(cardHTML).join(''):'<div class="state">No games scheduled today.</div>';
+      grid.querySelectorAll('.ghc').forEach(c=>{const pk=+c.dataset.pk;
+        c.querySelector('.eye').onclick=()=>{HIDDEN.add(pk);PEEK.delete(pk);saveHidden();repaint();buildPanel();};
+        c.querySelector('.reveal').onclick=()=>{PEEK.add(pk);repaint();};});
+    }
+    games.forEach(g=>{const c=grid.querySelector(`.ghc[data-pk="${g.gamePk}"]`);if(c)paint(c,g);});
+  }
+  function repaint(){GAMES.forEach(g=>{const c=document.querySelector(`.ghc[data-pk="${g.gamePk}"]`);if(c)paint(c,g);});}
+
+  function buildPanel(){
+    const list=document.getElementById('plist');
+    list.innerHTML=GAMES.map(g=>{const a=g.teams.away.team,h=g.teams.home.team,hid=HIDDEN.has(g.gamePk);
+      return `<div class="pgame ${hid?'hid':''}" data-pk="${g.gamePk}"><img src="${logo(a.id)}" onerror="this.style.visibility='hidden'"><span class="pn">${esc(abv(a))} @ ${esc(abv(h))}</span><span class="tg">${hid?'Hidden':'Shown'}</span></div>`;}).join('')
+      || '<div class="state">No games.</div>';
+    list.querySelectorAll('.pgame').forEach(el=>el.onclick=()=>{const pk=+el.dataset.pk;
+      if(HIDDEN.has(pk)){HIDDEN.delete(pk);PEEK.delete(pk);}else{HIDDEN.add(pk);PEEK.delete(pk);}
+      saveHidden();repaint();buildPanel();});
+  }
+
+  function setMeta(state){
+    const live=GAMES.filter(g=>g.status&&g.status.abstractGameState==='Live').length;
+    const m=document.getElementById('meta');
+    if(state==='paused')m.innerHTML=`<span class="pause">Paused</span> · updates 10:00 AM–11:45 PM PT · ${esc(ptClock())} PT`;
+    else m.innerHTML=`<span class="live"><span class="dot"></span>Live</span> · ${live} in progress · ${esc(ptClock())} PT`;
+  }
+
+  function flatten(d){let g=[];((d&&d.dates)||[]).forEach(x=>(x.games||[]).forEach(y=>g.push(y)));
+    return g.sort((a,b)=>{const o=s=>s.status.abstractGameState==='Live'?0:s.status.abstractGameState==='Preview'?1:2;
+      return o(a)-o(b)||((a.gameDate||'').localeCompare(b.gameDate||''));});}
+
+  async function tick(){
+    if(!inWindow()){setMeta('paused');return;}
+    if(busy)return; busy=true;
+    const d=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${ptDate()}&hydrate=linescore,team`);
+    busy=false;
+    if(d){GAMES=flatten(d);ensure(GAMES);setMeta('live');if(document.getElementById('panel').classList.contains('open'))buildPanel();}
+  }
+
+  // panel open/close
+  const panel=document.getElementById('panel'),scrim=document.getElementById('scrim');
+  const openPanel=()=>{buildPanel();panel.classList.add('open');scrim.classList.add('open');};
+  const closePanel=()=>{panel.classList.remove('open');scrim.classList.remove('open');};
+  document.getElementById('filterBtn').onclick=openPanel;
+  document.getElementById('panelX').onclick=closePanel; scrim.onclick=closePanel;
+
+  (async function(){
+    const tj=await j(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${new Date().getFullYear()}`);
+    ((tj&&tj.teams)||[]).forEach(t=>{if(t.sport&&t.sport.id===1)ABBR[t.id]=t.abbreviation;});
+    // initial load (always), then 1s loop gated to the PT window
+    const d=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${ptDate()}&hydrate=linescore,team`);
+    if(d){GAMES=flatten(d);ensure(GAMES);}
+    setMeta(inWindow()?'live':'paused');
+    setInterval(tick,1000);
+  })();
+</script>
+</body>
+</html>
