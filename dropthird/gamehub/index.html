@@ -27,7 +27,8 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(312px,1fr));gap:14px;padding:16px 18px 60px;max-width:1440px;margin:0 auto;align-items:start}
-  .ghc{position:relative;background:linear-gradient(180deg,#0f1626,#0b0f1a);border:1px solid #20304c;border-radius:16px;overflow:hidden;box-shadow:0 10px 32px rgba(0,0,0,.5)}
+  .ghc{position:relative;background:linear-gradient(180deg,#0f1626,#0b0f1a);border:1px solid #20304c;border-radius:16px;overflow:hidden;box-shadow:0 10px 32px rgba(0,0,0,.5);cursor:pointer;transition:border-color .14s,transform .14s,box-shadow .14s}
+  .ghc:hover{border-color:#3a557f;transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,.6)}
   .ghc .eye{position:absolute;top:7px;right:7px;z-index:5;width:24px;height:24px;border:0;background:rgba(0,0,0,.45);color:#aebbd0;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:7px;opacity:0;transition:opacity .14s}
   .ghc:hover .eye{opacity:1}
   .ghc .eye:hover{color:#fff;background:rgba(0,0,0,.7)}
@@ -205,8 +206,9 @@
       grid.dataset.want=want;
       grid.innerHTML=games.length?games.map(cardHTML).join(''):'<div class="state">No games scheduled today.</div>';
       grid.querySelectorAll('.ghc').forEach(c=>{const pk=+c.dataset.pk;
-        c.querySelector('.eye').onclick=()=>{HIDDEN.add(pk);PEEK.delete(pk);saveHidden();repaint();buildPanel();};
-        c.querySelector('.reveal').onclick=()=>{PEEK.add(pk);repaint();};});
+        c.querySelector('.eye').onclick=(e)=>{e.stopPropagation();HIDDEN.add(pk);PEEK.delete(pk);saveHidden();repaint();buildPanel();};
+        c.querySelector('.reveal').onclick=(e)=>{e.stopPropagation();PEEK.add(pk);repaint();};
+        c.onclick=()=>{if(HIDDEN.has(pk)&&!PEEK.has(pk))return;location.href=`../games/?pk=${pk}&src=hub`;};});
     }
     games.forEach(g=>{const c=grid.querySelector(`.ghc[data-pk="${g.gamePk}"]`);if(c)paint(c,g);});
   }

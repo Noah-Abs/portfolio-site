@@ -230,6 +230,7 @@
 
   // ---------- game list ----------
   async function loadList(){
+    if(gdTimer){clearInterval(gdTimer);gdTimer=null;}
     const my=++tok; view.innerHTML='<div class="state">Loading games…</div>';
     const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${TEAM_ID}&season=${SEASON}&gameType=R`);
     if(my!==tok)return;
@@ -291,7 +292,7 @@
     return `<div class="panel"><div class="panel-h"><img src="${logo(side.team.id)}" onerror="this.style.visibility='hidden'">${esc(side.team.name)} — Pitching</div><div class="scroller"><table><thead>${head}</thead><tbody>${body}${tot}</tbody></table></div></div>`;
   }
   // ===== gameday detail =====
-  let GD=null;
+  let GD=null, gdTab='summary', gdTimer=null;
   const evClass=et=>{et=et||'';
     if(/single|double|triple|home_run/.test(et))return 'hit';
     if(/walk|hit_by_pitch/.test(et))return 'walk';
@@ -308,12 +309,18 @@
   }
 
   function scoreboard(){
-    const {away,home,g,date}=GD;
+    const {away,home,g,date,ls}=GD;
+    const abst=g&&g.status&&g.status.abstractGameState;
+    let mid;
+    if(abst==='Live'){const inn=(((ls&&ls.inningState)||'')+' '+((ls&&ls.currentInning)||'')).trim();
+      mid=`<div class="st" style="color:#46c77e">● Live</div><div class="sbdate">${esc(inn||'In progress')}</div>`;}
+    else if(abst==='Preview'){mid=`<div class="st">${esc((g&&g.status&&g.status.detailedState)||'Scheduled')}</div><div class="sbdate">${esc(date)}</div>`;}
+    else mid=`<div class="st">Final</div><div class="sbdate">${esc(date)}</div>`;
     const rec=s=>{const lr=g&&g.teams&&g.teams[s]&&g.teams[s].leagueRecord;return lr?`${lr.wins}-${lr.losses}`:'';};
     const side=(s,t)=>`<div class="sbteam ${s}"><img src="${logo(t.team.id)}" onerror="this.style.visibility='hidden'">`+
       `<div><div class="sbn">${esc(t.team.name)}</div><div class="sbr">${rec(s)}</div></div>`+
       `<div class="sbsc ${t.isWinner?'win':''}">${t.score==null?'–':t.score}</div></div>`;
-    return `<div class="scorebar">${side('away',away)}<div class="sbmid"><div class="st">Final</div><div class="sbdate">${esc(date)}</div></div>${side('home',home)}</div>`;
+    return `<div class="scorebar">${side('away',away)}<div class="sbmid">${mid}</div>${side('home',home)}</div>`;
   }
 
   function zoneSVG(pitches){
@@ -335,24 +342,29 @@
       `${dots}</svg></div>`;
   }
 
+  function renderAB(p){
+    const r=p.result, pitches=(p.playEvents||[]).filter(e=>e.isPitch);
+    const prows=pitches.map((pe,i)=>{const call=(pe.details&&pe.details.description)||(pe.details&&pe.details.call&&pe.details.call.description)||'';
+      const spd=pe.pitchData&&pe.pitchData.startSpeed, ty=pe.details&&pe.details.type&&pe.details.type.description;
+      return `<div class="pitchrow"><span class="pno ${zKind(pe)}">${i+1}</span><span class="pcall">${esc(call)}</span>`+
+        `<span class="pcount">${pe.count?pe.count.balls+'-'+pe.count.strikes:''}</span><span class="pvelo">${spd!=null?(+spd).toFixed(1)+' mph':''}</span><span class="ptype">${esc(ty||'')}</span></div>`;}).join('');
+    const outs=p.count&&p.count.outs;
+    return `<div class="ab"><div class="abmain"><div class="abhead">${r.event?`<span class="ev ${evClass(r.eventType)}">${esc(r.event)}</span>`:''}`+
+      `<span class="abdesc">${esc(r.description||'')} ${outs!=null?`<span class="o">${outs} out${outs===1?'':'s'}</span>`:''}</span></div>${prows}</div>`+
+      `${pitches.some(e=>e.pitchData&&e.pitchData.coordinates)?zoneSVG(pitches):''}</div>`;
+  }
   function playsTab(){
     const all=(GD.pbp&&GD.pbp.allPlays)||[];
     if(!all.length)return '<div class="state">Play-by-play unavailable for this game.</div>';
-    let html='',last='';
-    all.forEach(p=>{
-      const key=p.about.halfInning+p.about.inning;
-      if(key!==last){last=key;const bt=battingTeam(p);
-        html+=`<div class="inhdr">${p.about.halfInning==='top'?'Top':'Bottom'} ${ord(p.about.inning)} <span class="sc">· ${esc(bt.team.name)} batting</span></div>`;}
-      const r=p.result, pitches=(p.playEvents||[]).filter(e=>e.isPitch);
-      const prows=pitches.map((pe,i)=>{const call=(pe.details&&pe.details.description)||(pe.details&&pe.details.call&&pe.details.call.description)||'';
-        const spd=pe.pitchData&&pe.pitchData.startSpeed, ty=pe.details&&pe.details.type&&pe.details.type.description;
-        return `<div class="pitchrow"><span class="pno ${zKind(pe)}">${i+1}</span><span class="pcall">${esc(call)}</span>`+
-          `<span class="pcount">${pe.count?pe.count.balls+'-'+pe.count.strikes:''}</span><span class="pvelo">${spd!=null?(+spd).toFixed(1)+' mph':''}</span><span class="ptype">${esc(ty||'')}</span></div>`;}).join('');
-      const outs=p.count&&p.count.outs;
-      html+=`<div class="ab"><div class="abmain"><div class="abhead">${r.event?`<span class="ev ${evClass(r.eventType)}">${esc(r.event)}</span>`:''}`+
-        `<span class="abdesc">${esc(r.description||'')} ${outs!=null?`<span class="o">${outs} out${outs===1?'':'s'}</span>`:''}</span></div>${prows}</div>`+
-        `${pitches.some(e=>e.pitchData&&e.pitchData.coordinates)?zoneSVG(pitches):''}</div>`;
-    });
+    const live=GD.g&&GD.g.status&&GD.g.status.abstractGameState==='Live';
+    const groups=[];let cur=null;
+    all.forEach(p=>{const key=p.about.halfInning+p.about.inning;
+      if(!cur||cur.key!==key){cur={key,p0:p,plays:[]};groups.push(cur);} cur.plays.push(p);});
+    const order=live?groups.slice().reverse():groups;
+    let html=live?'<div style="color:#46c77e;font:600 11px Oswald;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 12px">● Live — newest plays first, auto-updating</div>':'';
+    order.forEach(grp=>{const p0=grp.p0,bt=battingTeam(p0);
+      html+=`<div class="inhdr">${p0.about.halfInning==='top'?'Top':'Bottom'} ${ord(p0.about.inning)} <span class="sc">· ${esc(bt.team.name)} batting</span></div>`;
+      (live?grp.plays.slice().reverse():grp.plays).forEach(p=>{html+=renderAB(p);});});
     return html;
   }
 
@@ -393,14 +405,35 @@
   function boxTab(){const {ls,away,home}=GD;
     return lineScore(ls||{},away,home)+battingTable(away)+battingTable(home)+pitchingTable(away)+pitchingTable(home);}
 
-  function setTab(name){
+  function setTab(name,keep){
+    gdTab=name;
     document.querySelectorAll('.gdtab').forEach(t=>t.classList.toggle('on',t.dataset.t===name));
     document.getElementById('gdc').innerHTML = name==='plays'?playsTab() : name==='box'?boxTab() : summaryTab();
     try{const u=new URL(location.href);u.searchParams.set('tab',name);history.replaceState(null,'',u);}catch(e){}
-    window.scrollTo&&window.scrollTo(0,0);
+    if(!keep)window.scrollTo&&window.scrollTo(0,0);
   }
 
+  function stopPoll(){if(gdTimer){clearInterval(gdTimer);gdTimer=null;}}
+  async function refreshGame(){
+    if(!GD)return; const pk=GD.pk;
+    const [box,ls,sch,pbp,wp]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/game/${pk}/boxscore`),
+      j(`https://statsapi.mlb.com/api/v1/game/${pk}/linescore`),
+      j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=${pk}`),
+      j(`https://statsapi.mlb.com/api/v1/game/${pk}/playByPlay`),
+      j(`https://statsapi.mlb.com/api/v1/game/${pk}/winProbability`)
+    ]);
+    if(!GD||GD.pk!==pk)return;
+    if(box&&box.teams){GD.box=box;GD.away=box.teams.away;GD.home=box.teams.home;}
+    if(ls)GD.ls=ls; if(pbp)GD.pbp=pbp; if(wp)GD.wp=wp;
+    let g=null;((sch&&sch.dates)||[]).forEach(d=>(d.games||[]).forEach(x=>{if(x.gamePk===pk)g=x;}));
+    if(g){GD.g=g;GD.away.score=g.teams.away.score;GD.home.score=g.teams.home.score;GD.away.isWinner=g.teams.away.isWinner;GD.home.isWinner=g.teams.home.isWinner;}
+    const sb=view.querySelector('.scorebar'); if(sb)sb.outerHTML=scoreboard();
+    setTab(gdTab,true);
+    if(!(GD.g&&GD.g.status&&GD.g.status.abstractGameState==='Live'))stopPoll();
+  }
   async function showGame(pk){
+    stopPoll();
     const my=++tok; view.innerHTML='<div class="state">Loading game…</div>';
     const [box,ls,sch,pbp,wp]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/game/${pk}/boxscore`),
@@ -416,16 +449,21 @@
     away.score=(g&&g.teams.away.score); home.score=(g&&g.teams.home.score);
     away.isWinner=(g&&g.teams.away.isWinner); home.isWinner=(g&&g.teams.home.isWinner);
     GD={pk,box,ls,sch,g,away,home,pbp,wp,date:g?mday(g.officialDate||g.gameDate):''};
+    const live=g&&g.status&&g.status.abstractGameState==='Live';
+    const src=new URLSearchParams(location.search).get('src');
     view.innerHTML=
-      `<div class="back" id="back">← All games</div>`+scoreboard()+
+      `<div class="back" id="back">${src==='hub'?'← GameHub':'← All games'}</div>`+scoreboard()+
       `<div class="gdtabs"><button class="gdtab" data-t="summary">Summary</button><button class="gdtab" data-t="plays">Plays</button><button class="gdtab" data-t="box">Box Score</button></div>`+
       `<div id="gdc"></div>`;
-    document.getElementById('back').onclick=()=>{const u=new URL(location.href);u.searchParams.delete('pk');u.searchParams.delete('tab');history.replaceState(null,'',u);loadList();};
+    document.getElementById('back').onclick=()=>{stopPoll();
+      if(src==='hub'){location.href='../gamehub/';return;}
+      const u=new URL(location.href);u.searchParams.delete('pk');u.searchParams.delete('tab');u.searchParams.delete('src');history.replaceState(null,'',u);loadList();};
     view.querySelectorAll('.gdtab').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
     const q=new URLSearchParams(location.search), t=q.get('tab');
-    setTab(t==='plays'||t==='box'?t:'summary');
+    setTab(live?(t==='box'||t==='summary'?t:'plays'):(t==='plays'||t==='box'?t:'summary'));
     try{const u=new URL(location.href);u.searchParams.set('pk',pk);history.replaceState(null,'',u);}catch(e){}
     document.getElementById('sub').textContent=`${esc(away.team.name)} @ ${esc(home.team.name)}`;
+    if(live)gdTimer=setInterval(refreshGame,8000);
   }
 
   // ---------- controls ----------
