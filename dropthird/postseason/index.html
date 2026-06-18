@@ -40,53 +40,27 @@
   .po-fit{width:100%;overflow:hidden}
   .po-sizer{margin:0 auto}
   .po-scale{width:max-content;transform-origin:top left}
-  .po{display:flex;align-items:stretch;gap:2px;padding:6px 0 18px;min-height:540px}
-  .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;padding:0 4px}
-  .po-head span{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(16px,2vw,26px);letter-spacing:1.5px;color:var(--muted,#69707b)}
-  .pside{display:flex;align-items:stretch}
-  .round{display:flex;flex-direction:column;min-width:156px;padding:0 9px}
-  .round-h{height:18px;margin-bottom:10px;font-family:"Oswald",sans-serif;font-weight:600;font-size:10px;letter-spacing:1.5px;
-    text-transform:uppercase;color:var(--muted2,#4a5159);text-align:center}
-  .games{flex:1;display:flex;flex-direction:column}
-  .game{flex:1;display:flex;align-items:center;position:relative}
-  .gbox{width:100%;background:var(--panel,#101115);border:1px solid var(--border2,#23272f);border-radius:9px;overflow:hidden}
-  .gbox.empty{border-style:dashed;background:transparent}
-  .slot{display:flex;align-items:center;gap:8px;padding:0 8px;height:33px}
-  .slot+.slot{border-top:1px solid var(--panel2,#16181d)}
-  .sd{width:16px;text-align:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:11px;color:var(--muted,#7e858f);flex:0 0 auto}
-  .slot img{width:21px;height:21px;object-fit:contain;flex:0 0 auto}
-  .snm{flex:1;min-width:0;font-weight:500;font-size:13px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .src{font-size:11px;color:var(--muted,#7e858f);font-variant-numeric:tabular-nums}
-  .slot.blank .snm{color:var(--muted2,#444a52);font-size:11px;letter-spacing:1px;text-transform:uppercase}
-  .slot.blank .sd{color:var(--muted2,#2f343b)}
-
-  /* connectors — line colour */
-  .pside .round.out .game::after,.pside .round.in .game::before,.pside .round.lead .game::after{content:'';position:absolute}
-  /* left side (NL) flows right */
-  .pside.l .round.out .game::after{left:100%;width:11px;box-sizing:border-box}
-  .pside.l .round.out .game:nth-child(odd)::after{top:50%;height:50%;border-top:2px solid var(--border2,#2a313c);border-right:2px solid var(--border2,#2a313c)}
-  .pside.l .round.out .game:nth-child(even)::after{bottom:50%;height:50%;border-bottom:2px solid var(--border2,#2a313c);border-right:2px solid var(--border2,#2a313c)}
-  .pside.l .round.in .game::before{right:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
-  .pside.l .round.lead .game::after{left:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
-  /* right side (AL) flows left (mirror) */
-  .pside.r .round.out .game::after{right:100%;width:11px;box-sizing:border-box}
-  .pside.r .round.out .game:nth-child(odd)::after{top:50%;height:50%;border-top:2px solid var(--border2,#2a313c);border-left:2px solid var(--border2,#2a313c)}
-  .pside.r .round.out .game:nth-child(even)::after{bottom:50%;height:50%;border-bottom:2px solid var(--border2,#2a313c);border-left:2px solid var(--border2,#2a313c)}
-  .pside.r .round.in .game::before{left:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
-  .pside.r .round.lead .game::after{right:100%;width:11px;height:2px;background:var(--border2,#2a313c);top:50%}
-
-  /* world series centre */
-  .center{display:flex;align-items:center;padding:0 6px}
-  .ws{width:170px;background:linear-gradient(180deg,var(--panel2,#17181d),var(--panel,#0e0f13));border:1px solid var(--border2,#2f3540);border-radius:12px;overflow:hidden;box-shadow:0 10px 36px rgba(0,0,0,.35)}
-  .ws-h{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:13px;color:#ffd24a;text-align:center;padding:9px 6px;border-bottom:1px solid var(--border,#23262c)}
-  .ws .slot{height:38px}
+  .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;padding:0 2px}
+  .po-head span{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:24px;letter-spacing:1.5px;color:var(--muted,#69707b)}
+  .stage{position:relative;font-family:"Oswald",sans-serif}
+  .blines{position:absolute;top:0;left:0}
+  .blines polyline{fill:none;stroke:var(--border2,#2a313c);stroke-width:2}
+  .bnode{position:absolute;width:150px;height:44px;display:flex;align-items:center;gap:9px;padding:0 11px;
+    background:var(--panel,#101115);border:1px solid var(--border2,#262d36);border-radius:11px;text-decoration:none;color:inherit;transition:border-color .13s,background .13s}
+  a.bnode:hover{border-color:#3b454f;background:var(--panel2,#15161b)}
+  .bnode .bseed{font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;color:var(--muted,#7e858f);width:13px;text-align:center;flex:0 0 auto}
+  .bnode img{width:25px;height:25px;object-fit:contain;flex:0 0 auto}
+  .bnode .bname{font-weight:600;font-size:14px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .blabel{position:absolute;font-family:"Oswald",sans-serif;font-weight:600;font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2,#4a5159);transform:translateX(-50%);white-space:nowrap}
+  .wsbox{position:absolute;width:152px;background:linear-gradient(180deg,var(--panel2,#17181d),var(--panel,#0e0f13));border:1px solid var(--border2,#2f3540);border-radius:12px;overflow:hidden;transform:translateY(-50%);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .wsbox .wsh{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:2px;font-size:13px;color:#ffd24a;text-align:center;padding:8px 6px;border-bottom:1px solid var(--border,#23262c)}
+  .wsbox .wss{display:flex;align-items:center;gap:9px;padding:9px 11px}
+  .wsbox .wss+.wss{border-top:1px solid var(--panel2,#16181d)}
+  .wsbox .wss .lg{font-family:"Oswald",sans-serif;font-weight:700;font-size:11px;color:var(--muted,#7e858f);width:18px;flex:0 0 auto}
+  .wsbox .wss .nm{color:var(--muted2,#5b626c);font-size:12px;letter-spacing:1px;text-transform:uppercase}
 
   .state{text-align:center;color:var(--muted,#7e858f);padding:60px 10px;letter-spacing:2px;text-transform:uppercase;font-size:13px}
 
-  @media(max-width:980px){
-    .po{justify-content:flex-start}
-    .lgmark{font-size:30px}
-  }
   @media(max-width:760px){
     body{flex-direction:column}
     .side-rail{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
@@ -160,40 +134,44 @@
     return seeds;
   }
 
-  function slot(seed,t,blank){
-    if(!t)return `<div class="slot blank"><span class="sd">${seed||''}</span><span class="snm">${esc(blank||'')}</span></div>`;
-    return `<div class="slot"><span class="sd">${seed}</span><img src="${logo(t.id)}" onerror="this.style.visibility='hidden'">`+
-      `<span class="snm">${esc(t.name)}</span></div>`;
-  }
-  const game=(slots,empty)=>`<div class="game"><div class="gbox${empty?' empty':''}">${slots}</div></div>`;
-  const blankGame=()=>game(slot('',null,'')+slot('',null,''),true);
-  const roundCol=(label,games,cls)=>`<div class="round ${cls}"><div class="round-h">${esc(label)}</div><div class="games">${games}</div></div>`;
+  // ----- bracket geometry (fixed stage, scaled to fit) -----
+  const NW=150, NH=44, SP=72, OFF=40;
+  const xSeed=0, segWC=178, xBye=208, segDS=386, segLCS=470, STAGE_W=1170;
+  const WSW=152, WSL=(STAGE_W-WSW)/2;
+  const Y=n=>OFF+n*SP;
+  const ORD=[6,3,2,5,4,1];                       // seed order, top -> bottom
+  const yy={}; ORD.forEach((s,i)=>yy[s]=Y(i));
+  const yWCa=(yy[6]+yy[3])/2, yWCb=(yy[5]+yy[4])/2;
+  const yDSt=(yWCa+yy[2])/2, yDSb=(yWCb+yy[1])/2, yLCS=(yDSt+yDSb)/2;
+  const STAGE_H=Y(5)+NH/2+22;
 
-  function wcGames(s){
-    return game(slot(4,s[4])+slot(5,s[5]))+
-           game(slot(3,s[3])+slot(6,s[6]));
+  function bnode(seed,t,left,yc){
+    const pos=`left:${left}px;top:${yc-NH/2}px`;
+    if(!t)return `<div class="bnode" style="${pos}"><span class="bseed">${seed}</span><span class="bname" style="color:var(--muted2,#4a5159)">—</span></div>`;
+    return `<a class="bnode" href="../team/?id=${t.id}" style="${pos}"><span class="bseed">${seed}</span>`+
+      `<img src="${logo(t.id)}" onerror="this.style.visibility='hidden'"><span class="bname">${esc(t.name)}</span></a>`;
   }
-  function dsGames(s){
-    return game(slot(1,s[1])+slot('',null,'WC 4 / 5'))+
-           game(slot(2,s[2])+slot('',null,'WC 3 / 6'));
-  }
-  function sideNL(){
-    const s=leaguePic('NL');
-    return `<div class="pside l">`+
-      roundCol('Wild Card',wcGames(s),'lead')+
-      roundCol('Division Series',dsGames(s),'out in')+
-      roundCol('Pennant',blankGame(),'lead in')+`</div>`;
-  }
-  function sideAL(){
-    const s=leaguePic('AL');
-    return `<div class="pside r">`+
-      roundCol('Pennant',blankGame(),'lead in')+
-      roundCol('Division Series',dsGames(s),'out in')+
-      roundCol('Wild Card',wcGames(s),'lead')+`</div>`;
+  function buildSide(s,mirror,champ){
+    const M=x=>mirror?STAGE_W-x:x, bl=x=>mirror?STAGE_W-x-NW:x;
+    const lines=[
+      [[xSeed+NW,yy[6]],[segWC,yy[6]],[segWC,yy[3]],[xSeed+NW,yy[3]]],   // WC 3 v 6
+      [[xSeed+NW,yy[5]],[segWC,yy[5]],[segWC,yy[4]],[xSeed+NW,yy[4]]],   // WC 4 v 5
+      [[segWC,yWCa],[segDS,yWCa],[segDS,yy[2]],[xBye+NW,yy[2]]],         // DS top: #2 vs WC win
+      [[segWC,yWCb],[segDS,yWCb],[segDS,yy[1]],[xBye+NW,yy[1]]],         // DS bottom: #1 vs WC win
+      [[segDS,yDSt],[segLCS,yDSt],[segLCS,yDSb],[segDS,yDSb]],           // LCS
+      [[segLCS,yLCS],[WSL,yLCS]]                                          // -> World Series
+    ];
+    const poly=lines.map(p=>`<polyline points="${p.map(q=>M(q[0])+','+q[1]).join(' ')}"/>`).join('');
+    const boxes=[[6,xSeed],[3,xSeed],[5,xSeed],[4,xSeed],[2,xBye],[1,xBye]]
+      .map(a=>bnode(a[0],s[a[0]],bl(a[1]),yy[a[0]])).join('');
+    const lbl=[['Wild Card',xSeed+NW/2],['Division Series',xBye+NW/2],[champ,segLCS-4]]
+      .map(a=>`<div class="blabel" style="left:${M(a[1])}px;top:12px">${a[0]}</div>`).join('');
+    return {poly,boxes,lbl};
   }
   function worldSeries(){
-    return `<div class="center"><div class="ws"><div class="ws-h">World Series</div><div class="gbox">`+
-      slot('NL',null,'Champion')+slot('AL',null,'Champion')+`</div></div></div>`;
+    return `<div class="wsbox" style="left:${WSL}px;top:${yLCS}px"><div class="wsh">World Series</div>`+
+      `<div class="wss"><span class="lg">AL</span><span class="nm">Champion</span></div>`+
+      `<div class="wss"><span class="lg">NL</span><span class="nm">Champion</span></div></div>`;
   }
 
   function fitBracket(){
@@ -207,10 +185,13 @@
     sizer.style.width=(w*k)+'px';sizer.style.height=(h*k)+'px';
   }
   function render(){
+    const al=buildSide(leaguePic('AL'),false,'ALCS');
+    const nl=buildSide(leaguePic('NL'),true,'NLCS');
+    const svg=`<svg class="blines" width="${STAGE_W}" height="${STAGE_H}" viewBox="0 0 ${STAGE_W} ${STAGE_H}">${al.poly}${nl.poly}</svg>`;
     document.getElementById('content').innerHTML=
       `<div class="po-fit"><div class="po-sizer"><div class="po-scale">`+
-      `<div class="po-head"><span>National League</span><span>American League</span></div>`+
-      `<div class="po">${sideNL()}${worldSeries()}${sideAL()}</div>`+
+      `<div class="po-head" style="width:${STAGE_W}px"><span>American League</span><span>National League</span></div>`+
+      `<div class="stage" style="width:${STAGE_W}px;height:${STAGE_H}px">${svg}${al.boxes}${nl.boxes}${al.lbl}${nl.lbl}${worldSeries()}</div>`+
       `</div></div></div>`;
     fitBracket();
     setTimeout(fitBracket,250);
