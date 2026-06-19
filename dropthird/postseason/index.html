@@ -13,7 +13,7 @@
   html,body{height:100%}
   body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:row-reverse}
-  .side-rail{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);
     border-left:1px solid var(--border,#1b1e24);padding:32px 18px;display:flex;flex-direction:column}
   .brand-link{text-decoration:none;color:inherit;display:block}
   .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
@@ -37,7 +37,7 @@
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
 
   /* ===== bracket ===== */
-  .po-fit{width:100%;overflow:hidden}
+  .po-fit{width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
   .po-sizer{margin:0 auto}
   .po-scale{width:max-content;transform-origin:top left}
   .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;padding:0 2px}
@@ -63,7 +63,7 @@
 
   @media(max-width:760px){
     body{flex-direction:column}
-    .side-rail{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
+    .side{position:static;height:auto;width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:20px 16px}
     .nav{flex-direction:row;flex-wrap:wrap;margin-top:16px;gap:8px}
     .tab{padding:10px 14px}.side-foot{display:none}
     .main{padding:26px 16px 60px}
@@ -72,7 +72,7 @@
 <script src="/settings.js"></script>
 </head>
 <body>
-  <aside class="side-rail">
+  <aside class="side">
     <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
     <nav class="nav">
       <div class="nav-label">Teams</div>
@@ -182,7 +182,8 @@
     sc.style.transform='none';sizer.style.width='';sizer.style.height='';
     const w=sc.offsetWidth,h=sc.offsetHeight,avail=fit.clientWidth;
     if(!w)return;
-    const k=Math.min(1,avail/w);
+    const small=window.matchMedia('(max-width:760px)').matches;
+    const k=small?1:Math.min(1,avail/w);   // phones: full size + horizontal scroll, not shrink-to-tiny
     sc.style.transform='scale('+k+')';
     sizer.style.width=(w*k)+'px';sizer.style.height=(h*k)+'px';
   }
