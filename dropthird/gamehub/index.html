@@ -103,6 +103,30 @@
   .pgame .tg{font-size:13px;font-weight:600;color:var(--green)}.pgame.hid .tg{color:var(--gray2)}
   .scrim{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.5);display:none}.scrim.open{display:block}
   .state{display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray);font-size:15px;font-weight:500;grid-column:1/-1}
+  @media(max-width:600px){
+    html,body{overflow-x:hidden}
+    .topbar{gap:9px;padding:9px 12px;flex-wrap:wrap;row-gap:9px}
+    .ico{width:34px;height:34px}.ico svg{width:17px;height:17px}
+    .tb-mid{overflow:hidden;flex:1 1 auto}
+    .tb-title{font-size:19px}
+    .tb-meta{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .seg{order:5;flex-basis:100%}.seg button{flex:1;padding:9px;font-size:13px}
+    body[data-mode=scores] #scores{grid-template-columns:1fr!important;overflow:auto;padding:8px 12px 22px;gap:10px}
+    #spot{padding:12px 8px;align-items:stretch}
+    .big{padding:clamp(16px,3vh,30px) 14px;width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
+    .big-teams{width:100%}
+    .big-row{display:grid;grid-template-columns:5px 44px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%}
+    .big-row img{width:46px;height:46px}
+    .big-bar{height:46px;width:5px}
+    .big-nm{min-width:0}
+    .big-nm .n{font-size:clamp(22px,6vw,36px)}
+    .big-nm .r{font-size:11px;margin-top:2px}
+    .big-sc{font-size:clamp(40px,12vw,64px)}
+    .big-mu{gap:8px}
+    .mp .sh{width:clamp(40px,11vw,56px);height:clamp(40px,11vw,56px)}
+    .mp .nm{font-size:clamp(15px,4vw,22px)}
+    .mp .role{font-size:clamp(9px,2.4vw,12px)}
+  }
 </style>
 </head>
 <body>
@@ -295,6 +319,7 @@
   /* auto-fit scores to one screen */
   function fit(){
     if(MODE!=='scores')return;const wrap=document.getElementById('scores');if(!wrap||!wrap.querySelector('.card'))return;
+    if(window.innerWidth<=600){document.body.style.setProperty('--s',1);return;}   // phone: full-size cards, scroll
     const avail=wrap.clientHeight;if(avail<90)return;let lo=0.55,hi=2.4;
     for(let i=0;i<12;i++){const mid=(lo+hi)/2;document.body.style.setProperty('--s',mid);if(wrap.scrollHeight<=avail)lo=mid;else hi=mid;}
     document.body.style.setProperty('--s',lo);

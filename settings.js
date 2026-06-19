@@ -23,7 +23,20 @@
     +'.dt-tg{width:46px;height:25px;border-radius:13px;background:var(--border2,#262a32);position:relative;cursor:pointer;border:none;flex:0 0 auto}'
     +'.dt-tg:after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .2s}'
     +'.dt-tg.on{background:var(--accent,#4aa3ff)}.dt-tg.on:after{left:24px}'
-    +'@media(max-width:760px){.nav .tab{flex:0 0 auto}}';
+    +'@media(max-width:760px){'
+    +'html,body{overflow-x:hidden;max-width:100%}'
+    +'body:has(>.side){flex-direction:column!important}'
+    +'body:has(>.side) .side{position:static!important;height:auto!important;flex:0 0 auto!important;width:100%!important;max-width:100%!important;border-left:0!important;border-right:0!important;border-bottom:1px solid var(--border,#1b1e24)!important;padding:13px 12px!important;overflow:visible!important}'
+    +'body:has(>.side) .nav{flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important;gap:7px!important;margin-top:11px!important;padding-bottom:3px;-webkit-overflow-scrolling:touch;scrollbar-width:none}'
+    +'body:has(>.side) .nav::-webkit-scrollbar{display:none}'
+    +'body:has(>.side) .nav-label{display:none!important}'
+    +'body:has(>.side) .nav .tab{flex:0 0 auto!important;white-space:nowrap;padding:9px 14px!important}'
+    +'body:has(>.side) .side-foot{display:none!important}'
+    +'body:has(>.side) .main{width:100%!important;max-width:100%!important;min-width:0!important;padding-left:14px!important;padding-right:14px!important}'
+    +'body:has(>.side) .page{max-width:100%!important;min-width:0}'
+    +'body:has(>.side) table{display:block;overflow-x:auto;max-width:100%;white-space:nowrap;-webkit-overflow-scrolling:touch}'
+    +'body:has(>.side) .page-sub,body:has(>.side) .page-head p{white-space:normal!important;overflow-wrap:anywhere}'
+    +'}';
     document.head.appendChild(css);
     var gear=document.createElement('button');gear.className='dt-gear';gear.innerHTML='&#9881;';gear.setAttribute('aria-label','Settings');
     var pop=document.createElement('div');pop.className='dt-pop';
