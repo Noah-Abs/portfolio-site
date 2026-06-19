@@ -49,17 +49,22 @@
   .sm-cnt{font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(26px,3vw,56px);line-height:1;font-variant-numeric:tabular-nums;color:#dfe7f2}
   .sm-outs{display:flex;align-items:center;gap:6px;font-family:"Oswald",sans-serif;font-weight:600;font-size:clamp(10px,1vw,15px);letter-spacing:1px;text-transform:uppercase;color:#9fb0c8;flex-direction:column}
   .sm-outs .od{display:flex;gap:5px}.sm-outs .od i{width:clamp(8px,1vw,13px);height:clamp(8px,1vw,13px);border-radius:50%;background:#2a3850}.sm-outs .od i.on{background:#e0556a}
-  .sm-dia{position:relative;width:clamp(46px,5vw,84px);height:clamp(34px,3.7vw,62px)}
-  .sm-dia i{position:absolute;width:36%;height:36%;border-radius:3px;background:#2a3850;transform:rotate(45deg)}
-  .sm-dia .d2{top:0;left:32%}.sm-dia .d1{top:30%;right:0}.sm-dia .d3{top:30%;left:0}.sm-dia i.on{background:#ffd24a;box-shadow:0 0 12px rgba(255,210,74,.6)}
+  .sm-dia{position:relative;width:clamp(58px,6vw,98px);height:clamp(58px,6vw,98px)}
+  .sm-dia i{position:absolute;width:30%;aspect-ratio:1;border-radius:3px;background:#2a3850;transform:rotate(45deg)}
+  .sm-dia .d2{top:2%;left:50%;transform:translateX(-50%) rotate(45deg)}
+  .sm-dia .d1{top:50%;right:2%;transform:translateY(-50%) rotate(45deg)}
+  .sm-dia .d3{top:50%;left:2%;transform:translateY(-50%) rotate(45deg)}
+  .sm-dia i.on{background:#ffd24a;box-shadow:0 0 12px rgba(255,210,74,.6)}
   .sm-risp{font-family:"Oswald";font-weight:700;font-size:clamp(9px,.9vw,12px);letter-spacing:1px;color:#ffd24a;border:1px solid rgba(255,210,74,.45);border-radius:6px;padding:2px 8px}
   .sm-big{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:clamp(18px,2vw,34px);color:#cfe0ff;text-align:center}
   .sm-sub{font-size:clamp(10px,1vw,14px);letter-spacing:2px;text-transform:uppercase;color:#7e8ba6;text-align:center}
 
-  .solo-foot{flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(20px,5vw,90px);padding:clamp(12px,2vh,24px) 20px;background:rgba(8,11,16,.9);border-top:1px solid #18202c;min-height:0}
-  .mu .lab{font-weight:700;font-size:clamp(9px,.85vw,12px);letter-spacing:2px;text-transform:uppercase;color:#5b6b86;margin-bottom:3px}
-  .mu .nm{font-family:"Oswald",sans-serif;font-weight:600;font-size:clamp(15px,1.6vw,26px);line-height:1}
-  .mu .ex{font-size:clamp(11px,1vw,15px);color:#8fa0b8;margin-top:1px}
+  .solo-foot{flex:0 0 auto;position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(26px,6.5vw,120px);padding:clamp(16px,3vh,38px) clamp(120px,16vw,200px);background:rgba(8,11,16,.92);border-top:1px solid #18202c;min-height:0}
+  .mu{text-align:center;min-width:0}
+  .mu .lab{font-weight:700;font-size:clamp(11px,1.1vw,16px);letter-spacing:2.5px;text-transform:uppercase;color:#6b7790;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:7px}
+  .mu .lab .dt{width:9px;height:9px;border-radius:50%;background:var(--mc,#5b6b86);flex:0 0 auto}
+  .mu .nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:clamp(24px,3vw,50px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mu .ex{font-size:clamp(13px,1.3vw,21px);color:#9fb0c8;margin-top:4px}
   .solo-foot.empty{display:none}
   .solo-plays{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#aab4c2;border:1px solid #2a3445;border-radius:9px;padding:8px 13px;cursor:pointer;background:#10141c}
   .solo-plays:hover{color:#fff;border-color:#4aa3ff}
@@ -236,11 +241,12 @@
     }else if(fin){mid.innerHTML=`<div class="sm-big">Final</div>${ls.currentInning&&ls.currentInning!==9?`<div class="sm-sub">${ordinal(ls.currentInning)}</div>`:''}`;}
     else{mid.innerHTML=`<div class="sm-big">${esc(gameTime(g))}</div><div class="sm-sub">First Pitch</div>`;}
     const foot=document.getElementById('soloFoot');
-    if(live){const {batP,pitP,pCount,bAvg}=muInfo(g);
+    if(live){const {batP,pitP,pCount,bAvg,top:tp}=muInfo(g);
+      const pitchTeam=tp?h.team:a.team, batTeam=tp?a.team:h.team;
       foot.className='solo-foot';
       foot.innerHTML=`<span class="rotwhich" id="rotWhich"></span>`+
-        `<div class="mu"><div class="lab">Pitching</div><div class="nm">${pitP?esc(lastName(pitP.fullName)):'—'}</div><div class="ex">${pCount!==''?pCount+' pitches':''}</div></div>`+
-        `<div class="mu"><div class="lab">At Bat</div><div class="nm">${batP?esc(lastName(batP.fullName)):'—'}</div><div class="ex">${bAvg?esc(showp(bAvg)):''}</div></div>`+
+        `<div class="mu" style="--mc:${tc(pitchTeam)}"><div class="lab"><span class="dt"></span>Pitching · ${esc(abv(pitchTeam))}</div><div class="nm">${pitP?esc(lastName(pitP.fullName)):'—'}</div><div class="ex">${pCount!==''?pCount+' pitches':''}</div></div>`+
+        `<div class="mu" style="--mc:${tc(batTeam)}"><div class="lab"><span class="dt"></span>At Bat · ${esc(abv(batTeam))}</div><div class="nm">${batP?esc(lastName(batP.fullName)):'—'}</div><div class="ex">${bAvg?esc(showp(bAvg)):''}</div></div>`+
         `<span class="solo-plays" id="soloPlays">Plays →</span>`;
     }else{foot.className='solo-foot';foot.innerHTML=`<span class="rotwhich" id="rotWhich"></span><span class="solo-plays" id="soloPlays">Box Score →</span>`;}
     const sp=document.getElementById('soloPlays');if(sp)sp.onclick=()=>goPBP(g.gamePk);
