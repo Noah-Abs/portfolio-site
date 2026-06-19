@@ -41,7 +41,10 @@
   .today:hover{color:#fff}
 
   .pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:13px}
-  .pp-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:15px;overflow:hidden}
+  .pp-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:15px;overflow:hidden;cursor:pointer;transition:border-color .14s,transform .12s}
+  .pp-card:hover{border-color:#3b454f;transform:translateY(-2px)}
+  .pp-card .cue{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#4a5159);text-align:center;padding:0 0 11px}
+  .pp-card:hover .cue{color:var(--accent,#4aa3ff)}
   .pp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border,#1b1e24)}
   .pp-mt{display:flex;align-items:center;gap:7px;font-family:"Oswald",sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;min-width:0}
   .pp-mt img{width:20px;height:20px;object-fit:contain;flex:0 0 auto}
@@ -61,6 +64,28 @@
   .pp-tbd .pp-shot{background:var(--panel2,#15161b);border-color:var(--border2,#2a2f37)}
   .pp-tbd .pp-nm{color:var(--muted,#7e858f)}
   .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:60px 10px;grid-column:1/-1}
+
+  /* lineup modal */
+  .lm-scrim{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px}
+  .lm-scrim.open{display:flex}
+  .lm{background:var(--panel,#101115);border:1px solid var(--border2,#262a32);border-radius:16px;width:100%;max-width:760px;max-height:88vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+  .lm-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;background:var(--panel,#101115);border-bottom:1px solid var(--border,#1b1e24);z-index:2}
+  .lm-mt{display:flex;align-items:center;gap:8px;font-family:"Anton",sans-serif;text-transform:uppercase;font-size:18px;letter-spacing:.5px}
+  .lm-mt img{width:24px;height:24px;object-fit:contain}.lm-mt .at{color:var(--muted2,#4a5159);margin:0 2px}
+  .lm-sub{font-size:12px;color:var(--muted,#7e858f);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+  .lm-x{cursor:pointer;color:var(--muted,#7e858f);width:32px;height:32px;flex:0 0 auto;border-radius:50%;background:var(--panel2,#15161b);display:flex;align-items:center;justify-content:center;font-size:15px}.lm-x:hover{color:#fff}
+  .lm-body{display:grid;grid-template-columns:1fr 1fr}
+  .lm-team{padding:16px 18px;min-width:0}.lm-team+.lm-team{border-left:1px solid var(--border,#1b1e24)}
+  .lm-th{display:flex;align-items:center;gap:9px;margin-bottom:10px}.lm-th img{width:26px;height:26px;object-fit:contain}.lm-th .nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px}
+  .lm-pit{font-size:12.5px;color:var(--text2,#cfd4da);margin-bottom:13px}.lm-pit b{color:#fff}.lm-pit .h{color:var(--muted2,#5b6470);font-size:11px;letter-spacing:1px}
+  .lm-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2,#4a5159);margin-bottom:5px}
+  .lm-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--panel2,#16181d);font-size:14px}
+  .lm-row:first-of-type{border-top:0}
+  .lm-row .o{width:15px;color:var(--muted2,#5b6470);font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .lm-row .p{width:32px;font-size:11px;color:var(--muted,#7e858f);font-weight:600;letter-spacing:.5px;flex:0 0 auto}
+  .lm-row .n{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lm-empty{color:var(--muted,#7e858f);font-size:13px;padding:14px 0}
+  @media(max-width:680px){.lm-body{grid-template-columns:1fr}.lm-team+.lm-team{border-left:0;border-top:1px solid var(--border,#1b1e24)}}
   @media(max-width:760px){
     .pp-grid{grid-template-columns:1fr}
     .pp-mu{grid-template-columns:1fr 28px 1fr;gap:6px;padding:16px 12px 18px}
@@ -113,6 +138,8 @@
     </div>
   </main>
 
+  <div class="lm-scrim" id="lmScrim"><div class="lm" id="lm"><div class="lm-head" id="lmHead"></div><div class="lm-body" id="lmBody"></div></div></div>
+
 <script>
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
@@ -127,7 +154,7 @@
   const fmtDay=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});};
   const gameTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
 
-  let DATE=ptToday(), STATS={}, tok=0;
+  let DATE=ptToday(), STATS={}, GAMES={}, tok=0, lmTok=0;
   const sub=document.getElementById('sub'), grid=document.getElementById('grid'), daylbl=document.getElementById('daylbl');
 
   function statusLine(g){const st=g.status||{},ls=g.linescore||{},a=st.abstractGameState;
@@ -148,9 +175,10 @@
   }
   function cardHTML(g){
     const a=g.teams.away.team,h=g.teams.home.team,st=statusLine(g);
-    return `<div class="pp-card">
+    return `<div class="pp-card" data-pk="${g.gamePk}">
       <div class="pp-head"><div class="pp-mt"><img src="${logo(a.id)}" onerror="this.style.visibility='hidden'">${esc(abv(a))}<span class="at">@</span><img src="${logo(h.id)}" onerror="this.style.visibility='hidden'">${esc(abv(h))}</div><div class="pp-time ${st.live?'live':''}">${esc(st.t)}</div></div>
       <div class="pp-mu">${pPanel(a,g.teams.away.probablePitcher)}<div class="pp-vs">VS</div>${pPanel(h,g.teams.home.probablePitcher)}</div>
+      <div class="cue">Tap for lineups →</div>
     </div>`;
   }
 
@@ -173,8 +201,38 @@
         STATS[p.id]={wins:st.wins,losses:st.losses,era:st.era,ip:st.inningsPitched,k:st.strikeOuts,whip:st.whip,hand:p.pitchHand?(p.pitchHand.code==='L'?'LHP':'RHP'):''};});
     }
     sub.textContent=games.length?(games.length+' games · '+season):'No games';
+    GAMES={}; games.forEach(g=>{GAMES[g.gamePk]=g;});
     grid.innerHTML=games.length?games.map(cardHTML).join(''):'<div class="state">No games scheduled.</div>';
+    grid.querySelectorAll('.pp-card').forEach(c=>c.onclick=()=>openLineup(+c.dataset.pk));
   }
+
+  /* ---- lineup card modal ---- */
+  const scrim=document.getElementById('lmScrim');
+  function closeLineup(){scrim.classList.remove('open');lmTok++;}
+  function teamLineup(bx,side,team,pp){
+    const t=bx&&bx.teams&&bx.teams[side], order=(t&&t.battingOrder)||[];
+    const hand=pp&&STATS[pp.id]&&STATS[pp.id].hand;
+    const pit=pp&&pp.fullName?`<div class="lm-pit">SP: <b>${esc(pp.fullName)}</b>${hand?` <span class="h">${esc(hand)}</span>`:''}</div>`:'';
+    let rows;
+    if(order.length){rows=order.map((id,i)=>{const pl=t.players&&t.players['ID'+id];if(!pl)return '';
+      return `<div class="lm-row"><span class="o">${i+1}</span><span class="p">${esc((pl.position&&pl.position.abbreviation)||'')}</span><span class="n">${esc(pl.person&&pl.person.fullName)}</span></div>`;}).join('');}
+    else rows='<div class="lm-empty">Lineup not posted yet.</div>';
+    return `<div class="lm-team"><div class="lm-th"><img src="${logo(team.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(team.name)}</span></div>${pit}<div class="lm-lbl">Lineup</div>${rows}</div>`;
+  }
+  async function openLineup(pk){
+    const g=GAMES[pk]; if(!g)return;
+    const my=++lmTok;
+    const a=g.teams.away.team, h=g.teams.home.team, st=statusLine(g);
+    document.getElementById('lmHead').innerHTML=`<div><div class="lm-mt"><img src="${logo(a.id)}" onerror="this.style.visibility='hidden'">${esc(abv(a))}<span class="at">@</span><img src="${logo(h.id)}" onerror="this.style.visibility='hidden'">${esc(abv(h))}</div><div class="lm-sub">${esc(st.t)}</div></div><span class="lm-x" id="lmX">✕</span>`;
+    document.getElementById('lmX').onclick=closeLineup;
+    document.getElementById('lmBody').innerHTML='<div class="lm-empty" style="grid-column:1/-1;text-align:center;padding:36px">Loading lineups…</div>';
+    scrim.classList.add('open');
+    const bx=await j(`https://statsapi.mlb.com/api/v1/game/${pk}/boxscore`);
+    if(my!==lmTok)return;
+    document.getElementById('lmBody').innerHTML=teamLineup(bx,'away',a,g.teams.away.probablePitcher)+teamLineup(bx,'home',h,g.teams.home.probablePitcher);
+  }
+  scrim.addEventListener('click',function(e){if(e.target===scrim)closeLineup();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLineup();});
 
   document.getElementById('prev').onclick=()=>{DATE=shiftDate(DATE,-1);load();};
   document.getElementById('next').onclick=()=>{DATE=shiftDate(DATE,1);load();};
