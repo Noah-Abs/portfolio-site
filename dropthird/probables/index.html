@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Probable Pitchers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1040px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+
+  .daybar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .daybtn{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#2f3540);background:var(--panel2,#15161b);color:var(--text3,#aab0b9);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .daybtn:hover{color:#fff;border-color:#3b454f}.daybtn svg{width:18px;height:18px}
+  .daylbl{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:1px}
+  .daylbl b{color:var(--accent,#4aa3ff)}
+  .today{font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:9px 14px;cursor:pointer}
+  .today:hover{color:#fff}
+
+  .pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:13px}
+  .pp-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:15px;overflow:hidden}
+  .pp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border,#1b1e24)}
+  .pp-mt{display:flex;align-items:center;gap:7px;font-family:"Oswald",sans-serif;font-weight:700;font-size:14px;letter-spacing:.5px;min-width:0}
+  .pp-mt img{width:20px;height:20px;object-fit:contain;flex:0 0 auto}
+  .pp-mt .at{color:var(--muted2,#4a5159);font-weight:500;margin:0 2px}
+  .pp-time{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);flex:0 0 auto}
+  .pp-time.live{color:#46c77e}
+  .pp-mu{display:grid;grid-template-columns:1fr 40px 1fr;align-items:start;gap:10px;padding:18px 16px 20px}
+  .pp-p{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;min-width:0}
+  .pp-shot{width:clamp(64px,9vw,82px);height:clamp(64px,9vw,82px);border-radius:50%;background:linear-gradient(160deg,var(--c,#243049),#0a0e15 78%);border:3px solid var(--c,#243049);overflow:hidden;display:flex;align-items:flex-end;justify-content:center;flex:0 0 auto}
+  .pp-shot img{width:100%;height:100%;object-fit:contain;object-position:bottom center}
+  .pp-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px;line-height:1.1}
+  .pp-hand{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2,#5b6470)}
+  .pp-line{font-family:"Oswald",sans-serif;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;color:#fff;margin-top:2px}
+  .pp-line .sep{color:var(--muted2,#4a5159);margin:0 3px;font-weight:400}
+  .pp-sub{font-size:11.5px;color:var(--muted,#7e858f);font-variant-numeric:tabular-nums}
+  .pp-vs{align-self:center;text-align:center;font-family:"Anton",sans-serif;font-size:15px;color:var(--muted2,#3f4651);letter-spacing:1px}
+  .pp-tbd .pp-shot{background:var(--panel2,#15161b);border-color:var(--border2,#2a2f37)}
+  .pp-tbd .pp-nm{color:var(--muted,#7e858f)}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:60px 10px;grid-column:1/-1}
+  @media(max-width:760px){
+    .pp-grid{grid-template-columns:1fr}
+    .pp-mu{grid-template-columns:1fr 28px 1fr;gap:6px;padding:16px 12px 18px}
+    .pp-shot{width:62px;height:62px}
+    .pp-nm{font-size:14.5px}.pp-line{font-size:15px}.pp-sub{font-size:10.5px}
+    .pp-vs{font-size:13px}
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab active" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div class="page-t">Probable Pitchers</div>
+        <div class="page-sub" id="sub">Starting matchups</div>
+      </div>
+      <div class="daybar">
+        <button class="daybtn" id="prev" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="daybtn" id="next" aria-label="Next day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <span class="daylbl" id="daylbl">—</span>
+        <button class="today" id="todayBtn">Today</button>
+      </div>
+      <div class="pp-grid" id="grid"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
+  const tc=t=>TEAMCOLOR[t.id]||'#2a3a55';
+  const abv=t=>t.abbreviation||String(t.name||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+  const ordinal=n=>n+(['th','st','nd','rd'][(n%100>>3^1&&n%10)||0]||'th');
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const shiftDate=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+  const fmtDay=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});};
+  const gameTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
+
+  let DATE=ptToday(), STATS={}, tok=0;
+  const sub=document.getElementById('sub'), grid=document.getElementById('grid'), daylbl=document.getElementById('daylbl');
+
+  function statusLine(g){const st=g.status||{},ls=g.linescore||{},a=st.abstractGameState;
+    if(a==='Live'){const inn=(((ls.inningState||'')+' '+(ls.currentInning||'')).trim());return {t:'Live'+(inn?' · '+inn:''),live:true};}
+    if(a==='Final')return {t:'Final',live:false};
+    return {t:gameTime(g),live:false};}
+
+  function pPanel(team,pp){
+    if(!pp||!pp.id)return `<div class="pp-p pp-tbd" style="--c:${tc(team)}"><div class="pp-shot"></div><div class="pp-nm">TBD</div><div class="pp-hand">Not announced</div></div>`;
+    const s=STATS[pp.id]||{};
+    const wl=(s.wins!=null)?(s.wins+'-'+s.losses):'—';
+    const era=(s.era!=null&&s.era!=='-.--')?s.era:'—';
+    const sub2=[];if(s.ip!=null)sub2.push(s.ip+' IP');if(s.k!=null)sub2.push(s.k+' K');if(s.whip!=null)sub2.push(s.whip+' WHIP');
+    return `<div class="pp-p" style="--c:${tc(team)}"><div class="pp-shot"><img src="${shot(pp.id)}" onerror="this.style.opacity=0"></div>`+
+      `<div><div class="pp-nm">${esc(pp.fullName)}</div><div class="pp-hand">${s.hand?s.hand:''}</div></div>`+
+      `<div class="pp-line">${esc(wl)}<span class="sep">·</span>${esc(era)} ERA</div>`+
+      `<div class="pp-sub">${esc(sub2.join(' · '))}</div></div>`;
+  }
+  function cardHTML(g){
+    const a=g.teams.away.team,h=g.teams.home.team,st=statusLine(g);
+    return `<div class="pp-card">
+      <div class="pp-head"><div class="pp-mt"><img src="${logo(a.id)}" onerror="this.style.visibility='hidden'">${esc(abv(a))}<span class="at">@</span><img src="${logo(h.id)}" onerror="this.style.visibility='hidden'">${esc(abv(h))}</div><div class="pp-time ${st.live?'live':''}">${esc(st.t)}</div></div>
+      <div class="pp-mu">${pPanel(a,g.teams.away.probablePitcher)}<div class="pp-vs">VS</div>${pPanel(h,g.teams.home.probablePitcher)}</div>
+    </div>`;
+  }
+
+  async function load(){
+    const my=++tok;
+    grid.innerHTML='<div class="state">Loading…</div>';
+    daylbl.innerHTML=(DATE===ptToday()?'<b>Today</b> · ':'')+esc(fmtDay(DATE));
+    const season=DATE.slice(0,4);
+    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${DATE}&hydrate=probablePitcher,team,linescore`);
+    if(my!==tok)return;
+    const games=(((sch&&sch.dates)||[])[0]||{}).games||[];
+    games.sort((x,y)=>(x.gameDate||'').localeCompare(y.gameDate||''));
+    // fetch season stats for all probable pitchers in one call
+    const ids=[];games.forEach(g=>{['away','home'].forEach(s=>{const p=g.teams[s].probablePitcher;if(p&&p.id)ids.push(p.id);});});
+    STATS={};
+    if(ids.length){
+      const pe=await j(`https://statsapi.mlb.com/api/v1/people?personIds=${[...new Set(ids)].join(',')}&hydrate=stats(group=[pitching],type=[season],season=${season})`);
+      if(my!==tok)return;
+      ((pe&&pe.people)||[]).forEach(p=>{const sp=(((p.stats||[])[0]||{}).splits)||[];const tot=sp.find(x=>!x.team&&!x.sport)||sp[sp.length-1]||{};const st=tot.stat||{};
+        STATS[p.id]={wins:st.wins,losses:st.losses,era:st.era,ip:st.inningsPitched,k:st.strikeOuts,whip:st.whip,hand:p.pitchHand?(p.pitchHand.code==='L'?'LHP':'RHP'):''};});
+    }
+    sub.textContent=games.length?(games.length+' games · '+season):'No games';
+    grid.innerHTML=games.length?games.map(cardHTML).join(''):'<div class="state">No games scheduled.</div>';
+  }
+
+  document.getElementById('prev').onclick=()=>{DATE=shiftDate(DATE,-1);load();};
+  document.getElementById('next').onclick=()=>{DATE=shiftDate(DATE,1);load();};
+  document.getElementById('todayBtn').onclick=()=>{DATE=ptToday();load();};
+  load();
+</script>
+</body>
+</html>
