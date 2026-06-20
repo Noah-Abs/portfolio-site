@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Player Spotlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1080px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+
+  .daybar{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .daybtn{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#2f3540);background:var(--panel2,#15161b);color:var(--text3,#aab0b9);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .daybtn:hover{color:#fff;border-color:#3b454f}.daybtn svg{width:18px;height:18px}
+  .daylbl{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:1px}.daylbl b{color:var(--accent,#4aa3ff)}
+  .today{font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:9px 14px;cursor:pointer}.today:hover{color:#fff}
+
+  .sec-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);margin:26px 0 12px;display:flex;align-items:center;gap:9px}
+  .sec-h::before{content:"";width:5px;height:16px;border-radius:3px;background:var(--accent,#4aa3ff)}
+  .sec-h.bat::before{background:#ffd24a}.sec-h.pit::before{background:#46c77e}
+  .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+  .sp-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:15px;overflow:hidden;display:flex;flex-direction:column}
+  .sp-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border,#1b1e24)}
+  .sp-tm{display:flex;align-items:center;gap:7px;font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;min-width:0}
+  .sp-tm img{width:19px;height:19px;object-fit:contain;flex:0 0 auto}
+  .sp-res{font-size:11px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:7px;white-space:nowrap;flex:0 0 auto}
+  .sp-res.w{color:#46c77e;background:rgba(70,199,126,.13)}.sp-res.l{color:#e0556a;background:rgba(224,85,106,.11)}
+  .sp-body{display:flex;align-items:center;gap:14px;padding:15px}
+  .sp-shot{width:66px;height:66px;border-radius:50%;background:linear-gradient(160deg,var(--c,#243049),#0a0e15 78%);border:3px solid var(--c,#243049);overflow:hidden;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center}
+  .sp-shot img{width:100%;height:100%;object-fit:contain;object-position:bottom center}
+  .sp-info{min-width:0}
+  .sp-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:18px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp-pos{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#5b6470);margin-bottom:6px}
+  .sp-line{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px;color:#fff;line-height:1.25}
+  .sp-line .hl{color:#ffd24a}
+  .sp-line .dec{color:#46c77e}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:50px 10px}
+  @media(max-width:760px){.sp-grid{grid-template-columns:1fr}}
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab active" href="../spotlight/"><span class="dot"></span>Spotlight</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div class="page-t">Player Spotlight</div>
+        <div class="page-sub" id="sub">Standout performances</div>
+      </div>
+      <div class="daybar">
+        <button class="daybtn" id="prev" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="daybtn" id="next" aria-label="Next day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <span class="daylbl" id="daylbl">—</span>
+        <button class="today" id="latestBtn">Latest</button>
+      </div>
+      <div id="content"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
+  const tc=id=>TEAMCOLOR[id]||'#2a3a55';
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const shiftDate=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+  const fmtDay=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});};
+
+  let ABBR={}, DATE=shiftDate(ptToday(),-1), tok=0;
+  const sub=document.getElementById('sub'), content=document.getElementById('content'), daylbl=document.getElementById('daylbl');
+  const abv=id=>ABBR[id]||'';
+
+  // ----- scoring -----
+  function hitScore(b){return (b.totalBases||0)+1.2*(b.rbi||0)+0.8*(b.runs||0)+2*(b.homeRuns||0)+1.5*(b.stolenBases||0)+0.3*(b.baseOnBalls||0);}
+  function pitScore(p){return (p.outs||0)*0.85+(p.strikeOuts||0)-(p.earnedRuns||0)*3-(p.hits||0)*0.4-(p.baseOnBalls||0)*0.3+(p.wins?3:0)+(p.saves?2.5:0)+(p.shutouts?5:0)+(p.completeGames?2:0);}
+  function hitLine(b){
+    const p=[`${b.hits}-${b.atBats}`];
+    if(b.homeRuns)p.push(`<span class="hl">${b.homeRuns>1?b.homeRuns+' HR':'HR'}</span>`);
+    if(b.triples)p.push(`${b.triples} 3B`);
+    if(b.doubles)p.push(`${b.doubles} 2B`);
+    if(b.rbi)p.push(`${b.rbi} RBI`);
+    if(b.runs)p.push(`${b.runs} R`);
+    if(b.stolenBases)p.push(`${b.stolenBases} SB`);
+    if(b.baseOnBalls&&b.hits<2)p.push(`${b.baseOnBalls} BB`);
+    return p.join(', ');
+  }
+  function pitLine(p){
+    const dec=p.wins?'W':p.saves?'SV':p.holds?'HLD':p.losses?'L':'';
+    const tags=[];if(p.shutouts)tags.push('SHO');else if(p.completeGames)tags.push('CG');
+    else if(p.gamesStarted&&(p.outs||0)>=18&&(p.earnedRuns||0)<=3)tags.push('QS');
+    const parts=[`${p.inningsPitched} IP`,`<span class="hl">${p.strikeOuts} K</span>`,`${p.earnedRuns} ER`];
+    if(p.hits!=null)parts.push(`${p.hits} H`);
+    let s=parts.join(', ');
+    if(dec)s+=` <span class="dec">· ${dec}</span>`;
+    if(tags.length)s+=` <span class="dec">· ${tags.join(' ')}</span>`;
+    return s;
+  }
+  function card(x){
+    const at=x.side==='away'?'@':'vs';
+    return `<div class="sp-card" style="--c:${tc(x.teamId)}">
+      <div class="sp-top"><div class="sp-tm"><img src="${logo(x.teamId)}" onerror="this.style.visibility='hidden'">${esc(abv(x.teamId))}</div>`+
+      `<div class="sp-res ${x.won?'w':'l'}">${x.won?'W':'L'} ${x.ts}-${x.os} ${at} ${esc(abv(x.oppId))}</div></div>
+      <div class="sp-body"><div class="sp-shot"><img src="${shot(x.id)}" onerror="this.style.opacity=0"></div>
+      <div class="sp-info"><div class="sp-nm">${esc(x.name)}</div><div class="sp-pos">${esc(x.pos)} · ${esc(abv(x.teamId))}</div><div class="sp-line">${x.line}</div></div></div>
+    </div>`;
+  }
+
+  async function load(){
+    const my=++tok;
+    content.innerHTML='<div class="state">Loading…</div>';
+    daylbl.innerHTML=(DATE===shiftDate(ptToday(),-1)?'<b>Yesterday</b> · ':(DATE===ptToday()?'<b>Today</b> · ':''))+esc(fmtDay(DATE));
+    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${DATE}&hydrate=team`);
+    if(my!==tok)return;
+    const games=((((sch&&sch.dates)||[])[0]||{}).games||[]).filter(g=>g.status&&(g.status.abstractGameState==='Final'||g.status.abstractGameState==='Live'));
+    if(!games.length){content.innerHTML='<div class="state">No games on this date.</div>';sub.textContent='No games';return;}
+    const bats=[], pits=[];
+    await Promise.all(games.map(async g=>{
+      const bx=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`);
+      if(my!==tok||!bx||!bx.teams)return;
+      ['away','home'].forEach(side=>{
+        const other=side==='away'?'home':'away';
+        const teamId=g.teams[side].team.id, oppId=g.teams[other].team.id;
+        const ts=g.teams[side].score, os=g.teams[other].score, won=ts>os;
+        const pls=(bx.teams[side]||{}).players||{};
+        for(const k in pls){const pl=pls[k];const st=pl.stats||{};const b=st.batting,p=st.pitching;
+          const base={id:pl.person.id,name:pl.person.fullName,pos:(pl.position&&pl.position.abbreviation)||'',teamId,oppId,side,ts,os,won};
+          if(b&&b.atBats!=null&&(b.atBats>0)){const sc=hitScore(b);if(sc>=4&&(b.hits>=2||b.homeRuns>=1||b.rbi>=3||b.stolenBases>=2))bats.push(Object.assign({score:sc,line:hitLine(b)},base));}
+          if(p&&p.inningsPitched){const outs=p.outs||0;if(((p.gamesStarted&&outs>=12)||p.saves||(p.strikeOuts||0)>=5))pits.push(Object.assign({score:pitScore(p),line:pitLine(p)},base));}
+        }
+      });
+    }));
+    if(my!==tok)return;
+    bats.sort((a,b)=>b.score-a.score);pits.sort((a,b)=>b.score-a.score);
+    const topBat=bats.slice(0,6), topPit=pits.slice(0,3);
+    sub.textContent=games.length+' games · '+DATE.slice(0,4);
+    let html='';
+    if(topBat.length)html+=`<div class="sec-h bat">At the Plate</div><div class="sp-grid">${topBat.map(card).join('')}</div>`;
+    if(topPit.length)html+=`<div class="sec-h pit">On the Mound</div><div class="sp-grid">${topPit.map(card).join('')}</div>`;
+    content.innerHTML=html||'<div class="state">No standout performances found.</div>';
+  }
+
+  document.getElementById('prev').onclick=()=>{DATE=shiftDate(DATE,-1);load();};
+  document.getElementById('next').onclick=()=>{DATE=shiftDate(DATE,1);load();};
+  document.getElementById('latestBtn').onclick=()=>{DATE=shiftDate(ptToday(),-1);load();};
+
+  (async function(){
+    const tj=await j(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${new Date().getFullYear()}`);
+    ((tj&&tj.teams)||[]).forEach(t=>{if(t.sport&&t.sport.id===1)ABBR[t.id]=t.abbreviation;});
+    load();
+  })();
+</script>
+</body>
+</html>
