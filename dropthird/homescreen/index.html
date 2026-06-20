@@ -57,6 +57,40 @@
   .card:hover .ct .ar{opacity:1;transform:translateX(0)}
   .card .cd{font-size:12.5px;line-height:1.4;color:var(--muted,#7e858f);letter-spacing:.3px}
 
+  /* subtle favorite-team game line under the tagline */
+  .fav-strip{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px;margin:18px auto 0;
+    font-size:12px;letter-spacing:.4px;color:var(--muted,#7e858f);cursor:pointer;line-height:1.55;max-width:680px}
+  .fav-strip.show{display:inline-flex}
+  .fav-strip:hover{color:var(--text3,#aab0b9)}
+  .fav-strip .lead{display:inline-flex;align-items:center;gap:6px}
+  .fav-strip img{width:15px;height:15px;object-fit:contain}
+  .fav-strip .nm{font-weight:600;color:var(--text2,#cfd4da);letter-spacing:1.2px;text-transform:uppercase;font-size:11px}
+  .fav-strip .sep{opacity:.45}
+  .fav-strip .go{color:var(--accent,#4aa3ff);font-weight:600}
+  .fav-strip.noclick{cursor:default}.fav-strip.noclick:hover{color:var(--muted,#7e858f)}
+
+  /* lineup modal (shared pattern with /probables/) */
+  .lm-scrim{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px}
+  .lm-scrim.open{display:flex}
+  .lm{background:var(--panel,#101115);border:1px solid var(--border2,#262a32);border-radius:16px;width:100%;max-width:760px;max-height:88vh;overflow:auto;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:left}
+  .lm-head{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 18px;background:var(--panel,#101115);border-bottom:1px solid var(--border,#1b1e24);z-index:2}
+  .lm-mt{display:flex;align-items:center;gap:8px;font-family:"Anton",sans-serif;text-transform:uppercase;font-size:18px;letter-spacing:.5px}
+  .lm-mt img{width:24px;height:24px;object-fit:contain}.lm-mt .at{color:var(--muted2,#4a5159);margin:0 2px}
+  .lm-sub{font-size:12px;color:var(--muted,#7e858f);letter-spacing:1px;text-transform:uppercase;margin-top:3px}
+  .lm-x{cursor:pointer;color:var(--muted,#7e858f);width:32px;height:32px;flex:0 0 auto;border-radius:50%;background:var(--panel2,#15161b);display:flex;align-items:center;justify-content:center;font-size:15px}.lm-x:hover{color:#fff}
+  .lm-body{display:grid;grid-template-columns:1fr 1fr}
+  .lm-team{padding:16px 18px;min-width:0}.lm-team+.lm-team{border-left:1px solid var(--border,#1b1e24)}
+  .lm-th{display:flex;align-items:center;gap:9px;margin-bottom:10px}.lm-th img{width:26px;height:26px;object-fit:contain}.lm-th .nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px}
+  .lm-pit{font-size:12.5px;color:var(--text2,#cfd4da);margin-bottom:13px}.lm-pit b{color:#fff}
+  .lm-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted2,#4a5159);margin-bottom:5px}
+  .lm-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--panel2,#16181d);font-size:14px}
+  .lm-row:first-of-type{border-top:0}
+  .lm-row .o{width:15px;color:var(--muted2,#5b6470);font-weight:700;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .lm-row .p{width:32px;font-size:11px;color:var(--muted,#7e858f);font-weight:600;letter-spacing:.5px;flex:0 0 auto}
+  .lm-row .n{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lm-empty{color:var(--muted,#7e858f);font-size:13px;padding:14px 0}
+  @media(max-width:680px){.lm-body{grid-template-columns:1fr}.lm-team+.lm-team{border-left:0;border-top:1px solid var(--border,#1b1e24)}}
+
   @media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:760px){
     html,body{overflow-x:hidden;max-width:100%}
@@ -106,18 +140,96 @@
       <h1 class="hero-t">DROPTHIRD</h1>
       <div class="rule"></div>
       <p class="hero-s">Baseball, by the numbers</p>
+      <div class="fav-strip" id="favStrip"></div>
 
       <div class="grid">
         <a class="card" href="../standings/"><div class="ct">Standings<span class="ar">→</span></div><div class="cd">Divisions, wild-card race & playoff seeding.</div></a>
         <a class="card" href="../games/"><div class="ct">Games<span class="ar">→</span></div><div class="cd">Schedules, results & full box scores for any team.</div></a>
         <a class="card" href="../gamehub/"><div class="ct">GameHub<span class="ar">→</span></div><div class="cd">Live scoreboard — every game's score, runners & count, once a second.</div></a>
         <a class="card" href="../probables/"><div class="ct">Probables<span class="ar">→</span></div><div class="cd">Today's probable starting pitchers, matchup by matchup.</div></a>
-        <a class="card" href="../spotlight/"><div class="ct">Spotlight<span class="ar">→</span></div><div class="cd">Yesterday's standout players — the big games at the plate & on the mound.</div></a>
+        <a class="card" href="../spotlight/"><div class="ct">Spotlight<span class="ar">→</span></div><div class="cd">Yesterday's Player of the Game, every matchup.</div></a>
         <a class="card" href="../postseason/"><div class="ct">Postseason<span class="ar">→</span></div><div class="cd">The bracket if the season ended today.</div></a>
         <a class="card" href="../team-trends/"><div class="ct">Team Trends<span class="ar">→</span></div><div class="cd">Splits & situational performance, team by team.</div></a>
         <a class="card" href="../clubs/"><div class="ct">Clubs<span class="ar">→</span></div><div class="cd">Jump into any of the 30 teams.</div></a>
       </div>
     </div>
   </main>
+
+  <div class="lm-scrim" id="lmScrim"><div class="lm"><div class="lm-head" id="lmHead"></div><div class="lm-body" id="lmBody"></div></div></div>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const abv=t=>(t&&t.abbreviation)||String((t&&t.name)||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+  const lastName=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p.slice(1).join(' '):p[0]||'';};
+  const TEAMS={108:'Angels',109:'D-backs',110:'Orioles',111:'Red Sox',112:'Cubs',113:'Reds',114:'Guardians',115:'Rockies',116:'Tigers',117:'Astros',118:'Royals',119:'Dodgers',120:'Nationals',121:'Mets',133:'Athletics',134:'Pirates',135:'Padres',136:'Mariners',137:'Giants',138:'Cardinals',139:'Rays',140:'Rangers',141:'Blue Jays',142:'Twins',143:'Phillies',144:'Braves',145:'White Sox',146:'Marlins',147:'Yankees',158:'Brewers'};
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const gameTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
+  function statusLine(g){const st=g.status||{},lsc=g.linescore||{},a=st.abstractGameState;
+    if(a==='Live'){const inn=((lsc.inningState||'')+' '+(lsc.currentInning||'')).trim();return {t:'Live'+(inn?' · '+inn:''),live:true};}
+    if(a==='Final')return {t:'Final',live:false};
+    return {t:gameTime(g),live:false};}
+
+  /* ---- favorite-team game line (a small detail; hidden when no team / no game) ---- */
+  let favTok=0;
+  async function renderFav(){
+    const el=document.getElementById('favStrip');
+    const qsTeam=new URLSearchParams(location.search).get('team');
+    const fav=qsTeam||(window.getSettings&&window.getSettings().favTeam)||(localStorage.getItem('dt-fav-team')||'');
+    el.className='fav-strip';el.onclick=null;el.innerHTML='';
+    if(!fav)return;
+    const my=++favTok;
+    const lead=`<span class="lead"><img src="${logo(fav)}" onerror="this.style.display='none'"><span class="nm">${esc(TEAMS[fav]||'My team')}</span></span>`;
+    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${fav}&date=${ptToday()}&hydrate=probablePitcher,team,linescore,venue`);
+    if(my!==favTok)return;
+    const games=(((sch&&sch.dates)||[])[0]||{}).games||[];
+    const g=games.find(x=>x.status&&x.status.abstractGameState!=='Final')||games[0];
+    const sep='<span class="sep">·</span>';
+    if(!g){el.innerHTML=lead+sep+'<span>No game today</span>';el.classList.add('show','noclick');return;}
+    const home=String(g.teams.home.team.id)===String(fav), side=home?'home':'away', opp=home?'away':'home';
+    const st=statusLine(g), venue=(g.venue&&g.venue.name)||'';
+    const myPP=g.teams[side].probablePitcher, oppPP=g.teams[opp].probablePitcher;
+    let pp='';
+    if(myPP&&myPP.fullName){pp=lastName(myPP.fullName);if(oppPP&&oppPP.fullName)pp+=' vs '+lastName(oppPP.fullName);}
+    const parts=[`${home?'vs':'@'} ${esc(abv(g.teams[opp].team))}`, esc(st.t)];
+    if(venue)parts.push(esc(venue));
+    if(pp)parts.push(esc(pp));
+    el.innerHTML=lead+sep+parts.join(sep)+sep+'<span class="go">Lineup →</span>';
+    el.classList.add('show');
+    el.onclick=()=>openLineup(g);
+    if(new URLSearchParams(location.search).get('lineup'))openLineup(g);
+  }
+
+  /* ---- lineup card modal (shared pattern with /probables/) ---- */
+  const scrim=document.getElementById('lmScrim');
+  let lmTok=0;
+  function closeLineup(){scrim.classList.remove('open');lmTok++;}
+  function teamLineup(bx,side,team,pp){
+    const t=bx&&bx.teams&&bx.teams[side], order=(t&&t.battingOrder)||[];
+    const pit=pp&&pp.fullName?`<div class="lm-pit">SP: <b>${esc(pp.fullName)}</b></div>`:'';
+    let rows;
+    if(order.length){rows=order.map((id,i)=>{const pl=t.players&&t.players['ID'+id];if(!pl)return '';
+      return `<div class="lm-row"><span class="o">${i+1}</span><span class="p">${esc((pl.position&&pl.position.abbreviation)||'')}</span><span class="n">${esc(pl.person&&pl.person.fullName)}</span></div>`;}).join('');}
+    else rows='<div class="lm-empty">Lineup not posted yet.</div>';
+    return `<div class="lm-team"><div class="lm-th"><img src="${logo(team.id)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(team.name)}</span></div>${pit}<div class="lm-lbl">Lineup</div>${rows}</div>`;
+  }
+  async function openLineup(g){
+    if(!g)return;
+    const my=++lmTok;
+    const a=g.teams.away.team, h=g.teams.home.team, st=statusLine(g);
+    document.getElementById('lmHead').innerHTML=`<div><div class="lm-mt"><img src="${logo(a.id)}" onerror="this.style.visibility='hidden'">${esc(abv(a))}<span class="at">@</span><img src="${logo(h.id)}" onerror="this.style.visibility='hidden'">${esc(abv(h))}</div><div class="lm-sub">${esc(st.t)}</div></div><span class="lm-x" id="lmX">✕</span>`;
+    document.getElementById('lmX').onclick=closeLineup;
+    document.getElementById('lmBody').innerHTML='<div class="lm-empty" style="grid-column:1/-1;text-align:center;padding:36px">Loading lineups…</div>';
+    scrim.classList.add('open');
+    const bx=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`);
+    if(my!==lmTok)return;
+    document.getElementById('lmBody').innerHTML=teamLineup(bx,'away',a,g.teams.away.probablePitcher)+teamLineup(bx,'home',h,g.teams.home.probablePitcher);
+  }
+  scrim.addEventListener('click',function(e){if(e.target===scrim)closeLineup();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLineup();});
+  document.addEventListener('dt:fav-changed',renderFav);
+  renderFav();
+</script>
 </body>
 </html>

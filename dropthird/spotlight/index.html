@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>DROPTHIRD — Player Spotlight</title>
+<title>DROPTHIRD — Player of the Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -38,20 +38,19 @@
   .daylbl{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:1px}.daylbl b{color:var(--accent,#4aa3ff)}
   .today{font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:9px 14px;cursor:pointer}.today:hover{color:#fff}
 
-  .sec-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);margin:26px 0 12px;display:flex;align-items:center;gap:9px}
-  .sec-h::before{content:"";width:5px;height:16px;border-radius:3px;background:var(--accent,#4aa3ff)}
-  .sec-h.bat::before{background:#ffd24a}.sec-h.pit::before{background:#46c77e}
   .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
   .sp-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:15px;overflow:hidden;display:flex;flex-direction:column}
   .sp-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 14px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border,#1b1e24)}
-  .sp-tm{display:flex;align-items:center;gap:7px;font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;min-width:0}
-  .sp-tm img{width:19px;height:19px;object-fit:contain;flex:0 0 auto}
-  .sp-res{font-size:11px;font-weight:700;letter-spacing:.5px;padding:3px 9px;border-radius:7px;white-space:nowrap;flex:0 0 auto}
-  .sp-res.w{color:#46c77e;background:rgba(70,199,126,.13)}.sp-res.l{color:#e0556a;background:rgba(224,85,106,.11)}
+  .sp-mt{display:flex;align-items:center;gap:6px;font-family:"Oswald",sans-serif;font-weight:700;font-size:13px;letter-spacing:.5px;min-width:0}
+  .sp-mt img{width:18px;height:18px;object-fit:contain;flex:0 0 auto}
+  .sp-mt .at{color:var(--muted2,#4a5159);font-weight:500;margin:0 1px}
+  .sp-fin{font-size:11.5px;font-weight:700;letter-spacing:.5px;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums;white-space:nowrap;flex:0 0 auto}
+  .sp-fin.live{color:#46c77e}
   .sp-body{display:flex;align-items:center;gap:14px;padding:15px}
   .sp-shot{width:66px;height:66px;border-radius:50%;background:linear-gradient(160deg,var(--c,#243049),#0a0e15 78%);border:3px solid var(--c,#243049);overflow:hidden;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center}
   .sp-shot img{width:100%;height:100%;object-fit:contain;object-position:bottom center}
   .sp-info{min-width:0}
+  .sp-eyebrow{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffd24a;margin-bottom:3px}
   .sp-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:18px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sp-pos{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#5b6470);margin-bottom:6px}
   .sp-line{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px;color:#fff;line-height:1.25}
@@ -92,8 +91,8 @@
   <main class="main">
     <div class="page">
       <div class="page-head">
-        <div class="page-t">Player Spotlight</div>
-        <div class="page-sub" id="sub">Standout performances</div>
+        <div class="page-t">Player of the Game</div>
+        <div class="page-sub" id="sub">Every matchup's standout</div>
       </div>
       <div class="daybar">
         <button class="daybtn" id="prev" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -120,9 +119,9 @@
   const sub=document.getElementById('sub'), content=document.getElementById('content'), daylbl=document.getElementById('daylbl');
   const abv=id=>ABBR[id]||'';
 
-  // ----- scoring -----
-  function hitScore(b){return (b.totalBases||0)+1.2*(b.rbi||0)+0.8*(b.runs||0)+2*(b.homeRuns||0)+1.5*(b.stolenBases||0)+0.3*(b.baseOnBalls||0);}
-  function pitScore(p){return (p.outs||0)*0.85+(p.strikeOuts||0)-(p.earnedRuns||0)*3-(p.hits||0)*0.4-(p.baseOnBalls||0)*0.3+(p.wins?3:0)+(p.saves?2.5:0)+(p.shutouts?5:0)+(p.completeGames?2:0);}
+  // ----- player of the game: one unified "impact" so a hitter & a pitcher are comparable -----
+  function hitImpact(b){return (b.totalBases||0)*4+(b.rbi||0)*4+(b.runs||0)*2+(b.homeRuns||0)*5+(b.stolenBases||0)*3+(b.baseOnBalls||0)*1.5+((b.hits||0)>=3?6:0);}
+  function pitImpact(p){return (p.outs||0)*2+(p.strikeOuts||0)*3-(p.earnedRuns||0)*8-(p.hits||0)*1.5-(p.baseOnBalls||0)*1.5+(p.wins?6:0)+(p.saves?8:0)+(p.shutouts?15:0)+(p.completeGames?8:0);}
   function hitLine(b){
     const p=[`${b.hits}-${b.atBats}`];
     if(b.homeRuns)p.push(`<span class="hl">${b.homeRuns>1?b.homeRuns+' HR':'HR'}</span>`);
@@ -145,13 +144,19 @@
     if(tags.length)s+=` <span class="dec">· ${tags.join(' ')}</span>`;
     return s;
   }
+  function gameTime(g){try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}}
+  function statusLine(g){const st=g.status||{},lsc=g.linescore||{},a=st.abstractGameState;
+    if(a==='Live'){const inn=((lsc.inningState||'')+' '+(lsc.currentInning||'')).trim();return {t:'Live'+(inn?' · '+inn:''),live:true};}
+    if(a==='Final')return {t:'Final',live:false};
+    return {t:gameTime(g),live:false};}
+
   function card(x){
-    const at=x.side==='away'?'@':'vs';
+    const st=x.status;
     return `<div class="sp-card" style="--c:${tc(x.teamId)}">
-      <div class="sp-top"><div class="sp-tm"><img src="${logo(x.teamId)}" onerror="this.style.visibility='hidden'">${esc(abv(x.teamId))}</div>`+
-      `<div class="sp-res ${x.won?'w':'l'}">${x.won?'W':'L'} ${x.ts}-${x.os} ${at} ${esc(abv(x.oppId))}</div></div>
+      <div class="sp-top"><div class="sp-mt"><img src="${logo(x.aId)}" onerror="this.style.visibility='hidden'">${esc(abv(x.aId))}<span class="at">@</span><img src="${logo(x.hId)}" onerror="this.style.visibility='hidden'">${esc(abv(x.hId))}</div>`+
+      `<div class="sp-fin ${st.live?'live':''}">${x.aScore!=null?x.aScore+'–'+x.hScore+' · ':''}${esc(st.t)}</div></div>
       <div class="sp-body"><div class="sp-shot"><img src="${shot(x.id)}" onerror="this.style.opacity=0"></div>
-      <div class="sp-info"><div class="sp-nm">${esc(x.name)}</div><div class="sp-pos">${esc(x.pos)} · ${esc(abv(x.teamId))}</div><div class="sp-line">${x.line}</div></div></div>
+      <div class="sp-info"><div class="sp-eyebrow">★ Player of the Game</div><div class="sp-nm">${esc(x.name)}</div><div class="sp-pos">${esc(x.pos)} · ${esc(abv(x.teamId))}</div><div class="sp-line">${x.line}</div></div></div>
     </div>`;
   }
 
@@ -159,34 +164,34 @@
     const my=++tok;
     content.innerHTML='<div class="state">Loading…</div>';
     daylbl.innerHTML=(DATE===shiftDate(ptToday(),-1)?'<b>Yesterday</b> · ':(DATE===ptToday()?'<b>Today</b> · ':''))+esc(fmtDay(DATE));
-    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${DATE}&hydrate=team`);
+    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${DATE}&hydrate=team,linescore`);
     if(my!==tok)return;
     const games=((((sch&&sch.dates)||[])[0]||{}).games||[]).filter(g=>g.status&&(g.status.abstractGameState==='Final'||g.status.abstractGameState==='Live'));
-    if(!games.length){content.innerHTML='<div class="state">No games on this date.</div>';sub.textContent='No games';return;}
-    const bats=[], pits=[];
+    if(!games.length){content.innerHTML='<div class="state">No completed games on this date.</div>';sub.textContent='No games';return;}
+    const cards=[];
     await Promise.all(games.map(async g=>{
       const bx=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`);
       if(my!==tok||!bx||!bx.teams)return;
+      let best=null;
       ['away','home'].forEach(side=>{
         const other=side==='away'?'home':'away';
-        const teamId=g.teams[side].team.id, oppId=g.teams[other].team.id;
-        const ts=g.teams[side].score, os=g.teams[other].score, won=ts>os;
+        const teamId=g.teams[side].team.id;
+        const ts=g.teams[side].score, os=g.teams[other].score, won=ts!=null&&os!=null&&ts>os;
         const pls=(bx.teams[side]||{}).players||{};
         for(const k in pls){const pl=pls[k];const st=pl.stats||{};const b=st.batting,p=st.pitching;
-          const base={id:pl.person.id,name:pl.person.fullName,pos:(pl.position&&pl.position.abbreviation)||'',teamId,oppId,side,ts,os,won};
-          if(b&&b.atBats!=null&&(b.atBats>0)){const sc=hitScore(b);if(sc>=4&&(b.hits>=2||b.homeRuns>=1||b.rbi>=3||b.stolenBases>=2))bats.push(Object.assign({score:sc,line:hitLine(b)},base));}
-          if(p&&p.inningsPitched){const outs=p.outs||0;if(((p.gamesStarted&&outs>=12)||p.saves||(p.strikeOuts||0)>=5))pits.push(Object.assign({score:pitScore(p),line:pitLine(p)},base));}
+          let cand=null;
+          if(b&&b.atBats!=null&&b.atBats>0)cand={impact:hitImpact(b),line:hitLine(b)};
+          if(p&&p.inningsPitched&&(p.outs||0)>0){const pi=pitImpact(p);if(!cand||pi>cand.impact)cand={impact:pi,line:pitLine(p)};}
+          if(cand){const im=cand.impact*(won?1.1:1);
+            if(!best||im>best.impact)best={impact:im,id:pl.person.id,name:pl.person.fullName,pos:(pl.position&&pl.position.abbreviation)||'',teamId,line:cand.line};}
         }
       });
+      if(best){best.aId=g.teams.away.team.id;best.hId=g.teams.home.team.id;best.aScore=g.teams.away.score;best.hScore=g.teams.home.score;best.status=statusLine(g);cards.push(best);}
     }));
     if(my!==tok)return;
-    bats.sort((a,b)=>b.score-a.score);pits.sort((a,b)=>b.score-a.score);
-    const topBat=bats.slice(0,6), topPit=pits.slice(0,3);
-    sub.textContent=games.length+' games · '+DATE.slice(0,4);
-    let html='';
-    if(topBat.length)html+=`<div class="sec-h bat">At the Plate</div><div class="sp-grid">${topBat.map(card).join('')}</div>`;
-    if(topPit.length)html+=`<div class="sec-h pit">On the Mound</div><div class="sp-grid">${topPit.map(card).join('')}</div>`;
-    content.innerHTML=html||'<div class="state">No standout performances found.</div>';
+    cards.sort((a,b)=>b.impact-a.impact);
+    sub.textContent=cards.length+(cards.length===1?' game · ':' games · ')+DATE.slice(0,4);
+    content.innerHTML=cards.length?`<div class="sp-grid">${cards.map(card).join('')}</div>`:'<div class="state">No standout performances found.</div>';
   }
 
   document.getElementById('prev').onclick=()=>{DATE=shiftDate(DATE,-1);load();};

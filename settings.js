@@ -2,6 +2,7 @@
   var DARK={'--bg':'#0b0c0e','--bg2':'#0e0f13','--panel':'#101115','--panel2':'#15161b','--border':'#1b1e24','--border2':'#262a32','--text':'#ffffff','--text2':'#cfd4da','--text3':'#aab0b9','--muted':'#7e858f','--muted2':'#474d56'};
   var LIGHT={'--bg':'#eef1f4','--bg2':'#ffffff','--panel':'#ffffff','--panel2':'#f1f4f7','--border':'#e2e7ec','--border2':'#d4dbe2','--text':'#14181d','--text2':'#2b333b','--text3':'#48515b','--muted':'#6c757e','--muted2':'#aab0b9'};
   var ACCENT='#4aa3ff';
+  var FAV_TEAMS=[[108,'Angels'],[109,'Diamondbacks'],[110,'Orioles'],[111,'Red Sox'],[112,'Cubs'],[113,'Reds'],[114,'Guardians'],[115,'Rockies'],[116,'Tigers'],[117,'Astros'],[118,'Royals'],[119,'Dodgers'],[120,'Nationals'],[121,'Mets'],[133,'Athletics'],[134,'Pirates'],[135,'Padres'],[136,'Mariners'],[137,'Giants'],[138,'Cardinals'],[139,'Rays'],[140,'Rangers'],[141,'Blue Jays'],[142,'Twins'],[143,'Phillies'],[144,'Braves'],[145,'White Sox'],[146,'Marlins'],[147,'Yankees'],[158,'Brewers']];
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
   function applyTheme(t){var m=t==='light'?LIGHT:DARK,r=document.documentElement;for(var k in m)r.style.setProperty(k,m[k]);r.setAttribute('data-dt-theme',t);}
   var theme=ls('dt-theme')||'dark';
@@ -23,6 +24,8 @@
     +'.dt-tg{width:46px;height:25px;border-radius:13px;background:var(--border2,#262a32);position:relative;cursor:pointer;border:none;flex:0 0 auto}'
     +'.dt-tg:after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .2s}'
     +'.dt-tg.on{background:var(--accent,#4aa3ff)}.dt-tg.on:after{left:24px}'
+    +'.dt-sel{background:var(--panel2,#15161b);color:var(--text,#fff);border:1px solid var(--border2,#262a32);border-radius:8px;padding:6px 9px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;max-width:150px;cursor:pointer;outline:none}'
+    +'.dt-sel:focus{border-color:var(--accent,#4aa3ff)}'
     +'.dt-navbtn{display:none}.dt-navscrim{display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45)}'
     +'@media(max-width:760px){'
     +'html,body{overflow-x:hidden;max-width:100%}'
@@ -46,9 +49,17 @@
     var pop=document.createElement('div');pop.className='dt-pop';
     pop.innerHTML='<div class="dt-menu"><div class="dt-item" data-act="cc">&#9881;&nbsp; Control Center</div></div>'
       +'<div class="dt-cc"><div class="dt-h">Control Center</div>'
-      +'<div class="dt-row"><span>Light mode</span><button class="dt-tg" data-act="theme"></button></div></div>';
+      +'<div class="dt-row"><span>Light mode</span><button class="dt-tg" data-act="theme"></button></div>'
+      +'<div class="dt-row"><span>Favorite team</span><select class="dt-sel" data-act="fav"></select></div></div>';
     document.body.appendChild(gear);document.body.appendChild(pop);
     var menu=pop.querySelector('.dt-menu'),cc=pop.querySelector('.dt-cc');
+    var favSel=pop.querySelector('.dt-sel');
+    if(favSel){
+      var opts='<option value="">None</option>';
+      FAV_TEAMS.slice().sort(function(a,b){return a[1]<b[1]?-1:1;}).forEach(function(t){opts+='<option value="'+t[0]+'">'+t[1]+'</option>';});
+      favSel.innerHTML=opts;favSel.value=ls('dt-fav-team')||'';
+      favSel.onchange=function(){ls('dt-fav-team',favSel.value);document.dispatchEvent(new CustomEvent('dt:fav-changed',{detail:favSel.value}));};
+    }
     function refresh(){pop.querySelector('.dt-tg').classList.toggle('on',(ls('dt-theme')||'dark')==='light');}
     gear.onclick=function(e){e.stopPropagation();var o=pop.classList.toggle('open');if(!o){cc.classList.remove('open');menu.style.display='';}refresh();};
     pop.onclick=function(e){e.stopPropagation();var t=e.target.closest('[data-act]');if(!t)return;
@@ -71,5 +82,6 @@
       document.addEventListener('click',function(e){if(!e.target.closest('.side'))closeNav();});
     }
   }
+  window.getSettings=function(){return {theme:ls('dt-theme')||'dark',favTeam:ls('dt-fav-team')||''};};
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
