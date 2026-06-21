@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Injury Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1040px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+
+  .daybar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:10px}
+  .teamsel{font-family:"Oswald",sans-serif;font-size:14px;font-weight:600;letter-spacing:.5px;color:var(--text2,#cfd4da);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:10px 14px;cursor:pointer;outline:none}
+  .teamsel:hover{border-color:#3b454f;color:#fff}.teamsel:focus{border-color:var(--accent,#4aa3ff)}
+  .teamttl{display:flex;align-items:center;gap:10px;font-family:"Oswald",sans-serif;font-weight:700;font-size:18px;margin-right:auto}
+  .teamttl img{width:26px;height:26px;object-fit:contain}
+  .cap{font-size:11.5px;color:var(--muted2,#5b6470);letter-spacing:.4px;margin-bottom:20px;line-height:1.5}
+  .cap b{color:var(--text3,#aab0b9);font-weight:600}
+
+  .inj-head,.inj-row{display:grid;grid-template-columns:228px minmax(0,1fr) 96px 120px 132px;gap:14px;align-items:center}
+  .inj-head{padding:2px 16px 9px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2,#4a5159);font-weight:700}
+  .inj-list{display:flex;flex-direction:column;gap:7px}
+  .inj-row{padding:12px 16px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:12px}
+  .inj-pl{display:flex;align-items:center;gap:11px;min-width:0}
+  .inj-shot{width:42px;height:42px;border-radius:50%;background:linear-gradient(160deg,var(--c,#243049),#0a0e15 78%);border:2px solid var(--c,#243049);overflow:hidden;flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center}
+  .inj-shot img{width:100%;height:100%;object-fit:contain;object-position:bottom center}
+  .inj-pi{min-width:0}
+  .inj-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:15px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .inj-pos{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2,#5b6470)}
+  .inj-injury{display:flex;align-items:center;gap:9px;min-width:0}
+  .inj-il{font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 7px;border-radius:5px;flex:0 0 auto;white-space:nowrap}
+  .inj-reason{font-size:13.5px;color:var(--text2,#cfd4da);line-height:1.3;min-width:0}
+  .inj-date,.inj-ret{font-size:13px;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums}
+  .inj-ret.elig{color:#46c77e;font-weight:600}
+  .inj-reh{font-size:12px;font-weight:600;color:#46c77e;display:inline-flex;align-items:center;gap:6px}
+  .inj-reh::before{content:"";width:7px;height:7px;border-radius:50%;background:#46c77e;box-shadow:0 0 0 3px rgba(70,199,126,.18)}
+  .inj-reh.no{color:var(--muted2,#5b6470)}.inj-reh.no::before{background:var(--muted2,#5b6470);box-shadow:none}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:54px 10px}
+  @media(max-width:760px){
+    .inj-head{display:none}
+    .inj-row{grid-template-columns:1fr;gap:0}
+    .inj-pl{padding-bottom:10px}
+    .inj-cell{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--panel2,#16181d);padding:8px 0}
+    .inj-cell::before{content:attr(data-l);color:var(--muted2,#4a5159);text-transform:uppercase;letter-spacing:1px;font-size:10px;font-weight:700;flex:0 0 auto}
+    .inj-injury{flex-wrap:wrap;justify-content:flex-end;text-align:right}
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="../injuries/"><span class="dot"></span>Injuries</a>
+      <a class="tab" href="../transactions/"><span class="dot"></span>Transactions</a>
+      <a class="tab" href="../spotlight/"><span class="dot"></span>Spotlight</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div class="page-t">Injury Tracker</div>
+        <div class="page-sub" id="sub">Injured list, club by club</div>
+      </div>
+      <div class="daybar">
+        <div class="teamttl" id="teamttl"></div>
+        <select class="teamsel" id="teamSel" aria-label="Choose a team"></select>
+      </div>
+      <div class="cap" id="cap"><b>Exp. return</b> is the earliest date a player is eligible to come off the IL (injury date + IL length) — MLB doesn't publish exact return dates.</div>
+      <div id="content"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
+  const tc=id=>TEAMCOLOR[id]||'#2a3a55';
+  const TEAMLIST={108:'Angels',109:'Diamondbacks',110:'Orioles',111:'Red Sox',112:'Cubs',113:'Reds',114:'Guardians',115:'Rockies',116:'Tigers',117:'Astros',118:'Royals',119:'Dodgers',120:'Nationals',121:'Mets',133:'Athletics',134:'Pirates',135:'Padres',136:'Mariners',137:'Giants',138:'Cardinals',139:'Rays',140:'Rangers',141:'Blue Jays',142:'Twins',143:'Phillies',144:'Braves',145:'White Sox',146:'Marlins',147:'Yankees',158:'Brewers'};
+  const IL={D7:{d:7,l:'7-Day IL',c:'#ffd24a'},D10:{d:10,l:'10-Day IL',c:'#e0a23a'},D15:{d:15,l:'15-Day IL',c:'#ef8a4a'},D60:{d:60,l:'60-Day IL',c:'#e0556a'}};
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const parseDate=s=>{if(!s)return null;if(/^\d{4}-\d{2}-\d{2}$/.test(s))return new Date(s+'T12:00:00');const d=new Date(s);return isNaN(d)?null:d;};
+  const fmtD=d=>d?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+  const reasonOf=desc=>{const m=String(desc).match(/injured list(?:,? retroactive to [^.]+)?\.\s*(.+?)\.?\s*$/i);return m?m[1].trim():'';};
+  const retroOf=desc=>{const m=String(desc).match(/retroactive to ([A-Za-z]+ \d+,? \d{4})/i);return m?m[1]:'';};
+
+  let TEAM='', tok=0;
+  const sub=document.getElementById('sub'), content=document.getElementById('content'), teamSel=document.getElementById('teamSel'), teamttl=document.getElementById('teamttl'), cap=document.getElementById('cap');
+  const fav=(window.getSettings&&window.getSettings().favTeam)||(localStorage.getItem('dt-fav-team')||'');
+  const urlTeam=new URLSearchParams(location.search).get('team');
+  TEAM=(urlTeam&&TEAMLIST[urlTeam])?urlTeam:((fav&&TEAMLIST[fav])?fav:'');
+
+  teamSel.innerHTML='<option value="">Choose a team…</option>'+
+    Object.keys(TEAMLIST).map(id=>[id,TEAMLIST[id]]).sort((a,b)=>a[1]<b[1]?-1:1).map(t=>`<option value="${t[0]}">${esc(t[1])}</option>`).join('');
+  teamSel.value=TEAM;
+  teamSel.onchange=()=>{TEAM=teamSel.value;load();};
+
+  function row(p){
+    const il=IL[p.code]||{l:p.code,c:'#8a929c'};
+    const elig=p.elig, eligPast=elig&&parseDate(ptToday())>=elig;
+    return `<div class="inj-row" style="--c:${tc(TEAM)}">
+      <div class="inj-pl"><div class="inj-shot"><img src="${shot(p.id)}" onerror="this.style.opacity=0"></div>
+        <div class="inj-pi"><div class="inj-nm">${esc(p.name)}</div><div class="inj-pos">${esc(p.pos)}</div></div></div>
+      <div class="inj-cell inj-injury" data-l="Injury"><span class="inj-il" style="color:${il.c};background:${il.c}1f">${esc(il.l)}</span><span class="inj-reason">${esc(p.reason||'Undisclosed')}</span></div>
+      <div class="inj-cell inj-date" data-l="Injured">${p.inj?fmtD(p.inj):'—'}</div>
+      <div class="inj-cell inj-ret${eligPast?' elig':''}" data-l="Exp. return">${eligPast?'Eligible':fmtD(elig)}</div>
+      <div class="inj-cell" data-l="Rehab">${p.rehab?'<span class="inj-reh">On rehab</span>':'<span class="inj-reh no">Not started</span>'}</div>
+    </div>`;
+  }
+
+  async function load(){
+    const my=++tok;
+    if(!TEAM){teamttl.innerHTML='';cap.style.display='none';sub.textContent='Choose a team';content.innerHTML='<div class="state">Pick a team to see its injured list.</div>';return;}
+    cap.style.display='';
+    teamttl.innerHTML=`<img src="${logo(TEAM)}" onerror="this.style.visibility='hidden'">${esc(TEAMLIST[TEAM])}`;
+    content.innerHTML='<div class="state">Loading…</div>';
+    const year=ptToday().slice(0,4);
+    const [ros,tx]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/teams/${TEAM}/roster/40Man`),
+      j(`https://statsapi.mlb.com/api/v1/transactions?teamId=${TEAM}&startDate=${year}-01-01&endDate=${ptToday()}`)
+    ]);
+    if(my!==tok)return;
+    const injured=((ros&&ros.roster)||[]).filter(x=>x.status&&/^D/.test(x.status.code||''));
+    const T=(tx&&tx.transactions)||[];
+    const rows=injured.map(x=>{
+      const id=x.person.id;
+      const mine=T.filter(t=>t.person&&t.person.id===id);
+      const places=mine.filter(t=>/placed .* on the .* injured list/i.test(t.description||'')).sort((a,b)=>a.date<b.date?1:-1);
+      const transfers=mine.filter(t=>/transferred .* to the .* injured list/i.test(t.description||'')).sort((a,b)=>a.date<b.date?1:-1);
+      const place=places[0]||transfers[0];
+      const rehabs=mine.filter(t=>/rehab assignment/i.test(t.description||'')).sort((a,b)=>a.date<b.date?1:-1);
+      const reh=rehabs[0];
+      const injStr=place?(retroOf(place.description)||place.date):'';
+      const inj=parseDate(injStr);
+      const code=x.status.code;
+      let elig=null;if(inj&&IL[code]){elig=new Date(inj);elig.setDate(elig.getDate()+IL[code].d);}
+      const rehabActive=!!(reh&&place&&reh.date>=place.date);
+      return {id,name:x.person.fullName,pos:(x.position&&x.position.abbreviation)||'',code,reason:place?reasonOf(place.description):'',inj,elig,rehab:rehabActive,_sev:(IL[code]||{}).d||0};
+    });
+    rows.sort((a,b)=>{const ta=a.inj?a.inj.getTime():0,tb=b.inj?b.inj.getTime():0;return tb-ta;});
+    const cnt={};rows.forEach(r=>{cnt[r.code]=(cnt[r.code]||0)+1;});
+    const order=['D60','D15','D10','D7'];
+    const parts=order.filter(c=>cnt[c]).map(c=>cnt[c]+' · '+IL[c].l.replace(' IL',''));
+    sub.textContent=rows.length?(rows.length+' on the IL'+(parts.length?'  ·  '+parts.join('   '):'')):'No injuries';
+    if(!rows.length){content.innerHTML='<div class="state">No players on the injured list. 🎉</div>';return;}
+    content.innerHTML='<div class="inj-head"><div>Player</div><div>Injury</div><div>Injured</div><div>Exp. Return</div><div>Rehab</div></div>'+
+      `<div class="inj-list">${rows.map(row).join('')}</div>`;
+  }
+
+  load();
+</script>
+</body>
+</html>
