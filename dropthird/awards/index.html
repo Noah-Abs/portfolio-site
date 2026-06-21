@@ -36,7 +36,7 @@
   .chip{font-size:12.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text3,#aab0b9);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:999px;padding:8px 16px;cursor:pointer;transition:.14s}
   .chip:hover{color:#fff;border-color:#3b454f}
   .chip.active{background:var(--accent,#4aa3ff);border-color:var(--accent,#4aa3ff);color:#06121f}
-  .cap{font-size:11.5px;color:var(--muted2,#5b6470);letter-spacing:.3px;margin-bottom:22px;line-height:1.5;max-width:780px}
+  .cap{font-size:11.5px;color:var(--muted2,#5b6470);letter-spacing:.3px;margin-bottom:22px;line-height:1.5;max-width:820px}
   .cap b{color:var(--text3,#aab0b9);font-weight:600}
 
   .aw-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -49,14 +49,14 @@
   .aw-shot{width:42px;height:42px;flex:0 0 auto;border-radius:50%;background:linear-gradient(160deg,var(--c,#243049),#0a0e15 78%);border:2px solid var(--c,#243049);overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
   .aw-shot img{width:100%;height:100%;object-fit:contain;object-position:bottom center}
   .aw-info{flex:1;min-width:0}
-  .aw-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:15.5px;line-height:1.1;display:flex;align-items:center;gap:7px}
+  .aw-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:15.5px;line-height:1.15;display:flex;align-items:center;gap:7px}
   .aw-nm .t{font-weight:600;font-size:11px;color:var(--muted,#7e858f);letter-spacing:.5px}
   .aw-nm img{width:15px;height:15px;object-fit:contain;flex:0 0 auto}
-  .aw-sub{font-size:11.5px;color:var(--muted,#7e858f);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .aw-pct{flex:0 0 auto;text-align:right;min-width:54px}
+  .aw-sub{margin-top:5px}
+  .aw-odds{font-weight:700;font-size:11.5px;color:#cfe0ff;background:rgba(74,163,255,.11);border:1px solid rgba(74,163,255,.22);border-radius:6px;padding:2px 8px;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+  .aw-pct{flex:0 0 auto;text-align:right;min-width:50px}
   .aw-pct b{font-family:"Oswald",sans-serif;font-weight:700;font-size:21px;line-height:1;font-variant-numeric:tabular-nums}
-  .aw-pct span{display:block;font-size:8.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2,#5b6470);margin-top:2px}
-  .aw-field{font-size:11.5px;color:var(--muted2,#5b6470);letter-spacing:.5px;padding:8px 13px;display:flex;justify-content:space-between}
+  .aw-pct span{display:block;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2,#5b6470);margin-top:2px}
   .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:40px 10px}
   @media(max-width:820px){.aw-cols{grid-template-columns:1fr;gap:8px}.aw-lg{margin-top:8px}}
 </style>
@@ -96,11 +96,11 @@
     <div class="page">
       <div class="page-head">
         <div class="page-t">Award Tracker</div>
-        <div class="page-sub" id="sub">Race probabilities</div>
+        <div class="page-sub" id="sub">Futures odds</div>
       </div>
       <div class="chips" id="chips"></div>
-      <div class="cap" id="cap">Win probabilities are a <b>DROPTHIRD model</b> estimated from live season stats — not betting odds. MVP weighs OPS, HR, RBI, runs &amp; team record; Cy Young weighs ERA, WHIP, K, innings &amp; FIP.</div>
-      <div id="content"><div class="state">Loading…</div></div>
+      <div class="cap">Sportsbook <b>futures odds</b> shown as implied win probability (the vig removed so each race sums to 100%). Odds are a snapshot — the badge under each name is the listed price.</div>
+      <div id="content"></div>
     </div>
   </main>
 
@@ -108,63 +108,55 @@
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
   const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
   const tc=id=>TEAMCOLOR[id]||'#4aa3ff';
   const ABBR={108:'LAA',110:'BAL',111:'BOS',114:'CLE',116:'DET',117:'HOU',118:'KC',133:'ATH',136:'SEA',139:'TB',140:'TEX',141:'TOR',142:'MIN',145:'CWS',147:'NYY',109:'AZ',112:'CHC',113:'CIN',115:'COL',119:'LAD',120:'WSH',121:'NYM',134:'PIT',135:'SD',137:'SF',138:'STL',143:'PHI',144:'ATL',146:'MIA',158:'MIL'};
-  const TEAM_LG={108:'AL',110:'AL',111:'AL',114:'AL',116:'AL',117:'AL',118:'AL',133:'AL',136:'AL',139:'AL',140:'AL',141:'AL',142:'AL',145:'AL',147:'AL',109:'NL',112:'NL',113:'NL',115:'NL',119:'NL',120:'NL',121:'NL',134:'NL',135:'NL',137:'NL',138:'NL',143:'NL',144:'NL',146:'NL',158:'NL'};
 
-  const pf=v=>parseFloat(v)||0, pi=v=>parseInt(v)||0;
-  const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
-  const mean=a=>a.reduce((s,x)=>s+x,0)/(a.length||1);
-  const std=(a,m)=>Math.sqrt(a.reduce((s,x)=>s+(x-m)*(x-m),0)/(a.length||1))||1;
-  const zf=(pool,g)=>{const v=pool.map(g),m=mean(v),s=std(v,m);return x=>(x-m)/s;};
-  const T=1.5;
-  const splits=o=>(((o&&o.stats)||[])[0]||{}).splits||[];
-  const lgOf=s=>(s.league&&s.league.id===103)?'AL':(s.league&&s.league.id===104)?'NL':(TEAM_LG[s.team&&s.team.id]||'AL');
-
-  const sub=document.getElementById('sub'), content=document.getElementById('content'), chipsEl=document.getElementById('chips');
+  // resolved MLB id + parent club (prospects mapped to parent: Waldschmidt->AZ, Ballesteros->CHC, A.Miller->PHI)
+  const PLAYERS={
+    "Yordan Alvarez":[670541,117],"Bobby Witt Jr.":[677951,118],"Nick Kurtz":[701762,133],"Ben Rice":[700250,147],"Julio Rodriguez":[677594,136],"Shea Langeliers":[669127,133],"Junior Caminero":[691406,139],"Byron Buxton":[621439,142],"Mike Trout":[545361,108],"Cody Bellinger":[641355,147],
+    "Shohei Ohtani":[660271,119],"Juan Soto":[665742,121],"Corbin Carroll":[682998,109],"Kyle Schwarber":[656941,143],"James Wood":[695578,120],"Jordan Walker":[691023,138],"Bryce Harper":[547180,143],"Matt Olson":[621566,144],"Pete Crow-Armstrong":[691718,112],"Ronald Acuna Jr.":[660670,144],
+    "Cam Schlittler":[693645,147],"Dylan Cease":[656302,141],"Jacob deGrom":[594798,140],"Gavin Williams":[668909,114],"Drew Rasmussen":[656876,139],"Bryan Woo":[693433,136],"Davis Martin":[663436,145],"Tarik Skubal":[669373,116],"Shane McClanahan":[663556,139],"Joe Ryan":[657746,142],
+    "Jacob Misiorowski":[694819,158],"Cristopher Sanchez":[650911,143],"Paul Skenes":[694973,134],"Chris Sale":[519242,144],"Yoshinobu Yamamoto":[808967,119],"Chase Burns":[695505,113],"Kyle Harrison":[690986,158],"Zack Wheeler":[554430,143],"Mason Miller":[695243,135],
+    "Kevin McGonigle":[805808,116],"Munetaka Murakami":[808959,145],"Travis Bazzana":[683953,114],"Samuel Basallo":[694212,110],"Parker Messick":[800048,114],"Chase DeLauter":[800050,114],"Colt Emerson":[806068,136],"Payton Tolle":[801139,111],"Trey Yesavage":[702056,141],"Sam Antonacci":[803011,145],
+    "JJ Wetherholt":[802139,138],"Sal Stewart":[701398,113],"Bryce Eldridge":[805811,137],"Nolan McLean":[690997,121],"Carson Benge":[701807,121],"Konnor Griffin":[804606,134],"TJ Rumfield":[681198,115],"Ryan Waldschmidt":[814439,109],"Moises Ballesteros":[694208,112],"Aidan Miller":[805795,143]
+  };
+  const ODDS={
+    mvp:{
+      AL:[["Yordan Alvarez","+105"],["Bobby Witt Jr.","+250"],["Nick Kurtz","+600"],["Ben Rice","+600"],["Julio Rodriguez","22-1"],["Shea Langeliers","25-1"],["Junior Caminero","28-1"],["Byron Buxton","30-1"],["Mike Trout","60-1"],["Cody Bellinger","75-1"]],
+      NL:[["Shohei Ohtani","-1600"],["Juan Soto","25-1"],["Corbin Carroll","28-1"],["Kyle Schwarber","30-1"],["James Wood","45-1"],["Jordan Walker","50-1"],["Bryce Harper","55-1"],["Matt Olson","60-1"],["Pete Crow-Armstrong","70-1"],["Ronald Acuna Jr.","80-1"]]
+    },
+    cy:{
+      AL:[["Cam Schlittler","+160"],["Dylan Cease","+290"],["Jacob deGrom","+750"],["Gavin Williams","18-1"],["Drew Rasmussen","20-1"],["Bryan Woo","22-1"],["Davis Martin","28-1"],["Tarik Skubal","30-1"],["Shane McClanahan","35-1"],["Joe Ryan","35-1"]],
+      NL:[["Jacob Misiorowski","-140"],["Cristopher Sanchez","+220"],["Shohei Ohtani","12-1"],["Paul Skenes","15-1"],["Chris Sale","20-1"],["Yoshinobu Yamamoto","25-1"],["Chase Burns","30-1"],["Kyle Harrison","40-1"],["Zack Wheeler","40-1"],["Mason Miller","75-1"]]
+    },
+    roy:{
+      AL:[["Kevin McGonigle","-155"],["Munetaka Murakami","+600"],["Travis Bazzana","+600"],["Samuel Basallo","+800"],["Parker Messick","18-1"],["Chase DeLauter","25-1"],["Colt Emerson","30-1"],["Payton Tolle","35-1"],["Trey Yesavage","40-1"],["Sam Antonacci","45-1"]],
+      NL:[["JJ Wetherholt","-110"],["Sal Stewart","+270"],["Bryce Eldridge","+850"],["Nolan McLean","+900"],["Carson Benge","15-1"],["Konnor Griffin","20-1"],["TJ Rumfield","50-1"],["Ryan Waldschmidt","50-1"],["Moises Ballesteros","70-1"],["Aidan Miller","70-1"]]
+    }
+  };
   const AWARDS=[['mvp','MVP'],['cy','Cy Young'],['roy','Rookie of the Year']];
+
+  function impProb(o){o=String(o).trim();
+    let m=o.match(/^([+-])(\d+)$/); if(m){const v=+m[2];return m[1]==='-'?v/(v+100):100/(v+100);}
+    m=o.match(/^(\d+)\s*[-\/]\s*(\d+)$/); if(m){const a=+m[1],b=+m[2];return b/(a+b);}
+    m=o.match(/^\+?(\d+)$/); if(m){const v=+m[1];return 100/(v+100);}
+    return 0;
+  }
+
+  const RACES={};
+  for(const aw in ODDS){RACES[aw]={};
+    for(const L of ['AL','NL']){
+      const list=ODDS[aw][L].map(([name,odds])=>{const p=PLAYERS[name]||[0,0];return {name,odds,id:p[0],team:p[1],imp:impProb(odds)};});
+      const sum=list.reduce((s,c)=>s+c.imp,0)||1;
+      list.forEach(c=>c.pct=100*c.imp/sum);
+      list.sort((a,b)=>b.pct-a.pct);
+      RACES[aw][L]=list;
+    }
+  }
+
   let AWARD=new URLSearchParams(location.search).get('award'); if(!AWARDS.some(a=>a[0]===AWARD))AWARD='mvp';
-  let RACES={}, YEAR='';
-
-  function hitCand(s){const st=s.stat;return {id:s.player.id,name:s.player.fullName,team:s.team&&s.team.id,lg:lgOf(s),kind:'bat',st,
-    ops:pf(st.ops),hr:pi(st.homeRuns),rbi:pi(st.rbi),r:pi(st.runs),sb:pi(st.stolenBases),avg:pf(st.avg),ab:pi(st.atBats)};}
-  function pitCand(s){const st=s.stat;const ip=ipd(st.inningsPitched);
-    return {id:s.player.id,name:s.player.fullName,team:s.team&&s.team.id,lg:lgOf(s),kind:'pit',st,
-      era:pf(st.era),whip:pf(st.whip),k:pi(st.strikeOuts),ip,w:pi(st.wins),
-      fip:ip>0?((13*pi(st.homeRuns)+3*pi(st.baseOnBalls)-2*pi(st.strikeOuts))/ip+3.15):9.99};}
-
-  function scoreHit(pool,useTeam,WIN){
-    if(pool.length<2){pool.forEach(p=>p.val=0);return;}
-    const zo=zf(pool,p=>p.ops),zh=zf(pool,p=>p.hr),zr=zf(pool,p=>p.rbi),zru=zf(pool,p=>p.r),zs=zf(pool,p=>p.sb),za=zf(pool,p=>p.avg);
-    pool.forEach(p=>p.val=2.0*zo(p.ops)+0.8*zh(p.hr)+0.6*zr(p.rbi)+0.5*zru(p.r)+0.4*zs(p.sb)+0.6*za(p.avg)+(useTeam?1.2*(((WIN[p.team]||.5))-.5):0));
-  }
-  function scorePit(pool){
-    if(pool.length<2){pool.forEach(p=>p.val=0);return;}
-    const ze=zf(pool,p=>-p.era),zfi=zf(pool,p=>-p.fip),zk=zf(pool,p=>p.k),zi=zf(pool,p=>p.ip),zw=zf(pool,p=>-p.whip),zwin=zf(pool,p=>p.w);
-    pool.forEach(p=>p.val=1.6*ze(-p.era)+1.0*zfi(-p.fip)+1.0*zk(p.k)+0.8*zi(p.ip)+0.7*zw(-p.whip)+0.5*zwin(p.w));
-  }
-  function softmax(list){if(!list.length)return;const mx=Math.max(...list.map(p=>p.val));let s=0;list.forEach(p=>{p.e=Math.exp((p.val-mx)/T);s+=p.e;});list.forEach(p=>p.pct=100*p.e/s);list.sort((a,b)=>b.pct-a.pct);}
-
-  function statLine(c){
-    if(c.kind==='bat')return `${esc(c.st.avg)} · ${c.hr} HR · ${c.rbi} RBI · ${esc(c.st.ops)} OPS`;
-    return `${esc(c.st.era)} ERA · ${esc(c.st.whip)} WHIP · ${c.k} K · ${esc(c.st.inningsPitched)} IP`;
-  }
-
-  function build(h,p,rh,rp,st){
-    const WIN={};((st&&st.records)||[]).forEach(d=>(d.teamRecords||[]).forEach(t=>WIN[t.team.id]=pf(t.winningPercentage)));
-    const H=splits(h).map(hitCand), P=splits(p).map(pitCand);
-    const RH=splits(rh).map(hitCand).filter(c=>c.ab>=90), RP=splits(rp).map(pitCand).filter(c=>c.ip>=25);
-    RACES={mvp:{},cy:{},roy:{}};
-    ['AL','NL'].forEach(L=>{
-      const mh=H.filter(c=>c.lg===L); scoreHit(mh,true,WIN); softmax(mh); RACES.mvp[L]=mh;
-      const cp=P.filter(c=>c.lg===L); scorePit(cp); softmax(cp); RACES.cy[L]=cp;
-      const rh2=RH.filter(c=>c.lg===L), rp2=RP.filter(c=>c.lg===L);
-      scoreHit(rh2,false,WIN); scorePit(rp2);
-      const combo=rh2.concat(rp2); softmax(combo); RACES.roy[L]=combo;
-    });
-  }
+  const sub=document.getElementById('sub'), content=document.getElementById('content'), chipsEl=document.getElementById('chips');
 
   function row(c,i){
     return `<div class="aw-row${i===0?' fav':''}" style="--c:${tc(c.team)};--p:${c.pct.toFixed(1)}%">
@@ -172,46 +164,27 @@
       <div class="aw-shot"><img src="${shot(c.id)}" onerror="this.style.opacity=0"></div>
       <div class="aw-info">
         <div class="aw-nm">${esc(c.name)}<img src="${logo(c.team)}" onerror="this.style.display='none'"><span class="t">${esc(ABBR[c.team]||'')}</span></div>
-        <div class="aw-sub">${statLine(c)}</div>
+        <div class="aw-sub"><span class="aw-odds">${esc(c.odds)}</span></div>
       </div>
-      <div class="aw-pct"><b>${c.pct.toFixed(0)}%</b><span>win</span></div>
+      <div class="aw-pct"><b>${c.pct.toFixed(0)}%</b><span>implied</span></div>
     </div>`;
   }
   function column(L,list){
     const lc=L==='AL'?'#d4283b':'#2f6cdb';
     const head=`<div class="aw-lg" style="--lc:${lc}">${L==='AL'?'American League':'National League'}</div>`;
-    if(!list||!list.length)return `<div>${head}<div class="state">Not enough qualified players yet.</div></div>`;
-    const top=list.slice(0,8);
-    const fieldPct=Math.max(0,100-top.reduce((s,c)=>s+c.pct,0));
-    const fieldN=list.length-top.length;
-    const field=fieldN>0?`<div class="aw-field"><span>Field — ${fieldN} more</span><span>${fieldPct.toFixed(0)}%</span></div>`:'';
-    return `<div>${head}${top.map(row).join('')}${field}</div>`;
+    if(!list||!list.length)return `<div>${head}<div class="state">No odds.</div></div>`;
+    return `<div>${head}${list.map(row).join('')}</div>`;
   }
   function render(){
     chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.k===AWARD));
     const lbl=AWARDS.find(a=>a[0]===AWARD)[1];
-    sub.textContent=lbl+' race · '+YEAR+' · model projection';
+    sub.textContent=lbl+' · 2026 · implied from futures odds';
     const r=RACES[AWARD]||{};
     content.innerHTML=`<div class="aw-cols">${column('AL',r.AL)}${column('NL',r.NL)}</div>`;
   }
-
-  async function load(){
-    chipsEl.innerHTML=AWARDS.map(([k,l])=>`<div class="chip${k===AWARD?' active':''}" data-k="${k}">${esc(l)}</div>`).join('');
-    chipsEl.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{AWARD=c.dataset.k;render();});
-    const now=new Date().getFullYear();
-    for(const y of [now,now-1,now-2]){
-      const [h,p,rh,rp,st]=await Promise.all([
-        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=hitting&playerPool=qualified&season=${y}&sportIds=1&limit=500`),
-        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=pitching&playerPool=qualified&season=${y}&sportIds=1&limit=500`),
-        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=hitting&playerPool=rookies&season=${y}&sportIds=1&limit=500`),
-        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=pitching&playerPool=rookies&season=${y}&sportIds=1&limit=500`),
-        j(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${y}&standingsTypes=regularSeason`)
-      ]);
-      if(splits(h).length){YEAR=y;build(h,p,rh,rp,st);render();return;}
-    }
-    content.innerHTML='<div class="state">No season data available.</div>';
-  }
-  load();
+  chipsEl.innerHTML=AWARDS.map(([k,l])=>`<div class="chip${k===AWARD?' active':''}" data-k="${k}">${esc(l)}</div>`).join('');
+  chipsEl.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{AWARD=c.dataset.k;render();});
+  render();
 </script>
 </body>
 </html>
