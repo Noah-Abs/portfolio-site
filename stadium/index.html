@@ -10,45 +10,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  :root{--dodger:#005A9C;--dodger-br:#3a86e0;--dodger-gl:rgba(58,134,224,.20)}
+  html,body{min-height:100%}
+  :root{--dodger:#005A9C;--dodger-br:#3a86e0;--dodger-gl:rgba(58,134,224,.18)}
   body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;
     min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
-  .topbar{display:flex;align-items:center;gap:12px;padding:20px 28px;position:relative;z-index:3}
+  .topbar{display:flex;align-items:center;gap:12px;padding:18px 28px 4px;position:relative;z-index:3}
   .brand-link{text-decoration:none;color:inherit;display:flex;align-items:baseline;gap:9px}
   .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:21px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
   .brand-sub{font-weight:500;text-transform:uppercase;letter-spacing:4px;font-size:9px;color:var(--muted,#7e858f)}
 
-  .hero{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
-    padding:48px 28px 72px;position:relative}
-  .glow{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%);width:min(900px,120vw);height:560px;
-    background:radial-gradient(ellipse at center,var(--dodger-gl),transparent 66%);pointer-events:none;z-index:0}
-  .ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:0;pointer-events:none;overflow:hidden}
-  .ghost img{width:min(70vh,760px);opacity:.05;filter:grayscale(.2)}
-
-  .wrap{position:relative;z-index:1;width:100%;max-width:1000px}
-  .badge{display:inline-flex;align-items:center;gap:9px;font-weight:600;text-transform:uppercase;letter-spacing:3px;font-size:11px;
-    color:var(--text2,#cfd4da);border:1px solid var(--border2,#2a2f37);border-radius:999px;padding:7px 16px;margin-bottom:30px;background:var(--panel,#101115)}
-  .badge img{width:16px;height:16px;object-fit:contain}
-  .badge i{width:7px;height:7px;border-radius:50%;background:var(--dodger-br);box-shadow:0 0 0 4px var(--dodger-gl)}
-  .eyebrow{font-weight:600;text-transform:uppercase;letter-spacing:6px;font-size:13px;color:var(--dodger-br);margin-bottom:14px}
-  .h1{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(52px,12vw,164px);line-height:.84;letter-spacing:2px;color:var(--text,#fff);
-    text-shadow:0 6px 60px var(--dodger-gl)}
-  .rule{width:96px;height:5px;border-radius:3px;margin:30px auto 24px;
-    background:linear-gradient(90deg,var(--dodger),var(--dodger-br))}
-  .sub{font-weight:300;letter-spacing:4px;text-transform:uppercase;font-size:clamp(12px,2vw,16px);color:var(--muted,#7e858f)}
+  .hero{text-align:center;padding:18px 28px 4px;position:relative}
+  .glow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:min(820px,118vw);height:330px;
+    background:radial-gradient(ellipse at center,var(--dodger-gl),transparent 68%);pointer-events:none;z-index:0}
+  .wrap{position:relative;z-index:1;width:100%;max-width:1120px;margin:0 auto}
+  .eyebrow{font-weight:600;text-transform:uppercase;letter-spacing:6px;font-size:12px;color:var(--dodger-br);margin-bottom:10px}
+  .eyebrow img{width:15px;height:15px;object-fit:contain;vertical-align:-2px;margin-right:7px}
+  .h1{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,8.4vw,118px);line-height:.9;letter-spacing:2px;
+    white-space:nowrap;color:var(--text,#fff);text-shadow:0 6px 50px var(--dodger-gl)}
+  .rule{width:88px;height:5px;border-radius:3px;margin:18px auto 16px;background:linear-gradient(90deg,var(--dodger),var(--dodger-br))}
+  .sub{font-weight:300;letter-spacing:4px;text-transform:uppercase;font-size:clamp(11px,1.7vw,14px);color:var(--muted,#7e858f)}
   .sub b{color:var(--text2,#cfd4da);font-weight:500}
 
-  .facts{margin-top:54px;display:grid;grid-template-columns:repeat(4,1fr);gap:13px;text-align:left}
-  .fact{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:14px;padding:17px 18px;
-    border-top:2px solid var(--dodger-br)}
-  .fact .k{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.8px;color:var(--muted,#7e858f)}
-  .fact .v{font-family:"Anton",sans-serif;font-size:27px;line-height:1.05;margin-top:7px;letter-spacing:.5px}
-  .fact .v small{font-family:"Oswald",sans-serif;font-weight:500;font-size:13px;color:var(--text3,#aab0b9);letter-spacing:.5px}
+  .facts{margin-top:20px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+  .fact{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:12px;padding:10px 16px;border-top:2px solid var(--dodger-br);text-align:left;min-width:108px}
+  .fact .k{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted,#7e858f)}
+  .fact .v{font-family:"Anton",sans-serif;font-size:21px;line-height:1.05;margin-top:5px;letter-spacing:.5px}
+  .fact .v small{font-family:"Oswald",sans-serif;font-weight:500;font-size:12px;color:var(--text3,#aab0b9)}
 
-  @media(max-width:820px){.facts{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:480px){.topbar{padding:16px 16px}.hero{padding:30px 16px 56px}.facts{grid-template-columns:1fr 1fr;gap:10px}.fact .v{font-size:22px}}
+  .bowl-wrap{width:100%;max-width:1000px;margin:26px auto 56px;padding:0 16px}
+  .bowl-card{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:20px;padding:16px 16px 10px;position:relative;overflow:hidden}
+  .bowl-card::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 42%,var(--dodger-gl),transparent 70%);pointer-events:none}
+  #bowl{width:100%;height:auto;display:block;position:relative;z-index:1}
+  .bowl-cap{text-align:center;font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted2,#5b6470);margin-top:6px;position:relative;z-index:1}
+
+  @media(max-width:560px){.topbar{padding:14px 16px 2px}.hero{padding:12px 14px 2px}.fact{min-width:0;flex:1 1 40%;padding:9px 12px}.fact .v{font-size:18px}.bowl-wrap{padding:0 10px;margin:18px auto 40px}}
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -57,23 +53,72 @@
     <a class="brand-link" href="/dropthird/homescreen/"><span class="brand">DROPTHIRD</span><span class="brand-sub">Ballparks</span></a>
   </header>
 
-  <main class="hero">
+  <section class="hero">
     <div class="glow"></div>
-    <div class="ghost"><img src="https://www.mlbstatic.com/team-logos/119.svg" alt=""></div>
     <div class="wrap">
-      <div class="badge"><img src="https://www.mlbstatic.com/team-logos/119.svg" alt="">Los Angeles, California</div>
-      <div class="eyebrow">MLB Ballpark</div>
+      <div class="eyebrow"><img src="https://www.mlbstatic.com/team-logos/119.svg" alt="">MLB Ballpark · Los Angeles</div>
       <h1 class="h1">Dodger Stadium</h1>
       <div class="rule"></div>
       <p class="sub">Home of the <b>Los Angeles Dodgers</b> · Chavez Ravine</p>
-
       <div class="facts">
         <div class="fact"><div class="k">Opened</div><div class="v">1962</div></div>
         <div class="fact"><div class="k">Capacity</div><div class="v">56,000</div></div>
         <div class="fact"><div class="k">Surface</div><div class="v">Grass</div></div>
-        <div class="fact"><div class="k">Field <small>(L · C · R)</small></div><div class="v">330·395·330</div></div>
+        <div class="fact"><div class="k">Field <small>L·C·R</small></div><div class="v">330·395·330</div></div>
       </div>
     </div>
-  </main>
+  </section>
+
+  <section class="bowl-wrap">
+    <div class="bowl-card">
+      <svg id="bowl" viewBox="60 176 880 670" role="img" aria-label="Overhead seating diagram of Dodger Stadium">
+        <!-- field -->
+        <g>
+          <rect x="392.5" y="290.5" width="215" height="215" rx="40" transform="rotate(45 500 398)" fill="#2f7d3f" stroke="#3c8f4d" stroke-width="2"/>
+          <path d="M500 550 L348 398 M500 550 L652 398" stroke="#eef3ee" stroke-width="2.4" opacity=".55" fill="none"/>
+          <path d="M360 386 A200 200 0 0 1 640 386" stroke="#ffffff" stroke-width="2" opacity=".14" fill="none"/>
+          <image href="https://www.mlbstatic.com/team-logos/119.svg" x="432" y="300" width="136" height="92" opacity=".95" preserveAspectRatio="xMidYMid meet"/>
+          <rect x="442" y="432" width="116" height="116" rx="20" transform="rotate(45 500 490)" fill="#b9824a"/>
+          <rect x="463.5" y="453.5" width="73" height="73" rx="12" transform="rotate(45 500 490)" fill="#2f7d3f"/>
+          <circle cx="500" cy="490" r="8" fill="#cf9a5e"/>
+          <g fill="#f4f6f4"><rect x="496" y="546" width="8" height="8" rx="1.5"/><rect x="556" y="486" width="7" height="7" rx="1.5" transform="rotate(45 559.5 489.5)"/><rect x="496.5" y="426.5" width="7" height="7" rx="1.5" transform="rotate(45 500 430)"/><rect x="436.5" y="486" width="7" height="7" rx="1.5" transform="rotate(45 440 489.5)"/></g>
+        </g>
+        <g id="seats"></g>
+      </svg>
+      <div class="bowl-cap">Overhead · Seating Bowl</div>
+    </div>
+  </section>
+
+<script>
+  (function(){
+    const C={x:500,y:442};
+    const seats=document.getElementById('seats');
+    const NS='http://www.w3.org/2000/svg';
+    function arc(r,n,w,h,fill,stroke,a0,a1){
+      for(let i=0;i<n;i++){
+        const t=a0+(a1-a0)*(n===1?0.5:i/(n-1));
+        const rad=t*Math.PI/180;
+        const x=C.x+r*Math.cos(rad), y=C.y+r*Math.sin(rad);
+        const e=document.createElementNS(NS,'rect');
+        e.setAttribute('x',(x-w/2).toFixed(1));e.setAttribute('y',(y-h/2).toFixed(1));
+        e.setAttribute('width',w);e.setAttribute('height',h);e.setAttribute('rx','4');
+        e.setAttribute('fill',fill);e.setAttribute('stroke',stroke);e.setAttribute('stroke-width','1.5');
+        e.setAttribute('transform',`rotate(${(t+90).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`);
+        seats.appendChild(e);
+      }
+    }
+    const A0=-30, A1=210;                       // wrap the bottom ~240°, open at the outfield
+    const tiers=[
+      {r:214,n:20,w:36,h:27,f:'#2a63cf',s:'#4f86e6'},   // field / loge
+      {r:266,n:24,w:38,h:29,f:'#34507e',s:'#4a6aa0'},   // reserve
+      {r:320,n:28,w:40,h:31,f:'#2a3a55',s:'#3c4f70'},   // mid
+      {r:376,n:32,w:43,h:33,f:'#222c3c',s:'#34415a'}    // top deck
+    ];
+    tiers.forEach(T=>arc(T.r,T.n,T.w,T.h,T.f,T.s,A0,A1));
+    // outfield pavilions, flanking the center-field gap
+    arc(252,5,34,29,'#2f4a7a','#4a6aa0',214,250);
+    arc(252,5,34,29,'#2f4a7a','#4a6aa0',290,326);
+  })();
+</script>
 </body>
 </html>
