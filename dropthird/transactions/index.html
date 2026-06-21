@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Transaction Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1000px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:18px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+
+  .daybar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .daybtn{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#2f3540);background:var(--panel2,#15161b);color:var(--text3,#aab0b9);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .daybtn:hover{color:#fff;border-color:#3b454f}.daybtn svg{width:18px;height:18px}
+  .daylbl{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:1px}.daylbl b{color:var(--accent,#4aa3ff)}
+  .today{font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:9px 14px;cursor:pointer}.today:hover{color:#fff}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+  .chip{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text3,#aab0b9);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:999px;padding:7px 14px;cursor:pointer;transition:.14s;display:flex;align-items:center;gap:7px}
+  .chip:hover{color:#fff;border-color:#3b454f}
+  .chip.active{background:var(--accent,#4aa3ff);border-color:var(--accent,#4aa3ff);color:#06121f}
+  .chip .n{font-size:10.5px;font-weight:700;opacity:.7;font-variant-numeric:tabular-nums}
+  .chip.active .n{opacity:.85}
+
+  .tx-day{margin-bottom:20px}
+  .tx-date{font-family:"Oswald",sans-serif;font-weight:700;font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);margin:0 0 10px;display:flex;align-items:center;gap:9px}
+  .tx-date::before{content:"";width:5px;height:15px;border-radius:3px;background:var(--accent,#4aa3ff)}
+  .tx-list{display:flex;flex-direction:column;gap:7px}
+  .tx-row{display:flex;align-items:center;gap:13px;padding:11px 15px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:12px}
+  .tx-logo{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
+  .tx-badge{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:4px 0;border-radius:6px;flex:0 0 auto;width:92px;text-align:center;white-space:nowrap}
+  .tx-desc{font-size:13.5px;color:var(--text2,#cfd4da);line-height:1.35;min-width:0}
+  .tx-desc b{color:#fff;font-weight:600}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:54px 10px}
+  @media(max-width:760px){
+    .tx-row{flex-wrap:wrap;gap:9px 11px}
+    .tx-badge{width:auto;padding:4px 9px}
+    .tx-desc{flex:1 1 100%;order:3}
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="../transactions/"><span class="dot"></span>Transactions</a>
+      <a class="tab" href="../spotlight/"><span class="dot"></span>Spotlight</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div class="page-t">Transaction Log</div>
+        <div class="page-sub" id="sub">Every move across the majors</div>
+      </div>
+      <div class="daybar">
+        <button class="daybtn" id="prev" aria-label="Previous week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <button class="daybtn" id="next" aria-label="Next week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        <span class="daylbl" id="daylbl">—</span>
+        <button class="today" id="todayBtn">This week</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="content"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const MLB=new Set([108,109,110,111,112,113,114,115,116,117,118,119,120,121,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,158]);
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const shiftDate=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+  const fmtDay=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});};
+  const fmtShort=s=>{const d=new Date(s+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+
+  // typeCode -> {badge label, color, category for chip filtering}
+  const TYPE={
+    TR:{l:'Trade',c:'#c084fc',cat:'trade'}, ACQ:{l:'Acquired',c:'#c084fc',cat:'trade'},
+    CU:{l:'Recalled',c:'#46c77e',cat:'callup'}, SE:{l:'Selected',c:'#46c77e',cat:'callup'},
+    OPT:{l:'Optioned',c:'#e0a23a',cat:'option'},
+    DES:{l:'DFA',c:'#e0556a',cat:'dfa'},
+    CLW:{l:'Claimed',c:'#4aa3ff',cat:'waiver'}, OUT:{l:'Outrighted',c:'#4aa3ff',cat:'waiver'},
+    SFA:{l:'Signed',c:'#ffd24a',cat:'signed'}, REL:{l:'Released',c:'#e0556a',cat:'released'},
+    SC:{l:'Status',c:'#8a929c',cat:'il'}, ASG:{l:'Assigned',c:'#8a929c',cat:'il'},
+    SU:{l:'Suspended',c:'#e0556a',cat:'il'}, RET:{l:'Retired',c:'#8a929c',cat:'il'},
+    DFA:{l:'Free Agency',c:'#8a929c',cat:'released'}
+  };
+  const typeOf=code=>TYPE[code]||{l:'Move',c:'#8a929c',cat:'other'};
+  const CHIPS=[['all','All'],['trade','Trades'],['callup','Call-ups'],['option','Options'],['dfa','DFA'],['waiver','Waivers'],['signed','Signed'],['released','Released'],['il','IL / Status']];
+
+  let END=ptToday(), tok=0, FILTER='all', ALL=[], FIRST=true;
+  const urlCat=new URLSearchParams(location.search).get('cat');
+  const sub=document.getElementById('sub'), content=document.getElementById('content'), daylbl=document.getElementById('daylbl'), chipsEl=document.getElementById('chips');
+
+  function render(){
+    const rows=ALL.filter(t=>FILTER==='all'||t.cat===FILTER);
+    // counts per chip
+    const counts={all:ALL.length};
+    ALL.forEach(t=>{counts[t.cat]=(counts[t.cat]||0)+1;});
+    chipsEl.innerHTML=CHIPS.filter(c=>c[0]==='all'||counts[c[0]]).map(([k,label])=>
+      `<div class="chip${k===FILTER?' active':''}" data-k="${k}">${esc(label)}<span class="n">${counts[k]||0}</span></div>`).join('');
+    chipsEl.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{FILTER=c.dataset.k;render();});
+    if(!rows.length){content.innerHTML='<div class="state">No moves in this window.</div>';return;}
+    // group by date, newest first
+    const byDate={};rows.forEach(t=>{(byDate[t.date]=byDate[t.date]||[]).push(t);});
+    const dates=Object.keys(byDate).sort((a,b)=>b<a?-1:1);
+    content.innerHTML=dates.map(d=>{
+      const list=byDate[d].map(t=>
+        `<div class="tx-row"><img class="tx-logo" src="${logo(t.teamId)}" onerror="this.style.visibility='hidden'">`+
+        `<span class="tx-badge" style="color:${t.color};background:${t.color}1f">${esc(t.badge)}</span>`+
+        `<span class="tx-desc">${esc(t.desc)}</span></div>`).join('');
+      return `<div class="tx-day"><div class="tx-date">${esc(fmtDay(d))}</div><div class="tx-list">${list}</div></div>`;
+    }).join('');
+  }
+
+  async function load(){
+    const my=++tok;
+    FILTER=(FIRST&&urlCat)?urlCat:'all';FIRST=false;
+    content.innerHTML='<div class="state">Loading…</div>';chipsEl.innerHTML='';
+    const START=shiftDate(END,-6);
+    daylbl.innerHTML=(END===ptToday()?'<b>This week</b> · ':'')+esc(fmtShort(START)+' – '+fmtShort(END));
+    const tj=await j(`https://statsapi.mlb.com/api/v1/transactions?startDate=${START}&endDate=${END}`);
+    if(my!==tok)return;
+    const raw=(tj&&tj.transactions)||[];
+    const seen=new Set();ALL=[];
+    raw.forEach(x=>{
+      const inMLB=(x.toTeam&&MLB.has(x.toTeam.id))||(x.fromTeam&&MLB.has(x.fromTeam.id));
+      if(!inMLB)return;
+      const key=(x.date||'')+'|'+(x.description||'')+'|'+((x.person&&x.person.id)||'');
+      if(seen.has((x.date||'')+'|'+(x.description||'')))return; // collapse trade rows repeated per player
+      seen.add((x.date||'')+'|'+(x.description||''));
+      const code=x.typeCode, ty=typeOf(code);
+      const teamId=(x.toTeam&&MLB.has(x.toTeam.id))?x.toTeam.id:((x.fromTeam&&MLB.has(x.fromTeam.id))?x.fromTeam.id:((x.toTeam&&x.toTeam.id)||(x.fromTeam&&x.fromTeam.id)));
+      ALL.push({date:x.date||END,cat:ty.cat,badge:ty.l,color:ty.c,teamId,desc:x.description||((x.person&&x.person.fullName)||'')+' — '+ty.l});
+    });
+    sub.textContent=ALL.length?(ALL.length+' moves · '+fmtShort(shiftDate(END,-6))+' – '+fmtShort(END)+' '+END.slice(0,4)):'No moves';
+    render();
+  }
+
+  document.getElementById('prev').onclick=()=>{END=shiftDate(END,-7);load();};
+  document.getElementById('next').onclick=()=>{const n=shiftDate(END,7);END=(n>ptToday()?ptToday():n);load();};
+  document.getElementById('todayBtn').onclick=()=>{END=ptToday();load();};
+  load();
+</script>
+</body>
+</html>
