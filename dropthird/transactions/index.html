@@ -32,7 +32,10 @@
   .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
   .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
 
-  .daybar{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .daybar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+  .teamsel{font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;color:var(--text2,#cfd4da);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:9px;padding:9px 12px;cursor:pointer;outline:none;margin-left:auto}
+  .teamsel:hover{border-color:#3b454f;color:#fff}.teamsel:focus{border-color:var(--accent,#4aa3ff)}
+  @media(max-width:760px){.teamsel{margin-left:0;flex:1 1 100%}}
   .daybtn{width:40px;height:40px;flex:0 0 auto;border-radius:10px;border:1px solid var(--border2,#2f3540);background:var(--panel2,#15161b);color:var(--text3,#aab0b9);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
   .daybtn:hover{color:#fff;border-color:#3b454f}.daybtn svg{width:18px;height:18px}
   .daylbl{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;letter-spacing:1px}.daylbl b{color:var(--accent,#4aa3ff)}
@@ -102,6 +105,7 @@
         <button class="daybtn" id="next" aria-label="Next week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
         <span class="daylbl" id="daylbl">—</span>
         <button class="today" id="todayBtn">This week</button>
+        <select class="teamsel" id="teamSel" aria-label="Filter by team"></select>
       </div>
       <div class="chips" id="chips"></div>
       <div id="content"><div class="state">Loading…</div></div>
@@ -131,11 +135,20 @@
     DFA:{l:'Free Agency',c:'#8a929c',cat:'released'}
   };
   const typeOf=code=>TYPE[code]||{l:'Move',c:'#8a929c',cat:'other'};
+  const SKIP=new Set(['NUM']); // jersey-number changes aren't roster moves
   const CHIPS=[['all','All'],['trade','Trades'],['callup','Call-ups'],['option','Options'],['dfa','DFA'],['waiver','Waivers'],['signed','Signed'],['released','Released'],['il','IL / Status']];
+  const TEAMLIST={108:'Angels',109:'Diamondbacks',110:'Orioles',111:'Red Sox',112:'Cubs',113:'Reds',114:'Guardians',115:'Rockies',116:'Tigers',117:'Astros',118:'Royals',119:'Dodgers',120:'Nationals',121:'Mets',133:'Athletics',134:'Pirates',135:'Padres',136:'Mariners',137:'Giants',138:'Cardinals',139:'Rays',140:'Rangers',141:'Blue Jays',142:'Twins',143:'Phillies',144:'Braves',145:'White Sox',146:'Marlins',147:'Yankees',158:'Brewers'};
 
-  let END=ptToday(), tok=0, FILTER='all', ALL=[], FIRST=true;
-  const urlCat=new URLSearchParams(location.search).get('cat');
+  let END=ptToday(), tok=0, FILTER='all', ALL=[], FIRST=true, TEAM='';
+  const params=new URLSearchParams(location.search);
+  const urlCat=params.get('cat'), urlTeam=params.get('team');
+  if(urlTeam&&TEAMLIST[urlTeam])TEAM=urlTeam;
   const sub=document.getElementById('sub'), content=document.getElementById('content'), daylbl=document.getElementById('daylbl'), chipsEl=document.getElementById('chips');
+  const teamSel=document.getElementById('teamSel'), prevBtn=document.getElementById('prev'), nextBtn=document.getElementById('next'), todayBtn=document.getElementById('todayBtn');
+  teamSel.innerHTML='<option value="">All teams · this week</option>'+
+    Object.keys(TEAMLIST).map(id=>[id,TEAMLIST[id]]).sort((a,b)=>a[1]<b[1]?-1:1).map(t=>`<option value="${t[0]}">${esc(t[1])} · full season</option>`).join('');
+  teamSel.value=TEAM;
+  teamSel.onchange=()=>{TEAM=teamSel.value;END=ptToday();load();};
 
   function render(){
     const rows=ALL.filter(t=>FILTER==='all'||t.cat===FILTER);
@@ -162,23 +175,28 @@
     const my=++tok;
     FILTER=(FIRST&&urlCat)?urlCat:'all';FIRST=false;
     content.innerHTML='<div class="state">Loading…</div>';chipsEl.innerHTML='';
-    const START=shiftDate(END,-6);
-    daylbl.innerHTML=(END===ptToday()?'<b>This week</b> · ':'')+esc(fmtShort(START)+' – '+fmtShort(END));
-    const tj=await j(`https://statsapi.mlb.com/api/v1/transactions?startDate=${START}&endDate=${END}`);
+    const teamMode=!!TEAM;
+    [prevBtn,nextBtn,todayBtn].forEach(b=>b.style.display=teamMode?'none':'');
+    const year=ptToday().slice(0,4);
+    const START=teamMode?(year+'-01-01'):shiftDate(END,-6);
+    const ENDd=teamMode?ptToday():END;
+    if(teamMode)daylbl.innerHTML=`<img src="${logo(TEAM)}" style="width:18px;height:18px;object-fit:contain;vertical-align:-3px;margin-right:6px" onerror="this.style.display='none'"><b>${esc(TEAMLIST[TEAM])}</b> · ${year} Season`;
+    else daylbl.innerHTML=(END===ptToday()?'<b>This week</b> · ':'')+esc(fmtShort(START)+' – '+fmtShort(END));
+    const tj=await j(`https://statsapi.mlb.com/api/v1/transactions?${teamMode?'teamId='+TEAM+'&':''}startDate=${START}&endDate=${ENDd}`);
     if(my!==tok)return;
     const raw=(tj&&tj.transactions)||[];
     const seen=new Set();ALL=[];
     raw.forEach(x=>{
+      if(SKIP.has(x.typeCode))return;
       const inMLB=(x.toTeam&&MLB.has(x.toTeam.id))||(x.fromTeam&&MLB.has(x.fromTeam.id));
       if(!inMLB)return;
-      const key=(x.date||'')+'|'+(x.description||'')+'|'+((x.person&&x.person.id)||'');
-      if(seen.has((x.date||'')+'|'+(x.description||'')))return; // collapse trade rows repeated per player
-      seen.add((x.date||'')+'|'+(x.description||''));
-      const code=x.typeCode, ty=typeOf(code);
-      const teamId=(x.toTeam&&MLB.has(x.toTeam.id))?x.toTeam.id:((x.fromTeam&&MLB.has(x.fromTeam.id))?x.fromTeam.id:((x.toTeam&&x.toTeam.id)||(x.fromTeam&&x.fromTeam.id)));
-      ALL.push({date:x.date||END,cat:ty.cat,badge:ty.l,color:ty.c,teamId,desc:x.description||((x.person&&x.person.fullName)||'')+' — '+ty.l});
+      const k=(x.date||'')+'|'+(x.description||''); // collapse trade rows repeated per player
+      if(seen.has(k))return; seen.add(k);
+      const ty=typeOf(x.typeCode);
+      const teamId=teamMode?TEAM:((x.toTeam&&MLB.has(x.toTeam.id))?x.toTeam.id:((x.fromTeam&&MLB.has(x.fromTeam.id))?x.fromTeam.id:((x.toTeam&&x.toTeam.id)||(x.fromTeam&&x.fromTeam.id))));
+      ALL.push({date:x.date||ENDd,cat:ty.cat,badge:ty.l,color:ty.c,teamId,desc:x.description||((x.person&&x.person.fullName)||'')+' — '+ty.l});
     });
-    sub.textContent=ALL.length?(ALL.length+' moves · '+fmtShort(shiftDate(END,-6))+' – '+fmtShort(END)+' '+END.slice(0,4)):'No moves';
+    sub.textContent=ALL.length?(ALL.length+' moves · '+(teamMode?esc(TEAMLIST[TEAM])+' · '+year+' season':fmtShort(START)+' – '+fmtShort(ENDd)+' '+ENDd.slice(0,4))):'No moves';
     render();
   }
 
