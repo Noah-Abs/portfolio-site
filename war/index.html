@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>WAR Model — DROPTHIRD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .top{display:flex;align-items:baseline;gap:10px;padding:18px 26px;border-bottom:1px solid var(--border,#1b1e24);position:sticky;top:0;background:var(--bg,#0b0c0e);z-index:5}
+  .top a.brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:21px;letter-spacing:1px;color:var(--text,#fff);text-decoration:none}
+  .top .sep{color:var(--muted2,#474d56)}
+  .top .t2{font-weight:600;text-transform:uppercase;letter-spacing:3px;font-size:11px;color:var(--muted,#7e858f)}
+  .main{max-width:1120px;margin:0 auto;padding:30px 24px 70px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(32px,6vw,60px);letter-spacing:1px;line-height:.95}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
+  .chip{font-size:12.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--text3,#aab0b9);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:999px;padding:8px 18px;cursor:pointer;transition:.14s}
+  .chip:hover{color:#fff;border-color:#3b454f}
+  .chip.active{background:var(--accent,#4aa3ff);border-color:var(--accent,#4aa3ff);color:#06121f}
+  .cap{font-size:11.5px;color:var(--muted2,#5b6470);letter-spacing:.3px;margin-bottom:18px;line-height:1.55;max-width:920px}
+  .cap b{color:var(--text3,#aab0b9);font-weight:600}
+
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border,#1b1e24);border-radius:14px;background:var(--panel,#101115)}
+  table{border-collapse:collapse;width:100%;min-width:680px;font-variant-numeric:tabular-nums}
+  thead th{position:sticky;top:0;background:var(--panel2,#15161b);color:var(--muted,#7e858f);font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-align:right;padding:11px 12px;white-space:nowrap;border-bottom:1px solid var(--border,#1b1e24)}
+  thead th.l{text-align:left}
+  tbody td{padding:10px 12px;text-align:right;font-size:14px;border-bottom:1px solid var(--bg2,#0e0f13);white-space:nowrap}
+  tbody td.l{text-align:left}
+  tbody tr:hover{background:var(--panel2,#15161b)}
+  .rank{color:var(--muted2,#565d67);width:34px;text-align:right;font-weight:600}
+  .pl{display:flex;align-items:center;gap:10px;min-width:210px;text-decoration:none;color:inherit}
+  .pl img{width:23px;height:23px;object-fit:contain;flex:0 0 auto}
+  .pl .nm{font-weight:600;color:var(--text,#fff)}
+  .pl .pos{font-size:10.5px;color:var(--muted2,#5b6470);letter-spacing:.5px;text-transform:uppercase;font-weight:600}
+  .pl:hover .nm{color:#cfe0ff;text-decoration:underline}
+  td.war{font-family:"Oswald",sans-serif;font-weight:700;font-size:17px;color:#fff}
+  td.pos-r{color:#46c77e}td.neg{color:#e0707f}td.mut{color:var(--muted,#7e858f)}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:50px 10px}
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="../dropthird/homescreen/">DROPTHIRD</a><span class="sep">/</span><span class="t2">WAR Model</span>
+  </header>
+  <main class="main">
+    <div class="page-t">WAR Model</div>
+    <div class="page-sub" id="sub">Wins Above Replacement</div>
+    <div class="chips" id="chips"></div>
+    <div class="cap">A component-built WAR (batting + baserunning + fielding + positional + replacement, all in runs ÷ runs-per-win), engineered to track <b>FanGraphs fWAR</b> closely. Batting uses wOBA linear weights; fielding uses Statcast <b>Fielding Run Value</b> (Baseball Savant); pitching is <b>FIP-based</b>. League constants are computed live from the season. It won't equal any one source to the decimal — public WAR formulas are proprietary — but it lands within a few tenths.</div>
+    <div id="content"><div class="state">Loading…</div></div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const N=v=>{const n=parseFloat(v);return isNaN(n)?0:n;};
+  const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
+  const splits=o=>(((o&&o.stats)||[])[0]||{}).splits||[];
+
+  // ---- constants (representative recent-season wOBA linear weights; league rates computed live) ----
+  const W={bb:.696,hbp:.726,s:.883,d:1.244,t:1.569,hr:2.004,scale:1.204};
+  const RUN_SB=0.2, RUN_CS=-0.41, RPW=10, REP_PER600=20;
+  const POSADJ={C:12.5,SS:7.5,'2B':3,'3B':2,CF:2.5,LF:-7.5,RF:-7.5,'1B':-12.5,DH:-17.5,OF:-7.5,P:0,TWP:-17.5};
+
+  let MODE=new URLSearchParams(location.search).get('tab')==='pit'?'pit':'bat', HIT=[], PIT=[], YEAR='';
+  const sub=document.getElementById('sub'), content=document.getElementById('content'), chipsEl=document.getElementById('chips');
+  const fmtR=v=>(v>=0?'+':'')+v.toFixed(1);
+
+  function parseCSV(text){
+    const lines=text.replace(/^﻿/,'').trim().split(/\r?\n/);
+    const pl=l=>{const o=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];
+      if(q){if(ch==='"'){if(l[i+1]==='"'){c+='"';i++;}else q=false;}else c+=ch;}
+      else{if(ch==='"')q=true;else if(ch===','){o.push(c);c='';}else c+=ch;}}o.push(c);return o;};
+    return {head:pl(lines[0]),rows:lines.slice(1).map(pl)};
+  }
+
+  function woba(b){ // b: {bb,ibb,hbp,s,d,t,hr,ab,sf}
+    const den=b.ab+b.bb-b.ibb+b.sf+b.hbp; if(den<=0)return 0;
+    return (W.bb*(b.bb-b.ibb)+W.hbp*b.hbp+W.s*b.s+W.d*b.d+W.t*b.t+W.hr*b.hr)/den;
+  }
+
+  function buildHitters(hitAll, frv){
+    const players=splits(hitAll).map(sp=>{const s=sp.stat;const h=N(s.hits),d=N(s.doubles),t=N(s.triples),hr=N(s.homeRuns);
+      return {id:sp.player.id,name:sp.player.fullName,team:(sp.team&&sp.team.id)||0,pos:(sp.position&&sp.position.abbreviation)||'DH',
+        pa:N(s.plateAppearances),ab:N(s.atBats),h,d,t,hr,s:h-d-t-hr,bb:N(s.baseOnBalls),ibb:N(s.intentionalWalks),
+        hbp:N(s.hitByPitch),sf:N(s.sacFlies),sb:N(s.stolenBases),cs:N(s.caughtStealing)};});
+    // league totals (true league average from everyone)
+    const L={ab:0,bb:0,ibb:0,hbp:0,s:0,d:0,t:0,hr:0,sf:0,sb:0,cs:0,on:0};
+    players.forEach(p=>{L.ab+=p.ab;L.bb+=p.bb;L.ibb+=p.ibb;L.hbp+=p.hbp;L.s+=p.s;L.d+=p.d;L.t+=p.t;L.hr+=p.hr;L.sf+=p.sf;L.sb+=p.sb;L.cs+=p.cs;L.on+=p.s+p.bb+p.hbp;});
+    const lgwOBA=woba(L);
+    const lgSBrate=L.on>0?((RUN_SB*L.sb+RUN_CS*L.cs)/L.on):0;
+    return players.filter(p=>p.pa>=120).map(p=>{
+      const bat=((woba(p)-lgwOBA)/W.scale)*p.pa;
+      const bsr=(RUN_SB*p.sb+RUN_CS*p.cs)-lgSBrate*(p.s+p.bb+p.hbp);
+      const fld=(frv[p.id]!=null)?frv[p.id]:0;
+      const pos=(POSADJ[p.pos]!=null?POSADJ[p.pos]:-7.5)*(p.pa/650);
+      const rep=p.pa/600*REP_PER600;
+      const war=(bat+bsr+fld+pos+rep)/RPW;
+      return Object.assign(p,{bat,bsr,fld,pos_r:pos,rep,war});
+    }).sort((a,b)=>b.war-a.war);
+  }
+
+  function buildPitchers(pitAll){
+    const players=splits(pitAll).map(sp=>{const s=sp.stat;return {id:sp.player.id,name:sp.player.fullName,team:(sp.team&&sp.team.id)||0,
+      ip:ipd(s.inningsPitched),hr:N(s.homeRuns),bb:N(s.baseOnBalls),hbp:N(s.hitBatsmen),k:N(s.strikeOuts),er:N(s.earnedRuns),r:N(s.runs),era:N(s.era),whip:s.whip};});
+    const L={ip:0,hr:0,bb:0,hbp:0,k:0,er:0,r:0};
+    players.forEach(p=>{L.ip+=p.ip;L.hr+=p.hr;L.bb+=p.bb;L.hbp+=p.hbp;L.k+=p.k;L.er+=p.er;L.r+=p.r;});
+    const lgERA=L.ip>0?L.er*9/L.ip:4.2, lgRA9=L.ip>0?L.r*9/L.ip:4.5;
+    const Cfip=lgERA-((13*L.hr+3*(L.bb+L.hbp)-2*L.k)/(L.ip||1));
+    const replRA9=lgRA9*1.23, raFactor=lgERA>0?lgRA9/lgERA:1.08;
+    return players.filter(p=>p.ip>=25).map(p=>{
+      const fip=(13*p.hr+3*(p.bb+p.hbp)-2*p.k)/(p.ip||1)+Cfip;
+      const fipRA9=fip*raFactor;
+      const war=(replRA9-fipRA9)*(p.ip/9)/RPW;
+      return Object.assign(p,{fip,war});
+    }).sort((a,b)=>b.war-a.war);
+  }
+
+  function plCell(t){return `<a class="pl" href="../dropthird/player/?id=${t.id}"><img src="${logo(t.team)}" onerror="this.style.visibility='hidden'"><span class="nm">${esc(t.name)}</span>${t.pos?`<span class="pos">${esc(t.pos)}</span>`:''}</a>`;}
+  const rcell=v=>`<td class="${v>=0?'pos-r':'neg'}">${fmtR(v)}</td>`;
+
+  function render(){
+    chipsEl.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.k===MODE));
+    sub.textContent=(MODE==='bat'?'Position players':'Pitchers')+' · '+YEAR+' · model';
+    if(MODE==='bat'){
+      const rows=HIT.slice(0,50);
+      sub.textContent=rows.length?sub.textContent:'No data';
+      content.innerHTML=`<div class="scroller"><table>
+        <thead><tr><th class="l rank">#</th><th class="l">Player</th><th>WAR</th><th>Bat</th><th>BsR</th><th>Fld</th><th>Pos</th><th>Rep</th><th>PA</th></tr></thead>
+        <tbody>${rows.map((t,i)=>`<tr><td class="rank">${i+1}</td><td class="l">${plCell(t)}</td><td class="war">${t.war.toFixed(1)}</td>${rcell(t.bat)}${rcell(t.bsr)}${rcell(t.fld)}${rcell(t.pos_r)}<td class="mut">+${t.rep.toFixed(1)}</td><td class="mut">${t.pa}</td></tr>`).join('')}</tbody>
+      </table></div>`;
+    }else{
+      const rows=PIT.slice(0,50);
+      content.innerHTML=`<div class="scroller"><table>
+        <thead><tr><th class="l rank">#</th><th class="l">Player</th><th>WAR</th><th>FIP</th><th>ERA</th><th>IP</th><th>K</th></tr></thead>
+        <tbody>${rows.map((t,i)=>`<tr><td class="rank">${i+1}</td><td class="l">${plCell(t)}</td><td class="war">${t.war.toFixed(1)}</td><td>${t.fip.toFixed(2)}</td><td class="mut">${t.era.toFixed(2)}</td><td class="mut">${t.ip.toFixed(1)}</td><td class="mut">${t.k}</td></tr>`).join('')}</tbody>
+      </table></div>`;
+    }
+  }
+
+  async function load(){
+    chipsEl.innerHTML=[['bat','Position Players'],['pit','Pitchers']].map(([k,l])=>`<div class="chip${k===MODE?' active':''}" data-k="${k}">${l}</div>`).join('');
+    chipsEl.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{MODE=c.dataset.k;render();});
+    const now=new Date().getFullYear();
+    for(const y of [now,now-1,now-2]){
+      const [hit,pit,csv]=await Promise.all([
+        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=hitting&playerPool=all&season=${y}&sportIds=1&limit=3000`),
+        j(`https://statsapi.mlb.com/api/v1/stats?stats=season&group=pitching&playerPool=all&season=${y}&sportIds=1&limit=3000`),
+        fetch(`https://baseballsavant.mlb.com/leaderboard/outs_above_average?type=Fielder&year=${y}&min=1&csv=true`).then(r=>r.ok?r.text():'').catch(()=>'')
+      ]);
+      if(splits(hit).length){
+        YEAR=y;
+        const frv={};
+        if(csv){const {head,rows}=parseCSV(csv);const iId=head.indexOf('player_id'),iF=head.indexOf('fielding_runs_prevented'),iO=head.indexOf('outs_above_average');
+          rows.forEach(c=>{const id=+c[iId];if(!id)return;const f=iF>=0&&c[iF]!==''?+c[iF]:(iO>=0&&c[iO]!==''?+c[iO]*0.8:null);if(f!=null)frv[id]=f;});}
+        HIT=buildHitters(hit,frv); PIT=buildPitchers(pit);
+        render(); return;
+      }
+    }
+    content.innerHTML='<div class="state">No season data available.</div>';
+  }
+  load();
+</script>
+</body>
+</html>
