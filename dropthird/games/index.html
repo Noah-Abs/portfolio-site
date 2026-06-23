@@ -137,19 +137,26 @@
   .wpchart{width:100%;height:auto;display:block;margin:6px 0}
   .wprow{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f)}
   .wprow b{color:var(--text,#fff)}
+  .wpwrap{padding:15px 16px 13px}
+  .wpchart{margin:11px 0 5px}
   .wphdr{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--text2,#cfd4da)}
-  .wphdr.bot{margin-top:1px}
-  .wphdr .wpt{display:inline-flex;align-items:center;gap:7px;min-width:0;font-weight:500}
-  .wphdr .wpt img{width:18px;height:18px;object-fit:contain;flex:0 0 auto}
-  .wphdr .wpt b{font-weight:700;white-space:nowrap}
-  .wphdr .wpt i{color:var(--muted,#7e858f);font-style:normal;font-size:11px;letter-spacing:.5px}
+  .wphdr.bot{margin-top:3px}
+  .wphdr .wpt{display:inline-flex;align-items:center;gap:6px;min-width:0;font-weight:500;background:var(--panel2,#15161b);border:1px solid var(--border2,#2a2f37);border-radius:999px;padding:4px 12px 4px 7px}
+  .wphdr .wpt .sw{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+  .wphdr .wpt img{width:17px;height:17px;object-fit:contain;flex:0 0 auto}
+  .wphdr .wpt b{font-weight:700;white-space:nowrap;font-size:12.5px}
+  .wphdr .wpt i{color:var(--muted,#7e858f);font-style:normal;font-size:10.5px;letter-spacing:.5px}
   .wphdr .wpwin{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted,#7e858f);white-space:nowrap}
+  .wphdr .wpwin b{color:var(--text,#fff)}
   .wphdr .wpaxis{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted2,#5b6470)}
   .wptick{fill:var(--muted2,#5b6470);font-family:"Oswald",sans-serif;font-size:11px;font-weight:600}
   .wpchart .wpdot{cursor:pointer}
-  .wpchart .wpd{transition:r .1s}
-  .wpchart .wpdot:hover .wpd{r:8.5}
-  .wpchart .wpdot.active .wpd{r:9;stroke:#fff;stroke-width:2.5}
+  .wpchart .wphalo{opacity:.22;transition:opacity .12s,r .12s}
+  .wpchart .wpd{stroke:var(--bg,#0b0c0e);stroke-width:2;transition:r .12s}
+  .wpchart .wpdot:hover .wphalo{opacity:.42;r:11}
+  .wpchart .wpdot:hover .wpd{r:6.5}
+  .wpchart .wpdot.active .wphalo{opacity:.55;r:12}
+  .wpchart .wpdot.active .wpd{r:7;stroke:#fff}
   .wpdetail{margin-top:10px;padding:9px 12px;background:var(--bg2,#0e0f13);border:1px solid var(--border,#1b1e24);border-radius:10px;font-size:12.5px;color:var(--muted,#7e858f);display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-height:20px}
   .wpdetail .inn{font-weight:700;color:var(--accent,#4aa3ff);font-size:11px;letter-spacing:.5px;flex:0 0 auto}
   .wpdetail .pd{flex:1;min-width:120px;color:var(--text2,#cfd4da);line-height:1.35}
@@ -464,41 +471,55 @@
   function wpChart(wp){
     const all=(GD.pbp&&GD.pbp.allPlays)||[];
     const n=wp.length; if(n<2)return '';
-    const W=880,H=250,padL=10,padR=10,padT=14,padB=26;
-    const plotW=W-padL-padR, plotH=H-padT-padB, mid=padT+plotH/2;
+    const W=880,H=270,padL=12,padR=12,padT=16,padB=28;
+    const plotW=W-padL-padR, plotH=H-padT-padB, mid=padT+plotH/2, botY=padT+plotH;
     const hp=x=>x.homeTeamWinProbability!=null?x.homeTeamWinProbability:(x.awayTeamWinProbability!=null?100-x.awayTeamWinProbability:50);
     const X=i=>padL+(i/(n-1))*plotW, Y=p=>padT+(1-p/100)*plotH;
     const pts=wp.map((x,i)=>X(i).toFixed(1)+','+Y(hp(x)).toFixed(1));
     const hc=tc(GD.home.team.id), ac=tc(GD.away.team.id), winner=hp(wp[n-1])>=50?GD.home:GD.away;
-    const lastX=X(n-1).toFixed(1), m=mid.toFixed(1);
-    const area=`M ${padL},${m} L ${pts.join(' L ')} L ${lastX},${m} Z`;
+    const lastX=X(n-1), endY=Y(hp(wp[n-1])), m=mid.toFixed(1);
+    const area=`M ${padL},${m} L ${pts.join(' L ')} L ${lastX.toFixed(1)},${m} Z`;
     // innings along the x-axis (from the play-by-play)
     const inn=i=>{const p=all[wp[i].atBatIndex];return p&&p.about?p.about.inning:null;};
     const segs=[];let s0=0,ci=inn(0);
     for(let i=1;i<n;i++){const v=inn(i);if(v!=null&&v!==ci){segs.push({inn:ci,a:s0,b:i});s0=i;ci=v;}}
     segs.push({inn:ci,a:s0,b:n-1});
-    let grid='',labels='';
-    segs.forEach((sg,k)=>{ if(k>0){const gx=X(sg.a).toFixed(1);grid+=`<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${(padT+plotH).toFixed(1)}" stroke="var(--border2,#2a2f37)" stroke-width="1" opacity=".5"/>`;}
-      if(sg.inn!=null)labels+=`<text x="${((X(sg.a)+X(sg.b))/2).toFixed(1)}" y="${(padT+plotH+16).toFixed(1)}" text-anchor="middle" class="wptick">${sg.inn}</text>`;});
+    let bands='',grid='',labels='';
+    segs.forEach((sg,k)=>{const x1=X(sg.a), x2=(k<segs.length-1?X(segs[k+1].a):X(sg.b));
+      if(k%2===1)bands+=`<rect x="${x1.toFixed(1)}" y="${padT}" width="${(x2-x1).toFixed(1)}" height="${plotH}" fill="#ffffff" opacity=".022"/>`;
+      if(k>0)grid+=`<line x1="${x1.toFixed(1)}" y1="${padT}" x2="${x1.toFixed(1)}" y2="${botY.toFixed(1)}" stroke="var(--border2,#2a2f37)" stroke-width="1" opacity=".4"/>`;
+      if(sg.inn!=null)labels+=`<text x="${((x1+x2)/2).toFixed(1)}" y="${(botY+17).toFixed(1)}" text-anchor="middle" class="wptick">${sg.inn}</text>`;});
     // clickable dots on the biggest momentum swings
     const dots=wp.map((x,i)=>({i,add:x.homeTeamWinProbabilityAdded})).filter(d=>d.add!=null&&Math.abs(d.add)>=4)
       .sort((a,b)=>Math.abs(b.add)-Math.abs(a.add)).slice(0,8);
-    const dotsvg=dots.map(d=>{const x=wp[d.i],cx=X(d.i).toFixed(1),cy=Y(hp(x)).toFixed(1);
-      return `<g class="wpdot" data-idx="${x.atBatIndex}"><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/><circle class="wpd" cx="${cx}" cy="${cy}" r="6" fill="${d.add>0?hc:ac}" stroke="var(--bg,#0b0c0e)" stroke-width="2"/></g>`;}).join('');
+    const dotsvg=dots.map(d=>{const x=wp[d.i],cx=X(d.i).toFixed(1),cy=Y(hp(x)).toFixed(1),col=d.add>0?hc:ac;
+      return `<g class="wpdot" data-idx="${x.atBatIndex}"><circle cx="${cx}" cy="${cy}" r="15" fill="transparent"/><circle class="wphalo" cx="${cx}" cy="${cy}" r="9" fill="${col}"/><circle class="wpd" cx="${cx}" cy="${cy}" r="5" fill="${col}"/></g>`;}).join('');
     return `<div class="wpwrap">
-      <div class="wphdr"><span class="wpt"><img src="${logo(GD.home.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.home.team.name)}</b> <i>ahead ↑</i></span><span class="wpwin">${esc(winner.team.name)} won${GD.away.score!=null?` ${GD.away.score}–${GD.home.score}`:''}</span></div>
+      <div class="wphdr"><span class="wpt"><span class="sw" style="background:${hc}"></span><img src="${logo(GD.home.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.home.team.name)}</b><i>ahead ↑</i></span><span class="wpwin"><b>${esc(winner.team.name)}</b> won${GD.away.score!=null?` ${GD.away.score}–${GD.home.score}`:''}</span></div>
       <svg class="wpchart" viewBox="0 0 ${W} ${H}">
-        <path d="${area}" fill="${hc}" opacity=".30" clip-path="url(#wptopc)"/>
-        <path d="${area}" fill="${ac}" opacity=".30" clip-path="url(#wpbotc)"/>
-        <clipPath id="wptopc"><rect x="${padL}" y="${padT}" width="${plotW}" height="${(mid-padT).toFixed(1)}"/></clipPath>
-        <clipPath id="wpbotc"><rect x="${padL}" y="${m}" width="${plotW}" height="${(padT+plotH-mid).toFixed(1)}"/></clipPath>
+        <defs>
+          <linearGradient id="wpgh" gradientUnits="userSpaceOnUse" x1="0" y1="${padT}" x2="0" y2="${m}"><stop offset="0" stop-color="${hc}" stop-opacity=".5"/><stop offset="1" stop-color="${hc}" stop-opacity="0"/></linearGradient>
+          <linearGradient id="wpga" gradientUnits="userSpaceOnUse" x1="0" y1="${m}" x2="0" y2="${botY}"><stop offset="0" stop-color="${ac}" stop-opacity="0"/><stop offset="1" stop-color="${ac}" stop-opacity=".5"/></linearGradient>
+          <clipPath id="wptopc"><rect x="${padL}" y="${padT}" width="${plotW}" height="${(mid-padT).toFixed(1)}"/></clipPath>
+          <clipPath id="wpbotc"><rect x="${padL}" y="${m}" width="${plotW}" height="${(botY-mid).toFixed(1)}"/></clipPath>
+        </defs>
+        <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}" rx="9" fill="var(--bg,#0b0c0e)" opacity=".55"/>
+        ${bands}
+        <line x1="${padL}" y1="${Y(75).toFixed(1)}" x2="${W-padR}" y2="${Y(75).toFixed(1)}" stroke="#fff" stroke-width="1" opacity=".05"/>
+        <line x1="${padL}" y1="${Y(25).toFixed(1)}" x2="${W-padR}" y2="${Y(25).toFixed(1)}" stroke="#fff" stroke-width="1" opacity=".05"/>
+        <path d="${area}" fill="url(#wpgh)" clip-path="url(#wptopc)"/>
+        <path d="${area}" fill="url(#wpga)" clip-path="url(#wpbotc)"/>
         ${grid}
-        <line x1="${padL}" y1="${m}" x2="${W-padR}" y2="${m}" stroke="var(--border2,#2a2f37)" stroke-width="1.2" stroke-dasharray="5 5"/>
-        <polyline points="${pts.join(' ')}" fill="none" stroke="#e8edf5" stroke-width="2.2" stroke-linejoin="round"/>
+        <line x1="${padL}" y1="${m}" x2="${W-padR}" y2="${m}" stroke="var(--text3,#aab0b9)" stroke-width="1.3" stroke-dasharray="2 5" stroke-linecap="round" opacity=".5"/>
+        <polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" opacity=".10"/>
+        <polyline points="${pts.join(' ')}" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${X(0).toFixed(1)}" cy="${Y(hp(wp[0])).toFixed(1)}" r="3" fill="#fff" opacity=".65"/>
+        <circle cx="${lastX.toFixed(1)}" cy="${endY.toFixed(1)}" r="9" fill="${winner===GD.home?hc:ac}" opacity=".32"/>
+        <circle cx="${lastX.toFixed(1)}" cy="${endY.toFixed(1)}" r="4.5" fill="#fff"/>
         ${dotsvg}
         ${labels}
       </svg>
-      <div class="wphdr bot"><span class="wpt"><img src="${logo(GD.away.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.away.team.name)}</b> <i>ahead ↓</i></span><span class="wpaxis">Inning →</span></div>
+      <div class="wphdr bot"><span class="wpt"><span class="sw" style="background:${ac}"></span><img src="${logo(GD.away.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.away.team.name)}</b><i>ahead ↓</i></span><span class="wpaxis">Inning →</span></div>
       <div class="wpdetail" id="wpdetail">Tap a ● dot to see the play</div>
     </div>`;
   }
