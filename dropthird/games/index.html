@@ -137,6 +137,26 @@
   .wpchart{width:100%;height:auto;display:block;margin:6px 0}
   .wprow{display:flex;justify-content:space-between;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f)}
   .wprow b{color:var(--text,#fff)}
+  .wphdr{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--text2,#cfd4da)}
+  .wphdr.bot{margin-top:1px}
+  .wphdr .wpt{display:inline-flex;align-items:center;gap:7px;min-width:0;font-weight:500}
+  .wphdr .wpt img{width:18px;height:18px;object-fit:contain;flex:0 0 auto}
+  .wphdr .wpt b{font-weight:700;white-space:nowrap}
+  .wphdr .wpt i{color:var(--muted,#7e858f);font-style:normal;font-size:11px;letter-spacing:.5px}
+  .wphdr .wpwin{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted,#7e858f);white-space:nowrap}
+  .wphdr .wpaxis{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted2,#5b6470)}
+  .wptick{fill:var(--muted2,#5b6470);font-family:"Oswald",sans-serif;font-size:11px;font-weight:600}
+  .wpchart .wpdot{cursor:pointer}
+  .wpchart .wpd{transition:r .1s}
+  .wpchart .wpdot:hover .wpd{r:8.5}
+  .wpchart .wpdot.active .wpd{r:9;stroke:#fff;stroke-width:2.5}
+  .wpdetail{margin-top:10px;padding:9px 12px;background:var(--bg2,#0e0f13);border:1px solid var(--border,#1b1e24);border-radius:10px;font-size:12.5px;color:var(--muted,#7e858f);display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-height:20px}
+  .wpdetail .inn{font-weight:700;color:var(--accent,#4aa3ff);font-size:11px;letter-spacing:.5px;flex:0 0 auto}
+  .wpdetail .pd{flex:1;min-width:120px;color:var(--text2,#cfd4da);line-height:1.35}
+  .wpdetail .psc{font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+  .wpdetail .wpa{display:inline-flex;align-items:center;gap:5px}
+  .wpdetail .wpa b{font-weight:700}.wpdetail .wpa img{width:18px;height:18px;object-fit:contain}
+  .wpdetail .hw{font-size:11px;color:var(--muted2,#5b6470);letter-spacing:.5px;white-space:nowrap}
 
   .inhdr{font-family:"Oswald",sans-serif;font-weight:600;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent,#4aa3ff);
     margin:20px 0 9px;display:flex;align-items:center;gap:9px}
@@ -247,6 +267,8 @@
   const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
+  const tc=id=>TEAMCOLOR[id]||'#4aa3ff';
   const showp=p=>(p==null||p==='')?'–':String(p).replace(/^0(?=\.)/,'');
   const mday=s=>{if(!s)return '';const a=String(s).slice(0,10).split('-');return MON[(+a[1])-1]+' '+(+a[2]);};
 
@@ -440,17 +462,59 @@
   }
 
   function wpChart(wp){
-    const n=wp.length,W=820,H=210,pad=6;
+    const all=(GD.pbp&&GD.pbp.allPlays)||[];
+    const n=wp.length; if(n<2)return '';
+    const W=880,H=250,padL=10,padR=10,padT=14,padB=26;
+    const plotW=W-padL-padR, plotH=H-padT-padB, mid=padT+plotH/2;
     const hp=x=>x.homeTeamWinProbability!=null?x.homeTeamWinProbability:(x.awayTeamWinProbability!=null?100-x.awayTeamWinProbability:50);
-    const pts=wp.map((x,i)=>(pad+i/(n-1)*(W-2*pad)).toFixed(1)+','+(pad+(1-hp(x)/100)*(H-2*pad)).toFixed(1));
-    const mid=pad+(H-2*pad)/2, winner=hp(wp[n-1])>=50?GD.home:GD.away;
-    return `<div class="wpwrap"><div class="wprow"><span><b>${esc(GD.home.team.name)}</b> win&nbsp;%</span><span>${esc(winner.team.name)} won</span></div>`+
-      `<svg class="wpchart" viewBox="0 0 ${W} ${H}">`+
-      `<defs><linearGradient id="wpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent,#4aa3ff)" stop-opacity=".25"/><stop offset="1" stop-color="var(--accent,#4aa3ff)" stop-opacity="0"/></linearGradient></defs>`+
-      `<line x1="0" y1="${mid}" x2="${W}" y2="${mid}" stroke="var(--border2,#2a2f37)" stroke-width="1.2" stroke-dasharray="5 5"/>`+
-      `<polygon points="${pad},${H-pad} ${pts.join(' ')} ${W-pad},${H-pad}" fill="url(#wpg)"/>`+
-      `<polyline points="${pts.join(' ')}" fill="none" stroke="var(--accent,#4aa3ff)" stroke-width="2.4" stroke-linejoin="round"/>`+
-      `</svg><div class="wprow"><span>1st pitch</span><span>Final out</span></div></div>`;
+    const X=i=>padL+(i/(n-1))*plotW, Y=p=>padT+(1-p/100)*plotH;
+    const pts=wp.map((x,i)=>X(i).toFixed(1)+','+Y(hp(x)).toFixed(1));
+    const hc=tc(GD.home.team.id), ac=tc(GD.away.team.id), winner=hp(wp[n-1])>=50?GD.home:GD.away;
+    const lastX=X(n-1).toFixed(1), m=mid.toFixed(1);
+    const area=`M ${padL},${m} L ${pts.join(' L ')} L ${lastX},${m} Z`;
+    // innings along the x-axis (from the play-by-play)
+    const inn=i=>{const p=all[wp[i].atBatIndex];return p&&p.about?p.about.inning:null;};
+    const segs=[];let s0=0,ci=inn(0);
+    for(let i=1;i<n;i++){const v=inn(i);if(v!=null&&v!==ci){segs.push({inn:ci,a:s0,b:i});s0=i;ci=v;}}
+    segs.push({inn:ci,a:s0,b:n-1});
+    let grid='',labels='';
+    segs.forEach((sg,k)=>{ if(k>0){const gx=X(sg.a).toFixed(1);grid+=`<line x1="${gx}" y1="${padT}" x2="${gx}" y2="${(padT+plotH).toFixed(1)}" stroke="var(--border2,#2a2f37)" stroke-width="1" opacity=".5"/>`;}
+      if(sg.inn!=null)labels+=`<text x="${((X(sg.a)+X(sg.b))/2).toFixed(1)}" y="${(padT+plotH+16).toFixed(1)}" text-anchor="middle" class="wptick">${sg.inn}</text>`;});
+    // clickable dots on the biggest momentum swings
+    const dots=wp.map((x,i)=>({i,add:x.homeTeamWinProbabilityAdded})).filter(d=>d.add!=null&&Math.abs(d.add)>=4)
+      .sort((a,b)=>Math.abs(b.add)-Math.abs(a.add)).slice(0,8);
+    const dotsvg=dots.map(d=>{const x=wp[d.i],cx=X(d.i).toFixed(1),cy=Y(hp(x)).toFixed(1);
+      return `<g class="wpdot" data-idx="${x.atBatIndex}"><circle cx="${cx}" cy="${cy}" r="14" fill="transparent"/><circle class="wpd" cx="${cx}" cy="${cy}" r="6" fill="${d.add>0?hc:ac}" stroke="var(--bg,#0b0c0e)" stroke-width="2"/></g>`;}).join('');
+    return `<div class="wpwrap">
+      <div class="wphdr"><span class="wpt"><img src="${logo(GD.home.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.home.team.name)}</b> <i>ahead ↑</i></span><span class="wpwin">${esc(winner.team.name)} won${GD.away.score!=null?` ${GD.away.score}–${GD.home.score}`:''}</span></div>
+      <svg class="wpchart" viewBox="0 0 ${W} ${H}">
+        <path d="${area}" fill="${hc}" opacity=".30" clip-path="url(#wptopc)"/>
+        <path d="${area}" fill="${ac}" opacity=".30" clip-path="url(#wpbotc)"/>
+        <clipPath id="wptopc"><rect x="${padL}" y="${padT}" width="${plotW}" height="${(mid-padT).toFixed(1)}"/></clipPath>
+        <clipPath id="wpbotc"><rect x="${padL}" y="${m}" width="${plotW}" height="${(padT+plotH-mid).toFixed(1)}"/></clipPath>
+        ${grid}
+        <line x1="${padL}" y1="${m}" x2="${W-padR}" y2="${m}" stroke="var(--border2,#2a2f37)" stroke-width="1.2" stroke-dasharray="5 5"/>
+        <polyline points="${pts.join(' ')}" fill="none" stroke="#e8edf5" stroke-width="2.2" stroke-linejoin="round"/>
+        ${dotsvg}
+        ${labels}
+      </svg>
+      <div class="wphdr bot"><span class="wpt"><img src="${logo(GD.away.team.id)}" onerror="this.style.visibility='hidden'"><b>${esc(GD.away.team.name)}</b> <i>ahead ↓</i></span><span class="wpaxis">Inning →</span></div>
+      <div class="wpdetail" id="wpdetail">Tap a ● dot to see the play</div>
+    </div>`;
+  }
+  function showWpPlay(idx){
+    const all=(GD.pbp&&GD.pbp.allPlays)||[], d=document.getElementById('wpdetail'); if(!d)return;
+    const p=all[idx], w=(GD.wp||[]).find(x=>x.atBatIndex===idx)||{};
+    const add=w.homeTeamWinProbabilityAdded, favHome=add>0, fav=favHome?GD.home:GD.away;
+    const innTxt=p?`${p.about.halfInning==='top'?'Top':'Bot'} ${ord(p.about.inning)}`:'';
+    const desc=(p&&p.result&&p.result.description)||(w.result&&w.result.description)||'';
+    const score=(p&&p.result&&p.result.awayScore!=null)?`${p.result.awayScore}–${p.result.homeScore}`:'';
+    const hw=w.homeTeamWinProbability;
+    d.innerHTML=`${innTxt?`<span class="inn">${esc(innTxt)}</span>`:''}<span class="pd">${esc(desc)||'No description'}</span>`+
+      (score?`<span class="psc">${score}</span>`:'')+
+      (add!=null?`<span class="wpa"><b class="${favHome?'pos':'neg'}">+${Math.abs(add).toFixed(1)}%</b><img src="${logo(fav.team.id)}" onerror="this.style.display='none'"></span>`:'')+
+      (hw!=null?`<span class="hw">${esc((GD.home.team.abbreviation)||'HOME')} ${Math.round(hw)}%</span>`:'');
+    view.querySelectorAll('.wpdot').forEach(c=>c.classList.toggle('active',+c.dataset.idx===idx));
   }
 
   function summaryTab(){
@@ -531,6 +595,8 @@
       if(src==='hub'){location.href='../gamehub/';return;}
       const u=new URL(location.href);u.searchParams.delete('pk');u.searchParams.delete('tab');u.searchParams.delete('src');history.replaceState(null,'',u);loadList();};
     view.querySelectorAll('.gdtab').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+    const gdcEl=document.getElementById('gdc');
+    if(gdcEl)gdcEl.addEventListener('click',e=>{const dot=e.target.closest('.wpdot');if(dot)showWpPlay(+dot.dataset.idx);});
     const q=new URLSearchParams(location.search), t=q.get('tab');
     setTab(live?(t==='box'||t==='summary'?t:'plays'):(t==='plays'||t==='box'?t:'summary'));
     try{const u=new URL(location.href);u.searchParams.set('pk',pk);history.replaceState(null,'',u);}catch(e){}
