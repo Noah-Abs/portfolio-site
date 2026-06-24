@@ -75,11 +75,23 @@
   .hm-cbar .blocks div{flex:1}
   .hm-key{font-size:11px;color:#8a939c;text-align:center;padding:6px 16px 16px;line-height:1.5}
   .hm-key b{color:#aab0b9}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .psearch{position:relative;width:min(280px,48vw)}
+  .psearch input{width:100%;background:var(--panel,#101115);border:1px solid var(--border2,#262a32);border-radius:9px;color:#fff;font:inherit;font-size:14px;padding:9px 12px;outline:none}
+  .psearch input:focus{border-color:var(--accent,#4aa3ff)}
+  .psr{position:absolute;right:0;top:100%;margin-top:5px;width:300px;max-width:86vw;background:var(--panel,#101115);border:1px solid var(--border2,#262a32);border-radius:10px;box-shadow:0 18px 50px rgba(0,0,0,.55);max-height:330px;overflow:auto;display:none;z-index:50}
+  .psr.on{display:block}
+  .psr a{display:flex;align-items:center;gap:9px;padding:9px 12px;color:var(--text2,#cfd4da);text-decoration:none;font-size:13.5px}
+  .psr a:hover{background:var(--panel2,#15161b);color:#fff}
+  .psr img{width:18px;height:18px;object-fit:contain}.psr span{color:#8a939c;font-size:11px;margin-left:auto}
 </style>
 <script src="/settings.js"></script>
 </head>
 <body>
-  <a class="back" onclick="history.length>1?history.back():location.href='/dropthird/clubs/'">← Back</a>
+  <div class="topbar">
+    <a class="back" onclick="history.length>1?history.back():location.href='/dropthird/clubs/'">← Back</a>
+    <div class="psearch"><input id="psq" placeholder="Search players…" autocomplete="off"><div class="psr" id="psr"></div></div>
+  </div>
   <div id="app"><div class="state">Loading…</div></div>
 
 <script>
@@ -259,6 +271,54 @@
     <div class="hm-key" id="hmKey"></div></div>`;}
   function hmInit(){if(!HS||!HS.pts.length)return;hmCyc();hmChips();hmDraw();}
 
+  /* ---- extra hitter + catcher stat boxes ---- */
+  const pct1=v=>{const n=num(v);return n==null?'–':((Math.abs(n)<=1?n*100:n).toFixed(1))+'%';};
+  const sec=v=>{const n=num(v);return n==null?'–':n.toFixed(2)+'s';};
+  const iv=v=>v==null||v===''?'–':v;
+  const sv=(s,k,a)=>{const x=s&&s[k];return (x==null||x==='')?'–':(a?fmtAvg(x):x);};
+  function parseSplits(jj){const o={};((jj&&jj.stats)||[]).forEach(s=>(s.splits||[]).forEach(p=>{if(p.split&&p.split.code)o[p.split.code]=p.stat;}));return o;}
+  function parseHA(jj){const o={};((jj&&jj.stats)||[]).forEach(s=>(s.splits||[]).forEach(p=>{o[p.isHome?'home':'away']=p.stat;}));return o;}
+  function catcherFielding(jj){const ss=(((jj&&jj.stats)||[])[0]||{}).splits||[];const c=ss.find(s=>s.position&&s.position.abbreviation==='C')||ss[0];return c?c.stat:{};}
+  function hitterExtra(cu,sp,ha,h,spd,bsr){
+    cu=cu||{};sp=sp||{};ha=ha||{};h=h||{};
+    return [
+      renderBox('Plate Discipline',[['Swing%',d1(cu.swing_percent)],['Z-Swing%',d1(cu.z_swing_percent)],['Chase%',d1(cu.oz_swing_percent)],
+        ['Z-Contact%',d1(cu.iz_contact_percent)],['O-Contact%',d1(cu.oz_contact_percent)],['Whiff%',d1(cu.whiff_percent)],
+        ['1st-Pitch K%',d1(cu.f_strike_percent)],['BB%',d1(cu.bb_percent)],['K%',d1(cu.k_percent)]]),
+      renderBox('Batted-Ball Profile',[['GB%',d1(cu.groundballs_percent)],['FB%',d1(cu.flyballs_percent)],['LD%',d1(cu.linedrives_percent)],
+        ['Pop-Up%',d1(cu.popups_percent)],['Pull%',d1(cu.pull_percent)],['Center%',d1(cu.straightaway_percent)],['Oppo%',d1(cu.opposite_percent)]]),
+      renderBox('Contact Type',[['Avg Launch',num(cu.launch_angle_avg)!=null?d1(cu.launch_angle_avg)+'°':'–'],['Best Speed',d1(cu.avg_best_speed)],
+        ['Barrel%',d1(cu.barrel_batted_rate)],['Solid%',d1(cu.solidcontact_percent)],['Flare/Burner%',d1(cu.flareburner_percent)],['Sweet-Spot%',d1(cu.sweet_spot_percent)]]),
+      renderBox('Platoon Splits',[['OPS vs L',sv(sp.vl,'ops',1)],['OPS vs R',sv(sp.vr,'ops',1)],
+        ['AVG vs L',sv(sp.vl,'avg',1)],['AVG vs R',sv(sp.vr,'avg',1)],
+        ['SLG vs L',sv(sp.vl,'slg',1)],['SLG vs R',sv(sp.vr,'slg',1)]]),
+      renderBox('Situational',[['RISP AVG',sv(sp.risp,'avg',1)],['RISP OPS',sv(sp.risp,'ops',1)],['RISP H',sv(sp.risp,'hits')],
+        ['Home OPS',sv(ha.home,'ops',1)],['Away OPS',sv(ha.away,'ops',1)],['RISP RBI',sv(sp.risp,'rbi')]]),
+      renderBox('Speed & Baserunning',[['Sprint Speed',d1((spd||{}).sprint_speed)],['SB',iv(h.stolenBases)],['CS',iv(h.caughtStealing)],
+        ['Baserunning',sgn1((bsr||{}).runner_runs)],['HBP',iv(h.hitByPitch)],['GIDP',iv(h.groundIntoDoublePlay)]]),
+    ];
+  }
+  function catcherBoxes(fr,pt,cf){
+    fr=fr||{};pt=pt||{};cf=cf||{};
+    const edge=(a,b)=>{const x=num(fr[a]),y=num(fr[b]);if(x==null&&y==null)return '–';const s=(x||0)+(y||0);return (s>0?'+':'')+s.toFixed(1);};
+    const att=(num(cf.stolenBases)||0)+(num(cf.caughtStealing)||0);
+    return [
+      renderBox('Framing',[['Framing Runs',sgn1(fr.rv_tot)],['Strike Rate',pct1(fr.pct_tot)],['Called Pitches',num(fr.pitches)!=null?Math.round(fr.pitches):'–'],
+        ['Top-Zone',sgn1(fr.rv_12)],['Bottom-Zone',sgn1(fr.rv_18)],['Corners',edge('rv_11','rv_13')]]),
+      renderBox('Framing by Zone',[['Top',sgn1(fr.rv_12)],['Bottom',sgn1(fr.rv_18)],['Left',sgn1(fr.rv_14)],['Right',sgn1(fr.rv_16)],
+        ['Up Corners',edge('rv_11','rv_13')],['Low Corners',edge('rv_17','rv_19')]]),
+      renderBox('Pop Time & Arm',[['Pop Time 2B',sec(pt.pop_2b_sba)],['Pop Time 3B',sec(pt.pop_3b_sba)],
+        ['Arm Strength',num(pt.maxeff_arm_2b_3b_sba)!=null?d1(pt.maxeff_arm_2b_3b_sba)+' mph':'–'],['Exchange',sec(pt.exchange_2b_3b_sba)],
+        ['SBA tracked',num(pt.pop_2b_sba_count)!=null?Math.round(pt.pop_2b_sba_count):'–']]),
+      renderBox('Caught Stealing',[['SB Allowed',iv(cf.stolenBases)],['Caught',iv(cf.caughtStealing)],['CS%',pct1(cf.caughtStealingPercentage)],
+        ['Attempts',att||'–'],['Pickoffs',iv(cf.pickoffs)]]),
+      renderBox('Receiving',[['Passed Balls',iv(cf.passedBall)],['Wild Pitches',iv(cf.wildPitches)],['Catcher ERA',iv(cf.catcherERA)],
+        ['Interference',iv(cf.catchersInterference)]]),
+      renderBox('Fielding (C)',[['Innings',iv(cf.innings)],['Games',iv(cf.gamesPlayed)],['Started',iv(cf.gamesStarted)],
+        ['PO',iv(cf.putOuts)],['Assists',iv(cf.assists)],['Errors',iv(cf.errors)],['DP',iv(cf.doublePlays)],['Fld%',cf.fielding!=null?fmtAvg(cf.fielding):'–']]),
+    ];
+  }
+
   (async function(){
     const [pj,hj,pij,arsJ]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`),
@@ -272,6 +332,7 @@
     const tm=p.currentTeam;
     const posAbbr=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
     const pos=posAbbr==='TWP'?'DH/P':posAbbr;
+    const isC=posAbbr==='C';
     const bats=(p.batSide&&p.batSide.code)||'–', throws=(p.pitchHand&&p.pitchHand.code)||'–';
     const banner=`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.png/w_640,q_auto:good/v1/people/${ID}/action/hero/current`;
     const shot=`https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_auto:best/v1/people/${ID}/headshot/67/current`;
@@ -297,6 +358,7 @@
 
     // stage 2: leaderboard data this page needs (arsenal/advanced for pitchers, advanced stats for hitters)
     let savRows=[],cuR=[],xsR=[],spdR=[],bsrR=[],oaaR=[],pcuR=[],pxsR=[],paSp=[],paBz=[],paBx=[],scR=[],hscR=[];
+    let splJ=null,haJ=null,frR=[],ptR=[],fldJ=null;
     const fx=[];
     if(arsSplits.length)fx.push(csv(`${SAV}/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>savRows=r));
     if(pStat){
@@ -308,12 +370,19 @@
       fx.push(csv(`${SAV}/statcast_search/csv?all=true&type=details&player_type=pitcher&pitchers_lookup%5B%5D=${ID}&hfSea=${YEAR}%7C`).then(r=>scR=r));
     }
     if(hStat){
-      fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=batter&filter=&min=1&selections=exit_velocity_avg,exit_velocity_max,barrel_batted_rate,hard_hit_percent,sweet_spot_percent,oz_swing_percent,whiff_percent,bb_percent&chart=false&x=exit_velocity_avg&csv=true`).then(r=>cuR=r));
+      fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=batter&filter=&min=1&selections=exit_velocity_avg,exit_velocity_max,barrel_batted_rate,hard_hit_percent,sweet_spot_percent,oz_swing_percent,whiff_percent,bb_percent,k_percent,swing_percent,z_swing_percent,iz_contact_percent,oz_contact_percent,f_strike_percent,launch_angle_avg,avg_best_speed,solidcontact_percent,flareburner_percent,groundballs_percent,flyballs_percent,linedrives_percent,popups_percent,pull_percent,straightaway_percent,opposite_percent&chart=false&x=exit_velocity_avg&csv=true`).then(r=>cuR=r));
       fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=batter&year=${YEAR}&min=1&csv=true`).then(r=>xsR=r));
       fx.push(csv(`${SAV}/leaderboard/sprint_speed?type=batter&year=${YEAR}&min=1&csv=true`).then(r=>spdR=r));
       fx.push(csv(`${SAV}/leaderboard/baserunning?type=runner&year=${YEAR}&csv=true`).then(r=>bsrR=r));
       fx.push(csv(`${SAV}/leaderboard/outs_above_average?type=Fielder&startYear=${YEAR}&endYear=${YEAR}&split=no&team=&range=year&min=q&csv=true`).then(r=>oaaR=r));
       fx.push(csv(`${SAV}/statcast_search/csv?all=true&type=details&player_type=batter&batters_lookup%5B%5D=${ID}&hfSea=${YEAR}%7C`).then(r=>hscR=r));
+      fx.push(j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=statSplits&group=hitting&season=${YEAR}&sitCodes=vl,vr,risp`).then(r=>splJ=r));
+      fx.push(j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=homeAndAway&group=hitting&season=${YEAR}`).then(r=>haJ=r));
+    }
+    if(isC){
+      fx.push(csv(`${SAV}/leaderboard/catcher-framing?year=${YEAR}&min=1&csv=true`).then(r=>frR=r));
+      fx.push(csv(`${SAV}/leaderboard/poptime?year=${YEAR}&min=1&csv=true`).then(r=>ptR=r));
+      fx.push(j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=fielding&season=${YEAR}`).then(r=>fldJ=r));
     }
     await Promise.all(fx);
 
@@ -329,32 +398,47 @@
     const amap=pStat?arsenalsMap(paSp,paBz,paBx):{};
     const arsHTML=arsSplits.length?arsenalInner(arsSplits,savRows,amap):'';
     const pBoxes=pStat?pitcherBoxes(find(pcuR,ID),find(pxsR,ID),pitcherStatcast(scR),weightedPutaway(savRows)):[];
-    const advBoxes=()=>{const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
-      foot=`<div class="footnote">OPS+, wRC+, WAR, DRS and Max EV aren’t available from the free MLB/Statcast feeds, so they show “—”.</div>`;
-      return advancedBoxes(hStat,cu,xs,spd,bsr,oaa);};
+    const allHitterBoxes=()=>{const cu=find(cuR,ID),xs=find(xsR,ID),spd=find(spdR,ID),bsr=find(bsrR,ID,'entity_id'),oaa=find(oaaR,ID);
+      foot=`<div class="footnote">OPS+, wRC+, WAR & DRS aren’t in the free feeds, so they show “—”. Splits via MLB; Statcast via Baseball Savant.</div>`;
+      return advancedBoxes(hStat,cu,xs,spd,bsr,oaa).concat(hitterExtra(cu,parseSplits(splJ),parseHA(haJ),hStat,spd,bsr));};
+    const catBoxes=()=>catcherBoxes(find(frR,ID,'id'),find(ptR,ID,'entity_id'),catcherFielding(fldJ));
     let html;
     if(pitcherOnly){
-      // card | Pitching | arsenal (in line); advanced pitching boxes below
       const fill=`<div class="row fill">${card}${statBox('Pitching',PIT,pStat)}${arsHTML?`<div class="box arsbox">${arsHTML}</div>`:''}</div>`;
       const adv=(showHM||pBoxes.length)?`<div class="row" style="margin-top:16px">${showHM?hmBoxHTML('pitcher'):''}${pBoxes.join('')}</div>`:'';
       html=`<div class="page" style="max-width:1400px">${fill}${adv}</div>`;
     }else if(hitterOnly){
-      const stack=`<div class="stack">${advBoxes().join('')}</div>`;
-      const cols=showHM?4:3;
-      html=`<div class="page" style="max-width:${cols*330+(cols-1)*16}px"><div class="row top">${card}${statBox('Hitting',HIT,hStat)}${stack}${showHM?hmBoxHTML('hitter'):''}</div>${foot}</div>`;
+      const items=[card,statBox('Hitting',HIT,hStat),...allHitterBoxes()];
+      if(isC)items.push(...catBoxes());
+      if(showHM)items.push(hmBoxHTML('hitter'));
+      html=`<div class="page" style="max-width:1400px"><div class="row">${items.join('')}</div>${foot}</div>`;
     }else{
-      const nBox=1+(pStat?1:0)+(hStat?1:0), items=[card];
+      const items=[card];
       if(pStat)items.push(statBox('Pitching',PIT,pStat));
       if(hStat)items.push(statBox('Hitting',HIT,hStat));
       if(arsHTML)items.push(`<div class="arsenal">${arsHTML}</div>`);
       if(showHM)items.push(hmBoxHTML(HS.mode));
       if(pStat)items.push(...pBoxes);
-      if(hStat)items.push(...advBoxes());
-      html=`<div class="page" style="max-width:${nBox*330+(nBox-1)*16}px"><div class="row">${items.join('')}</div>${foot}</div>`;
+      if(hStat)items.push(...allHitterBoxes());
+      if(isC)items.push(...catBoxes());
+      html=`<div class="page" style="max-width:1400px"><div class="row">${items.join('')}</div>${foot}</div>`;
     }
     document.getElementById('app').innerHTML=html;
     if(showHM)hmInit();
     document.title=p.fullName;
+  })();
+
+  /* ---- top-right player search ---- */
+  (function(){const q=document.getElementById('psq'),box=document.getElementById('psr');if(!q)return;let t=null;
+    async function run(v){const jj=await j(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(v)}`);
+      const pl=((jj&&jj.people)||[]).slice(0,12);if(!pl.length){box.classList.remove('on');return;}
+      const tj=await j(`https://statsapi.mlb.com/api/v1/people?personIds=${pl.map(p=>p.id).join(',')}&hydrate=currentTeam`);
+      const tm={};((tj&&tj.people)||[]).forEach(p=>tm[p.id]={t:(p.currentTeam&&p.currentTeam.id)||0,pos:(p.primaryPosition&&p.primaryPosition.abbreviation)||''});
+      box.innerHTML=pl.map(p=>{const m=tm[p.id]||{};return `<a href="?id=${p.id}"><img src="${logo(m.t)}" onerror="this.style.visibility='hidden'">${esc(p.fullName)}<span>${esc(m.pos||'')}</span></a>`;}).join('');
+      box.classList.add('on');}
+    q.oninput=()=>{clearTimeout(t);const v=q.value.trim();if(v.length<3){box.classList.remove('on');return;}t=setTimeout(()=>run(v),250);};
+    q.onkeydown=e=>{if(e.key==='Enter'){const a=box.querySelector('a');if(a)location.href=a.getAttribute('href');}};
+    document.addEventListener('click',e=>{if(!e.target.closest('.psearch'))box.classList.remove('on');});
   })();
 </script>
 </body>
