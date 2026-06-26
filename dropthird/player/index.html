@@ -95,7 +95,7 @@
   <div id="app"><div class="state">Loading…</div></div>
 
 <script>
-  const ID=(+new URLSearchParams(location.search).get('id'))||660271, YEAR=2026;
+  const ID=(+new URLSearchParams(location.search).get('id'))||660271; let YEAR=new Date().getFullYear();
   // how each player entered pro ball (API exposes no clean "signed by" field)
   const META={
     660271:['Signed','2017 · Los Angeles Angels'],
@@ -133,14 +133,14 @@
     const hdr=rows.shift();return rows.map(r=>{const o={};hdr.forEach((h,i)=>o[h]=r[i]);return o;});
   }
 
-  function renderBox(title,rows){
+  function renderBox(title,rows,yr){
     const gr=Math.max(1,Math.ceil(rows.length/2));
     const cells=rows.map((r,i)=>`<div class="scell${i>=gr?' col2':''}"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('');
-    return `<div class="box"><div class="box-h"><span class="yr">${YEAR}</span> ${esc(title)}</div><div class="slist" style="grid-template-rows:repeat(${gr},1fr)">${cells}</div></div>`;
+    return `<div class="box"><div class="box-h"><span class="yr">${esc(yr==null?YEAR:yr)}</span> ${esc(title)}</div><div class="slist" style="grid-template-rows:repeat(${gr},1fr)">${cells}</div></div>`;
   }
-  function statBox(title,fields,stat){
+  function statBox(title,fields,stat,yr){
     return renderBox(title,fields.map(f=>{let v=stat[f[1]];
-      if(v==null||v==='')v='–';else if(f[2]==='avg')v=fmtAvg(v);return [f[0],v];}));
+      if(v==null||v==='')v='–';else if(f[2]==='avg')v=fmtAvg(v);return [f[0],v];}),yr);
   }
   const sgn0=v=>{const n=num(v);return n==null?'–':(n>0?'+':'')+Math.round(n);};
   const sgn1=v=>{const n=num(v);return n==null?'–':(n>0?'+':'')+(Math.round(n*10)/10);};
@@ -320,14 +320,28 @@
   }
 
   (async function(){
-    const [pj,hj,pij,arsJ]=await Promise.all([
+    // resolve the player's most recent season with stats (so retired players still show), + career
+    const [pj,hybH,hybP,carH,carP]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/people/${ID}?hydrate=currentTeam`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=yearByYear&group=hitting`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=yearByYear&group=pitching`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=career&group=hitting`),
+      j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=career&group=pitching`),
+    ]);
+    const p=pj&&pj.people&&pj.people[0];
+    if(!p){document.getElementById('app').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
+    const lastSeason=(jj,key)=>{let y=0;const sp=(((jj&&jj.stats)||[])[0]||{}).splits||[];
+      sp.forEach(s=>{const v=key==='ip'?ipd(s.stat.inningsPitched):num(s.stat[key]);if(v>0&&+s.season>y)y=+s.season;});return y;};
+    const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
+    const recent=Math.max(lastSeason(hybH,'plateAppearances'),lastSeason(hybP,'ip'));
+    if(recent)YEAR=recent;
+    const careerHit=(((carH&&carH.stats)||[])[0]||{}).splits||[], careerPit=(((carP&&carP.stats)||[])[0]||{}).splits||[];
+    const cHit=careerHit[0]&&careerHit[0].stat, cPit=careerPit[0]&&careerPit[0].stat;
+    const [hj,pij,arsJ]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=hitting&season=${YEAR}`),
       j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=season&group=pitching&season=${YEAR}`),
       j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=pitchArsenal&group=pitching&season=${YEAR}`),
     ]);
-    const p=pj&&pj.people&&pj.people[0];
-    if(!p){document.getElementById('app').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
 
     const tm=p.currentTeam;
     const posAbbr=(p.primaryPosition&&p.primaryPosition.abbreviation)||'';
@@ -402,13 +416,15 @@
       foot=`<div class="footnote">OPS+, wRC+, WAR & DRS aren’t in the free feeds, so they show “—”. Splits via MLB; Statcast via Baseball Savant.</div>`;
       return advancedBoxes(hStat,cu,xs,spd,bsr,oaa).concat(hitterExtra(cu,parseSplits(splJ),parseHA(haJ),hStat,spd,bsr));};
     const catBoxes=()=>catcherBoxes(find(frR,ID,'id'),find(ptR,ID,'entity_id'),catcherFielding(fldJ));
+    const careerHitBox=cHit?statBox('Hitting',HIT,cHit,'Career'):'';
+    const careerPitBox=cPit?statBox('Pitching',PIT,cPit,'Career'):'';
     let html;
     if(pitcherOnly){
       const fill=`<div class="row fill">${card}${statBox('Pitching',PIT,pStat)}${arsHTML?`<div class="box arsbox">${arsHTML}</div>`:''}</div>`;
-      const adv=(showHM||pBoxes.length)?`<div class="row" style="margin-top:16px">${showHM?hmBoxHTML('pitcher'):''}${pBoxes.join('')}</div>`:'';
+      const adv=`<div class="row" style="margin-top:16px">${careerPitBox}${showHM?hmBoxHTML('pitcher'):''}${pBoxes.join('')}</div>`;
       html=`<div class="page" style="max-width:1400px">${fill}${adv}</div>`;
     }else if(hitterOnly){
-      const items=[card,statBox('Hitting',HIT,hStat),...allHitterBoxes()];
+      const items=[card,statBox('Hitting',HIT,hStat),careerHitBox,...allHitterBoxes()];
       if(isC)items.push(...catBoxes());
       if(showHM)items.push(hmBoxHTML('hitter'));
       html=`<div class="page" style="max-width:1400px"><div class="row">${items.join('')}</div>${foot}</div>`;
@@ -416,6 +432,8 @@
       const items=[card];
       if(pStat)items.push(statBox('Pitching',PIT,pStat));
       if(hStat)items.push(statBox('Hitting',HIT,hStat));
+      if(careerPitBox)items.push(careerPitBox);
+      if(careerHitBox)items.push(careerHitBox);
       if(arsHTML)items.push(`<div class="arsenal">${arsHTML}</div>`);
       if(showHM)items.push(hmBoxHTML(HS.mode));
       if(pStat)items.push(...pBoxes);

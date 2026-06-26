@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Hall of Fame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:1060px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:16px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(30px,5vw,54px);letter-spacing:1px;line-height:1}
+  .page-sub{margin-top:8px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:12px;color:var(--muted,#7e858f)}
+  .hofsearch{position:relative;max-width:360px;margin:14px 0 6px}
+  .hofsearch input{width:100%;background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:10px;color:#fff;font:inherit;font-size:14px;padding:10px 13px;outline:none}
+  .hofsearch input:focus{border-color:var(--accent,#4aa3ff)}
+
+  .hof-yr{font-family:"Oswald",sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+  .hof-yr::before{content:"";width:5px;height:17px;border-radius:3px;background:#e9b949}
+  .hof-yr b{color:var(--text,#fff);font-weight:700}
+  .hof-yr .n{font-size:11px;color:var(--muted2,#5b6470);letter-spacing:1px}
+  .hof-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:11px}
+  .hof-card{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:13px;text-decoration:none;transition:transform .12s,border-color .12s;border-left:3px solid #e9b949}
+  .hof-card:hover{transform:translateY(-2px);border-color:#3b454f}
+  .hof-shot{width:46px;height:46px;flex:0 0 auto;border-radius:50%;overflow:hidden;background:linear-gradient(160deg,#3a3320,#11100a);display:flex;align-items:flex-end;justify-content:center}
+  .hof-shot img{width:100%;height:100%;object-fit:cover;object-position:top center}
+  .hof-info{min-width:0}
+  .hof-nm{font-family:"Oswald",sans-serif;font-weight:700;font-size:14.5px;line-height:1.15;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hof-note{font-size:10.5px;color:var(--muted,#7e858f);letter-spacing:.3px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hof-pct{font-size:10.5px;color:#e9b949;font-weight:600;letter-spacing:.3px;margin-top:2px}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:54px 10px}
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab active" href="../hall-of-fame/"><span class="dot"></span>Hall of Fame</a>
+      <a class="tab" href="../awards/"><span class="dot"></span>Awards</a>
+      <a class="tab" href="../injuries/"><span class="dot"></span>Injuries</a>
+      <a class="tab" href="../transactions/"><span class="dot"></span>Transactions</a>
+      <a class="tab" href="../spotlight/"><span class="dot"></span>Spotlight</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head">
+        <div class="page-t">Hall of Fame</div>
+        <div class="page-sub" id="sub">Cooperstown · every inductee</div>
+      </div>
+      <div class="hofsearch"><input id="hq" placeholder="Filter inductees…" autocomplete="off"></div>
+      <div id="content"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const shot=id=>`https://midfield.mlbstatic.com/v1/people/${id}/spots/120`;
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const sub=document.getElementById('sub'), content=document.getElementById('content');
+  let ALL=[];
+
+  function card(r){
+    const pct=r.votes&&r.percent?` <span class="hof-pct">${esc(r.percent)}%</span>`:'';
+    return `<a class="hof-card" href="../player/?id=${r.id}">
+      <div class="hof-shot"><img src="${shot(r.id)}" loading="lazy" onerror="this.style.display='none'"></div>
+      <div class="hof-info"><div class="hof-nm">${esc(r.name)}</div>${r.note?`<div class="hof-note">${esc(r.note)}</div>`:''}${pct}</div>
+    </a>`;
+  }
+  function render(filter){
+    const f=(filter||'').toLowerCase();
+    const rows=f?ALL.filter(r=>r.name.toLowerCase().includes(f)||String(r.year).includes(f)):ALL;
+    if(!rows.length){content.innerHTML='<div class="state">No inductees match.</div>';return;}
+    const byYr={};rows.forEach(r=>{(byYr[r.year]=byYr[r.year]||[]).push(r);});
+    const years=Object.keys(byYr).sort((a,b)=>b-a);
+    content.innerHTML=years.map(y=>`<div class="hof-yr"><b>${esc(y)}</b> Class <span class="n">· ${byYr[y].length}</span></div><div class="hof-grid">${byYr[y].map(card).join('')}</div>`).join('');
+  }
+
+  (async function(){
+    const h=await j('https://statsapi.mlb.com/api/v1/awards/MLBHOF/recipients?sportId=1');
+    const recs=(h&&h.awards)||[];
+    if(!recs.length){content.innerHTML='<div class="state">Couldn’t load Hall of Fame.</div>';return;}
+    ALL=recs.map(r=>({id:r.player&&r.player.id,name:(r.player&&(r.player.nameFirstLast||r.player.fullName))||'',year:+r.season||0,
+      note:r.notes||'',votes:r.votes,percent:r.percent})).filter(r=>r.id&&r.name);
+    ALL.sort((a,b)=>b.year-a.year||a.name.localeCompare(b.name));
+    sub.textContent=ALL.length+' inductees · '+ALL[ALL.length-1].year+'–'+ALL[0].year;
+    render('');
+  })();
+  document.getElementById('hq').oninput=e=>render(e.target.value.trim());
+</script>
+</body>
+</html>
