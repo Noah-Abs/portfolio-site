@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>DROPTHIRD — Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg,#0b0c0e);color:var(--text,#fff);font-family:"Oswald",sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:row-reverse}
+  .side{position:sticky;top:0;align-self:flex-start;flex:0 0 248px;height:100vh;overflow-y:auto;background:var(--bg2,#0e0f13);border-left:1px solid var(--border,#1b1e24);padding:30px 18px;display:flex;flex-direction:column}
+  .brand-link{text-decoration:none;color:inherit;display:block}
+  .brand{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:27px;letter-spacing:1px;line-height:1;color:var(--text,#fff)}
+  .brand-sub{margin-top:6px;font-weight:500;text-transform:uppercase;letter-spacing:5px;font-size:11px;color:var(--muted,#6b7280)}
+  .nav{margin-top:28px;display:flex;flex-direction:column;gap:5px}
+  .nav-label{width:100%;font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10px;color:var(--muted2,#474d56);padding:14px 15px 5px}
+  .nav-label:first-child{padding-top:0}
+  .tab{position:relative;display:flex;align-items:center;padding:11px 15px;border-radius:11px;color:var(--text3,#aab0b9);text-decoration:none;font-weight:500;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;border:1px solid transparent;transition:background .15s,color .15s,border-color .15s}
+  .tab:hover{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#262a32)}
+  .tab.active{background:var(--panel2,#15161b);color:var(--text,#fff);border-color:var(--border2,#2f3540)}
+  .tab.active .dot{background:var(--accent,#4aa3ff)}
+  .tab .dot{width:6px;height:6px;border-radius:50%;background:var(--border2,#2a2f37);margin-right:12px;flex:0 0 auto;transition:background .15s}
+  .tab:hover .dot{background:var(--text,#fff)}
+  .tab.live .dot{background:#e0556a}.tab.live.active .dot{background:#e0556a}
+  .side-foot{margin-top:auto;padding-top:18px;font-size:10.5px;letter-spacing:1.5px;color:var(--muted2,#3a4048);text-transform:uppercase}
+  .main{flex:1 1 auto;min-width:0;padding:40px 30px 70px}
+  .page{max-width:760px;margin:0 auto;width:100%}
+  .page-head{margin-bottom:16px;display:flex;align-items:center;gap:12px}
+  .page-t{font-family:"Anton",sans-serif;text-transform:uppercase;font-size:clamp(28px,5vw,48px);letter-spacing:1px;line-height:1}
+  .livedot{width:10px;height:10px;border-radius:50%;background:#e0556a;box-shadow:0 0 0 0 rgba(224,85,106,.6);animation:pulse 1.5s infinite;display:none}
+  .livedot.on{display:inline-block}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(224,85,106,.55)}70%{box-shadow:0 0 0 8px rgba(224,85,106,0)}100%{box-shadow:0 0 0 0 rgba(224,85,106,0)}}
+
+  .sb{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:16px;padding:18px 20px;margin-bottom:14px}
+  .sb-t{display:flex;align-items:center;gap:11px;min-width:0}
+  .sb-t.home{justify-content:flex-end;flex-direction:row-reverse}
+  .sb-t img{width:40px;height:40px;object-fit:contain;flex:0 0 auto}
+  .sb-t .ab{font-family:"Anton",sans-serif;font-size:21px;letter-spacing:.5px;line-height:1}
+  .sb-t .rec{font-size:11px;color:var(--muted,#7e858f);margin-top:2px}
+  .sb-c{text-align:center}
+  .sb-c .sc{font-family:"Oswald",sans-serif;font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sb-c .st{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted,#7e858f);margin-top:6px}
+  .sb-c .st.liveT{color:#e0556a}
+  .nowcard{background:linear-gradient(180deg,rgba(224,85,106,.08),transparent),var(--panel,#101115);border:1px solid #3a2630;border-radius:14px;padding:13px 16px;margin-bottom:16px}
+  .now-h{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e0556a;margin-bottom:7px}
+  .now-b{font-family:"Oswald",sans-serif;font-weight:700;font-size:16px}
+  .now-b .vs{color:var(--muted,#7e858f);font-weight:500;font-size:13px;margin:0 6px}
+  .now-m{font-size:12.5px;color:var(--text3,#aab0b9);margin-top:5px;font-variant-numeric:tabular-nums}
+  .now-pitches{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+  .pp{font-size:10.5px;font-weight:600;color:var(--text3,#aab0b9);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums}
+  .pp.b{border-color:#2c5e8f}.pp.s{border-color:#7a6a25}.pp.x{border-color:#2f6b3f}
+
+  .inn-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);margin:20px 0 9px;display:flex;align-items:center;gap:9px}
+  .inn-h::before{content:"";width:5px;height:15px;border-radius:3px;background:var(--accent,#4aa3ff)}
+  .play{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:11px;margin-bottom:7px}
+  .play.score{border-color:#2f4a3a;background:linear-gradient(90deg,rgba(70,199,126,.06),transparent)}
+  .play .ev{flex:0 0 auto;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted,#7e858f);background:var(--panel2,#15161b);border:1px solid var(--border2,#2f3540);border-radius:6px;padding:4px 7px;min-width:74px;text-align:center;margin-top:1px}
+  .play.score .ev{color:#46c77e;border-color:#2f4a3a}
+  .play .pd{flex:1;min-width:0;font-size:13.5px;color:var(--text2,#cfd4da);line-height:1.4}
+  .play .psc{flex:0 0 auto;font-family:"Oswald",sans-serif;font-weight:700;font-size:14px;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:1px}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:54px 14px;line-height:1.7}
+  .state a{color:var(--accent,#4aa3ff);text-decoration:none}
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <aside class="side">
+    <a class="brand-link" href="../homescreen/"><div class="brand">DROPTHIRD</div><div class="brand-sub">Statistics</div></a>
+    <nav class="nav">
+      <a class="tab live active" href="../live/"><span class="dot"></span>Live</a>
+      <div class="nav-label">Teams</div>
+      <a class="tab" href="../clubs/"><span class="dot"></span>Clubs</a>
+      <a class="tab" href="../standings/"><span class="dot"></span>Standings</a>
+      <a class="tab" href="../games/"><span class="dot"></span>Games</a>
+      <a class="tab" href="../gamehub/"><span class="dot"></span>GameHub</a>
+      <a class="tab" href="../probables/"><span class="dot"></span>Probables</a>
+      <a class="tab" href="../postseason/"><span class="dot"></span>Postseason</a>
+      <a class="tab" href="../team-offense/"><span class="dot"></span>Team Offense</a>
+      <a class="tab" href="../team-defense/"><span class="dot"></span>Team Defense</a>
+      <a class="tab" href="../team-pitching/"><span class="dot"></span>Team Pitching</a>
+      <a class="tab" href="../starting-pitching/"><span class="dot"></span>Starting Pitching</a>
+      <a class="tab" href="../bullpen/"><span class="dot"></span>Bullpen</a>
+      <a class="tab" href="../team-trends/"><span class="dot"></span>Team Trends</a>
+      <div class="nav-label">Players</div>
+      <a class="tab" href="../hall-of-fame/"><span class="dot"></span>Hall of Fame</a>
+      <a class="tab" href="../awards/"><span class="dot"></span>Awards</a>
+      <a class="tab" href="../injuries/"><span class="dot"></span>Injuries</a>
+      <a class="tab" href="../transactions/"><span class="dot"></span>Transactions</a>
+      <a class="tab" href="../spotlight/"><span class="dot"></span>Spotlight</a>
+      <a class="tab" href="../leaders-hitting/"><span class="dot"></span>Hitters</a>
+      <a class="tab" href="../leaders-starters/"><span class="dot"></span>Starters</a>
+      <a class="tab" href="../leaders-relievers/"><span class="dot"></span>Relievers</a>
+      <a class="tab" href="../leaders-defense/"><span class="dot"></span>Fielders</a>
+    </nav>
+    <div class="side-foot">2026 Season</div>
+  </aside>
+
+  <main class="main">
+    <div class="page">
+      <div class="page-head"><div class="page-t">Live</div><span class="livedot" id="livedot"></span></div>
+      <div id="content"><div class="state">Loading…</div></div>
+    </div>
+  </main>
+
+<script>
+  const logo=id=>`https://www.mlbstatic.com/team-logos/${id}.svg`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const abv=t=>(t&&t.abbreviation)||String((t&&t.name)||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+  const TEAMS={108:'Angels',109:'D-backs',110:'Orioles',111:'Red Sox',112:'Cubs',113:'Reds',114:'Guardians',115:'Rockies',116:'Tigers',117:'Astros',118:'Royals',119:'Dodgers',120:'Nationals',121:'Mets',133:'Athletics',134:'Pirates',135:'Padres',136:'Mariners',137:'Giants',138:'Cardinals',139:'Rays',140:'Rangers',141:'Blue Jays',142:'Twins',143:'Phillies',144:'Braves',145:'White Sox',146:'Marlins',147:'Yankees',158:'Brewers'};
+  const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const shiftDate=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+  const gameTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
+
+  const content=document.getElementById('content'), livedot=document.getElementById('livedot');
+  const FAV=new URLSearchParams(location.search).get('team')||(window.getSettings&&window.getSettings().favTeam)||(localStorage.getItem('dt-fav-team')||'');
+  let PK=null, GAME=null, timer=null, tok=0;
+
+  async function findGame(){
+    const t=ptToday();
+    const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${FAV}&startDate=${shiftDate(t,-1)}&endDate=${shiftDate(t,2)}&hydrate=team,linescore`);
+    const games=[];((sch&&sch.dates)||[]).forEach(d=>(d.games||[]).forEach(g=>games.push(g)));
+    if(!games.length)return null;
+    const live=games.find(g=>g.status&&g.status.abstractGameState==='Live'); if(live)return live;
+    const today=games.find(g=>g.officialDate===t); if(today)return today;
+    const now=Date.now();
+    const past=games.filter(g=>new Date(g.gameDate)<=now).sort((a,b)=>new Date(b.gameDate)-new Date(a.gameDate));
+    if(past[0])return past[0];
+    return games.sort((a,b)=>new Date(a.gameDate)-new Date(b.gameDate))[0];
+  }
+
+  function statusOf(g,ls){const a=g.status&&g.status.abstractGameState;
+    if(a==='Live'){const st=(ls&&ls.inningState)||'', inn=(ls&&ls.currentInningOrdinal)||'';return {live:true,t:`${st} ${inn} · ${(ls&&ls.outs)||0} out`};}
+    if(a==='Final')return {live:false,t:'Final'};
+    return {live:false,t:gameTime(g)};}
+
+  function scoreboard(g,ls,st){
+    const a=g.teams.away,h=g.teams.home;
+    return `<div class="sb">
+      <div class="sb-t"><img src="${logo(a.team.id)}" onerror="this.style.visibility='hidden'"><div><div class="ab">${esc(abv(a.team))}</div><div class="rec">${esc(TEAMS[a.team.id]||a.team.name)}</div></div></div>
+      <div class="sb-c"><div class="sc">${a.score==null?'':a.score} <span style="color:var(--muted2,#4a5159)">–</span> ${h.score==null?'':h.score}</div><div class="st ${st.live?'liveT':''}">${st.live?'● ':''}${esc(st.t)}</div></div>
+      <div class="sb-t home"><img src="${logo(h.team.id)}" onerror="this.style.visibility='hidden'"><div><div class="ab">${esc(abv(h.team))}</div><div class="rec">${esc(TEAMS[h.team.id]||h.team.name)}</div></div></div>
+    </div>`;
+  }
+
+  function nowCard(g,ls,cur){
+    if(!cur||!cur.matchup)return '';
+    const m=cur.matchup, b=m.batter&&m.batter.fullName, p=m.pitcher&&m.pitcher.fullName;
+    const balls=(ls&&ls.balls)||0,strikes=(ls&&ls.strikes)||0,outs=(ls&&ls.outs)||0;
+    const evs=(cur.playEvents||[]).filter(e=>e.isPitch).slice(-8);
+    const pitches=evs.map(e=>{const d=e.details||{},code=(d.call&&d.call.code)||'',cls=code==='B'?'b':(/S|W/.test(code)?'s':(code==='X'||code==='D'||code==='E'?'x':''));
+      const sp=e.pitchData&&e.pitchData.startSpeed?Math.round(e.pitchData.startSpeed):'';const ty=(d.type&&d.type.code)||'';
+      return `<span class="pp ${cls}">${esc(d.description||code)}${ty?' · '+esc(ty):''}${sp?' '+sp:''}</span>`;}).join('');
+    return `<div class="nowcard"><div class="now-h">● At Bat — ${esc(m.batSide&&m.batSide.code||'')}</div>
+      <div class="now-b">${esc(b||'—')}<span class="vs">vs</span>${esc(p||'—')}</div>
+      <div class="now-m">${balls}-${strikes} count · ${outs} out${cur.about&&cur.about.halfInning?` · ${cur.about.halfInning==='top'?'Top':'Bot'} ${cur.about.inning}`:''}</div>
+      ${pitches?`<div class="now-pitches">${pitches}</div>`:''}</div>`;
+  }
+
+  function feed(g,all,live){
+    const bt=p=>p.about.halfInning==='top'?g.teams.away:g.teams.home;
+    const done=all.filter(p=>p.result&&p.result.description);
+    if(!done.length)return '<div class="state">No plays yet.</div>';
+    const groups=[];let cur=null;
+    done.forEach(p=>{const k=p.about.halfInning+p.about.inning;if(!cur||cur.k!==k){cur={k,inn:p.about.inning,half:p.about.halfInning,team:bt(p),plays:[]};groups.push(cur);}cur.plays.push(p);});
+    const ord=n=>n+(['th','st','nd','rd'][(n%100>>3^1&&n%10)||0]||'th');
+    const order=live?groups.slice().reverse():groups;
+    return order.map(grp=>{
+      const plays=live?grp.plays.slice().reverse():grp.plays;
+      const rows=plays.map(p=>`<div class="play${p.about.isScoringPlay?' score':''}"><span class="ev">${esc(p.result.event||'')}</span><span class="pd">${esc(p.result.description)}</span><span class="psc">${p.result.awayScore}-${p.result.homeScore}</span></div>`).join('');
+      return `<div class="inn-h">${grp.half==='top'?'Top':'Bottom'} ${ord(grp.inn)} · ${esc(TEAMS[grp.team.team.id]||grp.team.team.name)} batting</div>${rows}`;
+    }).join('');
+  }
+
+  async function load(){
+    const my=++tok;
+    const [pbp,ls,sch]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/game/${PK}/playByPlay`),
+      j(`https://statsapi.mlb.com/api/v1/game/${PK}/linescore`),
+      j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=${PK}&hydrate=team,linescore`)
+    ]);
+    if(my!==tok)return;
+    let g=GAME;((sch&&sch.dates)||[]).forEach(d=>(d.games||[]).forEach(x=>{if(x.gamePk===PK)g=x;}));GAME=g||GAME;
+    const all=(pbp&&pbp.allPlays)||[], st=statusOf(GAME,ls);
+    livedot.classList.toggle('on',st.live);
+    const cur=st.live?(pbp&&pbp.currentPlay):null;
+    content.innerHTML=scoreboard(GAME,ls,st)+(cur?nowCard(GAME,ls,cur):'')+feed(GAME,all,st.live);
+    if(!st.live&&timer){clearInterval(timer);timer=null;}
+  }
+
+  (async function(){
+    if(!FAV){content.innerHTML='<div class="state">No favorite team set.<br>Open settings (⚙, top-right) and pick your <b>Favorite team</b> — the Live tab follows it automatically.</div>';return;}
+    document.title=`Live · ${TEAMS[FAV]||'My team'}`;
+    GAME=await findGame();
+    if(!GAME){content.innerHTML=`<div class="state">No recent or upcoming game for the ${esc(TEAMS[FAV]||'')} right now.</div>`;return;}
+    PK=GAME.gamePk;
+    await load();
+    if(GAME.status&&GAME.status.abstractGameState==='Live')timer=setInterval(load,9000);
+  })();
+  document.addEventListener('dt:fav-changed',()=>location.reload());
+</script>
+</body>
+</html>
