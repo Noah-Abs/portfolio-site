@@ -104,6 +104,19 @@
     .grid{margin-top:32px;gap:11px}
   }
   @media(max-width:620px){.grid{grid-template-columns:1fr!important}}
+
+  .hsearch{position:relative;max-width:440px;margin:28px auto 0;text-align:left}
+  .hsearch .ic{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted,#7e858f);pointer-events:none}
+  .hsearch input{width:100%;background:var(--panel,#101115);border:1px solid var(--border2,#2a2f37);border-radius:12px;color:var(--text,#fff);font-family:"Oswald",sans-serif;font-size:15px;letter-spacing:.3px;padding:13px 16px 13px 42px;outline:none;transition:border-color .15s}
+  .hsearch input::placeholder{color:var(--muted2,#5b6470)}
+  .hsearch input:focus{border-color:var(--accent,#4aa3ff)}
+  .hsearch .res{position:absolute;left:0;right:0;top:100%;margin-top:6px;background:var(--panel,#101115);border:1px solid var(--border2,#2a2f37);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.55);max-height:340px;overflow:auto;display:none;z-index:30}
+  .hsearch .res.on{display:block}
+  .hsearch .res a{display:flex;align-items:center;gap:11px;padding:11px 14px;color:var(--text2,#cfd4da);text-decoration:none;font-size:14px;border-bottom:1px solid var(--bg2,#0e0f13)}
+  .hsearch .res a:last-child{border-bottom:0}
+  .hsearch .res a:hover{background:var(--panel2,#15161b);color:#fff}
+  .hsearch .res img{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+  .hsearch .res .pos{margin-left:auto;color:var(--muted2,#5b6470);font-size:11px;letter-spacing:1px;text-transform:uppercase}
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -143,6 +156,11 @@
       <h1 class="hero-t">DROPTHIRD</h1>
       <div class="rule"></div>
       <p class="hero-s">Baseball, by the numbers</p>
+      <div class="hsearch">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="psq" placeholder="Search any player…" autocomplete="off" aria-label="Search players">
+        <div class="res" id="psr"></div>
+      </div>
       <div class="fav-strip" id="favStrip"></div>
 
       <div class="grid">
@@ -236,6 +254,19 @@
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLineup();});
   document.addEventListener('dt:fav-changed',renderFav);
   renderFav();
+
+  /* ---- player search ---- */
+  (function(){const q=document.getElementById('psq'),box=document.getElementById('psr');if(!q)return;let t=null;
+    async function run(v){const jj=await j(`https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(v)}`);
+      const pl=((jj&&jj.people)||[]).slice(0,12);if(!pl.length){box.classList.remove('on');box.innerHTML='<a style="cursor:default">No players found</a>';box.classList.add('on');return;}
+      const tj=await j(`https://statsapi.mlb.com/api/v1/people?personIds=${pl.map(p=>p.id).join(',')}&hydrate=currentTeam`);
+      const tm={};((tj&&tj.people)||[]).forEach(p=>tm[p.id]={t:(p.currentTeam&&p.currentTeam.id)||0,pos:(p.primaryPosition&&p.primaryPosition.abbreviation)||''});
+      box.innerHTML=pl.map(p=>{const m=tm[p.id]||{};return `<a href="../player/?id=${p.id}"><img src="${logo(m.t)}" onerror="this.style.visibility='hidden'">${esc(p.fullName)}<span class="pos">${esc(m.pos||'')}</span></a>`;}).join('');
+      box.classList.add('on');}
+    q.oninput=()=>{clearTimeout(t);const v=q.value.trim();if(v.length<3){box.classList.remove('on');return;}t=setTimeout(()=>run(v),250);};
+    q.onkeydown=e=>{if(e.key==='Enter'){const a=box.querySelector('a[href]');if(a)location.href=a.getAttribute('href');}};
+    document.addEventListener('click',e=>{if(!e.target.closest('.hsearch'))box.classList.remove('on');});
+  })();
 </script>
 </body>
 </html>
