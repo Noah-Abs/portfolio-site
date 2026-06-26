@@ -114,6 +114,14 @@
   .pgrid>.arsenal{grid-column:1/-1}
   .hmwrap{display:flex;justify-content:center}
   .hmwrap>.hmbox{max-width:440px;width:100%}
+  /* dense masonry so every box packs with no empty gaps */
+  .pmason{column-width:266px;column-gap:13px}
+  .pmason>.box{break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 13px;max-width:none;width:100%}
+  .ptables{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:13px;align-items:start}
+  .ptables>.wbox{max-width:none;width:auto;min-width:0}
+  .arsfull>.arsenal{width:100%}
+  .hmrow{display:flex;justify-content:center}
+  .hmrow>.hmbox{max-width:440px;width:100%}
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -493,31 +501,24 @@
           <div class="hero-sub"><span class="pos">${esc(pos)}</span>${tm?`<img src="${logo(tm.id)}" onerror="this.remove()">`:''}<span>${esc(tm?tm.name:'')}</span></div>
           <div class="hero-bio">${bioInline}</div></div>
         ${tiles?`<div class="hero-stats">${tiles}</div>`:''}</div></div>`;
-    const sec=(t,inner,cls)=>inner?`<section class="psec"><div class="psec-h">${esc(t)}</div><div class="pgrid ${cls||''}">${inner}</div></section>`:'';
-    const hmSec=m=>showHM?`<section class="psec"><div class="psec-h">${m==='hitter'?'Hot &amp; Cold Zones':'Pitch Locations'}</div><div class="hmwrap">${hmBoxHTML(m)}</div></section>`:'';
-    let body='';
+    const grp=(t,inner)=>inner?`<section class="psec"><div class="psec-h">${esc(t)}</div>${inner}</section>`:'';
+    // every stat box (season, career, advanced, splits, catcher) packs into one dense masonry — no empty grid cells
+    let statBoxes,tables;
     if(pitcherOnly){
-      body=sec('This Season',statBox('Pitching',PIT,pStat)+careerPitBox)
-        +(arsHTML?sec('Pitch Arsenal',`<div class="arsenal">${arsHTML}</div>`,'wide'):'')
-        +sec('Recent Form',recPit.join(''),'wide')
-        +sec('Statcast & Advanced',pBoxes.join(''))
-        +hmSec('pitcher');
+      statBoxes=statBox('Pitching',PIT,pStat)+careerPitBox+pBoxes.join('');
+      tables=recPit.join('');
     }else if(hitterOnly){
-      body=sec('This Season',statBox('Hitting',HIT,hStat)+careerHitBox)
-        +sec('Recent Form',recHit.join(''),'wide')
-        +sec('Statcast & Advanced',allHitterBoxes().join(''))
-        +(isC?sec('Behind the Plate',catBoxes().join('')):'')
-        +hmSec('hitter');
+      statBoxes=statBox('Hitting',HIT,hStat)+careerHitBox+allHitterBoxes().join('')+(isC?catBoxes().join(''):'');
+      tables=recHit.join('');
     }else{
-      const season=(pStat?statBox('Pitching',PIT,pStat):'')+(hStat?statBox('Hitting',HIT,hStat):'')+careerPitBox+careerHitBox;
-      const adv=pBoxes.join('')+(hStat?allHitterBoxes().join(''):'');
-      body=sec('This Season',season)
-        +(arsHTML?sec('Pitch Arsenal',`<div class="arsenal">${arsHTML}</div>`,'wide'):'')
-        +sec('Recent Form',recPit.join('')+recHit.join(''),'wide')
-        +sec('Statcast & Advanced',adv)
-        +(isC?sec('Behind the Plate',catBoxes().join('')):'')
-        +hmSec(HS&&HS.mode);
+      statBoxes=(pStat?statBox('Pitching',PIT,pStat):'')+(hStat?statBox('Hitting',HIT,hStat):'')+careerPitBox+careerHitBox
+        +pBoxes.join('')+(hStat?allHitterBoxes().join(''):'')+(isC?catBoxes().join(''):'');
+      tables=recPit.join('')+recHit.join('');
     }
+    const body=grp('Statistics',`<div class="pmason">${statBoxes}</div>`)
+      +grp('Recent Form',tables?`<div class="ptables">${tables}</div>`:'')
+      +grp('Pitch Arsenal',arsHTML?`<div class="arsfull"><div class="arsenal">${arsHTML}</div></div>`:'')
+      +(showHM?grp(hmMode==='hitter'?'Hot & Cold Zones':'Pitch Locations',`<div class="hmrow">${hmBoxHTML(hmMode)}</div>`):'');
     const html=`<div class="page">${hero}${body}${foot}</div>`;
     document.getElementById('app').innerHTML=html;
     if(showHM)hmInit();
