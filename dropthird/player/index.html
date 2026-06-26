@@ -34,6 +34,7 @@
   .row{display:flex;gap:16px;flex-wrap:wrap;align-items:stretch}
   .box{flex:0 1 330px;min-width:0;max-width:330px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
   .arsbox,.row.fill .arsbox{flex:1 1 340px;max-width:none}
+  .wbox{flex:1 1 360px;max-width:560px;min-width:0}
   .row.top{align-items:flex-start}
   .stack{display:flex;flex-direction:column;gap:16px;flex:0 1 330px;min-width:0;max-width:330px}
   .stack .box{flex:0 0 auto;width:100%;max-width:none}
@@ -109,6 +110,8 @@
   const d1=v=>{const n=num(v);return n==null?'–':n.toFixed(1);};
   const d3=v=>{const n=num(v);return n==null?'–':n.toFixed(3).replace(/^0(?=\.)/,'');};
   const SAV='https://baseballsavant.mlb.com';
+  const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
+  const ABBR={108:'LAA',109:'AZ',110:'BAL',111:'BOS',112:'CHC',113:'CIN',114:'CLE',115:'COL',116:'DET',117:'HOU',118:'KC',119:'LAD',120:'WSH',121:'NYM',133:'ATH',134:'PIT',135:'SD',136:'SEA',137:'SF',138:'STL',139:'TB',140:'TEX',141:'TOR',142:'MIN',143:'PHI',144:'ATL',145:'CWS',146:'MIA',147:'NYY',158:'MIL'};
 
   const HIT=[['G','gamesPlayed'],['PA','plateAppearances'],['AB','atBats'],['R','runs'],['H','hits'],['2B','doubles'],
     ['3B','triples'],['HR','homeRuns'],['RBI','rbi'],['BB','baseOnBalls'],['SO','strikeOuts'],['SB','stolenBases'],
@@ -319,6 +322,46 @@
     ];
   }
 
+  /* ---- recent form: rolling splits, last 3 games, month-by-month (from the game log) ---- */
+  const glSplits=jj=>(((jj&&jj.stats)||[])[0]||{}).splits||[];
+  const dnum=s=>{const a=String(s||'').split('-');return Date.UTC(+a[0],(+a[1]||1)-1,+a[2]||1);};
+  const ipFmt=outs=>Math.floor(outs/3)+'.'+(outs%3);
+  const r3=v=>isFinite(v)?v.toFixed(3).replace(/^0(?=\.)/,''):'–';
+  const r2=v=>isFinite(v)?v.toFixed(2):'–';
+  const MN=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function aggHit(gs){const s={ab:0,h:0,d:0,t:0,hr:0,bb:0,hbp:0,sf:0,rbi:0,so:0,r:0,tb:0};
+    gs.forEach(g=>{const t=g.stat||{};s.ab+=num(t.atBats)||0;s.h+=num(t.hits)||0;s.d+=num(t.doubles)||0;s.t+=num(t.triples)||0;s.hr+=num(t.homeRuns)||0;s.bb+=num(t.baseOnBalls)||0;s.hbp+=num(t.hitByPitch)||0;s.sf+=num(t.sacFlies)||0;s.rbi+=num(t.rbi)||0;s.so+=num(t.strikeOuts)||0;s.r+=num(t.runs)||0;s.tb+=num(t.totalBases)||0;});
+    const tb=s.tb||(s.h+s.d+2*s.t+3*s.hr),den=s.ab+s.bb+s.hbp+s.sf;
+    const obp=den?(s.h+s.bb+s.hbp)/den:NaN,slg=s.ab?tb/s.ab:NaN;
+    return {g:gs.length,avg:s.ab?s.h/s.ab:NaN,obp,slg,ops:(isFinite(obp)&&isFinite(slg))?obp+slg:NaN,hr:s.hr,rbi:s.rbi};}
+  function aggPit(gs){const s={outs:0,h:0,er:0,bb:0,so:0,w:0,l:0,sv:0};
+    gs.forEach(g=>{const t=g.stat||{};s.outs+=Math.round(ipd(t.inningsPitched)*3);s.h+=num(t.hits)||0;s.er+=num(t.earnedRuns)||0;s.bb+=num(t.baseOnBalls)||0;s.so+=num(t.strikeOuts)||0;s.w+=num(t.wins)||0;s.l+=num(t.losses)||0;s.sv+=num(t.saves)||0;});
+    const ip=s.outs/3;
+    return {g:gs.length,ip:s.outs,era:ip?s.er*9/ip:NaN,whip:ip?(s.h+s.bb)/ip:NaN,so:s.so,bb:s.bb};}
+  function tableBox(title,heads,rows,yr){
+    const th='<tr>'+heads.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr>';
+    const tb=rows.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('');
+    return `<div class="box wbox"><div class="box-h"><span class="yr">${esc(yr==null?YEAR:yr)}</span> ${esc(title)}</div><div class="ascroll"><table class="atbl"><thead>${th}</thead><tbody>${tb}</tbody></table></div></div>`;
+  }
+  function recentBoxes(gl,mode){
+    if(!gl.length)return [];
+    const sorted=gl.slice().sort((a,b)=>dnum(a.date)-dnum(b.date)), ref=dnum(sorted[sorted.length-1].date);
+    const within=d=>sorted.filter(g=>(ref-dnum(g.date))<=d*86400000);
+    const agg=mode==='pit'?aggPit:aggHit;
+    const heads=mode==='pit'?['','G','IP','ERA','WHIP','SO','BB']:['','G','AVG','OBP','SLG','OPS','HR','RBI'];
+    const rowOf=(lab,a)=>mode==='pit'?[lab,a.g,ipFmt(a.ip),r2(a.era),r2(a.whip),a.so,a.bb]:[lab,a.g,r3(a.avg),r3(a.obp),r3(a.slg),r3(a.ops),a.hr,a.rbi];
+    const rolling=[rowOf('Last 7 d',agg(within(7))),rowOf('Last 10 d',agg(within(10))),rowOf('Last 30 d',agg(within(30))),rowOf('Season',agg(sorted))];
+    const md=d=>{const a=String(d).split('-');return (+a[1])+'/'+(+a[2]);};
+    const last=sorted.slice(-3).reverse();
+    const lgH=mode==='pit'?['Date','Opp','IP','H','ER','K','BB','Dec']:['Date','Opp','AB','H','HR','RBI','BB','K'];
+    const lgRows=last.map(g=>{const t=g.stat||{},opp=(g.isHome?'vs ':'@ ')+(ABBR[g.opponent&&g.opponent.id]||'');
+      if(mode==='pit'){const dec=num(t.wins)?'W':num(t.losses)?'L':num(t.saves)?'SV':'—';return [md(g.date),opp,ipFmt(Math.round(ipd(t.inningsPitched)*3)),iv(t.hits),iv(t.earnedRuns),iv(t.strikeOuts),iv(t.baseOnBalls),dec];}
+      return [md(g.date),opp,iv(t.atBats),iv(t.hits),iv(t.homeRuns),iv(t.rbi),iv(t.baseOnBalls),iv(t.strikeOuts)];});
+    const byM={};sorted.forEach(g=>{const m=String(g.date).slice(0,7);(byM[m]=byM[m]||[]).push(g);});
+    const monRows=Object.keys(byM).sort().map(m=>rowOf(MN[+m.slice(5,7)]||m,agg(byM[m])));
+    return [tableBox('Recent Form',heads,rolling),tableBox('Last 3 Games',lgH,lgRows),tableBox('By Month',heads,monRows)];
+  }
+
   (async function(){
     // resolve the player's most recent season with stats (so retired players still show), + career
     const [pj,hybH,hybP,carH,carP]=await Promise.all([
@@ -332,7 +375,6 @@
     if(!p){document.getElementById('app').innerHTML='<div class="state">Couldn’t load player.</div>';return;}
     const lastSeason=(jj,key)=>{let y=0;const sp=(((jj&&jj.stats)||[])[0]||{}).splits||[];
       sp.forEach(s=>{const v=key==='ip'?ipd(s.stat.inningsPitched):num(s.stat[key]);if(v>0&&+s.season>y)y=+s.season;});return y;};
-    const ipd=ip=>{const a=String(ip||'0').split('.');return (+a[0]||0)+((+a[1]||0)/3);};
     const recent=Math.max(lastSeason(hybH,'plateAppearances'),lastSeason(hybP,'ip'));
     if(recent)YEAR=recent;
     const careerHit=(((carH&&carH.stats)||[])[0]||{}).splits||[], careerPit=(((carP&&carP.stats)||[])[0]||{}).splits||[];
@@ -372,9 +414,11 @@
 
     // stage 2: leaderboard data this page needs (arsenal/advanced for pitchers, advanced stats for hitters)
     let savRows=[],cuR=[],xsR=[],spdR=[],bsrR=[],oaaR=[],pcuR=[],pxsR=[],paSp=[],paBz=[],paBx=[],scR=[],hscR=[];
-    let splJ=null,haJ=null,frR=[],ptR=[],fldJ=null;
+    let splJ=null,haJ=null,frR=[],ptR=[],fldJ=null,glHitJ=null,glPitJ=null;
     const fx=[];
     if(arsSplits.length)fx.push(csv(`${SAV}/leaderboard/pitch-arsenal-stats?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>savRows=r));
+    if(hStat)fx.push(j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=gameLog&group=hitting&season=${YEAR}`).then(r=>glHitJ=r));
+    if(pStat)fx.push(j(`https://statsapi.mlb.com/api/v1/people/${ID}/stats?stats=gameLog&group=pitching&season=${YEAR}`).then(r=>glPitJ=r));
     if(pStat){
       fx.push(csv(`${SAV}/leaderboard/custom?year=${YEAR}&type=pitcher&filter=&min=1&selections=xera,whiff_percent,k_percent,oz_swing_percent,barrel_batted_rate,hard_hit_percent,groundballs_percent,flyballs_percent,fastball_avg_speed&chart=false&x=xera&csv=true`).then(r=>pcuR=r));
       fx.push(csv(`${SAV}/leaderboard/expected_statistics?type=pitcher&year=${YEAR}&min=1&csv=true`).then(r=>pxsR=r));
@@ -418,13 +462,15 @@
     const catBoxes=()=>catcherBoxes(find(frR,ID,'id'),find(ptR,ID,'entity_id'),catcherFielding(fldJ));
     const careerHitBox=cHit?statBox('Hitting',HIT,cHit,'Career'):'';
     const careerPitBox=cPit?statBox('Pitching',PIT,cPit,'Career'):'';
+    const recHit=hStat?recentBoxes(glSplits(glHitJ),'bat'):[];
+    const recPit=pStat?recentBoxes(glSplits(glPitJ),'pit'):[];
     let html;
     if(pitcherOnly){
       const fill=`<div class="row fill">${card}${statBox('Pitching',PIT,pStat)}${arsHTML?`<div class="box arsbox">${arsHTML}</div>`:''}</div>`;
-      const adv=`<div class="row" style="margin-top:16px">${careerPitBox}${showHM?hmBoxHTML('pitcher'):''}${pBoxes.join('')}</div>`;
+      const adv=`<div class="row" style="margin-top:16px">${careerPitBox}${recPit.join('')}${showHM?hmBoxHTML('pitcher'):''}${pBoxes.join('')}</div>`;
       html=`<div class="page" style="max-width:1400px">${fill}${adv}</div>`;
     }else if(hitterOnly){
-      const items=[card,statBox('Hitting',HIT,hStat),careerHitBox,...allHitterBoxes()];
+      const items=[card,statBox('Hitting',HIT,hStat),careerHitBox,...recHit,...allHitterBoxes()];
       if(isC)items.push(...catBoxes());
       if(showHM)items.push(hmBoxHTML('hitter'));
       html=`<div class="page" style="max-width:1400px"><div class="row">${items.join('')}</div>${foot}</div>`;
@@ -434,6 +480,7 @@
       if(hStat)items.push(statBox('Hitting',HIT,hStat));
       if(careerPitBox)items.push(careerPitBox);
       if(careerHitBox)items.push(careerHitBox);
+      items.push(...recPit,...recHit);
       if(arsHTML)items.push(`<div class="arsenal">${arsHTML}</div>`);
       if(showHM)items.push(hmBoxHTML(HS.mode));
       if(pStat)items.push(...pBoxes);
