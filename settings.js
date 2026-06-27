@@ -2,6 +2,7 @@
   var DARK={'--bg':'#0b0c0e','--bg2':'#0e0f13','--panel':'#101115','--panel2':'#15161b','--border':'#1b1e24','--border2':'#262a32','--text':'#ffffff','--text2':'#cfd4da','--text3':'#aab0b9','--muted':'#7e858f','--muted2':'#474d56'};
   var LIGHT={'--bg':'#eef1f4','--bg2':'#ffffff','--panel':'#ffffff','--panel2':'#f1f4f7','--border':'#e2e7ec','--border2':'#d4dbe2','--text':'#14181d','--text2':'#2b333b','--text3':'#48515b','--muted':'#6c757e','--muted2':'#aab0b9'};
   var ACCENT='#4aa3ff';
+  var TEAMCOLOR={108:'#BA0021',109:'#A71930',110:'#DF4601',111:'#BD3039',112:'#0E3386',113:'#C6011F',114:'#E31937',115:'#33006F',116:'#FA4616',117:'#EB6E1F',118:'#004687',119:'#005A9C',120:'#AB0003',121:'#FF5910',133:'#EFB21E',134:'#FDB827',135:'#FFC425',136:'#2CA6A4',137:'#FD5A1E',138:'#C41E3A',139:'#8FBCE6',140:'#C0111F',141:'#1D7AE0',142:'#D31145',143:'#E81828',144:'#CE1141',145:'#C4CED4',146:'#00A3E0',147:'#5B7DB1',158:'#FFC52F'};
   var FAV_TEAMS=[[108,'Angels'],[109,'Diamondbacks'],[110,'Orioles'],[111,'Red Sox'],[112,'Cubs'],[113,'Reds'],[114,'Guardians'],[115,'Rockies'],[116,'Tigers'],[117,'Astros'],[118,'Royals'],[119,'Dodgers'],[120,'Nationals'],[121,'Mets'],[133,'Athletics'],[134,'Pirates'],[135,'Padres'],[136,'Mariners'],[137,'Giants'],[138,'Cardinals'],[139,'Rays'],[140,'Rangers'],[141,'Blue Jays'],[142,'Twins'],[143,'Phillies'],[144,'Braves'],[145,'White Sox'],[146,'Marlins'],[147,'Yankees'],[158,'Brewers']];
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
   function applyTheme(t){var m=t==='light'?LIGHT:DARK,r=document.documentElement;for(var k in m)r.style.setProperty(k,m[k]);r.setAttribute('data-dt-theme',t);}
@@ -27,6 +28,15 @@
     +'.dt-sel{background:var(--panel2,#15161b);color:var(--text,#fff);border:1px solid var(--border2,#262a32);border-radius:8px;padding:6px 9px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;max-width:150px;cursor:pointer;outline:none}'
     +'.dt-sel:focus{border-color:var(--accent,#4aa3ff)}'
     +'.tab.live .dot{background:#e0556a!important;animation:dtlv 1.5s infinite}@keyframes dtlv{0%{box-shadow:0 0 0 0 rgba(224,85,106,.5)}70%{box-shadow:0 0 0 6px rgba(224,85,106,0)}100%{box-shadow:0 0 0 0 rgba(224,85,106,0)}}'
+    +'.dt-favbar{display:flex;align-items:center;gap:13px;padding:11px 15px;margin:0 0 22px;border-radius:13px;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);border-left:4px solid var(--fbc,var(--accent,#4aa3ff));text-decoration:none;color:var(--text,#fff);transition:transform .14s,border-color .14s,background .14s}'
+    +'.dt-favbar:hover{transform:translateY(-1px);background:var(--panel,#101115);border-color:var(--fbc,var(--accent,#4aa3ff))}'
+    +'.dt-favbar img{width:32px;height:32px;object-fit:contain;flex:0 0 auto}'
+    +'.dt-favbar .fb-nm{font-family:"Anton","Oswald",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.6px;font-size:18px;line-height:1;white-space:nowrap}'
+    +'.dt-favbar .fb-rec{font-size:12.5px;color:var(--text3,#aab0b9);font-weight:500;letter-spacing:.4px;white-space:nowrap}'
+    +'.dt-favbar .fb-go{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted,#7e858f);font-weight:600;white-space:nowrap}'
+    +'.dt-favbar:hover .fb-go{color:var(--fbc,var(--accent,#4aa3ff))}'
+    +'.dt-favbar .fb-go svg{width:14px;height:14px}'
+    +'@media(max-width:760px){.dt-favbar{margin-bottom:16px}.dt-favbar .fb-go span{display:none}}'
     +'.dt-navbtn{display:none}.dt-navscrim{display:none;position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.45)}'
     +'@media(max-width:760px){'
     +'html,body{overflow-x:hidden;max-width:100%}'
@@ -82,7 +92,54 @@
       navEl.addEventListener('click',function(e){if(e.target.closest('a'))closeNav();});
       document.addEventListener('click',function(e){if(!e.target.closest('.side'))closeNav();});
     }
+    favBar();
+    document.addEventListener('dt:fav-changed',favBar);
   }
+
+  // ---- favorite-team quick-access bar (top of each dropthird content page) ----
+  function favName(id){for(var i=0;i<FAV_TEAMS.length;i++){if(String(FAV_TEAMS[i][0])===String(id))return FAV_TEAMS[i][1];}return '';}
+  function favStandings(cb){
+    var season=new Date().getFullYear();
+    try{var c=JSON.parse(sessionStorage.getItem('dt-stand')||'null');if(c&&c.d&&(Date.now()-c.t<600000)){cb(c.d);return;}}catch(e){}
+    function tryYear(y){
+      fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season='+y+'&standingsTypes=regularSeason')
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(jx){
+          var recs=(jx&&jx.records)||[];
+          if(!recs.length&&y===season){tryYear(season-1);return;}
+          try{sessionStorage.setItem('dt-stand',JSON.stringify({t:Date.now(),d:jx}));}catch(e){}
+          cb(jx);
+        }).catch(function(){cb(null);});
+    }
+    tryYear(season);
+  }
+  function favRecord(id,el){
+    favStandings(function(jx){
+      var recs=(jx&&jx.records)||[],found=null;
+      for(var i=0;i<recs.length&&!found;i++){var tr=recs[i].teamRecords||[];
+        for(var k=0;k<tr.length;k++){if(String(tr[k].team&&tr[k].team.id)===String(id)){found=tr[k];break;}}}
+      if(!el)return;
+      if(!found){el.textContent='';return;}
+      var streak=found.streak&&found.streak.streakCode?(' · '+found.streak.streakCode):'';
+      el.textContent=found.wins+'-'+found.losses+streak;
+    });
+  }
+  function favBar(){
+    if(location.pathname.indexOf('/dropthird/')===-1)return;
+    var existing=document.querySelector('.dt-favbar');
+    var id=ls('dt-fav-team')||'', nm=favName(id);
+    var host=document.querySelector('.main .page');
+    if(!id||!nm||!host){if(existing&&existing.parentNode)existing.parentNode.removeChild(existing);return;}
+    var bar=existing;
+    if(!bar){bar=document.createElement('a');bar.className='dt-favbar';host.insertBefore(bar,host.firstChild);}
+    bar.href='/dropthird/team/?id='+id;
+    if(TEAMCOLOR[id])bar.style.setProperty('--fbc',TEAMCOLOR[id]);else bar.style.removeProperty('--fbc');
+    bar.innerHTML='<img src="https://www.mlbstatic.com/team-logos/'+id+'.svg" onerror="this.style.visibility=\'hidden\'">'
+      +'<span class="fb-nm">'+nm+'</span><span class="fb-rec" id="dtFbRec"></span>'
+      +'<span class="fb-go"><span>View team</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>';
+    favRecord(id,bar.querySelector('#dtFbRec'));
+  }
+
   window.getSettings=function(){return {theme:ls('dt-theme')||'dark',favTeam:ls('dt-fav-team')||''};};
   if(document.readyState!=='loading')init();else document.addEventListener('DOMContentLoaded',init);
 })();
