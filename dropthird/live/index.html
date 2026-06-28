@@ -140,12 +140,20 @@
   @keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 
   @media(max-width:760px){
+    html,body{overflow-x:hidden;max-width:100%}
+    body{flex-direction:column}
+    .side{position:static;height:auto;width:100%;max-width:100%;border-left:0;border-bottom:1px solid var(--border,#1b1e24);padding:14px 12px}
+    .nav{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;margin-top:12px;gap:7px;-webkit-overflow-scrolling:touch}
+    .nav-label{display:none}
+    .tab{padding:9px 14px;flex:0 0 auto;white-space:nowrap}
+    .side-foot{display:none}
+    .main{width:100%;max-width:100vw;padding:28px 16px 70px;overflow-x:hidden}
     body.islive .main{padding-bottom:150px}
-    .lsp{right:0;padding:0 10px 10px}
-    .lsp-card{padding:12px 15px;gap:10px;border-radius:22px}
-    .lsp-mid{gap:18px}.lsp-mid .rn{font-size:34px}
-    .lsp-right{min-width:0}.lsp-right .ln{font-size:11.5px}.lsp-right .ct{font-size:21px}
-    .bd{width:46px;height:46px}.bd i{width:13px;height:13px;margin-left:-6.5px}.bd .b2{margin-left:-6.5px}
+    .lsp{right:0;padding:0 9px 10px}
+    .lsp-card{padding:12px 14px;gap:11px;border-radius:22px}
+    .lsp-mid{gap:16px}.lsp-mid .rn{font-size:34px}.lsp-mid .ab{font-size:11px}
+    .lsp-right{min-width:0}.lsp-right .ln{font-size:12px}.lsp-right .ct{font-size:22px}
+    .bd{width:48px;height:48px}
   }
   .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:13px;padding:54px 14px;line-height:1.7}
   .state a{color:var(--accent,#4aa3ff);text-decoration:none}
@@ -388,10 +396,10 @@
     const bat=m.batter||(ls&&ls.offense&&ls.offense.batter);
     const pid=pit&&pit.id, bid=bat&&bat.id;
     let pc=null;if(pid&&map[pid]&&map[pid].pitching){const pp=map[pid].pitching;pc=pp.pitchesThrown!=null?pp.pitchesThrown:pp.numberOfPitches;}
-    const pitLine=`<b>${esc(lastName(pit&&pit.fullName))}</b>${pc!=null?' · '+pc:''}`;
+    const pitLine=`<b>${esc(lastName(pit&&pit.fullName))}:</b>${pc!=null?' '+pc:''}`;
     const bb=bid&&map[bid]&&map[bid].batting;
     const bl=(bb&&bb.atBats!=null)?`${bb.hits||0}-${bb.atBats}`:'0-0';
-    const batLine=`<b>${esc(lastName(bat&&bat.fullName))}</b> · ${bl}`;
+    const batLine=`<b>${esc(lastName(bat&&bat.fullName))}:</b> ${bl}`;
     const o=(ls&&ls.offense)||{};
     return {awayAb:abv(a.team),homeAb:abv(h.team),awayR,homeR,
       first:!!o.first,second:!!o.second,third:!!o.third,outs:(ls&&ls.outs)||0,
