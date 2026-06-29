@@ -108,8 +108,8 @@
   .main{padding-bottom:138px}
   .lsp{position:fixed;left:0;right:248px;bottom:0;z-index:50;display:flex;justify-content:center;padding:0 30px 16px;pointer-events:none}
   .lsp.hide{display:none}
-  .lsp-card{pointer-events:auto;width:100%;max-width:760px;background:#0A0A0A;border:1px solid #1e2026;border-radius:26px;box-shadow:0 14px 44px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 26px}
-  .lsp-left{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid #7b5cff;border-radius:13px;padding:11px 15px}
+  .lsp-card{pointer-events:auto;width:100%;max-width:760px;background:#0A0A0A;border:1px solid var(--border2,#2f3540);border-radius:18px;box-shadow:0 14px 44px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 26px}
+  .lsp-left{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;border:1.5px solid var(--accent,#4aa3ff);border-radius:12px;padding:11px 15px}
   .bd{position:relative;width:58px;height:58px}
   .bd i{position:absolute;width:18px;height:18px;transform:rotate(45deg);border-radius:3px;background:#fff;transition:background .2s ease,box-shadow .2s ease}
   .bd .b2{top:0;left:50%;margin-left:-9px}
@@ -120,12 +120,15 @@
   .outs i{width:11px;height:11px;border-radius:50%;background:#c7cace;transition:background .2s ease,box-shadow .2s ease}
   .outs i.on{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
   .outs.flash i{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
-  .lsp-mid{display:flex;gap:30px;align-items:flex-start}
+  .lsp-mid{display:flex;gap:24px;align-items:flex-end}
   .lsp-mid .col{display:flex;flex-direction:column;align-items:center}
   .lsp-mid .tl{width:24px;height:24px;object-fit:contain;margin-bottom:5px}
   .lsp-mid .ab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
-  .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.95;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
+  .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.9;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
   .lsp-mid .rn.bump{transform:scale(1.12)}
+  .lsp-inn{display:flex;flex-direction:column;align-items:center;gap:2px;padding-bottom:5px;flex:0 0 auto}
+  .lsp-inn .ar{font-size:13px;line-height:1;color:var(--accent,#4aa3ff)}
+  .lsp-inn .nm{font-family:"Oswald";font-weight:700;font-size:23px;line-height:1;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums}
   .lsp-right{text-align:right;min-width:118px;flex:0 0 auto}
   .lsp-right .ln{font-size:13.5px;font-weight:500;color:#cfd4da;letter-spacing:.2px;white-space:nowrap;transition:opacity .15s ease;line-height:1.5}
   .lsp-right .ln b{font-weight:700;color:#fff}
@@ -151,7 +154,7 @@
     .lsp{right:0;padding:0 9px 10px}
     .lsp-card{padding:11px 13px;gap:10px;border-radius:22px}
     .lsp-left{padding:9px 11px}
-    .lsp-mid{gap:15px}.lsp-mid .rn{font-size:34px}.lsp-mid .ab{font-size:11px}
+    .lsp-mid{gap:13px}.lsp-mid .rn{font-size:34px}.lsp-mid .ab{font-size:11px}.lsp-inn .nm{font-size:19px}.lsp-inn .ar{font-size:11px}
     .lsp-right{min-width:0}.lsp-right .ln{font-size:12px}.lsp-right .ct{font-size:22px}
     .bd{width:52px;height:52px}
   }
@@ -206,6 +209,7 @@
     </div>
     <div class="lsp-mid">
       <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
+      <div class="lsp-inn" id="lsp-inn"><span class="ar" id="lsp-innAr">▲</span><span class="nm" id="lsp-innNm">1</span></div>
       <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
     </div>
     <div class="lsp-right">
@@ -407,6 +411,7 @@
     const o=(ls&&ls.offense)||{};
     return Object.assign(head,{
       first:!!o.first,second:!!o.second,third:!!o.third,outs:(ls&&ls.outs)||0,
+      inn:(ls&&ls.currentInning)||null,top:!!(ls&&ls.isTopInning),
       inningKey:(ls?((ls.isTopInning?'T':'B')+ls.currentInning):''),
       pitLine,batLine,count:`${(ls&&ls.balls)||0}-${(ls&&ls.strikes)||0}`});
   }
@@ -422,6 +427,9 @@
     el('lsp-aAb').textContent=s.awayAb;el('lsp-hAb').textContent=s.homeAb;
     if(prevP.awayId!==s.awayId)el('lsp-aLogo').src=logo(s.awayId);
     if(prevP.homeId!==s.homeId)el('lsp-hLogo').src=logo(s.homeId);
+    const innEl=el('lsp-inn');
+    if(s.live&&s.inn){innEl.style.display='';el('lsp-innAr').textContent=s.top?'▲':'▼';el('lsp-innNm').textContent=s.inn;}
+    else innEl.style.display='none';
     const pit=el('lsp-pit'),bat=el('lsp-bat');
     pit.style.display=s.live?'':'none';bat.style.display=s.live?'':'none';
     el('lsp-ct').style.fontSize=s.live?'':'17px';
