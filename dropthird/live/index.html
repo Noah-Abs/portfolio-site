@@ -171,6 +171,44 @@
   body.navhidden .navtoggle{right:59px}
   body.navhidden .lsp{right:0}
   @media(max-width:760px){.navtoggle{display:none}}
+
+  /* tabs (Plays / Summary / Box) + box-score & summary tables */
+  .ltabs{display:flex;gap:4px;margin:14px 0;border-bottom:1px solid var(--border,#1b1e24)}
+  .ltab{padding:10px 16px;font-family:"Oswald",sans-serif;font-weight:600;font-size:12.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted,#7e858f);cursor:pointer;border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .ltab.on{color:var(--text,#fff);border-bottom-color:var(--accent,#4aa3ff)}
+  .ltab:hover{color:var(--text2,#cfd4da)}
+  .panel{background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:13px;overflow:hidden;margin-top:18px}
+  .panel-h{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;color:var(--text,#fff);padding:12px 15px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--border,#1b1e24)}
+  .panel-h img{width:22px;height:22px;object-fit:contain}
+  .scroller{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:540px}
+  th,td{padding:8px 10px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;border-top:1px solid var(--panel2,#16181d)}
+  th{font-family:"Oswald",sans-serif;font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted,#7e858f);border-top:0;border-bottom:1px solid var(--border2,#23262c)}
+  td.l,th.l{text-align:left}
+  .bn{display:flex;align-items:center;gap:4px}
+  .bn .sp{color:var(--muted2,#565d67);font-weight:600;width:14px;display:inline-block;text-align:right}
+  .bn .nm{color:var(--text,#fff);font-weight:500}
+  .bn .po{color:var(--muted,#7e858f);font-size:11px;margin-left:3px}
+  .bn.sub .nm{color:var(--text3,#aab0b9);font-weight:400}
+  .bn.sub{padding-left:16px}
+  td.h{color:#4aa3ff;font-weight:700}
+  .dec{color:#ffd24a;font-weight:700;font-size:11px;margin-left:5px}
+  tbody tr.tot td{border-top:1px solid var(--border2,#262a32);color:var(--text2,#cfd4da);font-weight:600}
+  tbody tr.tot td.l{color:var(--muted,#7e858f);text-transform:uppercase;font-size:11px;letter-spacing:1px}
+  .ls{margin-top:4px}
+  .lstbl{min-width:0;width:100%}
+  .lstbl th,.lstbl td{padding:7px 9px;text-align:center}
+  .lstbl td.tm,.lstbl th.tm{text-align:left;font-weight:600;color:var(--text,#fff)}
+  .lstbl td.rhe{font-weight:700;color:var(--text,#fff)}
+  .lstbl th.rhe{color:var(--text2,#cfd4da)}
+  .lstbl td{color:var(--text3,#aab0b9)}
+  .secttl{font-family:"Anton",sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:18px;color:var(--text,#fff);margin:24px 0 11px}
+  .secttl:first-child{margin-top:4px}
+  .playrow{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:11px;margin-bottom:7px}
+  .playrow>img{width:24px;height:24px;object-fit:contain;flex:0 0 auto}
+  .playrow .pd{flex:1;min-width:0;font-size:13.5px;color:var(--text2,#cfd4da);line-height:1.35}
+  .playrow .psc{font-family:"Oswald",sans-serif;font-weight:700;font-size:15px;color:var(--text,#fff);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .inn{flex:0 0 auto;min-width:34px;height:34px;padding:0 6px;border-radius:8px;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);display:flex;align-items:center;justify-content:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;color:var(--text2,#cfd4da);white-space:nowrap}
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -252,11 +290,14 @@
   const FAV=new URLSearchParams(location.search).get('team')||(window.getSettings&&window.getSettings().favTeam)||(localStorage.getItem('dt-fav-team')||'');
   let PK=null, GAME=null, timer=null, tok=0, baseTitle='';
   let ALLPLAYS=[];                              // latest plays (for expand-on-click)
+  let LS=null, BOX=null, PBP=null;              // latest linescore / boxscore / play-by-play (for the Box & Summary tabs)
+  let liveTab='plays';                          // active tab: plays | summary | box
   const expanded=new Set();                     // atBatIndex set the user has opened
   const seen=new Set(); let seeded=false;       // notified-event ids
   let prevP={};                                 // previous panel state (for animations)
-  let sbSig='', nowSig='', feedSig='';          // section render signatures
+  let sbSig='', nowSig='', feedSig='', tabSig='';// section render signatures
   let urls={};
+  const showp=p=>(p==null||p==='')?'–':String(p).replace(/^0(?=\.)/,'');
 
   async function findGame(){
     const t=ptToday();
@@ -386,7 +427,8 @@
     const row=feed.querySelector(`.play[data-ab="${ab}"]`);if(!row)return;
     if(feed.querySelector(`.abdetail[data-ab="${ab}"]`))return;
     const play=ALLPLAYS.find(p=>p.about.atBatIndex===ab);if(!play)return;
-    const d=document.createElement('div');d.className='abdetail';d.dataset.ab=ab;d.innerHTML=atBatDetail(play);
+    const d=document.createElement('div');d.className='abdetail';d.dataset.ab=ab;
+    try{d.innerHTML=atBatDetail(play);}catch(err){d.innerHTML='<div class="pl-empty">Pitch detail unavailable for this at-bat.</div>';}
     row.after(d);row.classList.add('open');
   }
   function removeDetail(ab){const feed=el('feed');if(!feed)return;
@@ -394,7 +436,74 @@
     const row=feed.querySelector(`.play[data-ab="${ab}"]`);if(row)row.classList.remove('open');}
   function toggleAb(ab){if(expanded.has(ab)){expanded.delete(ab);removeDetail(ab);}else{expanded.add(ab);insertDetail(ab);}}
   function applyExpanded(){expanded.forEach(ab=>insertDetail(ab));}
-  content.addEventListener('click',e=>{const row=e.target.closest('.play[data-ab]');if(!row)return;toggleAb(+row.dataset.ab);});
+  content.addEventListener('click',e=>{
+    const tab=e.target.closest('.ltab'); if(tab){setLiveTab(tab.dataset.t);return;}
+    const row=e.target.closest('.play[data-ab]'); if(row)toggleAb(+row.dataset.ab);
+  });
+
+  /* ---- Box Score & Summary tabs (same look as the Games tab) ---- */
+  function lineScore(ls,away,home){
+    const inns=(ls&&ls.innings)||[]; const n=Math.max(9,inns.length);
+    let head='<th class="tm l">&nbsp;</th>';for(let i=1;i<=n;i++)head+=`<th>${i}</th>`;head+='<th class="rhe">R</th><th class="rhe">H</th><th class="rhe">E</th>';
+    const row=(side,nm)=>{let r=`<td class="tm">${esc(nm)}</td>`;
+      for(let i=1;i<=n;i++){const inn=inns[i-1];const v=inn&&inn[side]&&inn[side].runs;r+=`<td>${(v==null)?'·':v}</td>`;}
+      const t=(ls.teams&&ls.teams[side])||{};r+=`<td class="rhe">${t.runs==null?'·':t.runs}</td><td class="rhe">${t.hits==null?'·':t.hits}</td><td class="rhe">${t.errors==null?'·':t.errors}</td>`;
+      return `<tr>${r}</tr>`;};
+    return `<div class="panel ls"><div class="scroller"><table class="lstbl"><thead><tr>${head}</tr></thead><tbody>${row('away',away.team.name)}${row('home',home.team.name)}</tbody></table></div></div>`;
+  }
+  function battingTable(side){
+    const players=side.players||{};
+    const bats=Object.values(players).filter(p=>p.stats&&p.stats.batting&&Object.keys(p.stats.batting).length&&p.battingOrder).sort((a,b)=>(+a.battingOrder)-(+b.battingOrder));
+    const head=`<tr><th class="l">Batters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>AVG</th></tr>`;
+    const body=bats.map(p=>{const s=p.stats.batting, o=+p.battingOrder, starter=o%100===0, spot=Math.floor(o/100);
+      const avg=p.seasonStats&&p.seasonStats.batting&&p.seasonStats.batting.avg;
+      return `<tr><td class="l"><span class="bn ${starter?'':'sub'}"><span class="sp">${starter?spot:''}</span><span class="nm">${esc(p.person.fullName)}</span><span class="po">${esc(p.position&&p.position.abbreviation)}</span></span></td>
+        <td>${s.atBats}</td><td>${s.runs}</td><td class="h">${s.hits}</td><td>${s.rbi}</td><td>${s.baseOnBalls}</td><td>${s.strikeOuts}</td><td>${showp(avg)}</td></tr>`;}).join('');
+    const t=side.teamStats&&side.teamStats.batting||{};
+    const tot=`<tr class="tot"><td class="l">Totals</td><td>${t.atBats}</td><td>${t.runs}</td><td class="h">${t.hits}</td><td>${t.rbi}</td><td>${t.baseOnBalls}</td><td>${t.strikeOuts}</td><td>${showp(t.avg)}</td></tr>`;
+    return `<div class="panel"><div class="panel-h"><img src="${logo(side.team.id)}" onerror="this.style.visibility='hidden'">${esc(side.team.name)} — Batting</div><div class="scroller"><table><thead>${head}</thead><tbody>${body}${tot}</tbody></table></div></div>`;
+  }
+  function pitchingTable(side){
+    const players=side.players||{};
+    const ps=(side.pitchers||[]).map(id=>players['ID'+id]).filter(p=>p&&p.stats&&p.stats.pitching);
+    const head=`<tr><th class="l">Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th><th>P</th><th>ERA</th></tr>`;
+    const body=ps.map(p=>{const s=p.stats.pitching;
+      let dec='';if(s.wins)dec='W';else if(s.losses)dec='L';else if(s.saves)dec='SV';else if(s.holds)dec='H';else if(s.blownSaves)dec='BS';
+      const era=p.seasonStats&&p.seasonStats.pitching&&p.seasonStats.pitching.era;
+      return `<tr><td class="l"><span class="bn"><span class="nm">${esc(p.person.fullName)}</span>${dec?`<span class="dec">${dec}</span>`:''}</span></td>
+        <td>${s.inningsPitched}</td><td>${s.hits}</td><td>${s.runs}</td><td>${s.earnedRuns}</td><td>${s.baseOnBalls}</td><td>${s.strikeOuts}</td><td>${s.homeRuns}</td><td>${s.numberOfPitches==null?'–':s.numberOfPitches}</td><td>${showp(era)}</td></tr>`;}).join('');
+    const t=side.teamStats&&side.teamStats.pitching||{};
+    const tot=`<tr class="tot"><td class="l">Totals</td><td>${t.inningsPitched}</td><td>${t.hits}</td><td>${t.runs}</td><td>${t.earnedRuns}</td><td>${t.baseOnBalls}</td><td>${t.strikeOuts}</td><td>${t.homeRuns}</td><td></td><td></td></tr>`;
+    return `<div class="panel"><div class="panel-h"><img src="${logo(side.team.id)}" onerror="this.style.visibility='hidden'">${esc(side.team.name)} — Pitching</div><div class="scroller"><table><thead>${head}</thead><tbody>${body}${tot}</tbody></table></div></div>`;
+  }
+  function boxTab(){
+    if(!BOX||!BOX.teams)return '<div class="state">Box score not available yet.</div>';
+    const a=BOX.teams.away, h=BOX.teams.home;
+    return lineScore(LS||{},a,h)+battingTable(a)+battingTable(h)+pitchingTable(a)+pitchingTable(h);
+  }
+  function summaryTab(){
+    const all=(PBP&&PBP.allPlays)||[], sp=(PBP&&PBP.scoringPlays)||[];
+    let html='';
+    if(sp.length){html+='<div class="secttl">Scoring Plays</div>';
+      sp.forEach(idx=>{const p=all[idx];if(!p)return;const bt=p.about.halfInning==='top'?GAME.teams.away:GAME.teams.home;
+        html+=`<div class="playrow"><span class="inn">${p.about.halfInning==='top'?'▲':'▼'}${p.about.inning}</span><img src="${logo(bt.team.id)}" onerror="this.style.visibility='hidden'"><span class="pd">${esc(p.result.description||'')}</span><span class="psc">${p.result.awayScore}-${p.result.homeScore}</span></div>`;});}
+    return html||'<div class="state">No scoring plays yet.</div>';
+  }
+  function setLiveTab(name){
+    liveTab=name; tabSig='';
+    document.querySelectorAll('.ltab').forEach(b=>b.classList.toggle('on',b.dataset.t===name));
+    const plays=el('plays'), extra=el('tabextra');
+    if(plays)plays.style.display=name==='plays'?'':'none';
+    if(extra)extra.style.display=name==='plays'?'none':'';
+    renderTab();
+  }
+  function renderTab(){
+    if(liveTab==='plays')return;
+    const extra=el('tabextra'); if(!extra)return;
+    const sig=liveTab+'|'+(ALLPLAYS.length)+'|'+(GAME&&GAME.teams.away.score)+'-'+(GAME&&GAME.teams.home.score);
+    if(sig===tabSig)return; tabSig=sig;
+    extra.innerHTML=liveTab==='box'?boxTab():summaryTab();
+  }
 
   /* ---- live status panel: in-place updates with animations ---- */
   function setOn(id,on){el(id).classList.toggle('on',!!on);}
@@ -524,7 +633,10 @@
 
   function ensureScaffold(){
     if(el('feed'))return;
-    content.innerHTML='<div id="sb"></div><div id="now"></div><div id="feed"><div class="state">Loading…</div></div>';
+    content.innerHTML='<div id="sb"></div>'+
+      '<div class="ltabs" id="ltabs"><button class="ltab on" data-t="plays">Plays</button><button class="ltab" data-t="summary">Summary</button><button class="ltab" data-t="box">Box Score</button></div>'+
+      '<div id="plays"><div id="now"></div><div id="feed"><div class="state">Loading…</div></div></div>'+
+      '<div id="tabextra" style="display:none"></div>';
   }
 
   async function load(){
@@ -539,10 +651,12 @@
     document.body.classList.toggle('islive',live);
     handleEvents(all);
     ensureScaffold();
+    LS=ls; BOX=box; PBP=pbp;                            // keep latest for the Box & Summary tabs
     renderSb(GAME,ls,st);
     const cur=live?(pbp&&pbp.currentPlay):null;
     renderNow(cur);
     renderFeed(GAME,all,live);
+    renderTab();                                         // refresh Box/Summary if one of them is open
     paintPanel(buildPanelState(GAME,ls,cur,box,st));   // panel stays at the bottom the whole time
   }
 
@@ -555,7 +669,7 @@
   async function tick(){
     if(!document.body.classList.contains('islive')){     // not live → follow the schedule for a newer/live game
       const g=await findGame();
-      if(g&&g.gamePk!==PK){GAME=g;PK=g.gamePk;setURLs();seeded=false;seen.clear();prevP={};expanded.clear();sbSig=nowSig=feedSig='';ensureScaffold();el('feed').innerHTML='<div class="state">Loading…</div>';}
+      if(g&&g.gamePk!==PK){GAME=g;PK=g.gamePk;setURLs();seeded=false;seen.clear();prevP={};expanded.clear();sbSig=nowSig=feedSig=tabSig='';liveTab='plays';ensureScaffold();setLiveTab('plays');el('feed').innerHTML='<div class="state">Loading…</div>';}
       else if(g)GAME=g;
     }
     await load();
