@@ -220,6 +220,42 @@
     .main{padding:26px 16px 60px}
     .grow{grid-template-columns:64px 22px 1fr auto;gap:8px;padding:10px}
   }
+
+  /* live status panel — shown at the bottom while viewing a live game */
+  .lsp{position:fixed;left:0;right:248px;bottom:0;z-index:60;display:flex;justify-content:center;padding:0 30px 16px;pointer-events:none}
+  .lsp.hide{display:none}
+  .lsp-card{pointer-events:auto;width:100%;max-width:760px;background:#0A0A0A;border:1px solid #1e2026;border-radius:26px;box-shadow:0 14px 44px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 26px}
+  .lsp-left{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;border:2px solid #7b5cff;border-radius:13px;padding:11px 15px}
+  .bd{position:relative;width:58px;height:58px}
+  .bd i{position:absolute;width:18px;height:18px;transform:rotate(45deg);border-radius:3px;background:#fff;transition:background .2s ease,box-shadow .2s ease}
+  .bd .b2{top:0;left:50%;margin-left:-9px}
+  .bd .b1{top:50%;right:0;margin-top:-9px}
+  .bd .b3{top:50%;left:0;margin-top:-9px}
+  .bd i.on{background:#FFD23F;box-shadow:0 0 11px rgba(255,210,63,.6)}
+  .outs{display:flex;gap:9px;justify-content:center;margin-top:11px}
+  .outs i{width:11px;height:11px;border-radius:50%;background:#c7cace;transition:background .2s ease,box-shadow .2s ease}
+  .outs i.on{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
+  .outs.flash i{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
+  .lsp-mid{display:flex;gap:30px;align-items:flex-start}
+  .lsp-mid .col{display:flex;flex-direction:column;align-items:center}
+  .lsp-mid .tl{width:24px;height:24px;object-fit:contain;margin-bottom:5px}
+  .lsp-mid .ab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
+  .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.95;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
+  .lsp-mid .rn.bump{transform:scale(1.12)}
+  .lsp-right{text-align:right;min-width:118px;flex:0 0 auto}
+  .lsp-right .ln{font-size:13.5px;font-weight:500;color:#cfd4da;letter-spacing:.2px;white-space:nowrap;transition:opacity .15s ease;line-height:1.5}
+  .lsp-right .ln b{font-weight:700;color:#fff}
+  .lsp-right .ct{font-family:"Oswald";font-weight:700;font-size:25px;margin-top:4px;color:#fff;font-variant-numeric:tabular-nums;transition:opacity .15s ease}
+  body.lspon .main{padding-bottom:138px}
+  @media(max-width:760px){
+    .lsp{right:0;padding:0 9px 10px}
+    .lsp-card{padding:11px 13px;gap:10px;border-radius:22px}
+    .lsp-left{padding:9px 11px}
+    .lsp-mid{gap:15px}.lsp-mid .rn{font-size:34px}.lsp-mid .ab{font-size:11px}.lsp-mid .tl{width:20px;height:20px}
+    .lsp-right{min-width:0}.lsp-right .ln{font-size:12px}.lsp-right .ct{font-size:22px}
+    .bd{width:52px;height:52px}
+    body.lspon .main{padding-bottom:150px}
+  }
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -268,6 +304,23 @@
     </div>
   </main>
 
+  <!-- live status panel — appears at the bottom while viewing a live game -->
+  <div class="lsp hide" id="lsp"><div class="lsp-card">
+    <div class="lsp-left">
+      <div class="bd"><i class="b2" id="lsp-b2"></i><i class="b3" id="lsp-b3"></i><i class="b1" id="lsp-b1"></i></div>
+      <div class="outs" id="lsp-outs"><i id="lsp-o0"></i><i id="lsp-o1"></i><i id="lsp-o2"></i></div>
+    </div>
+    <div class="lsp-mid">
+      <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
+      <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
+    </div>
+    <div class="lsp-right">
+      <div class="ln" id="lsp-pit">—</div>
+      <div class="ln" id="lsp-bat">—</div>
+      <div class="ct" id="lsp-ct">0-0</div>
+    </div>
+  </div></div>
+
 <script>
   const NOW=new Date().getFullYear();
   const DEFAULT_ID=119;   // Dodgers
@@ -291,6 +344,7 @@
   // ---------- game list ----------
   async function loadList(){
     if(gdTimer){clearInterval(gdTimer);gdTimer=null;}
+    lspHide();
     const my=++tok; view.innerHTML='<div class="state">Loading games…</div>';
     const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${TEAM_ID}&season=${SEASON}&gameType=R`);
     if(my!==tok)return;
@@ -353,6 +407,60 @@
   }
   // ===== gameday detail =====
   let GD=null, gdTab='summary', gdTimer=null, gdExpanded=new Set();
+
+  /* ===== live status panel (mirrors the Live tab) ===== */
+  let lspPrev={};
+  const lspG=id=>document.getElementById(id);
+  const lspLast=n=>{n=String(n||'').trim();const p=n.split(/\s+/);let x=p[p.length-1]||'—';if(p.length>1&&/^(jr|sr|ii|iii|iv|v)\.?$/i.test(x))x=p[p.length-2];return x;};
+  const lspAbv=t=>(t&&t.abbreviation)||String((t&&t.name)||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+  function lspSetOn(id,on){lspG(id).classList.toggle('on',!!on);}
+  function lspBump(e){e.classList.remove('bump');void e.offsetWidth;e.classList.add('bump');}
+  function lspFlashOuts(){const o=lspG('lsp-outs');o.classList.add('flash');setTimeout(()=>o.classList.remove('flash'),650);}
+  function lspFade(e,html,prev,plain){if(prev===undefined){plain?e.textContent=html:e.innerHTML=html;return;}if(html===prev)return;e.style.opacity=0;setTimeout(()=>{plain?e.textContent=html:e.innerHTML=html;e.style.opacity=1;},150);}
+  function lspBoxStats(box){const m={};if(!box)return m;['away','home'].forEach(s=>{const pl=(box.teams&&box.teams[s]&&box.teams[s].players)||{};Object.values(pl).forEach(p=>{if(p.person)m[p.person.id]=p.stats||{};});});return m;}
+  function lspBuild(){
+    const ls=GD.ls||{}, cur=GD.pbp&&GD.pbp.currentPlay, box=GD.box;
+    const a=GD.away, h=GD.home, map=lspBoxStats(box), lt=ls.teams||{};   // boxscore teams carry abbreviation + id
+    const awayR=(lt.away&&lt.away.runs!=null)?lt.away.runs:(a.score!=null?a.score:0);
+    const homeR=(lt.home&&lt.home.runs!=null)?lt.home.runs:(h.score!=null?h.score:0);
+    const m=(cur&&cur.matchup)||{};
+    const pit=m.pitcher||(ls.defense&&ls.defense.pitcher);
+    const bat=m.batter||(ls.offense&&ls.offense.batter);
+    const pid=pit&&pit.id, bid=bat&&bat.id;
+    let pc=null;if(pid&&map[pid]&&map[pid].pitching){const pp=map[pid].pitching;pc=pp.pitchesThrown!=null?pp.pitchesThrown:pp.numberOfPitches;}
+    const pitLine=`<b>${esc(lspLast(pit&&pit.fullName))}:</b>${pc!=null?' '+pc:''}`;
+    const bb=bid&&map[bid]&&map[bid].batting;
+    const bl=(bb&&bb.atBats!=null)?`${bb.hits||0}-${bb.atBats}`:'0-0';
+    const batLine=`<b>${esc(lspLast(bat&&bat.fullName))}:</b> ${bl}`;
+    const o=ls.offense||{};
+    return {awayAb:lspAbv(a.team),homeAb:lspAbv(h.team),awayR,homeR,awayId:a.team.id,homeId:h.team.id,
+      first:!!o.first,second:!!o.second,third:!!o.third,outs:ls.outs||0,
+      inningKey:((ls.isTopInning?'T':'B')+ls.currentInning),
+      pitLine,batLine,count:`${ls.balls||0}-${ls.strikes||0}`};
+  }
+  function lspPaint(s){
+    lspSetOn('lsp-b1',s.first);lspSetOn('lsp-b2',s.second);lspSetOn('lsp-b3',s.third);
+    for(let i=0;i<3;i++)lspSetOn('lsp-o'+i,i<s.outs);
+    if(lspPrev.inningKey&&s.inningKey&&s.inningKey!==lspPrev.inningKey)lspFlashOuts();
+    const aR=lspG('lsp-aR'),hR=lspG('lsp-hR');
+    if(lspPrev.awayR!=null&&s.awayR!==lspPrev.awayR)lspBump(aR);
+    if(lspPrev.homeR!=null&&s.homeR!==lspPrev.homeR)lspBump(hR);
+    aR.textContent=s.awayR;hR.textContent=s.homeR;
+    lspG('lsp-aAb').textContent=s.awayAb;lspG('lsp-hAb').textContent=s.homeAb;
+    if(lspPrev.awayId!==s.awayId)lspG('lsp-aLogo').src=logo(s.awayId);
+    if(lspPrev.homeId!==s.homeId)lspG('lsp-hLogo').src=logo(s.homeId);
+    lspFade(lspG('lsp-pit'),s.pitLine,lspPrev.pitLine);
+    lspFade(lspG('lsp-bat'),s.batLine,lspPrev.batLine);
+    lspFade(lspG('lsp-ct'),s.count,lspPrev.count,true);
+    lspPrev=s;
+  }
+  function lspRefresh(){
+    const g=GD&&GD.g, live=g&&g.status&&g.status.abstractGameState==='Live';
+    if(!GD||!live){lspHide();return;}
+    lspPaint(lspBuild());
+    lspG('lsp').classList.remove('hide');document.body.classList.add('lspon');
+  }
+  function lspHide(){lspG('lsp').classList.add('hide');document.body.classList.remove('lspon');lspPrev={};}
   const evClass=et=>{et=et||'';
     if(/single|double|triple|home_run/.test(et))return 'hit';
     if(/walk|hit_by_pitch/.test(et))return 'walk';
@@ -568,6 +676,7 @@
     document.getElementById('gdc').innerHTML = name==='plays'?playsTab() : name==='box'?boxTab() : summaryTab();
     try{const u=new URL(location.href);u.searchParams.set('tab',name);history.replaceState(null,'',u);}catch(e){}
     if(!keep)window.scrollTo&&window.scrollTo(0,0);
+    lspRefresh();   // keep the bottom live panel in sync with the current game
   }
 
   function stopPoll(){if(gdTimer){clearInterval(gdTimer);gdTimer=null;}}

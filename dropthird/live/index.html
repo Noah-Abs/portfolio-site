@@ -115,7 +115,6 @@
   .bd .b2{top:0;left:50%;margin-left:-9px}
   .bd .b1{top:50%;right:0;margin-top:-9px}
   .bd .b3{top:50%;left:0;margin-top:-9px}
-  .bd .hp{bottom:0;left:50%;margin-left:-9px}
   .bd i.on{background:#FFD23F;box-shadow:0 0 11px rgba(255,210,63,.6)}
   .outs{display:flex;gap:9px;justify-content:center;margin-top:11px}
   .outs i{width:11px;height:11px;border-radius:50%;background:#c7cace;transition:background .2s ease,box-shadow .2s ease}
@@ -123,6 +122,7 @@
   .outs.flash i{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
   .lsp-mid{display:flex;gap:30px;align-items:flex-start}
   .lsp-mid .col{display:flex;flex-direction:column;align-items:center}
+  .lsp-mid .tl{width:24px;height:24px;object-fit:contain;margin-bottom:5px}
   .lsp-mid .ab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
   .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.95;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
   .lsp-mid .rn.bump{transform:scale(1.12)}
@@ -201,12 +201,12 @@
   <!-- persistent live status panel (updated in place, never re-created) -->
   <div class="lsp hide" id="lsp"><div class="lsp-card">
     <div class="lsp-left">
-      <div class="bd"><i class="b2" id="lsp-b2"></i><i class="b3" id="lsp-b3"></i><i class="b1" id="lsp-b1"></i><i class="hp"></i></div>
+      <div class="bd"><i class="b2" id="lsp-b2"></i><i class="b3" id="lsp-b3"></i><i class="b1" id="lsp-b1"></i></div>
       <div class="outs" id="lsp-outs"><i id="lsp-o0"></i><i id="lsp-o1"></i><i id="lsp-o2"></i></div>
     </div>
     <div class="lsp-mid">
-      <div class="col"><span class="ab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
-      <div class="col"><span class="ab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
+      <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
+      <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
     </div>
     <div class="lsp-right">
       <div class="ln" id="lsp-pit">—</div>
@@ -221,7 +221,7 @@
   const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
   const abv=t=>(t&&t.abbreviation)||String((t&&t.name)||'').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
-  const lastName=n=>{n=String(n||'').trim();const p=n.split(/\s+/);return p[p.length-1]||'—';};
+  const lastName=n=>{n=String(n||'').trim();const p=n.split(/\s+/);let x=p[p.length-1]||'—';if(p.length>1&&/^(jr|sr|ii|iii|iv|v)\.?$/i.test(x))x=p[p.length-2];return x;};
   const el=id=>document.getElementById(id);
   const TEAMS={108:'Angels',109:'D-backs',110:'Orioles',111:'Red Sox',112:'Cubs',113:'Reds',114:'Guardians',115:'Rockies',116:'Tigers',117:'Astros',118:'Royals',119:'Dodgers',120:'Nationals',121:'Mets',133:'Athletics',134:'Pirates',135:'Padres',136:'Mariners',137:'Giants',138:'Cardinals',139:'Rays',140:'Rangers',141:'Blue Jays',142:'Twins',143:'Phillies',144:'Braves',145:'White Sox',146:'Marlins',147:'Yankees',158:'Brewers'};
   const ptToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -392,7 +392,7 @@
     const awayR=(lt.away&&lt.away.runs!=null)?lt.away.runs:(a.score||0);
     const homeR=(lt.home&&lt.home.runs!=null)?lt.home.runs:(h.score||0);
     const live=!!(st&&st.live);
-    const head={awayAb:abv(a.team),homeAb:abv(h.team),awayR,homeR,live};
+    const head={awayAb:abv(a.team),homeAb:abv(h.team),awayR,homeR,live,awayId:a.team.id,homeId:h.team.id};
     if(!live)return Object.assign(head,{first:false,second:false,third:false,outs:0,inningKey:'',
       pitLine:'',batLine:'',count:String((st&&st.t)||'').toUpperCase()});
     const m=(cur&&cur.matchup)||{};
@@ -420,6 +420,8 @@
     if(prevP.homeR!=null&&s.homeR!==prevP.homeR)bump(hR);
     aR.textContent=s.awayR;hR.textContent=s.homeR;
     el('lsp-aAb').textContent=s.awayAb;el('lsp-hAb').textContent=s.homeAb;
+    if(prevP.awayId!==s.awayId)el('lsp-aLogo').src=logo(s.awayId);
+    if(prevP.homeId!==s.homeId)el('lsp-hLogo').src=logo(s.homeId);
     const pit=el('lsp-pit'),bat=el('lsp-bat');
     pit.style.display=s.live?'':'none';bat.style.display=s.live?'':'none';
     el('lsp-ct').style.fontSize=s.live?'':'17px';
