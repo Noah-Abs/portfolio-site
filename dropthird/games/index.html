@@ -224,10 +224,7 @@
   .lsp{position:fixed;left:0;right:248px;bottom:0;z-index:60;display:flex;justify-content:center;padding:0 30px 16px;pointer-events:none}
   .lsp.hide{display:none}
   .lsp-card{pointer-events:auto;width:100%;max-width:760px;background:var(--panel,#101115);border:1px solid var(--border,#1b1e24);border-radius:16px;box-shadow:0 14px 40px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 24px}
-  .lsp-left{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;gap:7px}
-  .lsp-inn{display:flex;align-items:center;gap:4px}
-  .lsp-inn .ar{font-size:13px;line-height:1;color:var(--accent,#4aa3ff)}
-  .lsp-inn .nm{font-family:"Oswald";font-weight:700;font-size:17px;line-height:1;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums}
+  .lsp-left{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;gap:9px}
   .bd{position:relative;width:58px;height:58px}
   .bd i{position:absolute;width:18px;height:18px;transform:rotate(45deg);border-radius:3px;background:#fff;transition:background .2s ease,box-shadow .2s ease}
   .bd .b2{top:0;left:50%;margin-left:-9px}
@@ -238,12 +235,15 @@
   .outs i{width:11px;height:11px;border-radius:50%;background:#c7cace;transition:background .2s ease,box-shadow .2s ease}
   .outs i.on{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
   .outs.flash i{background:#e23b3b;box-shadow:0 0 8px rgba(226,59,59,.55)}
-  .lsp-mid{display:flex;gap:30px;align-items:center}
-  .lsp-mid .col{display:flex;flex-direction:column;align-items:center}
-  .lsp-mid .tl{width:24px;height:24px;object-fit:contain;margin-bottom:5px}
-  .lsp-mid .lspab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
-  .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.9;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
+  .lsp-mid{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;column-gap:16px;row-gap:5px}
+  .lsp-tm{display:flex;align-items:center;gap:6px}
+  .lsp-tm .tl{width:20px;height:20px;object-fit:contain}
+  .lsp-tm .lspab{font-size:12px;font-weight:700;letter-spacing:1px;color:#9aa0a6}
+  .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:40px;line-height:.85;color:#fff;font-variant-numeric:tabular-nums;min-width:32px;text-align:center;transition:transform .2s ease;will-change:transform}
   .lsp-mid .rn.bump{transform:scale(1.12)}
+  .lsp-inn{display:flex;flex-direction:column;align-items:center;line-height:1}
+  .lsp-inn .ar{font-size:12px;line-height:1;color:var(--accent,#4aa3ff)}
+  .lsp-inn .nm{font-family:"Oswald";font-weight:700;font-size:18px;line-height:1;color:var(--text2,#cfd4da);font-variant-numeric:tabular-nums}
   .lsp-right{text-align:right;min-width:118px;flex:0 0 auto}
   .lsp-right .ln{font-size:13.5px;font-weight:500;color:#cfd4da;letter-spacing:.2px;white-space:nowrap;transition:opacity .15s ease;line-height:1.5}
   .lsp-right .ln b{font-weight:700;color:#fff}
@@ -253,7 +253,7 @@
     .lsp{right:0;padding:0 9px 10px}
     .lsp-card{padding:11px 13px;gap:10px;border-radius:22px}
     .lsp-left{padding:9px 11px}
-    .lsp-mid{gap:20px}.lsp-mid .rn{font-size:34px}.lsp-mid .lspab{font-size:11px}.lsp-mid .tl{width:20px;height:20px}.lsp-inn .nm{font-size:15px}.lsp-inn .ar{font-size:11px}
+    .lsp-mid{column-gap:12px}.lsp-mid .rn{font-size:32px}.lsp-tm .lspab{font-size:11px}.lsp-tm .tl{width:18px;height:18px}.lsp-inn .nm{font-size:16px}.lsp-inn .ar{font-size:11px}
     .lsp-right{min-width:0}.lsp-right .ln{font-size:12px}.lsp-right .ct{font-size:22px}
     .bd{width:52px;height:52px}
     body.lspon .main{padding-bottom:150px}
@@ -321,13 +321,16 @@
   <!-- live status panel — appears at the bottom while viewing a live game -->
   <div class="lsp hide" id="lsp"><div class="lsp-card">
     <div class="lsp-left">
-      <div class="lsp-inn" id="lsp-inn"><span class="ar" id="lsp-innAr">▲</span><span class="nm" id="lsp-innNm">1</span></div>
       <div class="bd"><i class="b2" id="lsp-b2"></i><i class="b3" id="lsp-b3"></i><i class="b1" id="lsp-b1"></i></div>
       <div class="outs" id="lsp-outs"><i id="lsp-o0"></i><i id="lsp-o1"></i><i id="lsp-o2"></i></div>
     </div>
     <div class="lsp-mid">
-      <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
-      <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
+      <div class="lsp-tm"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-aAb">—</span></div>
+      <span class="lsp-gap"></span>
+      <div class="lsp-tm"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-hAb">—</span></div>
+      <span class="rn" id="lsp-aR">0</span>
+      <div class="lsp-inn" id="lsp-inn"><span class="ar" id="lsp-innAr">▲</span><span class="nm" id="lsp-innNm">1</span></div>
+      <span class="rn" id="lsp-hR">0</span>
     </div>
     <div class="lsp-right">
       <div class="ln" id="lsp-pit">—</div>
