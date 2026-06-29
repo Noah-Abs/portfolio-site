@@ -182,7 +182,7 @@
   function render(){
     if(!GAMES.length){grid.innerHTML='<div class="gh-state">No games scheduled.</div>';setHead();return;}
     grid.innerHTML=GAMES.map(cardHTML).join('');
-    grid.querySelectorAll('.gh-card').forEach(c=>{c.onclick=()=>{location.href=`../games/?pk=${c.dataset.pk}`;};});
+    grid.querySelectorAll('.gh-card').forEach(c=>{c.onclick=()=>{location.href=`../games/?pk=${c.dataset.pk}&src=hub`;};});
     setHead();
   }
   async function load(date,silent){

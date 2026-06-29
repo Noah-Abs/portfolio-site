@@ -362,9 +362,16 @@
     if(open)gdExpanded.add(idx);else gdExpanded.delete(idx);});
 
   // ---------- game list ----------
+  // a live game belongs under "Games"; the schedule list / past games stay under "Schedule"
+  function setActiveNav(toGames){
+    const sch=document.querySelector('.nav a[href="../games/"]');
+    const hub=document.querySelector('.nav a[href="../gamehub/"]');
+    if(sch)sch.classList.toggle('active',!toGames);
+    if(hub)hub.classList.toggle('active',toGames);
+  }
   async function loadList(){
     if(gdTimer){clearInterval(gdTimer);gdTimer=null;}
-    lspHide(); document.body.classList.remove('gd-open');
+    lspHide(); document.body.classList.remove('gd-open'); setActiveNav(false);
     const my=++tok; view.innerHTML='<div class="state">Loading games…</div>';
     const sch=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${TEAM_ID}&season=${SEASON}&gameType=R`);
     if(my!==tok)return;
@@ -748,6 +755,7 @@
     away.isWinner=(g&&g.teams.away.isWinner); home.isWinner=(g&&g.teams.home.isWinner);
     GD={pk,box,ls,sch,g,away,home,pbp,wp,date:g?mday(g.officialDate||g.gameDate):''};
     const live=g&&g.status&&g.status.abstractGameState==='Live';
+    setActiveNav(live);   // live game → highlight "Games"; otherwise leave it under "Schedule"
     const src=new URLSearchParams(location.search).get('src');
     view.innerHTML=
       `<div class="back" id="back">${src==='watch'?'← Watch':src==='hub'?'← GameHub':'← All games'}</div>`+scoreboard()+
