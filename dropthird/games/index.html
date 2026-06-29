@@ -239,7 +239,7 @@
   .lsp-mid{display:flex;gap:30px;align-items:flex-start}
   .lsp-mid .col{display:flex;flex-direction:column;align-items:center}
   .lsp-mid .tl{width:24px;height:24px;object-fit:contain;margin-bottom:5px}
-  .lsp-mid .ab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
+  .lsp-mid .lspab{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#9aa0a6;margin-bottom:3px}
   .lsp-mid .rn{font-family:"Oswald";font-weight:700;font-size:42px;line-height:.95;color:#fff;font-variant-numeric:tabular-nums;transition:transform .2s ease;will-change:transform}
   .lsp-mid .rn.bump{transform:scale(1.12)}
   .lsp-right{text-align:right;min-width:118px;flex:0 0 auto}
@@ -251,7 +251,7 @@
     .lsp{right:0;padding:0 9px 10px}
     .lsp-card{padding:11px 13px;gap:10px;border-radius:22px}
     .lsp-left{padding:9px 11px}
-    .lsp-mid{gap:15px}.lsp-mid .rn{font-size:34px}.lsp-mid .ab{font-size:11px}.lsp-mid .tl{width:20px;height:20px}
+    .lsp-mid{gap:15px}.lsp-mid .rn{font-size:34px}.lsp-mid .lspab{font-size:11px}.lsp-mid .tl{width:20px;height:20px}
     .lsp-right{min-width:0}.lsp-right .ln{font-size:12px}.lsp-right .ct{font-size:22px}
     .bd{width:52px;height:52px}
     body.lspon .main{padding-bottom:150px}
@@ -311,8 +311,8 @@
       <div class="outs" id="lsp-outs"><i id="lsp-o0"></i><i id="lsp-o1"></i><i id="lsp-o2"></i></div>
     </div>
     <div class="lsp-mid">
-      <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
-      <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="ab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
+      <div class="col"><img class="tl" id="lsp-aLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-aAb">—</span><span class="rn" id="lsp-aR">0</span></div>
+      <div class="col"><img class="tl" id="lsp-hLogo" alt="" onerror="this.style.visibility='hidden'"><span class="lspab" id="lsp-hAb">—</span><span class="rn" id="lsp-hR">0</span></div>
     </div>
     <div class="lsp-right">
       <div class="ln" id="lsp-pit">—</div>
@@ -423,6 +423,10 @@
     const a=GD.away, h=GD.home, map=lspBoxStats(box), lt=ls.teams||{};   // boxscore teams carry abbreviation + id
     const awayR=(lt.away&&lt.away.runs!=null)?lt.away.runs:(a.score!=null?a.score:0);
     const homeR=(lt.home&&lt.home.runs!=null)?lt.home.runs:(h.score!=null?h.score:0);
+    const live=!!(GD.g&&GD.g.status&&GD.g.status.abstractGameState==='Live');
+    const head={awayAb:lspAbv(a.team),homeAb:lspAbv(h.team),awayR,homeR,live,awayId:a.team.id,homeId:h.team.id};
+    if(!live)return Object.assign(head,{first:false,second:false,third:false,outs:0,inningKey:'',
+      pitLine:'',batLine:'',count:lspStatus(GD.g).toUpperCase()});
     const m=(cur&&cur.matchup)||{};
     const pit=m.pitcher||(ls.defense&&ls.defense.pitcher);
     const bat=m.batter||(ls.offense&&ls.offense.batter);
@@ -433,10 +437,16 @@
     const bl=(bb&&bb.atBats!=null)?`${bb.hits||0}-${bb.atBats}`:'0-0';
     const batLine=`<b>${esc(lspLast(bat&&bat.fullName))}:</b> ${bl}`;
     const o=ls.offense||{};
-    return {awayAb:lspAbv(a.team),homeAb:lspAbv(h.team),awayR,homeR,awayId:a.team.id,homeId:h.team.id,
+    return Object.assign(head,{
       first:!!o.first,second:!!o.second,third:!!o.third,outs:ls.outs||0,
       inningKey:((ls.isTopInning?'T':'B')+ls.currentInning),
-      pitLine,batLine,count:`${ls.balls||0}-${ls.strikes||0}`};
+      pitLine,batLine,count:`${ls.balls||0}-${ls.strikes||0}`});
+  }
+  function lspStatus(g){
+    const a=g&&g.status&&g.status.abstractGameState;
+    if(a==='Final')return 'Final';
+    if(g&&g.gameDate){try{return new Date(g.gameDate).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}catch(e){}}
+    return (g&&g.status&&g.status.detailedState)||'';
   }
   function lspPaint(s){
     lspSetOn('lsp-b1',s.first);lspSetOn('lsp-b2',s.second);lspSetOn('lsp-b3',s.third);
@@ -449,14 +459,15 @@
     lspG('lsp-aAb').textContent=s.awayAb;lspG('lsp-hAb').textContent=s.homeAb;
     if(lspPrev.awayId!==s.awayId)lspG('lsp-aLogo').src=logo(s.awayId);
     if(lspPrev.homeId!==s.homeId)lspG('lsp-hLogo').src=logo(s.homeId);
-    lspFade(lspG('lsp-pit'),s.pitLine,lspPrev.pitLine);
-    lspFade(lspG('lsp-bat'),s.batLine,lspPrev.batLine);
-    lspFade(lspG('lsp-ct'),s.count,lspPrev.count,true);
+    const pit=lspG('lsp-pit'),bat=lspG('lsp-bat');
+    pit.style.display=s.live?'':'none';bat.style.display=s.live?'':'none';
+    lspG('lsp-ct').style.fontSize=s.live?'':'17px';
+    if(s.live){lspFade(pit,s.pitLine,lspPrev.pitLine);lspFade(bat,s.batLine,lspPrev.batLine);lspFade(lspG('lsp-ct'),s.count,lspPrev.count,true);}
+    else{lspG('lsp-ct').textContent=s.count;}
     lspPrev=s;
   }
-  function lspRefresh(){
-    const g=GD&&GD.g, live=g&&g.status&&g.status.abstractGameState==='Live';
-    if(!GD||!live){lspHide();return;}
+  function lspRefresh(){      // panel stays at the bottom for ANY open game (live → full, else score + status)
+    if(!GD||!GD.g){lspHide();return;}
     lspPaint(lspBuild());
     lspG('lsp').classList.remove('hide');document.body.classList.add('lspon');
   }
