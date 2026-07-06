@@ -2421,10 +2421,24 @@ function renderVaSpray(el) {
   }
 
   let svg = `<svg class="va-chart-svg va-spray-svg" viewBox="0 0 250 250">`
-  // Field shape
-  svg += `<path d="M125,220 L30,130 Q125,15 220,130 Z" fill="rgba(76,175,80,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>`
-  svg += `<path d="M125,220 L85,180 L125,140 L165,180 Z" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>` // infield diamond
-  svg += `<circle cx="125" cy="220" r="3" fill="rgba(255,255,255,0.25)"/>` // home plate
+  // Outfield grass (fair territory: foul lines from home + fence arc)
+  svg += `<path d="M125,208 L34,66 Q125,14 216,66 Z" fill="rgba(76,175,80,0.08)" stroke="none"/>`
+  // Fence arc
+  svg += `<path d="M34,66 Q125,14 216,66" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="0.9"/>`
+  // Foul lines
+  svg += `<path d="M125,208 L34,66 M125,208 L216,66" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.6"/>`
+  // Infield dirt diamond
+  svg += `<path d="M125,208 L82,166 L125,124 L168,166 Z" fill="rgba(194,124,72,0.13)" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>`
+  // Bases
+  svg += `<g fill="rgba(255,255,255,0.32)">`
+  svg += `<rect x="164.5" y="162.5" width="7" height="7" transform="rotate(45 168 166)"/>`
+  svg += `<rect x="121.5" y="120.5" width="7" height="7" transform="rotate(45 125 124)"/>`
+  svg += `<rect x="78.5" y="162.5" width="7" height="7" transform="rotate(45 82 166)"/>`
+  svg += `</g>`
+  // Pitcher's mound
+  svg += `<circle cx="125" cy="164" r="4" fill="rgba(194,124,72,0.2)" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>`
+  // Home plate
+  svg += `<path d="M121,202 L129,202 L129,206 L125,210 L121,206 Z" fill="rgba(255,255,255,0.4)"/>`
 
   for (const b of balls) {
     const color = eventColors[b.event] || 'rgba(255,255,255,0.12)'
@@ -2838,9 +2852,10 @@ function renderVaWhiff(el) {
 
   // Same zone geometry as heatmap
   const szXMin = -0.83, szXMax = 0.83, szZMin = 1.5, szZMax = 3.5
-  const padX = 0.9, padZ = 0.8
-  const zoneLeft = szXMin - padX, zoneRight = szXMax + padX, zoneBot = szZMin - padZ, zoneTop = szZMax + padZ
   const GRID = 7
+  // Pad so the strike zone is exactly the center 3x3 block of the 7x7 grid
+  const padX = (szXMax - szXMin) * 2 / 3, padZ = (szZMax - szZMin) * 2 / 3
+  const zoneLeft = szXMin - padX, zoneRight = szXMax + padX, zoneBot = szZMin - padZ, zoneTop = szZMax + padZ
   const cellW = (zoneRight - zoneLeft) / GRID
   const cellH = (zoneTop - zoneBot) / GRID
   const swings = Array.from({ length: GRID }, () => Array(GRID).fill(0))
@@ -2857,14 +2872,14 @@ function renderVaWhiff(el) {
     }
   }
 
-  const W = 380, H = 440, PAD = 55
-  const szL = PAD, szR = W - PAD, szT = PAD, szB = H - PAD - 30
+  const W = 400, H = 430
+  const szL = 56, szR = 344, szT = 46, szB = 334
 
-  // Strike zone pixel coords
-  const szInL = szL + (szR - szL) * ((szXMin - zoneLeft) / (zoneRight - zoneLeft))
-  const szInR = szL + (szR - szL) * ((szXMax - zoneLeft) / (zoneRight - zoneLeft))
-  const szInT = szT + (szB - szT) * ((zoneTop - szZMax) / (zoneTop - zoneBot))
-  const szInB = szT + (szB - szT) * ((zoneTop - szZMin) / (zoneTop - zoneBot))
+  // Strike zone = the middle 3x3 block of the 7x7 grid, so the outline lands on cell edges
+  const szInL = szL + (szR - szL) * (2 / GRID)
+  const szInR = szL + (szR - szL) * (5 / GRID)
+  const szInT = szT + (szB - szT) * (2 / GRID)
+  const szInB = szT + (szB - szT) * (5 / GRID)
 
   let svg = `<svg class="va-chart-svg va-zone-svg" viewBox="0 0 ${W} ${H}">`
   // Dark background
@@ -2893,7 +2908,7 @@ function renderVaWhiff(el) {
   }
 
   // Strike zone border
-  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" rx="1"/>`
+  svg += `<rect x="${szInL}" y="${szInT}" width="${szInR - szInL}" height="${szInB - szInT}" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" rx="1"/>`
   // 3x3 inner grid
   const zW3 = (szInR - szInL) / 3, zH3 = (szInB - szInT) / 3
   for (let i = 1; i < 3; i++) {
@@ -2908,18 +2923,18 @@ function renderVaWhiff(el) {
   // Labels
   svg += `<text x="${W / 2}" y="${szT - 10}" fill="rgba(255,255,255,0.35)" font-size="10" text-anchor="middle" font-family="Inter" font-weight="600">Catcher's Perspective</text>`
 
-  // Color scale legend
-  const lx = szR + 8, ly = szInT, lh = szInB - szInT
-  for (let i = 0; i < 20; i++) {
-    const t = i / 19
+  // Color scale legend (horizontal, centered — never clips on narrow screens)
+  const legW = 150, legX = W / 2 - legW / 2, legY = szB + 44, segs = 24
+  for (let i = 0; i < segs; i++) {
+    const t = i / (segs - 1)
     let r, g, b
     if (t < 0.25) { const s = t / 0.25; r = Math.round(30 + s * 80); g = Math.round(160 + s * 40); b = Math.round(80 - s * 30) }
     else if (t < 0.5) { const s = (t - 0.25) / 0.25; r = Math.round(110 + s * 140); g = Math.round(200 - s * 40); b = Math.round(50 - s * 30) }
     else { const s = Math.min((t - 0.5) / 0.35, 1); r = 250; g = Math.round(160 - s * 130); b = Math.round(20 + s * 10) }
-    svg += `<rect x="${lx}" y="${ly + lh - (i + 1) * (lh / 20)}" width="8" height="${lh / 20 + 0.5}" fill="rgb(${r},${g},${b})" opacity="0.8"/>`
+    svg += `<rect x="${legX + i * (legW / segs)}" y="${legY}" width="${legW / segs + 0.5}" height="8" fill="rgb(${r},${g},${b})" opacity="0.85"/>`
   }
-  svg += `<text x="${lx + 4}" y="${ly - 4}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">High</text>`
-  svg += `<text x="${lx + 4}" y="${ly + lh + 10}" fill="rgba(255,255,255,0.3)" font-size="7" text-anchor="middle" font-family="Inter">Low</text>`
+  svg += `<text x="${legX - 6}" y="${legY + 7}" fill="rgba(255,255,255,0.4)" font-size="8" text-anchor="end" font-family="Inter">Low</text>`
+  svg += `<text x="${legX + legW + 6}" y="${legY + 7}" fill="rgba(255,255,255,0.4)" font-size="8" text-anchor="start" font-family="Inter">High</text>`
 
   svg += '</svg>'
 

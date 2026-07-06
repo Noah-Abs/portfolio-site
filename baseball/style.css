@@ -2,7 +2,7 @@
   --white: #FFFFFF;
   --silver: #C0C8D8;
   --sb-width: 280px;
-  --rn-width: 195px;
+  --rn-width: 0px;
   --team-bg1: #002580;
   --team-bg2: #000D3A;
   --team-bg3: #000510;
@@ -74,7 +74,7 @@ body::after {
   scrollbar-width: none; -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
   margin-left: var(--sb-width); margin-right: var(--rn-width);
-  position: sticky; top: 56px; z-index: 95;
+  position: sticky; top: 115px; z-index: 95;
 }
 .scoreboard-ticker::-webkit-scrollbar { display: none; }
 .scoreboard-ticker:empty { display: none; }
@@ -112,16 +112,16 @@ body::after {
 .sd-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.55; }
 
 /* ── Fixed Left Sidebar ── */
-.fixed-sidebar { position: fixed; top: 72px; left: 0; bottom: 0; width: var(--sb-width); z-index: 50; overflow-y: auto; scrollbar-width: none; padding: 1.5rem 1.1rem; display: flex; flex-direction: column; gap: 0.85rem; background: rgba(0,4,20,0.52); border-right: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
+.fixed-sidebar { position: fixed; top: 115px; left: 0; bottom: 0; width: var(--sb-width); z-index: 50; overflow-y: auto; scrollbar-width: none; padding: 1.5rem 1.1rem; display: flex; flex-direction: column; gap: 0.85rem; background: rgba(0,4,20,0.52); border-right: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); }
 .fixed-sidebar::-webkit-scrollbar { display: none; }
 
 /* ── Right Navigation Panel ── */
-.right-nav { position: fixed; top: 72px; right: 0; bottom: 0; width: var(--rn-width); z-index: 50; display: flex; flex-direction: column; background: rgba(0,4,20,0.52); border-left: 1px solid rgba(255,255,255,0.07); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); padding: 1.2rem 0; overflow-y: auto; scrollbar-width: none; }
+.right-nav { position: sticky; top: 67px; z-index: 99; display: flex; flex-direction: row; align-items: stretch; gap: 0.1rem; height: 48px; background: rgba(0,6,26,0.9); border-bottom: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); padding: 0 0.6rem; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .right-nav::-webkit-scrollbar { display: none; }
-.rn-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.2em; color: rgba(255,255,255,0.2); text-transform: uppercase; padding: 0 1rem 0.6rem; }
-.rn-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem; border: none; background: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 500; color: rgba(255,255,255,0.4); text-align: left; width: 100%; border-left: 2px solid transparent; transition: background 0.15s, color 0.15s, border-color 0.15s; -webkit-tap-highlight-color: transparent; }
-.rn-item:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.04); }
-.rn-item.active { color: #fff; border-left-color: var(--team-header2, #003DA5); background: rgba(255,255,255,0.06); }
+.rn-label { display: none; }
+.rn-item { display: flex; align-items: center; gap: 0.45rem; padding: 0 0.85rem; border: none; background: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; color: rgba(255,255,255,0.5); white-space: nowrap; flex-shrink: 0; border-bottom: 2px solid transparent; transition: background 0.15s, color 0.15s, border-color 0.15s; -webkit-tap-highlight-color: transparent; }
+.rn-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+.rn-item.active { color: #fff; border-bottom-color: var(--team-header2, #003DA5); background: rgba(255,255,255,0.05); }
 .rn-badge { font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; background: #e53; color: #fff; border-radius: 4px; padding: 1px 4px; }
 
 /* ── Main Content ── */
@@ -165,7 +165,7 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .p-line { font-size: 0.7rem; font-weight: 400; letter-spacing: 0.03em; color: rgba(255,255,255,0.42); }
 
 /* ── Hero Section ── */
-#view-home { height: calc(100dvh - 72px); overflow: hidden; }
+#view-home { height: calc(100dvh - 120px); overflow: hidden; }
 .hero-section { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem 2rem; gap: 1.1rem; }
 .hero-logo { height: clamp(130px, 14vw, 200px); width: auto; filter: drop-shadow(0 0 40px rgba(0,61,165,0.8)) drop-shadow(0 0 16px rgba(0,100,255,0.4)); opacity: 0.95; }
 .hero-wordmark { display: flex; flex-direction: column; align-items: center; gap: 0; line-height: 1; }
@@ -182,7 +182,7 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
 .ws-banner-year { writing-mode: vertical-rl; transform: rotate(180deg); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.1em; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); user-select: none; }
 
 /* ── Next Game Card ── */
-.hero-next { display: flex; flex-direction: column; gap: 0.4rem; background: rgba(0,30,100,0.3); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 0.75rem 0.85rem; flex-shrink: 0; margin: auto 0.6rem 0.75rem; overflow: hidden; }
+.hero-next { display: flex; flex-direction: column; gap: 0.4rem; background: rgba(0,30,100,0.3); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 0.75rem 0.85rem; flex-shrink: 0; margin: 0; overflow: hidden; }
 .hero-next-label { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255,255,255,0.28); }
 .hero-next-venue { font-size: 0.68rem; font-weight: 600; color: rgba(255,255,255,0.55); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero-next-matchup { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
@@ -639,6 +639,7 @@ body.no-left-sidebar .scoreboard-ticker { margin-left: 0; }
   :root { --sb-width: 0px; --rn-width: 0px; }
   .fixed-sidebar { display: none; }
   .right-nav { display: none; }
+  .scoreboard-ticker { top: 56px; }
   .main-content { margin-left: 0; margin-right: 0; }
   .sb-nav { display: none; }
 

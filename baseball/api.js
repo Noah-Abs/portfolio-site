@@ -805,20 +805,23 @@ function extractPlayByPlayData(feeds, teamId) {
           if (pi === lastPitchIdx && playResult) pitch.atBatResult = playResult
           pitches.push(pitch)
         }
-      }
 
-      if (play.hitData?.coordinates?.coordX != null) {
-        battedBalls.push({
-          coordX: play.hitData.coordinates.coordX,
-          coordY: play.hitData.coordinates.coordY,
-          launchSpeed: play.hitData.launchSpeed,
-          launchAngle: play.hitData.launchAngle,
-          totalDistance: play.hitData.totalDistance,
-          event: play.result?.event || '',
-          description: play.result?.description || '',
-          batterId, batterName,
-          isMyBatter, gamePk
-        })
+        // Batted-ball location lives on the in-play pitch event (evt.hitData),
+        // not on the play. Fall back to play-level hitData for older feeds.
+        const hd = evt.hitData || (pi === lastPitchIdx ? play.hitData : null)
+        if (hd?.coordinates?.coordX != null) {
+          battedBalls.push({
+            coordX: hd.coordinates.coordX,
+            coordY: hd.coordinates.coordY,
+            launchSpeed: hd.launchSpeed,
+            launchAngle: hd.launchAngle,
+            totalDistance: hd.totalDistance,
+            event: play.result?.event || '',
+            description: play.result?.description || '',
+            batterId, batterName,
+            isMyBatter, gamePk
+          })
+        }
       }
     }
   }
