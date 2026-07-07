@@ -4,8 +4,9 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Master scale — everything is in rem, so this fits the UI to the viewport */
-  font-size: clamp(10px, 1.02vw, 15px);
+  /* Master scale — sized to the SCREEN (both width and height), so the whole
+     dashboard always fits. Everything else is in rem and follows this. */
+  font-size: clamp(8px, min(1.05vw, 1.95vh), 15px);
 
   /* Surfaces */
   --bg:          #0b0e14;   /* deep charcoal page */
@@ -427,8 +428,8 @@ body {
 }
 
 /* ═══════════════════ Responsive fallback ═══════════════════ */
-/* Three columns stay down to phone widths; only stack when truly narrow. */
-@media (max-width: 720px) {
+/* Three horizontal columns stay down to phone widths; only stack when truly narrow. */
+@media (max-width: 560px) {
   body { height: auto; overflow: auto; }
   .pbp-grid { grid-template-columns: 1fr; height: auto; }
   .col { overflow: visible; }
