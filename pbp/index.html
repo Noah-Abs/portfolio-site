@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0e14" />
+  <title>Play-by-Play</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════ Top bar ══════════ -->
+  <header class="pbp-header">
+    <div class="ph-brand">
+      <span class="ph-dot"></span>
+      <span class="ph-title">Play<span class="ph-title-sep">·</span>by<span class="ph-title-sep">·</span>Play</span>
+    </div>
+    <div class="ph-matchup" id="ph-matchup">
+      <span class="ph-loading">Loading game…</span>
+    </div>
+    <div class="ph-status">
+      <span class="ph-live-badge" id="ph-live-badge" hidden><span class="ph-live-pip"></span>LIVE</span>
+      <span class="ph-updated" id="ph-updated"></span>
+    </div>
+  </header>
+
+  <!-- ══════════ Three-column command center ══════════ -->
+  <main class="pbp-grid" id="pbp-grid">
+
+    <!-- ─────── LEFT · 22% · live info center ─────── -->
+    <aside class="col col-left">
+
+      <section class="card" id="card-gameinfo">
+        <div class="card-head">
+          <span class="card-label">Game Info</span>
+          <span class="card-sub" id="gi-state"></span>
+        </div>
+        <div class="card-body" id="gi-body">
+          <div class="skeleton-lines"><span></span><span></span><span></span></div>
+        </div>
+      </section>
+
+      <section class="card" id="card-situation">
+        <div class="card-head">
+          <span class="card-label">Situation</span>
+        </div>
+        <div class="card-body" id="situation-body">
+          <div class="skeleton-lines"><span></span><span></span></div>
+        </div>
+      </section>
+
+      <section class="card card-grow" id="card-updates">
+        <div class="card-head">
+          <span class="card-label">Key Plays</span>
+        </div>
+        <div class="card-body card-scroll" id="updates-body">
+          <div class="empty-note">Waiting for game events…</div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- ─────── CENTER · 56% · focal point ─────── -->
+    <section class="col col-center">
+
+      <section class="card card-scoreboard" id="card-scoreboard">
+        <div class="sb-grid">
+          <div class="sb-team sb-away" id="sb-away">
+            <img class="sb-logo" id="sb-away-logo" alt="" />
+            <div class="sb-team-meta">
+              <span class="sb-abbr" id="sb-away-abbr">—</span>
+              <span class="sb-record" id="sb-away-record"></span>
+            </div>
+            <span class="sb-score" id="sb-away-score">0</span>
+          </div>
+
+          <div class="sb-center">
+            <div class="sb-inning" id="sb-inning">
+              <span class="sb-inning-arrow" id="sb-inning-arrow">▲</span>
+              <span class="sb-inning-num" id="sb-inning-num">—</span>
+            </div>
+            <div class="sb-state-line" id="sb-state-line">First Pitch</div>
+          </div>
+
+          <div class="sb-team sb-home" id="sb-home">
+            <span class="sb-score" id="sb-home-score">0</span>
+            <div class="sb-team-meta">
+              <span class="sb-abbr" id="sb-home-abbr">—</span>
+              <span class="sb-record" id="sb-home-record"></span>
+            </div>
+            <img class="sb-logo" id="sb-home-logo" alt="" />
+          </div>
+        </div>
+        <div class="sb-linescore-wrap card-scroll-x">
+          <table class="sb-linescore" id="sb-linescore"></table>
+        </div>
+      </section>
+
+      <section class="card card-state" id="card-state">
+        <div class="state-bases">
+          <div class="bases-diamond" id="bases-diamond">
+            <span class="base base-2b" id="base-2b"></span>
+            <span class="base base-3b" id="base-3b"></span>
+            <span class="base base-1b" id="base-1b"></span>
+            <span class="base base-home"></span>
+          </div>
+          <span class="state-mini-label">Bases</span>
+        </div>
+
+        <div class="state-count">
+          <div class="count-row">
+            <span class="count-key">B</span>
+            <span class="count-pips" id="pips-balls"></span>
+          </div>
+          <div class="count-row">
+            <span class="count-key">S</span>
+            <span class="count-pips" id="pips-strikes"></span>
+          </div>
+          <div class="count-row">
+            <span class="count-key">O</span>
+            <span class="count-pips" id="pips-outs"></span>
+          </div>
+        </div>
+
+        <div class="state-count-big" id="state-count-big">
+          <span class="scb-num" id="scb-balls">0</span>
+          <span class="scb-sep">–</span>
+          <span class="scb-num" id="scb-strikes">0</span>
+          <span class="scb-label">Count</span>
+        </div>
+      </section>
+
+      <section class="card card-matchup" id="card-matchup">
+        <div class="mu-side mu-batter">
+          <span class="mu-role">At Bat</span>
+          <img class="mu-headshot" id="mu-batter-img" alt="" />
+          <div class="mu-info">
+            <span class="mu-name" id="mu-batter-name">—</span>
+            <span class="mu-meta" id="mu-batter-meta"></span>
+            <span class="mu-line" id="mu-batter-line"></span>
+          </div>
+        </div>
+        <div class="mu-vs">vs</div>
+        <div class="mu-side mu-pitcher">
+          <span class="mu-role">Pitching</span>
+          <img class="mu-headshot" id="mu-pitcher-img" alt="" />
+          <div class="mu-info">
+            <span class="mu-name" id="mu-pitcher-name">—</span>
+            <span class="mu-meta" id="mu-pitcher-meta"></span>
+            <span class="mu-line" id="mu-pitcher-line"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card card-grow card-pbp" id="card-pbp">
+        <div class="card-head">
+          <span class="card-label">Play-by-Play</span>
+          <span class="card-sub" id="pbp-count"></span>
+        </div>
+        <div class="card-body card-scroll" id="pbp-body">
+          <div class="empty-note">Waiting for first pitch…</div>
+        </div>
+      </section>
+
+    </section>
+
+    <!-- ─────── RIGHT · 22% · box score ─────── -->
+    <aside class="col col-right">
+      <section class="card card-grow card-box" id="card-box">
+        <div class="card-head">
+          <span class="card-label">Box Score</span>
+          <div class="box-tabs" id="box-tabs">
+            <button class="box-tab active" data-team="away" id="box-tab-away">Away</button>
+            <button class="box-tab" data-team="home" id="box-tab-home">Home</button>
+          </div>
+        </div>
+        <div class="card-body card-scroll" id="box-body">
+          <div class="skeleton-lines"><span></span><span></span><span></span><span></span></div>
+        </div>
+      </section>
+    </aside>
+
+  </main>
+
+  <script src="pbp.js"></script>
+</body>
+</html>
