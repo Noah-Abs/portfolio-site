@@ -116,100 +116,46 @@
             <img class="sb-logo" id="sb-home-logo" alt="" />
           </div>
         </div>
-      </section>
-
-      <!-- Inning tracker / linescore -->
-      <section class="card card-innings" id="card-innings">
         <div class="sb-linescore-wrap card-scroll-x">
           <table class="sb-linescore" id="sb-linescore"></table>
         </div>
       </section>
 
-      <!-- Base / count / outs / game state -->
-      <section class="card card-state" id="card-state">
-        <div class="gs-panel gs-count-panel">
-          <div class="gs-count-big">
-            <span class="gs-cn" id="scb-balls">0</span><span class="gs-cn-sep">–</span><span class="gs-cn" id="scb-strikes">0</span>
+      <!-- Matchup with bases / count / outs in the middle (fills remaining space) -->
+      <section class="card card-matchup card-grow" id="card-matchup">
+        <div class="mu-side mu-batter">
+          <span class="mu-role">At Bat</span>
+          <img class="mu-headshot" id="mu-batter-img" alt="" />
+          <div class="mu-info">
+            <span class="mu-name" id="mu-batter-name">—</span>
+            <span class="mu-meta" id="mu-batter-meta"></span>
+            <div class="mu-stats" id="mu-batter-stats"></div>
           </div>
-          <div class="gs-count-pips">
-            <div class="count-row"><span class="count-key">B</span><span class="count-pips" id="pips-balls"></span></div>
-            <div class="count-row"><span class="count-key">S</span><span class="count-pips" id="pips-strikes"></span></div>
-          </div>
-          <span class="gs-panel-label">Count</span>
         </div>
 
-        <div class="gs-panel gs-diamond-panel">
+        <div class="mu-state">
           <div class="bases-diamond" id="bases-diamond">
             <span class="base base-2b" id="base-2b"></span>
             <span class="base base-3b" id="base-3b"></span>
             <span class="base base-1b" id="base-1b"></span>
             <span class="base base-home"></span>
           </div>
-          <span class="gs-situation" id="gs-situation">No runners on base</span>
+          <div class="mu-count" id="mu-count">0–0</div>
+          <div class="count-pips outs-pips" id="pips-outs"></div>
+          <span class="mu-situation" id="gs-situation">No runners on base</span>
         </div>
 
-        <div class="gs-panel gs-outs-panel">
-          <div class="count-pips outs-pips" id="pips-outs"></div>
-          <span class="gs-outs-label" id="gs-outs-label">0 Outs</span>
-          <span class="gs-panel-label">Outs</span>
+        <div class="mu-side mu-pitcher">
+          <span class="mu-role">Pitching</span>
+          <img class="mu-headshot" id="mu-pitcher-img" alt="" />
+          <div class="mu-info">
+            <span class="mu-name" id="mu-pitcher-name">—</span>
+            <span class="mu-meta" id="mu-pitcher-meta"></span>
+            <div class="mu-stats" id="mu-pitcher-stats"></div>
+          </div>
         </div>
 
         <div class="gs-leverage" id="gs-leverage" hidden><span class="gs-lev-dot"></span>High Leverage</div>
-      </section>
-
-      <!-- Batter vs Pitcher matchup -->
-      <section class="card card-matchup" id="card-matchup">
-        <div class="mu-top">
-          <div class="mu-side mu-batter">
-            <span class="mu-role">At Bat</span>
-            <img class="mu-headshot" id="mu-batter-img" alt="" />
-            <div class="mu-info">
-              <span class="mu-name" id="mu-batter-name">—</span>
-              <span class="mu-meta" id="mu-batter-meta"></span>
-              <div class="mu-stats" id="mu-batter-stats"></div>
-            </div>
-          </div>
-
-          <div class="mu-center">
-            <div class="mu-count" id="mu-count">0–0</div>
-            <div class="mu-lastpitch" id="mu-lastpitch"></div>
-            <div class="mu-h2h" id="mu-h2h"></div>
-          </div>
-
-          <div class="mu-side mu-pitcher">
-            <span class="mu-role">Pitching</span>
-            <img class="mu-headshot" id="mu-pitcher-img" alt="" />
-            <div class="mu-info">
-              <span class="mu-name" id="mu-pitcher-name">—</span>
-              <span class="mu-meta" id="mu-pitcher-meta"></span>
-              <div class="mu-stats" id="mu-pitcher-stats"></div>
-            </div>
-          </div>
-        </div>
-        <div class="mu-arsenal" id="mu-arsenal"></div>
-      </section>
-
-      <!-- Current at-bat pitch sequence -->
-      <section class="card card-pitchseq" id="card-pitchseq">
-        <div class="card-head">
-          <span class="card-label">Current At-Bat</span>
-          <span class="card-sub" id="ps-sub"></span>
-        </div>
-        <div class="ps-track" id="ps-track">
-          <div class="empty-note">No pitches yet.</div>
-        </div>
-      </section>
-
-      <!-- Play-by-play feed (at-bat grouped, newest at bottom) -->
-      <section class="card card-grow card-pbp" id="card-pbp">
-        <div class="card-head">
-          <span class="card-label"><span class="tl-live-pip" id="pbp-live-pip"></span>Play-by-Play</span>
-          <span class="card-sub" id="pbp-sub"></span>
-        </div>
-        <div class="pbp-scroll" id="pbp-scroll">
-          <div class="empty-note">Waiting for first pitch…</div>
-        </div>
-        <button class="tl-return pbp-return" id="pbp-return" hidden>↓ Return to live</button>
       </section>
 
     </section>

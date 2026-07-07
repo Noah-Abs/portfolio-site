@@ -418,7 +418,7 @@ function renderLinescore(m) {
 }
 
 function renderState(m, prev) {
-  const card = $('card-state')
+  const card = $('card-matchup')
   // bases (with illuminate animation)
   ;['first', 'second', 'third'].forEach((b, i) => {
     const el = $(['base-1b', 'base-2b', 'base-3b'][i]); if (!el) return
@@ -426,16 +426,11 @@ function renderState(m, prev) {
     el.classList.toggle('on', on)
     if (prev && !prev.bases[b] && on) pop(el, 'anim-base', 340)
   })
-  // count pips + big number
-  pips($('pips-balls'), 4, m.count.balls, 'on-ball')
-  pips($('pips-strikes'), 3, m.count.strikes, 'on-strike')
+  // outs pips (with pulse on a new out)
   const outsEl = $('pips-outs')
   const grewOut = prev && m.count.outs > prev.count.outs
   pips(outsEl, 3, m.count.outs, 'on-out')
   if (grewOut) { const dots = outsEl.querySelectorAll('.pip.on-out'); pop(dots[dots.length - 1], 'anim-out', 360) }
-  txt($('scb-balls'), m.count.balls)
-  txt($('scb-strikes'), m.count.strikes)
-  txt($('gs-outs-label'), `${m.count.outs} Out${m.count.outs === 1 ? '' : 's'}`)
   // situation summary
   txt($('gs-situation'), m.status.isLive ? m.situationText : (m.status.isFinal ? 'Final' : 'Pre-Game'))
   card.classList.toggle('risp', m.status.isLive && (m.bases.second || m.bases.third))
@@ -499,14 +494,8 @@ function renderMatchup(m) {
     txt($('mu-pitcher-meta'), m.status.isFinal ? 'Home' : 'Probable SP')
     $('mu-pitcher-stats').innerHTML = m.prob.home ? `<span class="mu-stat">${m.prob.home}</span>` : ''
   }
-  // center: count, last pitch, arsenal
+  // middle: count
   txt($('mu-count'), live ? `${m.count.balls}–${m.count.strikes}` : 'vs')
-  const lp = m.lastPitch
-  $('mu-lastpitch').innerHTML = (live && lp) ? `<b>${lp.type}</b> ${lp.velo ? lp.velo + ' mph' : ''}<br>${lp.resultLabel}` : ''
-  txt($('mu-h2h'), '')
-  $('mu-arsenal').innerHTML = (live && m.arsenal.length)
-    ? m.arsenal.map(a => `<div class="ars-pitch${lp && lp.type === a.type ? ' active' : ''}"><span class="ars-type">${a.type}</span><span class="ars-meta">${a.avg} mph · ${a.pct}%</span></div>`).join('')
-    : ''
 }
 
 /* ─── Pitch sequence (current at-bat) ─── */
@@ -755,10 +744,8 @@ function renderAll(m) {
   renderStatus(m)
   renderSummary(m)
   renderScoreboard(m, PREV)
-  renderState(m, PREV)
   renderMatchup(m)
-  renderPitchSeq(m)
-  renderPbpFeed(m)
+  renderState(m, PREV)
   renderTimeline(m)
   renderBox(m)
   PREV = m
