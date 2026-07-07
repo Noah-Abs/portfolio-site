@@ -13,10 +13,10 @@ const HEAD = id => `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:g
 let GAME_PK = null
 let PREV = null          // previous normalized model (for diffing)
 let BOX_TEAM = 'away'    // selected box-score tab
-let firstFeedRender = true
-let firstUpdatesRender = true
-const seenPlays = new Set()
-const seenUpdates = new Set()
+let firstTimelineRender = true
+const seenTimeline = new Set()
+let userAwayFromLive = false
+let LIVE_NOW = false
 let pollTimer = null
 
 /* ── helpers ── */
@@ -29,6 +29,63 @@ function qp(k) { return new URLSearchParams(location.search).get(k) }
 function txt(el, v) { if (el && el.textContent !== String(v)) el.textContent = v }
 function pop(el, cls, dur = 500) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), dur) }
 function abbrevName(full) { if (!full) return ''; const p = full.split(' '); return p.length < 2 ? full : p[0][0] + '. ' + p.slice(1).join(' ') }
+function ordinalNum(n) { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]) }
+function cleanSub(d) { return (d || '').replace(/^(Pitching Change|Offensive Substitution|Defensive Substitution|Defensive Switch):\s*/i, '') }
+function hitLabel(et) { return et === 'single' ? '1B' : et === 'double' ? '2B' : et === 'triple' ? '3B' : 'H' }
+function classifyEvent(et, ev) {
+  if (et === 'home_run') return 'hr'
+  if (/walk|hit_by_pitch/.test(et)) return 'walk'
+  if (/single|double|triple/.test(et)) return 'hit'
+  if (et === 'field_error' || /error/i.test(ev)) return 'error'
+  if (/out|strikeout|force|grounded_into|sac_|fielders_choice|double_play|triple_play|pickoff|caught_stealing/.test(et)) return 'out'
+  return 'info'
+}
+function outcomeIcon(item) {
+  switch (item.klass) {
+    case 'hr': return { t: 'HR', c: 'ic-hr', dot: false }
+    case 'hit': return { t: hitLabel(item.eventType), c: 'ic-hit', dot: false }
+    case 'walk': return { t: item.eventType === 'hit_by_pitch' ? 'HBP' : 'BB', c: 'ic-walk', dot: false }
+    case 'error': return { t: 'E', c: 'ic-error', dot: false }
+    case 'out': return item.eventType === 'strikeout' ? { t: 'K', c: 'ic-out', dot: false } : { t: '', c: 'ic-out', dot: true }
+    default: return { t: '', c: 'ic-info', dot: true }
+  }
+}
+function arrowSym(isTop) { return isTop ? '▲' : '▼' }
+function basesText(b) {
+  const on = []
+  if (b.first) on.push('1st'); if (b.second) on.push('2nd'); if (b.third) on.push('3rd')
+  if (!on.length) return 'Bases empty'
+  if (on.length === 3) return 'Bases loaded'
+  return 'Runner' + (on.length > 1 ? 's' : '') + ' on ' + on.join(' & ')
+}
+function situationHtml(it) {
+  const parts = [
+    `<span class="tl-arrow${it.isTop ? '' : ' bottom'}">${arrowSym(it.isTop)}</span> ${it.isTop ? 'Top' : 'Bot'} ${it.ordinal}`,
+    `${it.outsBefore} Out${it.outsBefore === 1 ? '' : 's'}`,
+    basesText(it.basesBefore),
+  ]
+  return parts.map((p, i) => i === 0 ? p : `<span class="tl-sit-sep">•</span> ${p}`).join(' ')
+}
+function playChips(it) {
+  const chips = []
+  if (it.eventType === 'home_run' && it.hit) {
+    if (it.hit.dist) chips.push(`<span class="chip chip-gold">${it.hit.dist} ft</span>`)
+    if (it.hit.ev) chips.push(`<span class="chip">${Math.round(it.hit.ev)} mph EV</span>`)
+    if (it.hit.la != null) chips.push(`<span class="chip">${Math.round(it.hit.la)}° LA</span>`)
+  } else if (it.eventType === 'strikeout' && it.pitch && it.pitch.velo) {
+    chips.push(`<span class="chip chip-red">${it.pitch.velo} mph ${it.pitch.type || ''}</span>`.replace(' </span>', '</span>'))
+  } else if (it.klass === 'hit' && it.hit && it.hit.ev) {
+    chips.push(`<span class="chip">${Math.round(it.hit.ev)} mph EV</span>`)
+    if (it.hit.dist) chips.push(`<span class="chip">${it.hit.dist} ft</span>`)
+  }
+  if (it.rbi > 0) chips.push(`<span class="chip chip-gold">${it.rbi} RBI</span>`)
+  return chips
+}
+function reviewRuling(desc) {
+  const m = /call on the field was (\w+)/i.exec(desc || '')
+  if (m) return 'Call ' + m[1].toLowerCase()
+  return 'Play under review'
+}
 
 /* ── game selection ── */
 async function pickGamePk() {
@@ -113,22 +170,63 @@ function normalize(feed) {
     home: gd.probablePitchers?.home?.fullName || '',
   }
 
-  // completed plays (chronological)
+  // ── Chronological timeline: enriched play cards + special-event notes ──
   const allPlays = ld.plays?.allPlays || []
-  const plays = allPlays.filter(p => p.about?.isComplete).map(p => ({
-    idx: p.about.atBatIndex,
-    inning: p.about.inning,
-    ordinal: p.about.halfInning === 'top' ? '▲' + p.about.inning : '▼' + p.about.inning,
-    half: p.about.halfInning,
-    isTop: p.about.isTopInning,
-    battingAbbr: p.about.isTopInning ? away.abbr : home.abbr,
-    event: p.result?.event || '',
-    desc: p.result?.description || '',
-    rbi: p.result?.rbi || 0,
-    isScoring: !!p.about?.isScoringPlay,
-    awayScore: p.result?.awayScore ?? 0,
-    homeScore: p.result?.homeScore ?? 0,
-  }))
+  const timeline = []
+  let simOuts = 0, simHalf = null, prevLeader = 0
+  let postFirst = false, postSecond = false, postThird = false
+  for (const p of allPlays) {
+    const ab = p.about || {}
+    const hk = `${ab.inning}${ab.halfInning}`
+    if (hk !== simHalf) { simHalf = hk; simOuts = 0; postFirst = postSecond = postThird = false }
+    const outsBefore = simOuts
+    const basesBefore = { first: postFirst, second: postSecond, third: postThird }
+
+    // special-event notifications (happen before the at-bat resolves)
+    for (const e of p.playEvents || []) {
+      if (e.type !== 'action') continue
+      const et = e.details?.eventType || ''
+      if (et === 'pitching_substitution') {
+        timeline.push({ kind: 'note', id: `n:${ab.atBatIndex}:pit:${e.details?.description}`, noteType: 'pitching', title: 'Pitching Change', isTop: ab.isTopInning, ordinal: ordinalNum(ab.inning), text: cleanSub(e.details?.description) })
+      } else if (/ejection/i.test(et)) {
+        timeline.push({ kind: 'note', id: `n:${ab.atBatIndex}:ej`, noteType: 'ejection', title: 'Ejection', isTop: ab.isTopInning, ordinal: ordinalNum(ab.inning), text: e.details?.description || '' })
+      }
+    }
+
+    if (ab.isComplete) {
+      const pitchesE = (p.playEvents || []).filter(e => e.isPitch)
+      const lastPitch = pitchesE[pitchesE.length - 1]
+      const inPlay = (p.playEvents || []).find(e => e.hitData)
+      const eventType = p.result?.eventType || ''
+      const aS = p.result?.awayScore ?? 0, hS = p.result?.homeScore ?? 0
+      const leadNow = aS > hS ? 1 : (hS > aS ? 2 : 0)
+      const leadChange = !!ab.isScoringPlay && leadNow !== 0 && leadNow !== prevLeader
+      const item = {
+        kind: 'play', id: `p:${ab.atBatIndex}`,
+        inning: ab.inning, isTop: ab.isTopInning, ordinal: ordinalNum(ab.inning),
+        outsBefore, basesBefore,
+        event: p.result?.event || '', eventType, klass: classifyEvent(eventType, p.result?.event || ''),
+        desc: p.result?.description || '',
+        rbi: p.result?.rbi || 0, isScoring: !!ab.isScoringPlay, hasReview: !!ab.hasReview,
+        aS, hS, awayAbbr: away.abbr, homeAbbr: home.abbr,
+        pitch: lastPitch && lastPitch.pitchData?.startSpeed ? { velo: Math.round(lastPitch.pitchData.startSpeed), type: lastPitch.details?.type?.description || '' } : null,
+        hit: inPlay?.hitData ? { ev: inPlay.hitData.launchSpeed, la: inPlay.hitData.launchAngle, dist: inPlay.hitData.totalDistance } : null,
+        leadChange,
+      }
+      item.major = eventType === 'home_run' || leadChange || (item.isScoring && item.rbi >= 2)
+      item.emph = item.isScoring
+      timeline.push(item)
+      if (ab.hasReview) timeline.push({ kind: 'note', id: `n:${ab.atBatIndex}:rev`, noteType: 'review', title: 'Replay Review', isTop: ab.isTopInning, ordinal: ordinalNum(ab.inning), text: reviewRuling(p.result?.description) })
+      prevLeader = leadNow
+    }
+
+    // advance situation for the next play — postOn* is the authoritative
+    // base state after this at-bat, i.e. the pre-state of the next one
+    if (p.count?.outs != null) simOuts = p.count.outs
+    postFirst = !!p.matchup?.postOnFirst
+    postSecond = !!p.matchup?.postOnSecond
+    postThird = !!p.matchup?.postOnThird
+  }
 
   return {
     gamePk: gd.game?.pk,
@@ -150,7 +248,7 @@ function normalize(feed) {
     onDeck: off.onDeck?.fullName || '',
     innings: ls.innings || [],
     scheduledInnings: ls.scheduledInnings || 9,
-    plays,
+    timeline,
     box,
     venue: gd.venue?.name || '',
     dateTime: gd.datetime?.dateTime || '',
@@ -278,62 +376,74 @@ function renderMatchup(m) {
   }
 }
 
-function classifyPlay(p) {
-  const ev = p.event || ''
-  if (/Home Run/i.test(ev)) return 'hr'
-  if (p.isScoring) return 'scoring'
-  if (/Strikeout|Strikes Out/i.test(ev)) return 'out'
-  if (/out|Grounded|Flyout|Lineout|Pop|Forceout|Play|Double Play/i.test(ev)) return 'out'
-  if (/Single|Double|Triple|Walk|Hit By Pitch|Reached|Balk|Wild Pitch|Stolen/i.test(ev)) return 'hit'
-  return 'info'
-}
-const KLASS = { hr: 'is-hr', scoring: 'is-scoring', out: 'is-out', hit: 'is-hit', info: 'is-info' }
-
-function playEl(p, animate) {
-  const kind = classifyPlay(p)
+function timelineEl(it, animate) {
   const el = document.createElement('div')
-  el.className = `play-item ${KLASS[kind]}${animate ? ' pbp-new' : ''}`
-  const scoreLine = p.isScoring ? `<div class="play-score">${p.awayScore}–${p.homeScore}</div>` : ''
+  if (it.kind === 'note') {
+    el.className = `tl-item tl-note note-${it.noteType}${animate ? ' tl-in' : ''}`
+    el.innerHTML =
+      `<div class="tl-note-head"><span class="tl-note-type">${it.title}</span>` +
+      `<span class="tl-note-sit">${arrowSym(it.isTop)} ${it.ordinal}</span></div>` +
+      `<div class="tl-note-body">${it.text || ''}</div>`
+    return el
+  }
+  const ic = outcomeIcon(it)
+  const iconHtml = `<span class="tl-icon ${ic.c}${ic.dot ? ' dot' : ''}">${ic.t}</span>`
+  const chips = playChips(it)
+  const chipsHtml = chips.length ? `<div class="tl-chips">${chips.join('')}</div>` : ''
+
+  if (it.major) {
+    const isLead = it.leadChange && it.eventType !== 'home_run'
+    const title = it.eventType === 'home_run' ? 'HOME RUN' : (isLead ? 'LEAD CHANGE' : 'SCORING PLAY')
+    el.className = `tl-item tl-feature${isLead ? ' lead' : ''}${animate ? ' tl-in' : ''}`
+    el.innerHTML =
+      `<div class="tl-sit">${situationHtml(it)}</div>` +
+      `<div class="tl-feature-head">${iconHtml}<span class="tl-feature-title">${title}</span>` +
+      `<span class="tl-feature-score">${it.awayAbbr} ${it.aS} · ${it.homeAbbr} ${it.hS}</span></div>` +
+      `<div class="tl-desc">${it.desc}</div>${chipsHtml}`
+    return el
+  }
+  el.className = `tl-item tl-play${it.emph ? ' emph' : ''}${animate ? ' tl-in' : ''}`
   el.innerHTML =
-    `<div class="play-badge">${p.ordinal}<span class="pb-inn">${p.battingAbbr}</span></div>` +
-    `<div class="play-body"><div class="play-event">${p.event}</div><div class="play-desc">${p.desc}</div>${scoreLine}</div>`
+    `<div class="tl-sit">${situationHtml(it)}</div>` +
+    `<div class="tl-main">${iconHtml}<span class="tl-desc">${it.desc}</span></div>${chipsHtml}`
   return el
 }
 
-function renderPbp(m) {
-  const body = $('pbp-body')
-  txt($('pbp-count'), m.plays.length ? `${m.plays.length} plays` : '')
-  if (!m.plays.length) return
-  if (firstFeedRender) {
+function renderTimeline(m) {
+  const body = $('tl-body')
+  const items = m.timeline
+  LIVE_NOW = m.status.isLive
+  $('card-timeline').classList.toggle('not-live', !m.status.isLive)
+  const nPlays = items.reduce((a, i) => a + (i.kind === 'play' ? 1 : 0), 0)
+  txt($('tl-count'), nPlays ? `${nPlays} plays` : '')
+  if (!items.length) return
+
+  const THRESH = 60
+  if (firstTimelineRender) {
     body.innerHTML = ''
-    for (let i = m.plays.length - 1; i >= 0; i--) { body.appendChild(playEl(m.plays[i], false)); seenPlays.add(m.plays[i].idx) }
-    firstFeedRender = false
+    for (let i = items.length - 1; i >= 0; i--) { body.appendChild(timelineEl(items[i], false)); seenTimeline.add(items[i].id) }
+    firstTimelineRender = false
+    body.scrollTop = 0
+    updateReturnBtn()
     return
   }
-  // prepend only new completed plays (chronological → newest ends on top)
-  for (const p of m.plays) {
-    if (seenPlays.has(p.idx)) continue
-    body.insertBefore(playEl(p, true), body.firstChild)
-    seenPlays.add(p.idx)
-  }
+  const fresh = items.filter(i => !seenTimeline.has(i.id))
+  if (!fresh.length) return
+  const atLive = body.scrollTop <= THRESH
+  const before = body.scrollHeight
+  for (const it of fresh) { body.insertBefore(timelineEl(it, true), body.firstChild); seenTimeline.add(it.id) }
+  const added = body.scrollHeight - before
+  if (atLive) body.scrollTop = 0
+  else body.scrollTop += added   // hold the user's position while reviewing
+  updateReturnBtn()
 }
 
-function renderUpdates(m) {
-  const body = $('updates-body')
-  const key = m.plays.filter(p => p.isScoring || /Home Run/i.test(p.event))
-  txt($('updates-count'), key.length ? String(key.length) : '')
-  if (!key.length) return
-  if (firstUpdatesRender) {
-    body.innerHTML = ''
-    for (let i = key.length - 1; i >= 0; i--) { body.appendChild(playEl(key[i], false)); seenUpdates.add(key[i].idx) }
-    firstUpdatesRender = false
-    return
-  }
-  for (const p of key) {
-    if (seenUpdates.has(p.idx)) continue
-    body.insertBefore(playEl(p, true), body.firstChild)
-    seenUpdates.add(p.idx)
-  }
+function updateReturnBtn() {
+  const body = $('tl-body'), btn = $('tl-return')
+  if (!body || !btn) return
+  const away = body.scrollTop > 60
+  userAwayFromLive = away
+  btn.hidden = !(away && LIVE_NOW)
 }
 
 function liveStateText(m) {
@@ -430,8 +540,7 @@ function renderAll(m) {
   renderScoreboard(m, PREV)
   renderState(m, PREV)
   renderMatchup(m)
-  renderPbp(m)
-  renderUpdates(m)
+  renderTimeline(m)
   renderBox(m)
   PREV = m
 }
@@ -457,8 +566,15 @@ function wireBoxTabs() {
   }))
 }
 
+function wireTimeline() {
+  const body = $('tl-body'), btn = $('tl-return')
+  if (body) body.addEventListener('scroll', updateReturnBtn, { passive: true })
+  if (btn) btn.addEventListener('click', () => body.scrollTo({ top: 0, behavior: 'smooth' }))
+}
+
 async function init() {
   wireBoxTabs()
+  wireTimeline()
   try {
     GAME_PK = await pickGamePk()
     if (!GAME_PK) { $('ph-matchup').innerHTML = '<span class="ph-loading">No game found.</span>'; return }

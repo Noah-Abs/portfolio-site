@@ -69,15 +69,16 @@
         </div>
       </section>
 
-      <!-- Chronological history -->
-      <section class="card card-grow" id="card-updates">
+      <!-- Live event timeline -->
+      <section class="card card-grow card-timeline" id="card-timeline">
         <div class="card-head">
-          <span class="card-label">Key Plays</span>
-          <span class="card-sub" id="updates-count"></span>
+          <span class="card-label"><span class="tl-live-pip" id="tl-live-pip"></span>Live Feed</span>
+          <span class="card-sub" id="tl-count"></span>
         </div>
-        <div class="card-body card-scroll" id="updates-body">
-          <div class="empty-note">Waiting for game events…</div>
+        <div class="tl-scroll" id="tl-body">
+          <div class="empty-note">Waiting for first pitch…</div>
         </div>
+        <button class="tl-return" id="tl-return" hidden>↑ Return to live</button>
       </section>
 
     </aside>
@@ -171,16 +172,6 @@
             <span class="mu-meta" id="mu-pitcher-meta"></span>
             <span class="mu-line" id="mu-pitcher-line"></span>
           </div>
-        </div>
-      </section>
-
-      <section class="card card-grow card-pbp" id="card-pbp">
-        <div class="card-head">
-          <span class="card-label">Play-by-Play</span>
-          <span class="card-sub" id="pbp-count"></span>
-        </div>
-        <div class="card-body card-scroll" id="pbp-body">
-          <div class="empty-note">Waiting for first pitch…</div>
         </div>
       </section>
 
