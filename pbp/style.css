@@ -4,6 +4,9 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
+  /* Master scale — everything is in rem, so this fits the UI to the viewport */
+  font-size: clamp(10px, 1.02vw, 15px);
+
   /* Surfaces */
   --bg:          #0b0e14;   /* deep charcoal page */
   --bg-2:        #0f131b;
@@ -31,13 +34,13 @@
   --c-red-dim:   rgba(239,83,80,0.14);
   --c-blue-dim:  rgba(76,157,255,0.14);
 
-  /* Geometry */
-  --radius:      12px;
-  --radius-sm:   8px;
-  --gap:         9px;
-  --pad:         11px;
+  /* Geometry — rem so they scale with the master font-size */
+  --radius:      0.8rem;
+  --radius-sm:   0.55rem;
+  --gap:         0.6rem;
+  --pad:         0.75rem;
   --shadow:      0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.25);
-  --header-h:    44px;
+  --header-h:    3rem;
 
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -52,7 +55,7 @@ body {
     var(--bg);
   color: var(--text-1);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 0.9rem;
   line-height: 1.35;
   -webkit-font-smoothing: antialiased;
   display: flex;
@@ -79,14 +82,14 @@ body {
   -webkit-backdrop-filter: blur(16px);
   gap: 1rem;
 }
-.ph-brand { display: flex; align-items: center; gap: 0.5rem; min-width: 190px; }
+.ph-brand { display: flex; align-items: center; gap: 0.5rem; min-width: 0; flex-shrink: 0; }
 .ph-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c-green); box-shadow: 0 0 10px var(--c-green); flex-shrink: 0; }
 .ph-title { font-weight: 800; letter-spacing: 0.02em; font-size: 0.95rem; }
 .ph-title-sep { color: var(--c-blue); margin: 0 1px; }
 .ph-matchup { flex: 1; text-align: center; font-weight: 600; color: var(--text-2); font-size: 0.9rem; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ph-matchup b { color: var(--text-1); }
 .ph-loading { color: var(--text-3); }
-.ph-status { display: flex; align-items: center; gap: 0.75rem; min-width: 190px; justify-content: flex-end; }
+.ph-status { display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex-shrink: 0; justify-content: flex-end; }
 .ph-live-badge { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.14em; color: var(--c-red); background: var(--c-red-dim); border: 1px solid rgba(239,83,80,0.3); padding: 3px 8px; border-radius: 999px; }
 .ph-live-badge[hidden] { display: none; }
 .ph-live-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--c-red); animation: pip 1.4s ease-in-out infinite; }
@@ -156,7 +159,7 @@ body {
 .gs-teams { display: flex; flex-direction: column; gap: 0.25rem; }
 .gs-team { display: flex; align-items: center; gap: 0.55rem; padding: 0.35rem 0.45rem; border-radius: var(--radius-sm); background: transparent; transition: background 0.25s ease; }
 .gs-team.leading { background: var(--surface-2); }
-.gs-logo { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; }
+.gs-logo { width: 1.75rem; height: 1.75rem; object-fit: contain; flex-shrink: 0; }
 .gs-meta { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; flex: 1; }
 .gs-name { font-size: 0.86rem; font-weight: 700; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gs-team.leading .gs-name { color: var(--text-1); }
@@ -243,7 +246,7 @@ body {
 .sb-team { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
 .sb-away { justify-content: flex-start; }
 .sb-home { justify-content: flex-end; }
-.sb-logo { width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+.sb-logo { width: 2.4rem; height: 2.4rem; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
 .sb-team-meta { display: flex; flex-direction: column; gap: 0.05rem; min-width: 0; }
 .sb-home .sb-team-meta { align-items: flex-end; }
 .sb-abbr { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.02em; line-height: 1; }
@@ -299,12 +302,12 @@ body {
 .outs-pips .pip { width: 13px; height: 13px; }
 
 .gs-diamond-panel { gap: 0.4rem; }
-.bases-diamond { position: relative; width: 60px; height: 60px; }
-.base { position: absolute; width: 16px; height: 16px; background: var(--surface-3); border: 1.5px solid var(--border-2); transform: rotate(45deg); transition: background 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease; }
-.base.base-2b { top: 3px; left: 50%; margin-left: -8px; }
-.base.base-1b { right: 1px; top: 50%; margin-top: -8px; }
-.base.base-3b { left: 1px; top: 50%; margin-top: -8px; }
-.base.base-home { bottom: 1px; left: 50%; margin-left: -6.5px; width: 13px; height: 13px; background: var(--surface-2); }
+.bases-diamond { position: relative; width: 4rem; height: 4rem; }
+.base { position: absolute; width: 1.05rem; height: 1.05rem; background: var(--surface-3); border: 1.5px solid var(--border-2); transform: rotate(45deg); transition: background 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease; }
+.base.base-2b { top: 0.2rem; left: 50%; margin-left: -0.525rem; }
+.base.base-1b { right: 0.05rem; top: 50%; margin-top: -0.525rem; }
+.base.base-3b { left: 0.05rem; top: 50%; margin-top: -0.525rem; }
+.base.base-home { bottom: 0.05rem; left: 50%; margin-left: -0.43rem; width: 0.86rem; height: 0.86rem; background: var(--surface-2); }
 .base.on { background: var(--c-yellow); border-color: var(--c-yellow); box-shadow: 0 0 12px rgba(246,196,69,0.7); }
 .gs-situation { font-size: 0.66rem; font-weight: 700; color: var(--text-2); text-align: center; letter-spacing: 0.02em; max-width: 120px; }
 .card-state.risp .gs-situation { color: var(--c-yellow); }
@@ -323,7 +326,7 @@ body {
 .mu-role { position: absolute; top: 0; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
 .mu-batter .mu-role { left: 0; color: var(--c-yellow); }
 .mu-pitcher .mu-role { right: 0; color: var(--c-blue); }
-.mu-headshot { width: 42px; height: 42px; border-radius: 10px; object-fit: cover; object-position: top; background: var(--surface-2); border: 2px solid var(--border-2); flex-shrink: 0; }
+.mu-headshot { width: 2.8rem; height: 2.8rem; border-radius: 0.65rem; object-fit: cover; object-position: top; background: var(--surface-2); border: 2px solid var(--border-2); flex-shrink: 0; }
 .mu-batter .mu-headshot { border-color: rgba(246,196,69,0.45); }
 .mu-pitcher .mu-headshot { border-color: rgba(76,157,255,0.4); }
 .mu-info { display: flex; flex-direction: column; gap: 0.08rem; min-width: 0; flex: 1; }
@@ -352,7 +355,7 @@ body {
 .ps-track { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
 .ps-track::-webkit-scrollbar { height: 6px; }
 .ps-track::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
-.ps-card { flex-shrink: 0; width: 72px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.35rem 0.3rem; display: flex; flex-direction: column; align-items: center; gap: 0.12rem; }
+.ps-card { flex-shrink: 0; width: 4.8rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 0.55rem; padding: 0.35rem 0.3rem; display: flex; flex-direction: column; align-items: center; gap: 0.12rem; }
 .ps-card.current { border-color: rgba(76,157,255,0.55); box-shadow: 0 0 0 1px rgba(76,157,255,0.25); }
 .ps-num { font-size: 0.48rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
 .ps-zone { width: 26px; height: 32px; flex-shrink: 0; }
@@ -431,16 +434,12 @@ body {
 }
 
 /* ═══════════════════ Responsive fallback ═══════════════════ */
-@media (max-width: 1080px) {
+/* Three columns stay down to phone widths; only stack when truly narrow. */
+@media (max-width: 720px) {
   body { height: auto; overflow: auto; }
   .pbp-grid { grid-template-columns: 1fr; height: auto; }
   .col { overflow: visible; }
+  .col-center { order: -1; }
   .card-grow { flex: none; }
-  .card-scroll { max-height: 460px; }
-}
-@media (max-width: 560px) {
-  .sb-score { font-size: 2.6rem; }
-  .sb-logo { width: 40px; height: 40px; }
-  .sb-abbr { font-size: 1.2rem; }
-  .card-state { flex-wrap: wrap; }
+  .card-scroll, .tl-scroll, .pbp-scroll, .box-body { max-height: 60vh; }
 }
