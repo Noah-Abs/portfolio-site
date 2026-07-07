@@ -15,6 +15,8 @@ let PREV = null          // previous normalized model (for diffing)
 let BOX_TEAM = 'away'    // selected box-score tab
 let firstTimelineRender = true
 const seenTimeline = new Set()
+let firstPbpRender = true
+const seenPbp = new Set()
 let userAwayFromLive = false
 let LIVE_NOW = false
 let pollTimer = null
@@ -86,6 +88,35 @@ function reviewRuling(desc) {
   if (m) return 'Call ' + m[1].toLowerCase()
   return 'Play under review'
 }
+function pitchInfo(e, i) {
+  const call = e.details?.call
+  let res = 'ball'
+  if (e.details?.isInPlay) res = 'inplay'
+  else if (/foul/i.test(call?.description || '')) res = 'foul'
+  else if (e.details?.isStrike) res = 'strike'
+  return {
+    num: e.pitchNumber || i + 1,
+    type: e.details?.type?.description || '',
+    velo: e.pitchData?.startSpeed ? Math.round(e.pitchData.startSpeed * 10) / 10 : null,
+    resultLabel: call?.description || '',
+    res,
+    balls: e.count?.balls ?? 0, strikes: e.count?.strikes ?? 0,
+    pX: e.pitchData?.coordinates?.pX, pZ: e.pitchData?.coordinates?.pZ,
+  }
+}
+function situationSummary(b) {
+  const on = []
+  if (b.first) on.push('1st'); if (b.second) on.push('2nd'); if (b.third) on.push('3rd')
+  if (!on.length) return 'No runners on base'
+  if (on.length === 3) return 'Bases loaded'
+  return 'Runner' + (on.length > 1 ? 's' : '') + ' on ' + on.join(' & ')
+}
+function shortRes(p) {
+  const r = p.resultLabel || ''
+  if (/in play/i.test(r)) return 'In Play'
+  if (/hit by pitch/i.test(r)) return 'HBP'
+  return r.replace('Swinging Strike', 'Swing').replace('Called Strike', 'Called') || (p.res === 'ball' ? 'Ball' : p.res)
+}
 
 /* ── game selection ── */
 async function pickGamePk() {
@@ -115,7 +146,8 @@ function normalize(feed) {
   const box = ld.boxscore || {}
   const status = gd.status || {}
   const abstract = status.abstractGameState
-  const isLive = abstract === 'Live', isFinal = abstract === 'Final'
+  const _fl = qp('forcelive')
+  const isLive = _fl ? true : abstract === 'Live', isFinal = _fl ? false : abstract === 'Final'
 
   const starterOf = side => {
     const id = box.teams?.[side]?.pitchers?.[0] || gd.probablePitchers?.[side]?.id
@@ -153,15 +185,26 @@ function normalize(feed) {
 
   const batter = batterId ? {
     id: batterId, name: off.batter.fullName,
-    meta: bP ? `${bP.position?.abbreviation || ''}${bP.jerseyNumber ? ' · #' + bP.jerseyNumber : ''}` : '',
-    line: bP?.stats?.batting?.summary || '',
+    num: bP?.jerseyNumber || '', pos: bP?.position?.abbreviation || '',
+    side: gd.players?.['ID' + batterId]?.batSide?.code || '',
+    game: {
+      ab: bP?.stats?.batting?.atBats ?? 0, h: bP?.stats?.batting?.hits ?? 0,
+      hr: bP?.stats?.batting?.homeRuns ?? 0, rbi: bP?.stats?.batting?.rbi ?? 0,
+      bb: bP?.stats?.batting?.baseOnBalls ?? 0, k: bP?.stats?.batting?.strikeOuts ?? 0,
+    },
     avg: bP?.seasonStats?.batting?.avg || '',
+    line: bP?.stats?.batting?.summary || '',
   } : null
   const pitcher = pitcherId ? {
     id: pitcherId, name: def.pitcher.fullName,
-    meta: pP ? (pP.stats?.pitching?.note || '') : '',
-    line: pP?.stats?.pitching?.summary || '',
+    num: pP?.jerseyNumber || '', throws: gd.players?.['ID' + pitcherId]?.pitchHand?.code || '',
+    game: {
+      ip: pP?.stats?.pitching?.inningsPitched ?? '0.0', pitches: pP?.stats?.pitching?.numberOfPitches ?? 0,
+      h: pP?.stats?.pitching?.hits ?? 0, r: pP?.stats?.pitching?.runs ?? 0, er: pP?.stats?.pitching?.earnedRuns ?? 0,
+      bb: pP?.stats?.pitching?.baseOnBalls ?? 0, k: pP?.stats?.pitching?.strikeOuts ?? 0,
+    },
     era: pP?.seasonStats?.pitching?.era || '',
+    note: pP?.stats?.pitching?.note || '',
   } : null
 
   // probable pitchers for preview
@@ -169,6 +212,43 @@ function normalize(feed) {
     away: gd.probablePitchers?.away?.fullName || '',
     home: gd.probablePitchers?.home?.fullName || '',
   }
+
+  // ── Pitcher's game arsenal (aggregate this game's pitches by type) ──
+  const arsenalMap = new Map()
+  for (const p of ld.plays?.allPlays || []) {
+    if (p.matchup?.pitcher?.id !== pitcherId) continue
+    for (const e of p.playEvents || []) {
+      if (!e.isPitch || !e.pitchData?.startSpeed) continue
+      const t = e.details?.type?.description || 'Unknown'
+      const mm = arsenalMap.get(t) || { type: t, count: 0, totV: 0 }
+      mm.count++; mm.totV += e.pitchData.startSpeed; arsenalMap.set(t, mm)
+    }
+  }
+  const totalArs = [...arsenalMap.values()].reduce((a, mm) => a + mm.count, 0)
+  const arsenal = [...arsenalMap.values()].sort((a, b) => b.count - a.count)
+    .map(mm => ({ type: mm.type, count: mm.count, avg: (mm.totV / mm.count).toFixed(1), pct: totalArs ? Math.round(mm.count / totalArs * 100) : 0 }))
+
+  // ── Current at-bat pitch sequence ──
+  const cp = ld.plays?.currentPlay
+  const curPitches = (cp?.playEvents || []).filter(e => e.isPitch).map((e, i) => pitchInfo(e, i))
+  const currentAtBat = {
+    batter: cp?.matchup?.batter?.fullName || '', pitcher: cp?.matchup?.pitcher?.fullName || '',
+    isComplete: cp?.about?.isComplete, pitches: curPitches,
+  }
+  const lastPitch = curPitches.length ? curPitches[curPitches.length - 1] : null
+
+  // ── Situation summary + high-leverage detection ──
+  const bases = { first: !!off.first, second: !!off.second, third: !!off.third }
+  const outsNow = ls.outs ?? 0
+  const risp = bases.second || bases.third
+  const runners = [bases.first, bases.second, bases.third].filter(Boolean).length
+  const situationText = situationSummary(bases) + (isLive && outsNow ? `, ${outsNow} out${outsNow === 1 ? '' : 's'}` : '')
+  const inningNum = ls.currentInning || 0
+  const closeGame = Math.abs(away.runs - home.runs) <= 1
+  const highLeverage = isLive && (
+    (outsNow === 2 && risp) || (bases.first && bases.second && bases.third) ||
+    (ls.balls === 3 && ls.strikes === 2 && runners > 0) ||
+    (inningNum >= 7 && closeGame && runners > 0) || inningNum > 9)
 
   // ── Chronological timeline: enriched play cards + special-event notes ──
   const allPlays = ld.plays?.allPlays || []
@@ -195,7 +275,7 @@ function normalize(feed) {
 
     if (ab.isComplete) {
       const pitchesE = (p.playEvents || []).filter(e => e.isPitch)
-      const lastPitch = pitchesE[pitchesE.length - 1]
+      const lastPitchEvt = pitchesE[pitchesE.length - 1]
       const inPlay = (p.playEvents || []).find(e => e.hitData)
       const eventType = p.result?.eventType || ''
       const aS = p.result?.awayScore ?? 0, hS = p.result?.homeScore ?? 0
@@ -209,8 +289,9 @@ function normalize(feed) {
         desc: p.result?.description || '',
         rbi: p.result?.rbi || 0, isScoring: !!ab.isScoringPlay, hasReview: !!ab.hasReview,
         aS, hS, awayAbbr: away.abbr, homeAbbr: home.abbr,
-        pitch: lastPitch && lastPitch.pitchData?.startSpeed ? { velo: Math.round(lastPitch.pitchData.startSpeed), type: lastPitch.details?.type?.description || '' } : null,
+        pitch: lastPitchEvt && lastPitchEvt.pitchData?.startSpeed ? { velo: Math.round(lastPitchEvt.pitchData.startSpeed), type: lastPitchEvt.details?.type?.description || '' } : null,
         hit: inPlay?.hitData ? { ev: inPlay.hitData.launchSpeed, la: inPlay.hitData.launchAngle, dist: inPlay.hitData.totalDistance } : null,
+        pitches: pitchesE.map((e, i) => pitchInfo(e, i)),
         leadChange,
       }
       item.major = eventType === 'home_run' || leadChange || (item.isScoring && item.rbi >= 2)
@@ -243,8 +324,8 @@ function normalize(feed) {
     count: {
       balls: ls.balls ?? 0, strikes: ls.strikes ?? 0, outs: ls.outs ?? 0,
     },
-    bases: { first: !!off.first, second: !!off.second, third: !!off.third },
-    batter, pitcher, prob,
+    bases,
+    batter, pitcher, prob, arsenal, currentAtBat, lastPitch, situationText, highLeverage,
     onDeck: off.onDeck?.fullName || '',
     innings: ls.innings || [],
     scheduledInnings: ls.scheduledInnings || 9,
@@ -298,14 +379,29 @@ function renderScoreboard(m, prev) {
     if (prev && (prev.inning.num !== m.inning.num || prev.inning.half !== m.inning.half)) pop($('sb-inning'), 'anim-inning', 400)
   }
 
+  // special-status pill (replay review, delay, extra innings…)
+  const pill = $('sb-status-pill'), d = m.status.detailed || ''
+  let pillText = '', pillCls = 'alert'
+  if (/Review/i.test(d)) pillText = 'Replay Review'
+  else if (/Delayed/i.test(d)) pillText = d
+  else if (/Postponed/i.test(d)) pillText = 'Postponed'
+  else if (/Suspended/i.test(d)) pillText = 'Suspended'
+  else if (/Warmup/i.test(d)) pillText = 'Warmup'
+  else if (m.status.isLive && m.inning.num > 9) pillText = 'Extra Innings'
+  pill.hidden = !pillText
+  pill.textContent = pillText
+  pill.className = 'sb-status-pill ' + pillCls
+
   renderLinescore(m)
 }
 
 function renderLinescore(m) {
   const table = $('sb-linescore')
   const n = Math.max(m.scheduledInnings, m.innings.length)
+  const curInn = m.status.isLive ? m.inning.num : 0
+  const arrow = m.inning.isTop ? '▲' : '▼'
   let head = '<tr class="ls-head"><th class="ls-team"></th>'
-  for (let i = 1; i <= n; i++) head += `<th class="${i === m.inning.num && m.status.isLive ? 'ls-cur' : ''}">${i}</th>`
+  for (let i = 1; i <= n; i++) head += `<th class="${i === curInn ? 'ls-cur' : ''}">${i === curInn ? `<span class="ls-arrow">${arrow}</span> ` : ''}${i}</th>`
   head += '<th class="ls-rhe">R</th><th class="ls-rhe">H</th><th class="ls-rhe">E</th></tr>'
 
   const row = (side, t) => {
@@ -322,24 +418,30 @@ function renderLinescore(m) {
 }
 
 function renderState(m, prev) {
-  // bases
+  const card = $('card-state')
+  // bases (with illuminate animation)
   ;['first', 'second', 'third'].forEach((b, i) => {
-    const id = ['base-1b', 'base-2b', 'base-3b'][i]
-    const el = $(id); if (!el) return
+    const el = $(['base-1b', 'base-2b', 'base-3b'][i]); if (!el) return
     const on = m.bases[b]
     el.classList.toggle('on', on)
     if (prev && !prev.bases[b] && on) pop(el, 'anim-base', 340)
   })
-  // count pips
+  // count pips + big number
   pips($('pips-balls'), 4, m.count.balls, 'on-ball')
   pips($('pips-strikes'), 3, m.count.strikes, 'on-strike')
   const outsEl = $('pips-outs')
   const grewOut = prev && m.count.outs > prev.count.outs
   pips(outsEl, 3, m.count.outs, 'on-out')
-  if (grewOut) { const dots = outsEl.querySelectorAll('.pip.on-out'); const last = dots[dots.length - 1]; pop(last, 'anim-out', 360) }
-  // big count
+  if (grewOut) { const dots = outsEl.querySelectorAll('.pip.on-out'); pop(dots[dots.length - 1], 'anim-out', 360) }
   txt($('scb-balls'), m.count.balls)
   txt($('scb-strikes'), m.count.strikes)
+  txt($('gs-outs-label'), `${m.count.outs} Out${m.count.outs === 1 ? '' : 's'}`)
+  // situation summary
+  txt($('gs-situation'), m.status.isLive ? m.situationText : (m.status.isFinal ? 'Final' : 'Pre-Game'))
+  card.classList.toggle('risp', m.status.isLive && (m.bases.second || m.bases.third))
+  // high-leverage
+  $('gs-leverage').hidden = !m.highLeverage
+  card.classList.toggle('high-lev', m.highLeverage)
 }
 
 function pips(container, total, on, cls) {
@@ -351,29 +453,93 @@ function pips(container, total, on, cls) {
   ;[...container.children].forEach((p, i) => p.className = 'pip' + (i < on ? ' ' + cls : ''))
 }
 
+function battingChips(b) {
+  const g = b.game, c = [`<span class="mu-stat"><b>${g.h}</b>-${g.ab}</span>`]
+  if (g.hr) c.push(`<span class="mu-stat hot"><b>${g.hr}</b> HR</span>`)
+  if (g.rbi) c.push(`<span class="mu-stat"><b>${g.rbi}</b> RBI</span>`)
+  if (g.bb) c.push(`<span class="mu-stat"><b>${g.bb}</b> BB</span>`)
+  if (g.k) c.push(`<span class="mu-stat"><b>${g.k}</b> K</span>`)
+  if (b.avg) c.push(`<span class="mu-stat">${b.avg} AVG</span>`)
+  return c.join('')
+}
+function pitchingChips(p) {
+  const g = p.game, c = [`<span class="mu-stat"><b>${g.ip}</b> IP</span>`]
+  c.push(`<span class="mu-stat${g.pitches >= 100 ? ' pc-alert' : ''}"><b>${g.pitches}</b> P</span>`)
+  c.push(`<span class="mu-stat"><b>${g.k}</b> K</span>`)
+  if (g.bb) c.push(`<span class="mu-stat"><b>${g.bb}</b> BB</span>`)
+  c.push(`<span class="mu-stat"><b>${g.er}</b> ER</span>`)
+  if (p.era) c.push(`<span class="mu-stat">${p.era} ERA</span>`)
+  return c.join('')
+}
+
 function renderMatchup(m) {
-  const showLive = m.status.isLive && m.batter && m.pitcher
-  if (showLive) {
-    const b = m.batter, p = m.pitcher
-    const bi = $('mu-batter-img'); if (bi.src !== HEAD(b.id)) bi.src = HEAD(b.id)
+  const live = m.status.isLive && m.batter && m.pitcher
+  const b = m.batter, p = m.pitcher
+  // batter side
+  if (live && b) {
+    const img = $('mu-batter-img'), u = HEAD(b.id); if (img.src !== u) img.src = u; img.style.visibility = ''
     txt($('mu-batter-name'), b.name)
-    txt($('mu-batter-meta'), b.meta)
-    txt($('mu-batter-line'), b.line || (b.avg ? 'AVG ' + b.avg : ''))
-    const pi = $('mu-pitcher-img'); if (pi.src !== HEAD(p.id)) pi.src = HEAD(p.id)
-    txt($('mu-pitcher-name'), p.name)
-    txt($('mu-pitcher-meta'), p.meta)
-    txt($('mu-pitcher-line'), p.line || (p.era ? 'ERA ' + p.era : ''))
-    $('mu-batter-img').style.visibility = ''; $('mu-pitcher-img').style.visibility = ''
+    txt($('mu-batter-meta'), [b.num ? '#' + b.num : '', b.pos, b.side ? 'Bats ' + b.side : ''].filter(Boolean).join(' · '))
+    $('mu-batter-stats').innerHTML = battingChips(b)
   } else {
-    // preview / final → show probable or final pitchers
+    $('mu-batter-img').style.visibility = 'hidden'
     txt($('mu-batter-name'), m.away.fullName)
     txt($('mu-batter-meta'), m.status.isFinal ? 'Away' : 'Probable SP')
-    txt($('mu-batter-line'), m.prob.away || '')
+    $('mu-batter-stats').innerHTML = m.prob.away ? `<span class="mu-stat">${m.prob.away}</span>` : ''
+  }
+  // pitcher side
+  if (live && p) {
+    const img = $('mu-pitcher-img'), u = HEAD(p.id); if (img.src !== u) img.src = u; img.style.visibility = ''
+    txt($('mu-pitcher-name'), p.name)
+    txt($('mu-pitcher-meta'), [p.num ? '#' + p.num : '', p.throws ? p.throws + 'HP' : '', p.throws ? 'Throws ' + p.throws : ''].filter(Boolean).join(' · '))
+    $('mu-pitcher-stats').innerHTML = pitchingChips(p)
+  } else {
+    $('mu-pitcher-img').style.visibility = 'hidden'
     txt($('mu-pitcher-name'), m.home.fullName)
     txt($('mu-pitcher-meta'), m.status.isFinal ? 'Home' : 'Probable SP')
-    txt($('mu-pitcher-line'), m.prob.home || '')
-    $('mu-batter-img').style.visibility = 'hidden'; $('mu-pitcher-img').style.visibility = 'hidden'
+    $('mu-pitcher-stats').innerHTML = m.prob.home ? `<span class="mu-stat">${m.prob.home}</span>` : ''
   }
+  // center: count, last pitch, arsenal
+  txt($('mu-count'), live ? `${m.count.balls}–${m.count.strikes}` : 'vs')
+  const lp = m.lastPitch
+  $('mu-lastpitch').innerHTML = (live && lp) ? `<b>${lp.type}</b> ${lp.velo ? lp.velo + ' mph' : ''}<br>${lp.resultLabel}` : ''
+  txt($('mu-h2h'), '')
+  $('mu-arsenal').innerHTML = (live && m.arsenal.length)
+    ? m.arsenal.map(a => `<div class="ars-pitch${lp && lp.type === a.type ? ' active' : ''}"><span class="ars-type">${a.type}</span><span class="ars-meta">${a.avg} mph · ${a.pct}%</span></div>`).join('')
+    : ''
+}
+
+/* ─── Pitch sequence (current at-bat) ─── */
+function miniZone(p) {
+  const W = 34, H = 40
+  const mapX = v => (v + 2) / 4 * W, mapY = v => H - ((v - 0.5) / 4) * H
+  const szx = mapX(-0.83), szw = mapX(0.83) - mapX(-0.83), szy = mapY(3.5), szh = mapY(1.5) - mapY(3.5)
+  let dot = ''
+  if (p.pX != null && p.pZ != null) {
+    const cx = Math.max(3, Math.min(W - 3, mapX(p.pX))), cy = Math.max(3, Math.min(H - 3, mapY(p.pZ)))
+    const col = p.res === 'inplay' ? 'var(--c-green)' : p.res === 'strike' ? 'var(--c-red)' : p.res === 'foul' ? 'var(--c-orange)' : 'var(--text-2)'
+    dot = `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3.2" fill="${col}"/>`
+  }
+  return `<svg class="ps-zone" viewBox="0 0 ${W} ${H}"><rect x="${szx.toFixed(1)}" y="${szy.toFixed(1)}" width="${szw.toFixed(1)}" height="${szh.toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="1" rx="2"/>${dot}</svg>`
+}
+
+function renderPitchSeq(m) {
+  const track = $('ps-track'), ab = m.currentAtBat
+  txt($('ps-sub'), ab.batter ? `${ab.batter} vs ${ab.pitcher}` : '')
+  if (!ab.pitches.length) { track.innerHTML = '<div class="empty-note">No pitches yet.</div>'; return }
+  const n = ab.pitches.length
+  track.innerHTML = ab.pitches.map((p, i) => {
+    const cur = i === n - 1 && !ab.isComplete
+    return `<div class="ps-card${cur ? ' current' : ''}">
+      <span class="ps-num">Pitch ${p.num}</span>
+      ${miniZone(p)}
+      <span class="ps-type">${p.type || '—'}</span>
+      <span class="ps-velo">${p.velo ? p.velo + ' mph' : ''}</span>
+      <span class="ps-result res-${p.res}">${shortRes(p)}</span>
+      <span class="ps-count">${p.balls}-${p.strikes}</span>
+    </div>`
+  }).join('')
+  track.scrollLeft = track.scrollWidth
 }
 
 function timelineEl(it, animate) {
@@ -531,6 +697,57 @@ function renderBox(m) {
   body.innerHTML = html
 }
 
+/* ─── Center play-by-play feed (at-bat grouped, newest at bottom) ─── */
+function pbpEl(it, animate) {
+  const el = document.createElement('div')
+  if (it.kind === 'note') {
+    el.className = `pbp-ab pbp-note note-${it.noteType}${animate ? ' pbp-new' : ''}`
+    el.innerHTML = `<div class="pbp-ab-head"><span class="pbp-ab-sit">${it.title}</span><span class="pbp-ab-desc">${it.text || ''}</span><span class="pbp-ab-sit">${arrowSym(it.isTop)} ${it.ordinal}</span></div>`
+    return el
+  }
+  const ic = outcomeIcon(it)
+  const klass = it.eventType === 'home_run' ? ' is-hr' : (it.isScoring ? ' is-scoring' : '')
+  el.className = `pbp-ab${klass}${animate ? ' pbp-new' : ''}`
+  const hasPitches = it.pitches && it.pitches.length
+  const pitchesHtml = hasPitches ? `<div class="pbp-ab-pitches">${it.pitches.map(pp =>
+    `<div class="pbp-pitch"><span class="pbp-pitch-n">${pp.num}</span><span class="pbp-pitch-type">${pp.type || '—'}</span><span class="pbp-pitch-velo">${pp.velo ? pp.velo + ' mph' : ''}</span><span class="pbp-pitch-res res-${pp.res}">${shortRes(pp)}</span></div>`).join('')}</div>` : ''
+  const caret = hasPitches ? '<span class="pbp-ab-caret">▸</span>' : ''
+  el.innerHTML = `<div class="pbp-ab-head"><span class="pbp-ab-sit">${arrowSym(it.isTop)}${it.ordinal} · ${it.outsBefore}o</span>` +
+    `<span class="tl-icon ${ic.c}${ic.dot ? ' dot' : ''} pbp-ab-icon">${ic.t}</span>` +
+    `<span class="pbp-ab-desc">${it.desc}</span>${caret}</div>${pitchesHtml}`
+  if (hasPitches) el.querySelector('.pbp-ab-head').addEventListener('click', () => el.classList.toggle('open'))
+  return el
+}
+
+function renderPbpFeed(m) {
+  const body = $('pbp-scroll'), items = m.timeline
+  const pip = $('pbp-live-pip'); if (pip) pip.style.display = m.status.isLive ? '' : 'none'
+  const nPlays = items.reduce((a, i) => a + (i.kind === 'play' ? 1 : 0), 0)
+  txt($('pbp-sub'), m.status.isLive ? `LIVE · ${liveStateText(m)}` : (nPlays ? `${nPlays} plays` : ''))
+  if (!items.length) return
+  const THRESH = 60
+  const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight <= THRESH
+  if (firstPbpRender) {
+    body.innerHTML = ''
+    for (const it of items) { body.appendChild(pbpEl(it, false)); seenPbp.add(it.id) }
+    firstPbpRender = false
+    body.scrollTop = body.scrollHeight
+    updatePbpReturn()
+    return
+  }
+  let added = false
+  for (const it of items) { if (seenPbp.has(it.id)) continue; body.appendChild(pbpEl(it, true)); seenPbp.add(it.id); added = true }
+  if (added && atBottom) body.scrollTop = body.scrollHeight
+  updatePbpReturn()
+}
+
+function updatePbpReturn() {
+  const body = $('pbp-scroll'), btn = $('pbp-return')
+  if (!body || !btn) return
+  const away = body.scrollHeight - body.scrollTop - body.clientHeight > 80
+  btn.hidden = !(away && LIVE_NOW)
+}
+
 /* ══════════════════ Orchestration ══════════════════ */
 
 function renderAll(m) {
@@ -540,6 +757,8 @@ function renderAll(m) {
   renderScoreboard(m, PREV)
   renderState(m, PREV)
   renderMatchup(m)
+  renderPitchSeq(m)
+  renderPbpFeed(m)
   renderTimeline(m)
   renderBox(m)
   PREV = m
@@ -570,6 +789,9 @@ function wireTimeline() {
   const body = $('tl-body'), btn = $('tl-return')
   if (body) body.addEventListener('scroll', updateReturnBtn, { passive: true })
   if (btn) btn.addEventListener('click', () => body.scrollTo({ top: 0, behavior: 'smooth' }))
+  const pbpBody = $('pbp-scroll'), pbpBtn = $('pbp-return')
+  if (pbpBody) pbpBody.addEventListener('scroll', updatePbpReturn, { passive: true })
+  if (pbpBtn) pbpBtn.addEventListener('click', () => pbpBody.scrollTo({ top: pbpBody.scrollHeight, behavior: 'smooth' }))
 }
 
 async function init() {
