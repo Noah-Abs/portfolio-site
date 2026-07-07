@@ -28,6 +28,7 @@ function addDays(iso, n) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.ge
 function qp(k) { return new URLSearchParams(location.search).get(k) }
 function txt(el, v) { if (el && el.textContent !== String(v)) el.textContent = v }
 function pop(el, cls, dur = 500) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), dur) }
+function abbrevName(full) { if (!full) return ''; const p = full.split(' '); return p.length < 2 ? full : p[0][0] + '. ' + p.slice(1).join(' ') }
 
 /* ── game selection ── */
 async function pickGamePk() {
@@ -59,6 +60,14 @@ function normalize(feed) {
   const abstract = status.abstractGameState
   const isLive = abstract === 'Live', isFinal = abstract === 'Final'
 
+  const starterOf = side => {
+    const id = box.teams?.[side]?.pitchers?.[0] || gd.probablePitchers?.[side]?.id
+    if (!id) return { name: '', hand: '' }
+    const person = gd.players?.['ID' + id]
+    const full = person?.fullName || gd.probablePitchers?.[side]?.fullName || box.teams?.[side]?.players?.['ID' + id]?.person?.fullName || ''
+    const hand = person?.pitchHand?.code ? person.pitchHand.code + 'HP' : ''
+    return { name: abbrevName(full), hand }
+  }
   const teamSide = side => {
     const t = gd.teams[side] || {}, bx = box.teams?.[side] || {}, lst = ls.teams?.[side] || {}
     return {
@@ -68,6 +77,7 @@ function normalize(feed) {
       hits: lst.hits ?? bx.teamStats?.batting?.hits ?? 0,
       errors: lst.errors ?? bx.teamStats?.fielding?.errors ?? 0,
       logo: t.id ? LOGO(t.id) : '',
+      starter: starterOf(side),
     }
   }
   const away = teamSide('away'), home = teamSide('home')
@@ -182,7 +192,7 @@ function renderScoreboard(m, prev) {
   arrow.classList.toggle('mid', mid)
   arrow.textContent = mid ? '■' : '▲'
   if (m.status.isFinal) { txt(num, 'F'); arrow.style.visibility = 'hidden'; txt(line, 'Final' + (m.inning.num > 9 ? ` / ${m.inning.num}` : '')) }
-  else if (!m.inning.num) { txt(num, '—'); arrow.style.visibility = 'hidden'; txt(line, m.startTime ? `First Pitch ${m.startTime}` : 'Scheduled') }
+  else if (!m.status.isLive || !m.inning.num) { txt(num, '—'); arrow.style.visibility = 'hidden'; txt(line, m.startTime ? `First Pitch ${m.startTime}` : (m.status.detailed || 'Scheduled')) }
   else {
     arrow.style.visibility = 'visible'
     txt(num, m.inning.num)
@@ -311,6 +321,7 @@ function renderPbp(m) {
 function renderUpdates(m) {
   const body = $('updates-body')
   const key = m.plays.filter(p => p.isScoring || /Home Run/i.test(p.event))
+  txt($('updates-count'), key.length ? String(key.length) : '')
   if (!key.length) return
   if (firstUpdatesRender) {
     body.innerHTML = ''
@@ -325,34 +336,49 @@ function renderUpdates(m) {
   }
 }
 
-function renderGameInfo(m) {
-  const rows = [
-    ['Status', m.status.detailed || '—'],
-    ['Venue', m.venue || '—'],
-    ['First Pitch', m.startTime || '—'],
-  ]
-  if (m.weather) rows.push(['Weather', m.weather])
-  txt($('gi-state'), m.status.isLive ? `${m.inning.state || m.inning.half} ${m.inning.ordinal}`.trim() : '')
-  $('gi-body').innerHTML = rows.map(([k, v]) => `<div class="gi-row"><span class="gi-k">${k}</span><span class="gi-v">${v}</span></div>`).join('')
+function liveStateText(m) {
+  const st = m.inning.state
+  const half = (st === 'Middle' || st === 'End') ? st : (m.inning.isTop ? 'Top' : 'Bottom')
+  return `${half} ${m.inning.ordinal}`.trim()
 }
 
-function renderSituation(m) {
-  const body = $('situation-body')
-  if (!m.status.isLive) {
-    body.innerHTML = `<div class="empty-note">${m.status.isFinal ? 'Game complete.' : 'Game has not started.'}</div>`
-    return
+function statusInfo(m) {
+  const d = m.status.detailed || ''
+  if (m.status.isLive) return { cls: 'st-live', label: 'LIVE', state: liveStateText(m) }
+  if (m.status.isFinal) return { cls: 'st-final', label: 'FINAL', state: m.inning.num > 9 ? `${m.inning.num} innings` : '' }
+  if (/Delayed/i.test(d)) return { cls: 'st-alert', label: 'DELAYED', state: d.replace(/^Delayed:?\s*/i, '') }
+  if (/Postponed/i.test(d)) return { cls: 'st-alert', label: 'POSTPONED', state: '' }
+  if (/Suspended/i.test(d)) return { cls: 'st-alert', label: 'SUSPENDED', state: '' }
+  if (/Warmup/i.test(d)) return { cls: 'st-upcoming', label: 'WARMUP', state: m.startTime || '' }
+  return { cls: 'st-upcoming', label: 'UPCOMING', state: m.startTime || '' }
+}
+
+function renderStatus(m) {
+  const card = $('card-status')
+  const info = statusInfo(m)
+  card.className = 'card card-status ' + info.cls
+  txt($('status-badge'), info.label)
+  txt($('status-state'), info.state)
+  const showScore = m.status.isLive || m.status.isFinal
+  txt($('status-score'), showScore
+    ? `${m.away.name} ${m.away.runs}, ${m.home.name} ${m.home.runs}`
+    : `${m.away.name} vs ${m.home.name}`)
+}
+
+function renderSummary(m) {
+  const showLead = m.status.isLive || m.status.isFinal
+  const set = (side, t, leading) => {
+    const logo = $(`gs-${side}-logo`); if (logo && t.logo && logo.src !== t.logo) logo.src = t.logo
+    txt($(`gs-${side}-name`), t.name)
+    const sp = t.starter && t.starter.name ? (t.starter.hand ? `${t.starter.hand} ${t.starter.name}` : t.starter.name) : ''
+    txt($(`gs-${side}-sub`), [t.record, sp].filter(Boolean).join(' · '))
+    txt($(`gs-${side}-score`), t.runs)
+    $(`gs-${side}`).classList.toggle('leading', leading)
   }
-  const risp = m.bases.second || m.bases.third
-  const runners = ['first', 'second', 'third'].filter(b => m.bases[b]).length
-  const cells = [
-    ['Count', `${m.count.balls}-${m.count.strikes}`, false],
-    ['Outs', m.count.outs, false],
-    ['On Base', runners, runners > 0],
-    ['RISP', risp ? 'Yes' : 'No', risp],
-  ]
-  body.innerHTML = `<div class="sit-grid">` + cells.map(([k, v, hot]) =>
-    `<div class="sit-cell"><span class="sit-v${hot ? ' hot' : ''}">${v}</span><span class="sit-k">${k}</span></div>`).join('') +
-    `<div class="sit-cell wide"><span class="sit-v">${m.onDeck || '—'}</span><span class="sit-k">On Deck</span></div></div>`
+  set('away', m.away, showLead && m.away.runs > m.home.runs)
+  set('home', m.home, showLead && m.home.runs > m.away.runs)
+  txt($('gs-venue'), m.venue || '')
+  txt($('gs-time'), m.status.isFinal ? 'Final' : (m.startTime || ''))
 }
 
 function renderBox(m) {
@@ -399,13 +425,13 @@ function renderBox(m) {
 
 function renderAll(m) {
   renderHeader(m)
+  renderStatus(m)
+  renderSummary(m)
   renderScoreboard(m, PREV)
   renderState(m, PREV)
   renderMatchup(m)
   renderPbp(m)
   renderUpdates(m)
-  renderGameInfo(m)
-  renderSituation(m)
   renderBox(m)
   PREV = m
 }

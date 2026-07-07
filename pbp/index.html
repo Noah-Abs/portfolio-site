@@ -33,28 +33,47 @@
     <!-- ─────── LEFT · 22% · live info center ─────── -->
     <aside class="col col-left">
 
-      <section class="card" id="card-gameinfo">
-        <div class="card-head">
-          <span class="card-label">Game Info</span>
-          <span class="card-sub" id="gi-state"></span>
+      <!-- Live status header -->
+      <section class="card card-status" id="card-status">
+        <div class="status-top">
+          <span class="status-badge" id="status-badge">—</span>
+          <span class="status-state" id="status-state"></span>
         </div>
-        <div class="card-body" id="gi-body">
-          <div class="skeleton-lines"><span></span><span></span><span></span></div>
+        <div class="status-score" id="status-score"></div>
+      </section>
+
+      <!-- Game summary -->
+      <section class="card card-summary" id="card-summary">
+        <div class="card-head"><span class="card-label">Matchup</span></div>
+        <div class="gs-teams">
+          <div class="gs-team" id="gs-away">
+            <img class="gs-logo" id="gs-away-logo" alt="" />
+            <div class="gs-meta">
+              <span class="gs-name" id="gs-away-name">—</span>
+              <span class="gs-sub" id="gs-away-sub"></span>
+            </div>
+            <span class="gs-score" id="gs-away-score">0</span>
+          </div>
+          <div class="gs-team" id="gs-home">
+            <img class="gs-logo" id="gs-home-logo" alt="" />
+            <div class="gs-meta">
+              <span class="gs-name" id="gs-home-name">—</span>
+              <span class="gs-sub" id="gs-home-sub"></span>
+            </div>
+            <span class="gs-score" id="gs-home-score">0</span>
+          </div>
+        </div>
+        <div class="gs-foot">
+          <span class="gs-venue" id="gs-venue"></span>
+          <span class="gs-time" id="gs-time"></span>
         </div>
       </section>
 
-      <section class="card" id="card-situation">
-        <div class="card-head">
-          <span class="card-label">Situation</span>
-        </div>
-        <div class="card-body" id="situation-body">
-          <div class="skeleton-lines"><span></span><span></span></div>
-        </div>
-      </section>
-
+      <!-- Chronological history -->
       <section class="card card-grow" id="card-updates">
         <div class="card-head">
           <span class="card-label">Key Plays</span>
+          <span class="card-sub" id="updates-count"></span>
         </div>
         <div class="card-body card-scroll" id="updates-body">
           <div class="empty-note">Waiting for game events…</div>

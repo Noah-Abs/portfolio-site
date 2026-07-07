@@ -135,17 +135,36 @@ body {
 .skeleton-lines span:nth-child(3) { width: 60%; }
 
 /* ═══════════════════ Left column ═══════════════════ */
-.gi-row { display: flex; align-items: baseline; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid var(--border); gap: 0.75rem; }
-.gi-row:last-child { border-bottom: none; }
-.gi-k { font-size: 0.72rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
-.gi-v { font-size: 0.82rem; color: var(--text-1); font-weight: 600; text-align: right; }
+/* Live status header */
+.card-status { padding: 0.9rem 1rem; border-left: 3px solid var(--text-3); }
+.card-status.st-live { border-left-color: var(--c-red); }
+.card-status.st-final { border-left-color: var(--text-3); }
+.card-status.st-upcoming { border-left-color: var(--c-blue); }
+.card-status.st-alert { border-left-color: var(--c-orange); }
+.status-top { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.45rem; }
+.status-badge { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.14em; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 0.4rem; white-space: nowrap; }
+.st-live .status-badge { color: var(--c-red); background: var(--c-red-dim); }
+.st-live .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--c-red); box-shadow: 0 0 8px var(--c-red); animation: pip 1.4s ease-in-out infinite; }
+.st-final .status-badge { color: var(--text-2); background: var(--surface-2); }
+.st-upcoming .status-badge { color: var(--c-blue); background: var(--c-blue-dim); }
+.st-alert .status-badge { color: var(--c-orange); background: rgba(255,157,66,0.14); }
+.status-state { font-size: 0.92rem; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-score { font-size: 0.8rem; color: var(--text-2); font-weight: 600; }
 
-.sit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.sit-cell { background: var(--surface-2); border-radius: var(--radius-sm); padding: 0.65rem 0.7rem; display: flex; flex-direction: column; gap: 0.15rem; }
-.sit-cell.wide { grid-column: 1 / -1; }
-.sit-v { font-size: 1.1rem; font-weight: 800; color: var(--text-1); line-height: 1; }
-.sit-k { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
-.sit-v.hot { color: var(--c-yellow); }
+/* Game summary */
+.gs-teams { display: flex; flex-direction: column; gap: 0.35rem; }
+.gs-team { display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.55rem; border-radius: var(--radius-sm); background: transparent; transition: background 0.25s ease; }
+.gs-team.leading { background: var(--surface-2); }
+.gs-logo { width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; }
+.gs-meta { display: flex; flex-direction: column; gap: 0.08rem; min-width: 0; flex: 1; }
+.gs-name { font-size: 0.94rem; font-weight: 700; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gs-team.leading .gs-name { color: var(--text-1); }
+.gs-sub { font-size: 0.66rem; color: var(--text-3); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gs-score { font-size: 1.5rem; font-weight: 800; color: var(--text-3); min-width: 1.2ch; text-align: center; font-variant-numeric: tabular-nums; }
+.gs-team.leading .gs-score { color: var(--text-1); }
+.gs-foot { display: flex; justify-content: space-between; gap: 0.6rem; margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px solid var(--border); font-size: 0.68rem; color: var(--text-3); font-weight: 600; }
+.gs-venue { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.gs-time { white-space: nowrap; flex-shrink: 0; }
 
 /* Key plays (left) + play-by-play (center) share item style */
 .play-item { display: flex; gap: 0.65rem; padding: 0.7rem 0.15rem; border-bottom: 1px solid var(--border); }
