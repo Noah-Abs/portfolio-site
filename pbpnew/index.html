@@ -43,8 +43,22 @@
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
   }
-  .r1{top:2.5vh;height:28.2vh;}
+  .r1{top:2.5vh;height:28.2vh;padding:13px 15px;display:flex;flex-direction:column;overflow:hidden;}
   .r2{top:31.7vh;bottom:2.5vh;}
+
+  /* Matchup content (box 3a) */
+  .mu-head{font-family:"Oswald",sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:2px;font-size:10.5px;color:var(--muted,#7e858f);margin-bottom:9px;}
+  .mu-team{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;}
+  .mu-team.lead{background:var(--panel2,#15161b);}
+  .mu-logo{width:28px;height:28px;object-fit:contain;flex:0 0 auto;}
+  .mu-info{flex:1;min-width:0;}
+  .mu-nm{font-family:"Oswald",sans-serif;font-weight:600;font-size:16px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3,#aab0b9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;}
+  .mu-team.lead .mu-nm{color:var(--text,#fff);}
+  .mu-sub{font-size:11px;color:var(--muted,#7e858f);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mu-sc{font-family:"Anton",sans-serif;font-size:25px;color:var(--text3,#aab0b9);min-width:1ch;text-align:center;flex:0 0 auto;}
+  .mu-team.lead .mu-sc{color:var(--text,#fff);}
+  .mu-foot{margin-top:auto;padding-top:9px;border-top:1px solid var(--border,#1b1e24);display:flex;justify-content:space-between;gap:8px;font-size:10.5px;letter-spacing:.4px;color:var(--muted,#7e858f);text-transform:uppercase;}
+  .mu-foot span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
   /* Corner number labels (temporary reference) */
   .tag{position:absolute;bottom:7px;right:10px;font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;color:var(--muted,#7e858f);}
@@ -81,8 +95,57 @@
   <div class="cbox c1"><span class="tag">2a</span></div>
   <div class="cbox c2"><span class="tag">2b</span></div>
   <div class="cbox c3"><span class="tag">2c</span></div>
-  <div class="rbox r1"><span class="tag">3a</span></div>
+  <div class="rbox r1" id="r1"><span class="tag">3a</span></div>
   <div class="rbox r2"><span class="tag">3b</span></div>
   <div class="brect"><span class="tag">4</span></div>
+
+<script>
+  const LOGO=id=>`https://www.mlbstatic.com/team-logos/team-cap-on-dark/${id}.svg`;
+  const j=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
+  const qp=k=>new URLSearchParams(location.search).get(k);
+  const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date());
+  const abbr=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):p[0]||'';};
+  const gTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
+
+  async function pickGame(){
+    if(qp('gamePk')){const f=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=${qp('gamePk')}&hydrate=team,linescore,probablePitcher,venue`);return ((f?.dates||[])[0]||{}).games?.[0]||null;}
+    const s=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today()}&hydrate=team,linescore,probablePitcher,venue`);
+    let games=[];for(const d of s?.dates||[])for(const g of d.games||[])games.push(g);
+    const team=qp('team');if(team){const f=games.filter(g=>[g.teams.home.team.id,g.teams.away.team.id].includes(+team));if(f.length)games=f;}
+    if(!games.length)return null;
+    const rank=g=>({Live:0,Final:1,Preview:2}[g.status.abstractGameState]??3);
+    games.sort((a,b)=>rank(a)-rank(b)||Date.parse(a.gameDate)-Date.parse(b.gameDate));
+    return games[0];
+  }
+
+  function teamRow(t,lead){
+    const nm=t.team.teamName||t.team.name||'';
+    const rec=t.leagueRecord?`${t.leagueRecord.wins}-${t.leagueRecord.losses}`:'';
+    const sp=t.probablePitcher&&t.probablePitcher.fullName?abbr(t.probablePitcher.fullName):'';
+    const sub=[rec,sp].filter(Boolean).join(' · ');
+    const sc=(t.score!=null)?t.score:'';
+    return `<div class="mu-team${lead?' lead':''}">
+      <img class="mu-logo" src="${LOGO(t.team.id)}" onerror="this.style.visibility='hidden'">
+      <div class="mu-info"><div class="mu-nm">${nm}</div><div class="mu-sub">${sub}</div></div>
+      <div class="mu-sc">${sc}</div></div>`;
+  }
+
+  async function render(){
+    const el=document.getElementById('r1');
+    const g=await pickGame();
+    if(!g){el.insertAdjacentHTML('afterbegin','<div class="mu-head">Matchup</div><div class="mu-sub">No game found.</div>');return;}
+    const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState;
+    const lead=(a.score!=null&&h.score!=null)?(a.score>h.score?'a':h.score>a.score?'h':''):'';
+    const foot=st==='Final'?'Final':st==='Live'?`${(g.linescore&&g.linescore.inningState)||''} ${(g.linescore&&g.linescore.currentInning)||''}`.trim():gTime(g);
+    const venue=(g.venue&&g.venue.name)||'';
+    el.querySelectorAll('.mu-head,.mu-team,.mu-foot').forEach(n=>n.remove());
+    el.insertAdjacentHTML('afterbegin',
+      `<div class="mu-head">Matchup</div>`+
+      teamRow(a,lead==='a')+teamRow(h,lead==='h')+
+      `<div class="mu-foot"><span>${venue}</span><span>${foot}</span></div>`);
+  }
+  render();
+  setInterval(render,20000);
+</script>
 </body>
 </html>
