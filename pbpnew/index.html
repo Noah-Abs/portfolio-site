@@ -26,20 +26,32 @@
   .lbox{
     position:absolute;
     left:1.5vw;
-    top:2.5vh;
+    top:1.5vh;
     width:28vw;
-    bottom:16.6vh;            /* ~1/6 of the screen height remains below */
+    bottom:17vh;
     background:var(--panel,#101115);
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
   }
 
-  /* Right box — same size/top, but runs to the bottom (no gap below) */
+  /* Right box — same top/bottom, a bit less wide */
   .rbox{
     position:absolute;
     right:1.5vw;
     top:2.5vh;
-    width:28vw;
+    width:22vw;
+    bottom:2.5vh;
+    background:var(--panel,#101115);
+    border:1px solid var(--border,#1b1e24);
+    border-radius:16px;
+  }
+
+  /* Bottom strip — under the left box, spanning across to the right box */
+  .brect{
+    position:absolute;
+    left:1.5vw;
+    right:24.5vw;
+    top:85vh;
     bottom:2.5vh;
     background:var(--panel,#101115);
     border:1px solid var(--border,#1b1e24);
@@ -51,5 +63,6 @@
 <body>
   <div class="lbox"></div>
   <div class="rbox"></div>
+  <div class="brect"></div>
 </body>
 </html>
