@@ -17,24 +17,26 @@
     color:var(--text,#fff);
     font-family:"Oswald",sans-serif;
     -webkit-font-smoothing:antialiased;
-    min-height:100vh;
-    display:flex;align-items:center;justify-content:center;
+    height:100vh;height:100dvh;
     overflow:hidden;
+    position:relative;
   }
-  /* faint watermark so the black canvas reads as "ours" — we build on top of this */
-  .ph{
-    font-family:"Anton",sans-serif;
-    text-transform:uppercase;
-    letter-spacing:.14em;
-    font-size:clamp(26px,6vw,64px);
-    color:var(--panel2,#15161b);
-    user-select:none;
-    white-space:nowrap;
+
+  /* Left box — ~28% of the width, tall, leaving ~1/6 of the screen open below it */
+  .lbox{
+    position:absolute;
+    left:1.5vw;
+    top:2.5vh;
+    width:28vw;
+    bottom:16.6vh;            /* ~1/6 of the screen height remains below */
+    background:var(--panel,#101115);
+    border:1px solid var(--border,#1b1e24);
+    border-radius:16px;
   }
 </style>
 <script src="/settings.js"></script>
 </head>
 <body>
-  <div class="ph">Play · by · Play</div>
+  <div class="lbox"></div>
 </body>
 </html>
