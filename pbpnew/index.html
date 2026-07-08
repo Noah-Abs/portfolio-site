@@ -34,17 +34,17 @@
     border-radius:16px;
   }
 
-  /* Right box — same top/bottom, a bit less wide */
+  /* Right column split vertically into 2 — top ~30% of box 3 */
   .rbox{
     position:absolute;
     right:1.5vw;
-    top:2.5vh;
     width:22vw;
-    bottom:2.5vh;
     background:var(--panel,#101115);
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
   }
+  .r1{top:2.5vh;height:28.2vh;}
+  .r2{top:31.7vh;bottom:2.5vh;}
 
   /* Corner number labels (temporary reference) */
   .tag{position:absolute;bottom:7px;right:10px;font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;color:var(--muted,#7e858f);}
@@ -81,7 +81,8 @@
   <div class="cbox c1"><span class="tag">2a</span></div>
   <div class="cbox c2"><span class="tag">2b</span></div>
   <div class="cbox c3"><span class="tag">2c</span></div>
-  <div class="rbox"><span class="tag">3</span></div>
+  <div class="rbox r1"><span class="tag">3a</span></div>
+  <div class="rbox r2"><span class="tag">3b</span></div>
   <div class="brect"><span class="tag">4</span></div>
 </body>
 </html>
