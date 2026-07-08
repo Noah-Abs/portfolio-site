@@ -96,18 +96,16 @@
   /* Matchup (box 2b) — pitcher | bases+count | batter */
   .mm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
   .mm-side{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0;}
-  .mm-hs{width:clamp(48px,9vh,76px);height:clamp(48px,9vh,76px);border-radius:12px;object-fit:cover;object-position:top;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);flex:0 0 auto;}
+  .mm-hs{width:clamp(48px,9vh,76px);height:clamp(48px,9vh,76px);border-radius:50%;object-fit:cover;object-position:top;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);flex:0 0 auto;}
   .mm-nm{font-family:"Oswald",sans-serif;font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.4px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   .mm-pos{color:var(--muted,#7e858f);font-size:11px;font-weight:500;}
   .mm-pc{font-family:"Anton",sans-serif;font-size:17px;line-height:1;color:var(--accent,#4aa3ff);}
   .mm-st{font-size:11px;color:var(--text3,#aab0b9);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   .mm-mid{display:flex;flex-direction:column;align-items:center;gap:7px;}
-  .mm-diamond{position:relative;width:54px;height:54px;}
-  .mm-b{position:absolute;width:15px;height:15px;background:var(--panel2,#15161b);border:1px solid var(--border2,#2a2f37);transform:rotate(45deg);}
-  .mm-b.on{background:#f6c445;border-color:#f6c445;box-shadow:0 0 10px rgba(246,196,69,.6);}
-  .mm-b.b2{top:0;left:19.5px;}
-  .mm-b.b1{right:0;top:19.5px;}
-  .mm-b.b3{left:0;top:19.5px;}
+  .mm-diamond{width:56px;height:56px;overflow:visible;}
+  .mm-diamond .path{fill:none;stroke:var(--border2,#2a2f37);stroke-width:2.5;stroke-linejoin:round;}
+  .mm-diamond .base{fill:var(--panel2,#15161b);stroke:var(--border2,#2a2f37);stroke-width:1.5;}
+  .mm-diamond .base.on{fill:#f6c445;stroke:#f6c445;filter:drop-shadow(0 0 4px rgba(246,196,69,.6));}
   .mm-count{font-family:"Anton",sans-serif;font-size:23px;line-height:1;color:var(--text,#fff);}
 
   /* Scoreboard (box 2a) */
@@ -293,8 +291,12 @@
     const bs=(bBox&&bBox.stats&&bBox.stats.batting)||{}, ps=(pBox&&pBox.stats&&pBox.stats.pitching)||{};
     const bPos=(bBox&&bBox.position&&bBox.position.abbreviation)||'';
     const on=b=>b?' on':'';
+    const base=(cls,x,y)=>`<rect class="base${cls}" x="${x-5}" y="${y-5}" width="10" height="10" transform="rotate(45 ${x} ${y})"/>`;
     const mid=`<div class="mm-mid">
-      <div class="mm-diamond"><span class="mm-b b2${on(ls.offense.second)}"></span><span class="mm-b b1${on(ls.offense.first)}"></span><span class="mm-b b3${on(ls.offense.third)}"></span></div>
+      <svg class="mm-diamond" viewBox="0 0 60 60">
+        <polygon class="path" points="30,9 51,30 30,51 9,30"/>
+        ${base(on(ls.offense.second),30,10)}${base(on(ls.offense.first),50,30)}${base(on(ls.offense.third),10,30)}
+      </svg>
       <div class="mm-count">${ls.balls||0}-${ls.strikes||0}</div></div>`;
     const pitcher=`<div class="mm-side">
       <img class="mm-hs" src="${HEAD(pid)}" onerror="this.style.visibility='hidden'">
