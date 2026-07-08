@@ -33,10 +33,23 @@
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
   }
+
+  /* Right box — same size/top, but runs to the bottom (no gap below) */
+  .rbox{
+    position:absolute;
+    right:1.5vw;
+    top:2.5vh;
+    width:28vw;
+    bottom:2.5vh;
+    background:var(--panel,#101115);
+    border:1px solid var(--border,#1b1e24);
+    border-radius:16px;
+  }
 </style>
 <script src="/settings.js"></script>
 </head>
 <body>
   <div class="lbox"></div>
+  <div class="rbox"></div>
 </body>
 </html>
