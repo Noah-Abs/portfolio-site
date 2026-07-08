@@ -76,7 +76,7 @@
   .c2{top:14.9vh;height:22.7vh;}
   .c3{top:38.6vh;height:45.4vh;}
 
-  /* Bottom strip — under the left box, spanning across to the right box */
+  /* Bottom strip — linescore grid (box 4) */
   .brect{
     position:absolute;
     left:1.5vw;
@@ -86,7 +86,20 @@
     background:var(--panel,#101115);
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
+    padding:6px 12px;
+    display:flex;align-items:center;
+    overflow:auto;
   }
+  .ls{border-collapse:collapse;width:100%;font-family:"Oswald",sans-serif;font-variant-numeric:tabular-nums;}
+  .ls th,.ls td{border:1px solid var(--border,#1b1e24);text-align:center;padding:3px 0;font-size:13px;font-weight:500;color:var(--text3,#aab0b9);min-width:22px;}
+  .ls th{font-size:10px;font-weight:600;color:var(--muted,#7e858f);letter-spacing:.5px;}
+  .ls .tm{border-left:0;text-align:left;white-space:nowrap;padding:2px 10px 2px 2px;min-width:0;}
+  .ls .tm img{width:19px;height:19px;object-fit:contain;vertical-align:middle;margin-right:7px;}
+  .ls .tm span{font-weight:600;text-transform:uppercase;letter-spacing:.5px;font-size:12.5px;color:var(--text2,#cfd4da);vertical-align:middle;}
+  .ls th.tm{border:0;}
+  .ls .rhe{color:var(--text,#fff);font-weight:700;background:rgba(255,255,255,.02);}
+  .ls th.rhe{color:var(--text3,#aab0b9);}
+  .ls .cur{color:var(--accent,#4aa3ff);}
 </style>
 <script src="/settings.js"></script>
 </head>
@@ -97,7 +110,7 @@
   <div class="cbox c3"><span class="tag">2c</span></div>
   <div class="rbox r1" id="r1"><span class="tag">3a</span></div>
   <div class="rbox r2"><span class="tag">3b</span></div>
-  <div class="brect"><span class="tag">4</span></div>
+  <div class="brect" id="b4"><span class="tag">4</span></div>
 
 <script>
   const LOGO=id=>`https://www.mlbstatic.com/team-logos/team-cap-on-dark/${id}.svg`;
@@ -130,22 +143,45 @@
       <div class="mu-sc">${sc}</div></div>`;
   }
 
-  async function render(){
+  function render3a(g){
     const el=document.getElementById('r1');
-    const g=await pickGame();
+    el.querySelectorAll('.mu-head,.mu-team,.mu-foot,.mu-sub').forEach(n=>n.remove());
     if(!g){el.insertAdjacentHTML('afterbegin','<div class="mu-head">Matchup</div><div class="mu-sub">No game found.</div>');return;}
     const a=g.teams.away,h=g.teams.home,st=g.status.abstractGameState;
     const lead=(a.score!=null&&h.score!=null)?(a.score>h.score?'a':h.score>a.score?'h':''):'';
     const foot=st==='Final'?'Final':st==='Live'?`${(g.linescore&&g.linescore.inningState)||''} ${(g.linescore&&g.linescore.currentInning)||''}`.trim():gTime(g);
     const venue=(g.venue&&g.venue.name)||'';
-    el.querySelectorAll('.mu-head,.mu-team,.mu-foot').forEach(n=>n.remove());
     el.insertAdjacentHTML('afterbegin',
       `<div class="mu-head">Matchup</div>`+
       teamRow(a,lead==='a')+teamRow(h,lead==='h')+
       `<div class="mu-foot"><span>${venue}</span><span>${foot}</span></div>`);
   }
-  render();
-  setInterval(render,20000);
+
+  async function render4(g){
+    const el=document.getElementById('b4');
+    el.querySelectorAll('.ls').forEach(n=>n.remove());
+    if(!g)return;
+    const ls=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/linescore`);
+    const innings=(ls&&ls.innings)||[];
+    const n=Math.max(9,innings.length);
+    const cur=(ls&&ls.currentInning)||0, live=g.status.abstractGameState==='Live';
+    const aT=(ls&&ls.teams&&ls.teams.away)||{}, hT=(ls&&ls.teams&&ls.teams.home)||{};
+    const ab=t=>t.team.abbreviation||String(t.team.teamName||t.team.name||'').slice(0,3).toUpperCase();
+    let head='<tr><th class="tm"></th>';
+    for(let i=1;i<=n;i++)head+=`<th class="${live&&i===cur?'cur':''}">${i}</th>`;
+    head+='<th class="rhe">R</th><th class="rhe">H</th><th class="rhe">E</th></tr>';
+    const row=(side,team,tot)=>{
+      let r=`<tr><td class="tm"><img src="${LOGO(team.team.id)}" onerror="this.style.visibility='hidden'"><span>${ab(team)}</span></td>`;
+      for(let i=1;i<=n;i++){const inn=innings.find(x=>x.num===i);const v=inn&&inn[side]?inn[side].runs:undefined;r+=`<td>${v==null?'':v}</td>`;}
+      r+=`<td class="rhe">${tot.runs!=null?tot.runs:(team.score!=null?team.score:'')}</td><td class="rhe">${tot.hits!=null?tot.hits:''}</td><td class="rhe">${tot.errors!=null?tot.errors:''}</td></tr>`;
+      return r;
+    };
+    el.insertAdjacentHTML('afterbegin',`<table class="ls"><tbody>${head}${row('away',g.teams.away,aT)}${row('home',g.teams.home,hT)}</tbody></table>`);
+  }
+
+  async function renderAll(){const g=await pickGame();render3a(g);render4(g);}
+  renderAll();
+  setInterval(renderAll,20000);
 </script>
 </body>
 </html>
