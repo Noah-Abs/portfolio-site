@@ -46,6 +46,18 @@
     border-radius:16px;
   }
 
+  /* Center box — fills the remaining space between the three boxes */
+  .cbox{
+    position:absolute;
+    left:30.5vw;
+    right:24.5vw;
+    top:2.5vh;
+    bottom:16vh;
+    background:var(--panel,#101115);
+    border:1px solid var(--border,#1b1e24);
+    border-radius:16px;
+  }
+
   /* Bottom strip — under the left box, spanning across to the right box */
   .brect{
     position:absolute;
@@ -63,6 +75,7 @@
 <body>
   <div class="lbox"></div>
   <div class="rbox"></div>
+  <div class="cbox"></div>
   <div class="brect"></div>
 </body>
 </html>
