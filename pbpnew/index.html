@@ -46,6 +46,9 @@
     border-radius:16px;
   }
 
+  /* Corner number labels (temporary reference) */
+  .tag{position:absolute;bottom:7px;right:10px;font-family:"Oswald",sans-serif;font-weight:600;font-size:14px;color:var(--muted,#7e858f);}
+
   /* Center box — fills the remaining space between the three boxes */
   .cbox{
     position:absolute;
@@ -73,9 +76,9 @@
 <script src="/settings.js"></script>
 </head>
 <body>
-  <div class="lbox"></div>
-  <div class="rbox"></div>
-  <div class="cbox"></div>
-  <div class="brect"></div>
+  <div class="lbox"><span class="tag">1</span></div>
+  <div class="cbox"><span class="tag">2</span></div>
+  <div class="rbox"><span class="tag">3</span></div>
+  <div class="brect"><span class="tag">4</span></div>
 </body>
 </html>
