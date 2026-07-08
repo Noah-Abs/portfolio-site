@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>Play-by-Play · DROPTHIRD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg,#0b0c0e);
+    color:var(--text,#fff);
+    font-family:"Oswald",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  /* faint watermark so the black canvas reads as "ours" — we build on top of this */
+  .ph{
+    font-family:"Anton",sans-serif;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:clamp(26px,6vw,64px);
+    color:var(--panel2,#15161b);
+    user-select:none;
+    white-space:nowrap;
+  }
+</style>
+<script src="/settings.js"></script>
+</head>
+<body>
+  <div class="ph">Play · by · Play</div>
+</body>
+</html>
