@@ -90,8 +90,25 @@
     border-radius:16px;
   }
   .c1{top:2.5vh;height:11.4vh;padding:0 26px;display:flex;align-items:center;overflow:hidden;}
-  .c2{top:14.9vh;height:22.7vh;}
+  .c2{top:14.9vh;height:22.7vh;padding:0 24px;display:flex;align-items:center;overflow:hidden;}
   .c3{top:38.6vh;height:45.4vh;}
+
+  /* Matchup (box 2b) — pitcher | bases+count | batter */
+  .mm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
+  .mm-side{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0;}
+  .mm-hs{width:clamp(48px,9vh,76px);height:clamp(48px,9vh,76px);border-radius:12px;object-fit:cover;object-position:top;background:var(--panel2,#15161b);border:1px solid var(--border2,#262a32);flex:0 0 auto;}
+  .mm-nm{font-family:"Oswald",sans-serif;font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.4px;color:var(--text,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .mm-pos{color:var(--muted,#7e858f);font-size:11px;font-weight:500;}
+  .mm-pc{font-family:"Anton",sans-serif;font-size:17px;line-height:1;color:var(--accent,#4aa3ff);}
+  .mm-st{font-size:11px;color:var(--text3,#aab0b9);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .mm-mid{display:flex;flex-direction:column;align-items:center;gap:7px;}
+  .mm-diamond{position:relative;width:54px;height:54px;}
+  .mm-b{position:absolute;width:15px;height:15px;background:var(--panel2,#15161b);border:1px solid var(--border2,#2a2f37);transform:rotate(45deg);}
+  .mm-b.on{background:#f6c445;border-color:#f6c445;box-shadow:0 0 10px rgba(246,196,69,.6);}
+  .mm-b.b2{top:0;left:19.5px;}
+  .mm-b.b1{right:0;top:19.5px;}
+  .mm-b.b3{left:0;top:19.5px;}
+  .mm-count{font-family:"Anton",sans-serif;font-size:23px;line-height:1;color:var(--text,#fff);}
 
   /* Scoreboard (box 2a) */
   .sb{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
@@ -137,7 +154,7 @@
 <body>
   <div class="lbox"><span class="tag">1</span></div>
   <div class="cbox c1" id="c1"><span class="tag">2a</span></div>
-  <div class="cbox c2"><span class="tag">2b</span></div>
+  <div class="cbox c2" id="c2"><span class="tag">2b</span></div>
   <div class="cbox c3"><span class="tag">2c</span></div>
   <div class="rbox r1" id="r1"><span class="tag">3a</span></div>
   <div class="rbox r2" id="b3b">
@@ -153,6 +170,8 @@
   const qp=k=>new URLSearchParams(location.search).get(k);
   const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date());
   const abbr=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):p[0]||'';};
+  const lastN=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p.slice(1).join(' '):p[0]||'';};
+  const HEAD=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto/v1/people/${id}/headshot/67/current`;
   const gTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
 
   async function pickGame(){
@@ -192,11 +211,10 @@
       `<div class="mu-foot"><span>${venue}</span><span>${foot}</span></div>`);
   }
 
-  async function render4(g){
+  function render4(g,ls){
     const el=document.getElementById('b4');
     el.querySelectorAll('.ls').forEach(n=>n.remove());
     if(!g)return;
-    const ls=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/linescore`);
     const innings=(ls&&ls.innings)||[];
     const n=Math.max(9,innings.length);
     const cur=(ls&&ls.currentInning)||0, live=g.status.abstractGameState==='Live';
@@ -215,9 +233,8 @@
   }
 
   let BX=null, bxTeam='away';
-  async function render3b(g){
-    if(!g)return;
-    BX=await j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`);
+  function render3b(g){
+    if(!g||!BX)return;
     const nm=t=>t.team.teamName||t.team.name||'';
     document.getElementById('bxTabs').innerHTML=
       `<div class="bx-tab" data-t="away">${nm(g.teams.away)}</div><div class="bx-tab" data-t="home">${nm(g.teams.home)}</div>`;
@@ -265,7 +282,43 @@
       </div>`);
   }
 
-  async function renderAll(){const g=await pickGame();render2a(g);render3a(g);render4(g);render3b(g);}
+  function render2b(g,ls,box){
+    const el=document.getElementById('c2');
+    el.querySelectorAll('.mm').forEach(n=>n.remove());
+    if(!ls||!ls.offense||!ls.offense.batter||!ls.defense||!ls.defense.pitcher){el.insertAdjacentHTML('afterbegin','<div class="mm"><div></div><div class="mm-st" style="text-align:center">No at-bat</div><div></div></div>');return;}
+    const isTop=ls.isTopInning, offSide=isTop?'away':'home', defSide=isTop?'home':'away';
+    const bid=ls.offense.batter.id, pid=ls.defense.pitcher.id;
+    const bBox=box&&box.teams[offSide].players['ID'+bid];
+    const pBox=box&&box.teams[defSide].players['ID'+pid];
+    const bs=(bBox&&bBox.stats&&bBox.stats.batting)||{}, ps=(pBox&&pBox.stats&&pBox.stats.pitching)||{};
+    const bPos=(bBox&&bBox.position&&bBox.position.abbreviation)||'';
+    const on=b=>b?' on':'';
+    const mid=`<div class="mm-mid">
+      <div class="mm-diamond"><span class="mm-b b2${on(ls.offense.second)}"></span><span class="mm-b b1${on(ls.offense.first)}"></span><span class="mm-b b3${on(ls.offense.third)}"></span></div>
+      <div class="mm-count">${ls.balls||0}-${ls.strikes||0}</div></div>`;
+    const pitcher=`<div class="mm-side">
+      <img class="mm-hs" src="${HEAD(pid)}" onerror="this.style.visibility='hidden'">
+      <div class="mm-nm">${lastN(ls.defense.pitcher.fullName)} <span class="mm-pos">P</span></div>
+      <div class="mm-pc">${ps.numberOfPitches!=null?ps.numberOfPitches+' P':''}</div>
+      <div class="mm-st">${[(ps.inningsPitched||'0.0')+' IP',(ps.baseOnBalls||0)+' BB',(ps.strikeOuts||0)+' K'].join(' · ')}</div></div>`;
+    const batter=`<div class="mm-side">
+      <img class="mm-hs" src="${HEAD(bid)}" onerror="this.style.visibility='hidden'">
+      <div class="mm-nm">${lastN(ls.offense.batter.fullName)} <span class="mm-pos">${bPos}</span></div>
+      <div class="mm-st">${bs.summary||('0-'+(bs.atBats||0))}</div></div>`;
+    el.insertAdjacentHTML('afterbegin',`<div class="mm">${pitcher}${mid}${batter}</div>`);
+  }
+
+  async function renderAll(){
+    const g=await pickGame();
+    render2a(g);render3a(g);
+    if(!g)return;
+    const [ls,box]=await Promise.all([
+      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/linescore`),
+      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`)
+    ]);
+    BX=box;
+    render4(g,ls);render2b(g,ls,box);render3b(g);
+  }
   renderAll();
   setInterval(renderAll,20000);
 </script>
