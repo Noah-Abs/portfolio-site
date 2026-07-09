@@ -152,7 +152,7 @@
   .c2{top:14.9vh;height:22.7vh;padding:0 24px;display:flex;align-items:center;overflow:hidden;}
   /* 2c split: 2/3 left + 1/3 right */
   .c3{top:38.6vh;height:45.4vh;right:auto;width:29.3vw;overflow:hidden;}
-  .c3b{top:38.6vh;height:45.4vh;left:auto;width:14.6vw;}
+  .c3b{top:38.6vh;height:45.4vh;left:auto;width:14.6vw;padding:12px 12px 11px;display:flex;flex-direction:column;overflow:hidden;}
 
   /* Spray chart (box 2c) — Dodger Stadium field */
   .spray,.spray2{position:absolute;inset:0;width:100%;height:100%;}
@@ -206,6 +206,31 @@
   .dtip{position:fixed;z-index:9999;transform:translate(-50%,-100%);background:var(--panel,#101115);border:1px solid var(--border2,#2f3540);border-radius:8px;padding:6px 10px;box-shadow:0 10px 30px rgba(0,0,0,.65);pointer-events:none;white-space:nowrap;font-family:"Oswald",sans-serif;}
   .dtip b{display:block;font-size:11.5px;font-weight:700;color:#fff;letter-spacing:.3px;}
   .dtip span{display:block;font-size:10px;color:var(--muted,#7e858f);margin-top:1px;letter-spacing:.2px;}
+  /* arsenal / bullpen slides */
+  .awrap,.bwrap{position:absolute;inset:0;display:flex;gap:10px;padding:28px 13px 22px;}
+  .acol,.bcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  .acol .zname,.bcol .zname{margin-bottom:5px;}
+  .ars-row{display:flex;align-items:center;gap:6px;padding:3px 1px;border-bottom:1px solid var(--bg2,#0e0f13);}
+  .ars-row i{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
+  .ars-nm{flex:1;min-width:0;font-family:"Oswald",sans-serif;font-size:10.5px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ars-mph{font-family:"Oswald",sans-serif;font-size:10.5px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;}
+  .ars-pct{font-family:"Oswald",sans-serif;font-size:10px;color:var(--muted,#7e858f);width:28px;text-align:right;font-variant-numeric:tabular-nums;}
+  .bp-row{padding:5px 1px;border-bottom:1px solid var(--bg2,#0e0f13);}
+  .bp-nm{font-family:"Oswald",sans-serif;font-size:11px;font-weight:600;color:var(--text,#fff);display:block;}
+  .bp-ln{font-size:9.5px;color:var(--muted,#7e858f);letter-spacing:.2px;}
+  /* win probability (box 2d) */
+  .wp-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);text-align:center;margin-bottom:11px;}
+  .wp-bar{height:12px;border-radius:6px;overflow:hidden;display:flex;background:var(--bg2,#0e0f13);border:1px solid var(--border,#1b1e24);}
+  .wp-bar>div{height:100%;transition:width .5s ease;}
+  .wp-teams{display:flex;justify-content:space-between;margin-top:9px;}
+  .wp-t{display:flex;align-items:center;gap:5px;}
+  .wp-t img{width:18px;height:18px;object-fit:contain;flex:0 0 auto;}
+  .wp-t span{font-family:"Oswald",sans-serif;font-size:11px;font-weight:600;color:var(--text3,#aab0b9);text-transform:uppercase;letter-spacing:.5px;}
+  .wp-t b{font-family:"Anton",sans-serif;font-size:17px;color:#fff;}
+  .wp-metrics{margin-top:auto;display:flex;flex-direction:column;}
+  .wp-m{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:7px 0;border-top:1px solid var(--border,#1b1e24);font-family:"Oswald",sans-serif;}
+  .wp-m span{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted,#7e858f);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wp-m b{font-size:14px;color:#fff;font-variant-numeric:tabular-nums;flex:0 0 auto;}
 
   /* Matchup (box 2b) — pitcher | bases+count | batter */
   .mm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
@@ -494,14 +519,60 @@
       </div>`;
   }
 
+  function pnameOf(pid){for(const s of ['away','home']){const pl=BX&&BX.teams&&BX.teams[s]&&BX.teams[s].players&&BX.teams[s].players['ID'+pid];if(pl&&pl.person)return lastN(pl.person.fullName);}return '';}
+  function arsenalFor(pid){const m={};if(!pid)return [];for(const p of PLAYS){if(!p.matchup||!p.matchup.pitcher||p.matchup.pitcher.id!==pid)continue;for(const e of (p.playEvents||[])){if(e.isPitch&&e.pitchData&&e.pitchData.startSpeed){const c=(e.details&&e.details.type&&e.details.type.code)||'',d=(e.details&&e.details.type&&e.details.type.description)||c;if(!m[c])m[c]={code:c,desc:d,n:0,v:0,mx:0};m[c].n++;m[c].v+=e.pitchData.startSpeed;m[c].mx=Math.max(m[c].mx,e.pitchData.startSpeed);}}}const arr=Object.values(m),tot=arr.reduce((s,x)=>s+x.n,0);return arr.sort((a,b)=>b.n-a.n).map(x=>({code:x.code,desc:x.desc,avg:x.v/x.n,mx:Math.round(x.mx),pct:tot?Math.round(x.n/tot*100):0}));}
+  function arsenalSlide(g){
+    const st={away:BX&&BX.teams&&BX.teams.away.pitchers&&BX.teams.away.pitchers[0], home:BX&&BX.teams&&BX.teams.home.pitchers&&BX.teams.home.pitchers[0]};
+    const col=side=>{const pid=st[side],ars=arsenalFor(pid);
+      const rows=ars.length?ars.map(a=>`<div class="ars-row"><i style="background:${pcolor(a.code)}"></i><span class="ars-nm">${esc(a.desc)}</span><span class="ars-mph">${a.avg.toFixed(1)}</span><span class="ars-pct">${a.pct}%</span></div>`).join(''):'<div class="zempty">No data</div>';
+      return `<div class="acol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams[side].team.id)}" onerror="this.style.display='none'">${esc(pnameOf(pid)||g.teams[side].team.abbreviation||'')}</div>${rows}</div>`;};
+    return `<div class="zhead">Pitch Arsenal · Starters</div><div class="awrap">${col('away')}${col('home')}</div>`;
+  }
+  function bullpenSlide(g){
+    const col=side=>{const bx=BX&&BX.teams&&BX.teams[side],pit=(bx&&bx.pitchers)||[],rel=pit.slice(1);
+      const rows=rel.length?rel.map(id=>{const p=bx.players['ID'+id];if(!p)return '';const s=(p.stats&&p.stats.pitching)||{};return `<div class="bp-row"><span class="bp-nm">${abbr(p.person&&p.person.fullName)}</span><span class="bp-ln">${s.inningsPitched||'0.0'} IP · ${s.strikeOuts??0} K · ${s.baseOnBalls??0} BB · ${s.earnedRuns??0} ER${s.numberOfPitches!=null?' · '+s.numberOfPitches+' P':''}</span></div>`;}).join(''):'<div class="zempty">No relievers used</div>';
+      return `<div class="bcol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams[side].team.id)}" onerror="this.style.display='none'">${esc(g.teams[side].team.abbreviation||'')}</div>${rows}</div>`;};
+    return `<div class="zhead">Bullpen</div><div class="bwrap">${col('away')}${col('home')}</div>`;
+  }
+
+  function renderWP(g,wp,ls,box){
+    const el=document.getElementById('c3b');
+    [...el.children].forEach(c=>{if(!c.classList.contains('tag'))c.remove();});
+    if(!g)return;
+    const last=(wp&&wp.length)?wp[wp.length-1]:null;
+    const aId=g.teams.away.team.id,hId=g.teams.home.team.id;
+    const aWP=last&&last.awayTeamWinProbability!=null?Math.round(last.awayTeamWinProbability):(g.status.abstractGameState==='Final'?(g.teams.away.score>g.teams.home.score?100:0):50);
+    const hWP=100-aWP;
+    const li=last&&last.leverageIndex!=null?last.leverageIndex:null;
+    let extra='';
+    if(g.status.abstractGameState==='Live'&&ls&&ls.offense&&ls.offense.batter){
+      const side=ls.isTopInning?'away':'home';
+      const bp=box&&box.teams[side]&&box.teams[side].players['ID'+ls.offense.batter.id];
+      const obp=bp&&bp.seasonStats&&bp.seasonStats.batting&&bp.seasonStats.batting.obp;
+      if(obp)extra+=`<div class="wp-m"><span>${lastN(ls.offense.batter.fullName)} · Reach Base</span><b>${Math.round(parseFloat(obp)*100)}%</b></div>`;
+    }
+    if(li!=null)extra+=`<div class="wp-m"><span>Leverage</span><b>${li.toFixed(2)}</b></div>`;
+    el.insertAdjacentHTML('afterbegin',
+      `<div class="wp-h">Win Probability</div>
+       <div class="wp-bar"><div style="width:${aWP}%;background:${tc(aId)}"></div><div style="width:${hWP}%;background:${tc(hId)}"></div></div>
+       <div class="wp-teams">
+         <div class="wp-t"><img src="${LOGO(aId)}" onerror="this.style.display='none'"><span>${esc(g.teams.away.team.abbreviation||'')}</span><b>${aWP}%</b></div>
+         <div class="wp-t"><b>${hWP}%</b><span>${esc(g.teams.home.team.abbreviation||'')}</span><img src="${LOGO(hId)}" onerror="this.style.display='none'"></div>
+       </div>
+       <div class="wp-metrics">${extra}</div>`);
+  }
+
   function render2c(g){
     const el=document.getElementById('c3');
     [...el.children].forEach(c=>{if(!c.classList.contains('tag'))c.remove();});
     if(!g)return;
-    el.insertAdjacentHTML('afterbegin',
-      `<div class="slides"><div class="slide${slideIdx===0?' on':''}">${spraySlide(g)}</div><div class="slide${slideIdx===1?' on':''}">${zoneSlide(g)}</div></div>
-       <div class="snav"><button class="sar" data-d="-1">‹</button><span class="sdot${slideIdx===0?' on':''}" data-i="0"></span><span class="sdot${slideIdx===1?' on':''}" data-i="1"></span><button class="sar" data-d="1">›</button></div>`);
-    el.querySelectorAll('.sar').forEach(b=>b.onclick=()=>{slideIdx=(slideIdx+ +b.dataset.d+2)%2;render2c(g);});
+    const B=[spraySlide,zoneSlide,arsenalSlide,bullpenSlide];
+    if(slideIdx>=B.length)slideIdx=0;
+    const slides=B.map((f,i)=>`<div class="slide${slideIdx===i?' on':''}">${f(g)}</div>`).join('');
+    const dots=B.map((_,i)=>`<span class="sdot${slideIdx===i?' on':''}" data-i="${i}"></span>`).join('');
+    el.insertAdjacentHTML('afterbegin',`<div class="slides">${slides}</div><div class="snav"><button class="sar" data-d="-1">‹</button>${dots}<button class="sar" data-d="1">›</button></div>`);
+    const N=B.length;
+    el.querySelectorAll('.sar').forEach(b=>b.onclick=()=>{slideIdx=(slideIdx+ +b.dataset.d+N)%N;render2c(g);});
     el.querySelectorAll('.sdot').forEach(d=>d.onclick=()=>{slideIdx=+d.dataset.i;render2c(g);});
     el.querySelectorAll('.tt').forEach(b=>b.onclick=()=>{sprayTeam=b.dataset.tm;render2c(g);});
     el.querySelectorAll('.pt').forEach(b=>b.onclick=()=>{zoneFilter=b.dataset.pt||null;render2c(g);});
@@ -634,15 +705,16 @@
     const g=await pickGame();
     render2a(g);render3a(g);
     if(!g)return;
-    const [ls,box,pbp,ven]=await Promise.all([
+    const [ls,box,pbp,ven,wp]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/linescore`),
       j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`),
       j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/playByPlay`),
-      (g.venue&&g.venue.id)?j(`https://statsapi.mlb.com/api/v1/venues/${g.venue.id}?hydrate=fieldInfo`):Promise.resolve(null)
+      (g.venue&&g.venue.id)?j(`https://statsapi.mlb.com/api/v1/venues/${g.venue.id}?hydrate=fieldInfo`):Promise.resolve(null),
+      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/winProbability`)
     ]);
     BX=box;
     FIELDINFO=(((ven&&ven.venues)||[])[0]||{}).fieldInfo||null;
-    render1(g,pbp);render2c(g);render4(g,ls);render2b(g,ls,box);render3b(g);
+    render1(g,pbp);render2c(g);renderWP(g,wp,ls,box);render4(g,ls);render2b(g,ls,box);render3b(g);
   }
   renderAll();
   setInterval(renderAll,20000);
