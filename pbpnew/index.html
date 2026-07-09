@@ -307,16 +307,16 @@
     const bx=BX&&BX.teams&&BX.teams[bxTeam];
     if(!bx){el.innerHTML='<div class="bx-lbl">No box score</div>';return;}
     const P=bx.players||{};
-    let html='<div class="bx-lbl">Batting</div><table class="bxt"><tr><th class="nm">Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th></tr>';
-    for(const id of bx.batters||[]){const p=P['ID'+id];if(!p)continue;const s=(p.stats&&p.stats.batting)||{};
-      const sub=p.battingOrder&&(parseInt(p.battingOrder,10)%100!==0);
+    let html='<div class="bx-lbl">Batting</div><table class="bxt"><tr><th class="nm">Batter</th><th>AB</th><th>R</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>K</th></tr>';
+    for(const id of bx.batters||[]){const p=P['ID'+id];if(!p||!p.battingOrder)continue;const s=(p.stats&&p.stats.batting)||{};
+      const sub=parseInt(p.battingOrder,10)%100!==0;
       const pos=(p.position&&p.position.abbreviation)||'';
-      html+=`<tr><td class="nm${sub?' sub':''}">${abbr(p.person&&p.person.fullName)}<span class="po">${pos}</span></td><td>${s.atBats??0}</td><td>${s.runs??0}</td><td>${s.hits??0}</td><td>${s.rbi??0}</td><td>${s.baseOnBalls??0}</td><td>${s.strikeOuts??0}</td></tr>`;}
+      html+=`<tr><td class="nm${sub?' sub':''}">${abbr(p.person&&p.person.fullName)}<span class="po">${pos}</span></td><td>${s.atBats??0}</td><td>${s.runs??0}</td><td>${s.hits??0}</td><td>${s.homeRuns??0}</td><td>${s.rbi??0}</td><td>${s.baseOnBalls??0}</td><td>${s.strikeOuts??0}</td></tr>`;}
     const tb=(bx.teamStats&&bx.teamStats.batting)||{};
-    html+=`<tr class="tot"><td class="nm">Team</td><td>${tb.atBats??0}</td><td>${tb.runs??0}</td><td>${tb.hits??0}</td><td>${tb.rbi??0}</td><td>${tb.baseOnBalls??0}</td><td>${tb.strikeOuts??0}</td></tr></table>`;
-    html+='<div class="bx-lbl">Pitching</div><table class="bxt"><tr><th class="nm">Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th></tr>';
+    html+=`<tr class="tot"><td class="nm">Team</td><td>${tb.atBats??0}</td><td>${tb.runs??0}</td><td>${tb.hits??0}</td><td>${tb.homeRuns??0}</td><td>${tb.rbi??0}</td><td>${tb.baseOnBalls??0}</td><td>${tb.strikeOuts??0}</td></tr></table>`;
+    html+='<div class="bx-lbl">Pitching</div><table class="bxt"><tr><th class="nm">Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>HR</th><th>BB</th><th>K</th></tr>';
     for(const id of bx.pitchers||[]){const p=P['ID'+id];if(!p)continue;const s=(p.stats&&p.stats.pitching)||{};
-      html+=`<tr><td class="nm">${abbr(p.person&&p.person.fullName)}</td><td>${s.inningsPitched??'0.0'}</td><td>${s.hits??0}</td><td>${s.runs??0}</td><td>${s.earnedRuns??0}</td><td>${s.baseOnBalls??0}</td><td>${s.strikeOuts??0}</td></tr>`;}
+      html+=`<tr><td class="nm">${abbr(p.person&&p.person.fullName)}</td><td>${s.inningsPitched??'0.0'}</td><td>${s.hits??0}</td><td>${s.runs??0}</td><td>${s.earnedRuns??0}</td><td>${s.homeRuns??0}</td><td>${s.baseOnBalls??0}</td><td>${s.strikeOuts??0}</td></tr>`;}
     html+='</table>';
     el.innerHTML=html;
   }
