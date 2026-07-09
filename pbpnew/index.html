@@ -200,6 +200,10 @@
   .pt:hover,.pt.on{background:var(--panel2,#15161b);color:#fff;}
   .pt i{width:8px;height:8px;border-radius:50%;flex:0 0 auto;}
   .pt.clr{color:var(--muted,#7e858f);}
+  .pdot,.hdot{cursor:pointer;}
+  .dtip{position:fixed;z-index:9999;transform:translate(-50%,-100%);background:var(--panel,#101115);border:1px solid var(--border2,#2f3540);border-radius:8px;padding:6px 10px;box-shadow:0 10px 30px rgba(0,0,0,.65);pointer-events:none;white-space:nowrap;font-family:"Oswald",sans-serif;}
+  .dtip b{display:block;font-size:11.5px;font-weight:700;color:#fff;letter-spacing:.3px;}
+  .dtip span{display:block;font-size:10px;color:var(--muted,#7e858f);margin-top:1px;letter-spacing:.2px;}
 
   /* Matchup (box 2b) — pitcher | bases+count | batter */
   .mm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
@@ -285,6 +289,14 @@
   const PCOL={FF:'#e0707a',FA:'#e0707a',SI:'#e9884a',FT:'#e9884a',FC:'#c78ce0',SL:'#e9c23f',ST:'#d4b13a',SV:'#b0d040',CU:'#5aa9e6',KC:'#5aa9e6',CS:'#5aa9e6',CH:'#46c77e',FS:'#3ac7a8',FO:'#3ac7a8',SC:'#3ac7a8',KN:'#9aa0a6',EP:'#9aa0a6'};
   const pcolor=c=>PCOL[c]||'#9aa0a6';
   let slideIdx=0, sprayTeam='away', zoneFilter=null, FIELDINFO=null;
+  const DTIP=document.createElement('div');DTIP.className='dtip';DTIP.style.display='none';document.body.appendChild(DTIP);
+  function showTip(c){
+    if(c.dataset.t==='pitch') DTIP.innerHTML=`<b>${c.dataset.desc||'Pitch'}${c.dataset.velo?' · '+c.dataset.velo+' mph':''}</b><span>${[c.dataset.inn,c.dataset.ct?c.dataset.ct:'',c.dataset.b?'vs '+c.dataset.b:''].filter(Boolean).join(' · ')}</span>`;
+    else DTIP.innerHTML=`<b>${[c.dataset.ev,c.dataset.dist?c.dataset.dist+' ft':'',c.dataset.evz?c.dataset.evz+' mph EV':''].filter(Boolean).join(' · ')}</b><span>${[c.dataset.b?c.dataset.b:'',c.dataset.p?'off '+c.dataset.p:''].filter(Boolean).join(' ')}</span>`;
+    const r=c.getBoundingClientRect();
+    DTIP.style.display='block';DTIP.style.left=(r.left+r.width/2)+'px';DTIP.style.top=(r.top-6)+'px';
+  }
+  const hideTip=()=>{DTIP.style.display='none';};
   /* smooth cubic-Bézier path through points (Catmull-Rom) */
   function smoothPath(pts){
     if(pts.length<2)return '';
@@ -317,7 +329,7 @@
     const infD=`M${home[0]},${home[1]} L${B1[0]},${B1[1]} L${B2[0]},${B2[1]} L${B3[0]},${B3[1]} Z`;
     const sq=(p,s,f)=>`<rect x="${(p[0]-s).toFixed(1)}" y="${(p[1]-s).toFixed(1)}" width="${(s*2).toFixed(1)}" height="${(s*2).toFixed(1)}" transform="rotate(45 ${p[0].toFixed(1)} ${p[1].toFixed(1)})" fill="${f}"/>`;
     const HITC='#46c77e', OUTC='#565b63';
-    const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?3.2:2.6}" fill="${col}" opacity="${isHit?1:.8}"><title>${esc(h.ev)}</title></circle>`;}).join('');
+    const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle class="hdot" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?3.4:2.8}" fill="${col}" opacity="${isHit?1:.82}" data-t="hit" data-ev="${esc(h.ev)}" data-dist="${h.dist||''}" data-evz="${h.evz||''}" data-p="${esc(h.pitcher||'')}" data-b="${esc(h.batter||'')}"/>`;}).join('');
     return `<svg class="spray2" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="ofg" cx="50%" cy="82%" r="82%"><stop offset="0" stop-color="#121316"/><stop offset="1" stop-color="#0A0A0A"/></radialGradient>
@@ -433,7 +445,7 @@
       const side=(p.about&&p.about.halfInning==='top')?'away':'home';
       if(side!==sprayTeam)continue;
       for(const e of (p.playEvents||[])){const hd=e.hitData;
-        if(hd&&hd.coordinates&&hd.coordinates.coordX!=null)balls.push({x:hd.coordinates.coordX,y:hd.coordinates.coordY,ev:(p.result&&p.result.event)||''});}
+        if(hd&&hd.coordinates&&hd.coordinates.coordX!=null)balls.push({x:hd.coordinates.coordX,y:hd.coordinates.coordY,ev:(p.result&&p.result.event)||'',dist:hd.totalDistance||null,evz:hd.launchSpeed?Math.round(hd.launchSpeed):null,pitcher:p.matchup&&p.matchup.pitcher&&p.matchup.pitcher.fullName,batter:p.matchup&&p.matchup.batter&&p.matchup.batter.fullName});}
     }
     const venue=(g.venue&&g.venue.name)||'Spray Chart';
     const ta=g.teams.away.team.abbreviation||'AWY', th=g.teams.home.team.abbreviation||'HOM';
@@ -452,7 +464,7 @@
     const VBW=112,VBH=124, zL=35,zR=77,zT=30,zB=92, w=zR-zL,h=zB-zT, cx=(zL+zR)/2, halfW=0.83;
     const sX=(zR-zL)/(2*halfW), sZ=(zB-zT)/(topFt-botFt);
     const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-    const dots=shown.map(p=>{const x=cl(cx+p.pX*sX,5,VBW-5),y=cl(zB-(p.pZ-botFt)*sZ,5,VBH-5);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${pcolor(p.code)}" stroke="#0b0c0e" stroke-width=".6"><title>${esc(p.desc)}</title></circle>`;}).join('');
+    const dots=shown.map(p=>{const x=cl(cx+p.pX*sX,5,VBW-5),y=cl(zB-(p.pZ-botFt)*sZ,5,VBH-5);return `<circle class="pdot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="${pcolor(p.code)}" stroke="#0b0c0e" stroke-width=".6" data-t="pitch" data-desc="${esc(p.desc)}" data-velo="${p.velo||''}" data-inn="${esc(p.inn)}" data-ct="${p.ct}" data-b="${esc(p.batter||'')}"/>`;}).join('');
     return `<svg class="zchart" viewBox="0 0 ${VBW} ${VBH}">
       <rect class="zbox" x="${zL}" y="${zT}" width="${w}" height="${h}" rx="3"/>
       <line class="zg" x1="${zL+w/3}" y1="${zT}" x2="${zL+w/3}" y2="${zB}"/>
@@ -465,7 +477,7 @@
   function zoneSlide(g){
     const aS=BX&&BX.teams&&BX.teams.away.pitchers&&BX.teams.away.pitchers[0];
     const hS=BX&&BX.teams&&BX.teams.home.pitchers&&BX.teams.home.pitchers[0];
-    const collect=pid=>{const arr=[];if(!pid)return arr;for(const p of PLAYS){if(!p.matchup||!p.matchup.pitcher||p.matchup.pitcher.id!==pid)continue;for(const e of (p.playEvents||[])){if(e.isPitch&&e.pitchData&&e.pitchData.coordinates&&e.pitchData.coordinates.pX!=null)arr.push({pX:e.pitchData.coordinates.pX,pZ:e.pitchData.coordinates.pZ,top:e.pitchData.strikeZoneTop,bot:e.pitchData.strikeZoneBottom,code:(e.details&&e.details.type&&e.details.type.code)||'',desc:(e.details&&e.details.type&&e.details.type.description)||''});}}return arr;};
+    const collect=pid=>{const arr=[];if(!pid)return arr;for(const p of PLAYS){if(!p.matchup||!p.matchup.pitcher||p.matchup.pitcher.id!==pid)continue;const inn=p.about&&p.about.inning,half=p.about&&p.about.halfInning,bat=p.matchup&&p.matchup.batter&&p.matchup.batter.fullName;for(const e of (p.playEvents||[])){if(e.isPitch&&e.pitchData&&e.pitchData.coordinates&&e.pitchData.coordinates.pX!=null)arr.push({pX:e.pitchData.coordinates.pX,pZ:e.pitchData.coordinates.pZ,top:e.pitchData.strikeZoneTop,bot:e.pitchData.strikeZoneBottom,code:(e.details&&e.details.type&&e.details.type.code)||'',desc:(e.details&&e.details.type&&e.details.type.description)||'',velo:e.pitchData.startSpeed?Math.round(e.pitchData.startSpeed):null,inn:inn?(half==='top'?'Top ':'Bot ')+ord(inn):'',ct:e.count?e.count.balls+'-'+e.count.strikes:'',batter:bat});}}return arr;};
     const aP=collect(aS),hP=collect(hS);
     const pname=pid=>{for(const s of ['away','home']){const pl=BX&&BX.teams&&BX.teams[s]&&BX.teams[s].players&&BX.teams[s].players['ID'+pid];if(pl&&pl.person)return lastN(pl.person.fullName);}return '';};
     const typeMap={};[...aP,...hP].forEach(p=>{if(p.code)typeMap[p.code]=p.desc||p.code;});
@@ -490,6 +502,9 @@
     el.querySelectorAll('.sdot').forEach(d=>d.onclick=()=>{slideIdx=+d.dataset.i;render2c(g);});
     el.querySelectorAll('.tt').forEach(b=>b.onclick=()=>{sprayTeam=b.dataset.tm;render2c(g);});
     el.querySelectorAll('.pt').forEach(b=>b.onclick=()=>{zoneFilter=b.dataset.pt||null;render2c(g);});
+    el.querySelectorAll('.pdot').forEach(c=>{c.onmouseenter=()=>showTip(c);c.onmouseleave=hideTip;});
+    el.querySelectorAll('.hdot').forEach(c=>{c.onclick=e=>{e.stopPropagation();showTip(c);};});
+    const sl=el.querySelector('.slides');if(sl)sl.onclick=e=>{if(!e.target.classList.contains('hdot'))hideTip();};
   }
 
   function render2a(g){
