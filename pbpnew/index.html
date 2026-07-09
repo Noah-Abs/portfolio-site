@@ -90,6 +90,8 @@
   .field .base{fill:#cfd4da;}
   .field .hit{fill:#e9b949;stroke:#0b0c0e;stroke-width:1.5;}
   .field .cap{fill:var(--muted,#7e858f);font-size:9px;font-family:"Oswald",sans-serif;font-weight:600;}
+  .dfield{width:100%;max-width:148px;height:auto;display:block;margin:0 auto;}
+  .dcap{font-size:9px;color:var(--muted,#7e858f);text-align:center;margin-top:3px;font-family:"Oswald",sans-serif;letter-spacing:.3px;}
 
   /* Right column split vertically into 2 — top ~30% of box 3 */
   .rbox{
@@ -310,7 +312,8 @@
     return d;
   }
   /* data-driven field: wall from venue fieldInfo (feet), infield from MLB dims */
-  function fieldSVG2(fi,hits,dotColor){
+  function fieldSVG2(fi,hits,cls){
+    const uid='f'+Math.random().toString(36).slice(2,7);
     const VBW=460,VBH=430,pad=0.10, HX=125.42,HY=198.5,K=2.5;
     const map=[['leftLine',-45],['left',-33.75],['leftCenter',-22.5],['center',0],['rightCenter',22.5],['right',33.75],['rightLine',45]];
     let wpts=[];
@@ -330,21 +333,21 @@
     const sq=(p,s,f)=>`<rect x="${(p[0]-s).toFixed(1)}" y="${(p[1]-s).toFixed(1)}" width="${(s*2).toFixed(1)}" height="${(s*2).toFixed(1)}" transform="rotate(45 ${p[0].toFixed(1)} ${p[1].toFixed(1)})" fill="${f}"/>`;
     const HITC='#46c77e', OUTC='#565b63';
     const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle class="hdot" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?3.4:2.8}" fill="${col}" opacity="${isHit?1:.82}" data-t="hit" data-ev="${esc(h.ev)}" data-dist="${h.dist||''}" data-evz="${h.evz||''}" data-p="${esc(h.pitcher||'')}" data-b="${esc(h.batter||'')}"/>`;}).join('');
-    return `<svg class="spray2" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="xMidYMid meet">
+    return `<svg class="${cls||'spray2'}" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="xMidYMid meet">
       <defs>
-        <radialGradient id="ofg" cx="50%" cy="82%" r="82%"><stop offset="0" stop-color="#121316"/><stop offset="1" stop-color="#0A0A0A"/></radialGradient>
-        <filter id="wsh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#000" flood-opacity="0.65"/></filter>
-        <filter id="hglow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <radialGradient id="ofg${uid}" cx="50%" cy="82%" r="82%"><stop offset="0" stop-color="#121316"/><stop offset="1" stop-color="#0A0A0A"/></radialGradient>
+        <filter id="wsh${uid}" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="2.5" flood-color="#000" flood-opacity="0.65"/></filter>
+        <filter id="hglow${uid}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       </defs>
-      <path d="${fillD}" fill="url(#ofg)"/>
+      <path d="${fillD}" fill="url(#ofg${uid})"/>
       <path d="${trackD}" fill="none" stroke="#1f2226" stroke-width="6" stroke-linecap="round"/>
-      <path d="${wallD}" fill="none" stroke="#3A3A3A" stroke-width="3.2" stroke-linecap="round" filter="url(#wsh)"/>
+      <path d="${wallD}" fill="none" stroke="#3A3A3A" stroke-width="3.2" stroke-linecap="round" filter="url(#wsh${uid})"/>
       <path d="${infD}" fill="#1C1C1C" stroke="#2a2a2a" stroke-width="1"/>
       <line x1="${home[0].toFixed(1)}" y1="${home[1].toFixed(1)}" x2="${wsvg[0][0].toFixed(1)}" y2="${wsvg[0][1].toFixed(1)}" stroke="#c3c8ce" stroke-width="1.3" opacity=".5"/>
       <line x1="${home[0].toFixed(1)}" y1="${home[1].toFixed(1)}" x2="${wsvg[wsvg.length-1][0].toFixed(1)}" y2="${wsvg[wsvg.length-1][1].toFixed(1)}" stroke="#c3c8ce" stroke-width="1.3" opacity=".5"/>
       <circle cx="${MD[0].toFixed(1)}" cy="${MD[1].toFixed(1)}" r="${(9*S).toFixed(1)}" fill="#242424"/>
       ${sq(B1,3.2,'#4a4a4a')}${sq(B2,3.2,'#4a4a4a')}${sq(B3,3.2,'#4a4a4a')}${sq(home,3,'#5a5a5a')}
-      <g filter="url(#hglow)">${dots}</g>
+      <g filter="url(#hglow${uid})">${dots}</g>
     </svg>`;
   }
   const gTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
@@ -450,7 +453,7 @@
     const venue=(g.venue&&g.venue.name)||'Spray Chart';
     const ta=g.teams.away.team.abbreviation||'AWY', th=g.teams.home.team.abbreviation||'HOM';
     return `<div class="ttog"><button class="tt${sprayTeam==='away'?' on':''}" data-tm="away">${esc(ta)}</button><button class="tt${sprayTeam==='home'?' on':''}" data-tm="home">${esc(th)}</button></div>
-      ${fieldSVG2(FIELDINFO,balls,tc(teamId))}
+      ${fieldSVG2(FIELDINFO,balls)}
       <div class="spray-h">${esc(venue)}</div>
       <div class="spray-lg"><span><i style="background:#46c77e"></i>Hit</span><span><i style="background:#565b63"></i>Out</span></div>`;
   }
@@ -546,24 +549,23 @@
     if(!ps.length)return '';
     let tops=[],bots=[];ps.forEach(e=>{const p=e.pitchData;if(p.strikeZoneTop)tops.push(p.strikeZoneTop);if(p.strikeZoneBottom)bots.push(p.strikeZoneBottom);});
     const avg=a=>a.length?a.reduce((s,c)=>s+c,0)/a.length:0;
-    const topFt=avg(tops)||3.4, botFt=avg(bots)||1.55, cx=58, SX=40, pad=1.25;
-    const SY=125/((topFt-botFt)+2*pad), yTop=10, yOf=z=>yTop+((topFt+pad)-z)*SY;
-    const zTopY=yOf(topFt), zBotY=yOf(botFt), zL=cx-28, w=56, h=zBotY-zTopY;
-    const cX=x=>Math.max(7,Math.min(109,x)), cY=y=>Math.max(7,Math.min(138,y));
-    const dots=ps.map(e=>{const c=e.pitchData.coordinates, x=cX(cx+c.pX*SX), y=cY(yOf(c.pZ));
+    const topFt=avg(tops)||3.4, botFt=avg(bots)||1.55;
+    const VBW=112,VBH=140, zL=35,zR=77,zT=34,zB=104, w=zR-zL,h=zB-zT, cx=(zL+zR)/2, halfW=0.83;
+    const sX=(zR-zL)/(2*halfW), sZ=(zB-zT)/(topFt-botFt);
+    const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    const dots=ps.map(e=>{const c=e.pitchData.coordinates, x=cl(cx+c.pX*sX,7,VBW-7), y=cl(zB-(c.pZ-botFt)*sZ,7,VBH-7);
       return `<g class="zd ${callClass(e.details)}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/><text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}">${e.pitchNumber||''}</text></g>`;}).join('');
-    return `<svg class="zone" viewBox="0 0 116 145" aria-label="strike zone"><rect class="zbox" x="${zL}" y="${zTopY.toFixed(1)}" width="${w}" height="${h.toFixed(1)}" rx="2"/><line class="zg" x1="${zL+w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL+2*w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+2*w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+h/3).toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+2*h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+2*h/3).toFixed(1)}"/>${dots}</svg>`;
-  }
-  function fieldSVG(play){
-    let hit=null;for(const e of (play.playEvents||[]))if(e.hitData&&e.hitData.coordinates&&e.hitData.coordinates.coordX!=null)hit=e.hitData;
-    if(!hit)return '';
-    const c=hit.coordinates, fx=100+(c.coordX-125.4)*0.62, fy=150+(c.coordY-203.5)*0.62;
-    const x=Math.max(8,Math.min(192,fx)), y=Math.max(8,Math.min(170,fy));
-    const cap=[hit.totalDistance?hit.totalDistance+' ft':'', hit.launchSpeed?Math.round(hit.launchSpeed)+' mph':''].filter(Boolean).join('  ·  ');
-    return `<svg class="field" viewBox="0 0 200 185" aria-label="hit location"><path class="grass" d="M100 150 L30 64 A 99 99 0 0 1 170 64 Z"/><line class="foul" x1="100" y1="150" x2="28" y2="62"/><line class="foul" x1="100" y1="150" x2="172" y2="62"/><polygon class="inf" points="100,150 133,117 100,84 67,117"/><circle class="base" cx="133" cy="117" r="3"/><circle class="base" cx="100" cy="84" r="3"/><circle class="base" cx="67" cy="117" r="3"/><circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5"/>${cap?`<text class="cap" x="100" y="182" text-anchor="middle">${esc(cap)}</text>`:''}</svg>`;
+    return `<svg class="zone" viewBox="0 0 ${VBW} ${VBH}" aria-label="strike zone"><rect class="zbox" x="${zL}" y="${zT}" width="${w}" height="${h}" rx="3"/><line class="zg" x1="${zL+w/3}" y1="${zT}" x2="${zL+w/3}" y2="${zB}"/><line class="zg" x1="${zL+2*w/3}" y1="${zT}" x2="${zL+2*w/3}" y2="${zB}"/><line class="zg" x1="${zL}" y1="${zT+h/3}" x2="${zR}" y2="${zT+h/3}"/><line class="zg" x1="${zL}" y1="${zT+2*h/3}" x2="${zR}" y2="${zT+2*h/3}"/>${dots}</svg>`;
   }
   function atBatDetail(play){
-    const z=zoneSVG(play), f=fieldSVG(play);
+    const z=zoneSVG(play);
+    let hit=null;for(const e of (play.playEvents||[]))if(e.hitData&&e.hitData.coordinates&&e.hitData.coordinates.coordX!=null)hit=e.hitData;
+    let f='';
+    if(hit){
+      f=fieldSVG2(FIELDINFO,[{x:hit.coordinates.coordX,y:hit.coordinates.coordY,ev:(play.result&&play.result.event)||''}],'dfield');
+      const cap=[hit.totalDistance?hit.totalDistance+' ft':'', hit.launchSpeed?Math.round(hit.launchSpeed)+' mph':''].filter(Boolean).join(' · ');
+      if(cap)f+=`<div class="dcap">${cap}</div>`;
+    }
     const viz=[z?`<div class="vz"><div class="vzh">Pitch Locations</div>${z}</div>`:'', f?`<div class="vz"><div class="vzh">Where It Went</div>${f}</div>`:''].join('');
     return `<div class="abx"><div class="abx-list">${pitchRows(play)}</div>${viz?`<div class="abx-viz">${viz}</div>`:''}</div>`;
   }
