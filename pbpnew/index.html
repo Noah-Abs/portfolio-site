@@ -316,7 +316,8 @@
     const b90=90/Math.SQRT2,B1=T(b90,b90),B2=T(0,127.28),B3=T(-b90,b90),MD=T(0,60.5);
     const infD=`M${home[0]},${home[1]} L${B1[0]},${B1[1]} L${B2[0]},${B2[1]} L${B3[0]},${B3[1]} Z`;
     const sq=(p,s,f)=>`<rect x="${(p[0]-s).toFixed(1)}" y="${(p[1]-s).toFixed(1)}" width="${(s*2).toFixed(1)}" height="${(s*2).toFixed(1)}" transform="rotate(45 ${p[0].toFixed(1)} ${p[1].toFixed(1)})" fill="${f}"/>`;
-    const dots=hits.map(h=>{const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3" fill="${dotColor}"><title>${esc(h.ev)}</title></circle>`;}).join('');
+    const HITC='#46c77e', OUTC='#565b63';
+    const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?3.2:2.6}" fill="${col}" opacity="${isHit?1:.8}"><title>${esc(h.ev)}</title></circle>`;}).join('');
     return `<svg class="spray2" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="ofg" cx="50%" cy="82%" r="82%"><stop offset="0" stop-color="#121316"/><stop offset="1" stop-color="#0A0A0A"/></radialGradient>
@@ -438,7 +439,8 @@
     const ta=g.teams.away.team.abbreviation||'AWY', th=g.teams.home.team.abbreviation||'HOM';
     return `<div class="ttog"><button class="tt${sprayTeam==='away'?' on':''}" data-tm="away">${esc(ta)}</button><button class="tt${sprayTeam==='home'?' on':''}" data-tm="home">${esc(th)}</button></div>
       ${fieldSVG2(FIELDINFO,balls,tc(teamId))}
-      <div class="spray-h">${esc(venue)}</div>`;
+      <div class="spray-h">${esc(venue)}</div>
+      <div class="spray-lg"><span><i style="background:#46c77e"></i>Hit</span><span><i style="background:#565b63"></i>Out</span></div>`;
   }
 
   function zoneChart(pitches){
@@ -446,12 +448,18 @@
     if(!pitches.length)return '<div class="zempty">No pitches</div>';
     let tops=[],bots=[];pitches.forEach(p=>{if(p.top)tops.push(p.top);if(p.bot)bots.push(p.bot);});
     const avg=a=>a.length?a.reduce((s,c)=>s+c,0)/a.length:0;
-    const topFt=avg(tops)||3.4,botFt=avg(bots)||1.55,cx=58,SX=34,pad=1.15;
-    const SY=105/((topFt-botFt)+2*pad),yTop=8,yOf=z=>yTop+((topFt+pad)-z)*SY;
-    const zTopY=yOf(topFt),zBotY=yOf(botFt),zL=cx-24,w=48,h=zBotY-zTopY;
-    const cX=x=>Math.max(5,Math.min(111,x)),cY=y=>Math.max(5,Math.min(120,y));
-    const dots=shown.map(p=>{const x=cX(cx+p.pX*SX),y=cY(yOf(p.pZ));return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${pcolor(p.code)}" stroke="#0b0c0e" stroke-width=".6"><title>${esc(p.desc)}</title></circle>`;}).join('');
-    return `<svg class="zchart" viewBox="0 0 116 128"><rect class="zbox" x="${zL}" y="${zTopY.toFixed(1)}" width="${w}" height="${h.toFixed(1)}" rx="2"/><line class="zg" x1="${zL+w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL+2*w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+2*w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+h/3).toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+2*h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+2*h/3).toFixed(1)}"/>${dots}</svg>`;
+    const topFt=avg(tops)||3.4, botFt=avg(bots)||1.55;
+    const VBW=112,VBH=124, zL=35,zR=77,zT=30,zB=92, w=zR-zL,h=zB-zT, cx=(zL+zR)/2, halfW=0.83;
+    const sX=(zR-zL)/(2*halfW), sZ=(zB-zT)/(topFt-botFt);
+    const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    const dots=shown.map(p=>{const x=cl(cx+p.pX*sX,5,VBW-5),y=cl(zB-(p.pZ-botFt)*sZ,5,VBH-5);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${pcolor(p.code)}" stroke="#0b0c0e" stroke-width=".6"><title>${esc(p.desc)}</title></circle>`;}).join('');
+    return `<svg class="zchart" viewBox="0 0 ${VBW} ${VBH}">
+      <rect class="zbox" x="${zL}" y="${zT}" width="${w}" height="${h}" rx="3"/>
+      <line class="zg" x1="${zL+w/3}" y1="${zT}" x2="${zL+w/3}" y2="${zB}"/>
+      <line class="zg" x1="${zL+2*w/3}" y1="${zT}" x2="${zL+2*w/3}" y2="${zB}"/>
+      <line class="zg" x1="${zL}" y1="${zT+h/3}" x2="${zR}" y2="${zT+h/3}"/>
+      <line class="zg" x1="${zL}" y1="${zT+2*h/3}" x2="${zR}" y2="${zT+2*h/3}"/>
+      ${dots}</svg>`;
   }
 
   function zoneSlide(g){
