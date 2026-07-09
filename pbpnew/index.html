@@ -32,7 +32,25 @@
     background:var(--panel,#101115);
     border:1px solid var(--border,#1b1e24);
     border-radius:16px;
+    padding:6px 11px 10px;
+    overflow-y:auto;scrollbar-width:none;
   }
+  .lbox::-webkit-scrollbar{display:none;}
+
+  /* Play-by-play feed (box 1) — dropthird /live/ style */
+  .inn-h{font-family:"Oswald",sans-serif;font-weight:700;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted,#7e858f);margin:14px 0 7px;display:flex;align-items:center;gap:8px;}
+  .inn-h:first-child{margin-top:2px;}
+  .inn-h::before{content:"";width:4px;height:13px;border-radius:3px;background:var(--accent,#4aa3ff);}
+  .play{display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:9px;padding:8px 10px;background:var(--panel2,#15161b);border:1px solid var(--border,#1b1e24);border-radius:9px;margin-bottom:5px;}
+  .play.score{border-color:#2f4a3a;background:linear-gradient(90deg,rgba(70,199,126,.07),transparent);}
+  .play .ev{font-size:8px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--text3,#aab0b9);background:var(--panel,#101115);border:1px solid var(--border2,#2f3540);border-radius:5px;padding:3px 4px;min-width:50px;text-align:center;margin-top:1px;}
+  .play .ev.hit{color:#46c77e;border-color:#2f4a3a;}
+  .play .ev.hr{color:#e9b949;border-color:#5a4a1e;}
+  .play .ev.bb{color:#5aa9e6;border-color:#274a6b;}
+  .play .ev.k{color:#e0707a;border-color:#5a2a30;}
+  .play .pd{min-width:0;font-size:12px;color:var(--text2,#cfd4da);line-height:1.4;}
+  .play .psc{font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:1px;}
+  .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:12px;padding:40px 14px;}
 
   /* Right column split vertically into 2 — top ~30% of box 3 */
   .rbox{
@@ -150,7 +168,7 @@
 <script src="/settings.js"></script>
 </head>
 <body>
-  <div class="lbox"><span class="tag">1</span></div>
+  <div class="lbox" id="lbox"><span class="tag">1</span></div>
   <div class="cbox c1" id="c1"><span class="tag">2a</span></div>
   <div class="cbox c2" id="c2"><span class="tag">2b</span></div>
   <div class="cbox c3"><span class="tag">2c</span></div>
@@ -280,6 +298,31 @@
       </div>`);
   }
 
+  const ord=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
+  function evClass(ev){const e=(ev||'').toLowerCase();if(/home run/.test(e))return 'hr';if(/single|double|triple/.test(e))return 'hit';if(/walk|hit by pitch|intent/.test(e))return 'bb';if(/strikeout|strikes out/.test(e))return 'k';return 'out';}
+  function feedHTML(g,done,live){
+    if(!done.length)return '<div class="state">No plays yet.</div>';
+    const bt=p=>p.about.halfInning==='top'?g.teams.away:g.teams.home;
+    const groups=[];let cur=null;
+    done.forEach(p=>{const k=p.about.halfInning+p.about.inning;if(!cur||cur.k!==k){cur={k,inn:p.about.inning,half:p.about.halfInning,team:bt(p),plays:[]};groups.push(cur);}cur.plays.push(p);});
+    const order=live?groups.slice().reverse():groups;
+    return order.map(grp=>{
+      const plays=live?grp.plays.slice().reverse():grp.plays;
+      const rows=plays.map(p=>{const ev=(p.result&&p.result.event)||'Play';
+        return `<div class="play${p.about.isScoringPlay?' score':''}"><span class="ev ${evClass(ev)}">${ev}</span><span class="pd">${(p.result&&p.result.description)||''}</span><span class="psc">${(p.result&&p.result.awayScore)??''}–${(p.result&&p.result.homeScore)??''}</span></div>`;}).join('');
+      const tnm=grp.team.team.teamName||grp.team.team.name||'';
+      return `<div class="inn-h">${grp.half==='top'?'Top':'Bottom'} ${ord(grp.inn)} · ${tnm}</div>${rows}`;
+    }).join('');
+  }
+  function render1(g,pbp){
+    const el=document.getElementById('lbox');
+    [...el.children].forEach(c=>{if(!c.classList.contains('tag'))c.remove();});
+    if(!g)return;
+    const all=(pbp&&pbp.allPlays)||[];
+    const done=all.filter(p=>p.about&&p.about.isComplete);
+    el.insertAdjacentHTML('afterbegin',feedHTML(g,done,g.status.abstractGameState==='Live'));
+  }
+
   function render2b(g,ls,box){
     const el=document.getElementById('c2');
     el.querySelectorAll('.mm').forEach(n=>n.remove());
@@ -314,12 +357,13 @@
     const g=await pickGame();
     render2a(g);render3a(g);
     if(!g)return;
-    const [ls,box]=await Promise.all([
+    const [ls,box,pbp]=await Promise.all([
       j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/linescore`),
-      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`)
+      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/boxscore`),
+      j(`https://statsapi.mlb.com/api/v1/game/${g.gamePk}/playByPlay`)
     ]);
     BX=box;
-    render4(g,ls);render2b(g,ls,box);render3b(g);
+    render1(g,pbp);render4(g,ls);render2b(g,ls,box);render3b(g);
   }
   renderAll();
   setInterval(renderAll,20000);
