@@ -331,8 +331,8 @@
     const b90=90/Math.SQRT2,B1=T(b90,b90),B2=T(0,127.28),B3=T(-b90,b90),MD=T(0,60.5);
     const infD=`M${home[0]},${home[1]} L${B1[0]},${B1[1]} L${B2[0]},${B2[1]} L${B3[0]},${B3[1]} Z`;
     const sq=(p,s,f)=>`<rect x="${(p[0]-s).toFixed(1)}" y="${(p[1]-s).toFixed(1)}" width="${(s*2).toFixed(1)}" height="${(s*2).toFixed(1)}" transform="rotate(45 ${p[0].toFixed(1)} ${p[1].toFixed(1)})" fill="${f}"/>`;
-    const HITC='#46c77e', OUTC='#565b63';
-    const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle class="hdot" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?3.4:2.8}" fill="${col}" opacity="${isHit?1:.82}" data-t="hit" data-ev="${esc(h.ev)}" data-dist="${h.dist||''}" data-evz="${h.evz||''}" data-p="${esc(h.pitcher||'')}" data-b="${esc(h.batter||'')}"/>`;}).join('');
+    const HITC='#5ce089', OUTC='#9aa1ad';
+    const dots=hits.map(h=>{const isHit=/single|double|triple|home\s?run/i.test(h.ev);const col=isHit?HITC:OUTC;const [sx,sy]=T((h.x-HX)*K,(HY-h.y)*K);return `<circle class="hdot" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${isHit?4.4:3.8}" fill="${col}" opacity="${isHit?1:.92}" stroke="rgba(255,255,255,.22)" stroke-width=".8" data-t="hit" data-ev="${esc(h.ev)}" data-dist="${h.dist||''}" data-evz="${h.evz||''}" data-p="${esc(h.pitcher||'')}" data-b="${esc(h.batter||'')}"/>`;}).join('');
     return `<svg class="${cls||'spray2'}" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="xMidYMid meet">
       <defs>
         <radialGradient id="ofg${uid}" cx="50%" cy="82%" r="82%"><stop offset="0" stop-color="#121316"/><stop offset="1" stop-color="#0A0A0A"/></radialGradient>
@@ -455,7 +455,7 @@
     return `<div class="ttog"><button class="tt${sprayTeam==='away'?' on':''}" data-tm="away">${esc(ta)}</button><button class="tt${sprayTeam==='home'?' on':''}" data-tm="home">${esc(th)}</button></div>
       ${fieldSVG2(FIELDINFO,balls)}
       <div class="spray-h">${esc(venue)}</div>
-      <div class="spray-lg"><span><i style="background:#46c77e"></i>Hit</span><span><i style="background:#565b63"></i>Out</span></div>`;
+      <div class="spray-lg"><span><i style="background:#5ce089"></i>Hit</span><span><i style="background:#9aa1ad"></i>Out</span></div>`;
   }
 
   function zoneChart(pitches){
