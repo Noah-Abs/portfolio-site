@@ -51,6 +51,45 @@
   .play .pd{min-width:0;font-size:12px;color:var(--text2,#cfd4da);line-height:1.4;}
   .play .psc{font-family:"Oswald",sans-serif;font-weight:700;font-size:12px;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;margin-top:1px;}
   .state{text-align:center;color:var(--muted,#7e858f);letter-spacing:2px;text-transform:uppercase;font-size:12px;padding:40px 14px;}
+  .play{cursor:pointer;transition:border-color .15s;}
+  .play:hover{border-color:var(--border2,#2f3540);}
+  .play.open{border-color:#2f3540;margin-bottom:0;border-bottom-left-radius:0;border-bottom-right-radius:0;}
+  .play .chev{color:var(--muted,#7e858f);font-size:14px;line-height:1;margin-left:5px;transition:transform .15s,color .15s;}
+  .play.open .chev{transform:rotate(90deg);color:#fff;}
+  /* at-bat detail (pitches + strike zone + field) */
+  .abdetail{background:var(--panel,#101115);border:1px solid #2f3540;border-top:1px dashed #2f3540;border-radius:0 0 9px 9px;margin:0 0 5px;padding:10px 11px;}
+  .abx{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+  .abx-list{flex:1 1 150px;min-width:140px;}
+  .abx-viz{display:flex;gap:11px;flex-wrap:wrap;}
+  .vz{display:flex;flex-direction:column;gap:4px;}
+  .vzh{font-size:8.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted,#7e858f);}
+  .prow{display:grid;grid-template-columns:18px 1fr auto auto;gap:7px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.055);font-size:11.5px;}
+  .prow:last-child{border-bottom:none;}
+  .pn{font-family:"Oswald",sans-serif;font-weight:700;color:var(--muted,#7e858f);text-align:center;font-variant-numeric:tabular-nums;}
+  .pty{color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pvel{font-variant-numeric:tabular-nums;color:#fff;font-weight:600;white-space:nowrap;}
+  .pres{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 5px;border-radius:5px;border:1px solid var(--border2,#2f3540);color:var(--text3,#aab0b9);white-space:nowrap;}
+  .pres.ball{color:#5aa9e6;border-color:#274a6b;}
+  .pres.strike{color:#e0707a;border-color:#5a2a30;}
+  .pres.foul{color:#e9a23f;border-color:#5a431e;}
+  .pres.inplay{color:#46c77e;border-color:#2f4a3a;}
+  .pl-empty{font-size:11px;color:var(--muted,#7e858f);padding:4px 0;}
+  .zone{width:92px;height:115px;display:block;}
+  .zone .zbox{fill:rgba(255,255,255,.03);stroke:var(--border2,#3a4048);stroke-width:1.4;}
+  .zone .zg{stroke:rgba(255,255,255,.09);stroke-width:.8;}
+  .zone .zd circle{fill:#9aa0a6;stroke:rgba(0,0,0,.55);stroke-width:1;}
+  .zone .zd.ball circle{fill:#5aa9e6;}
+  .zone .zd.strike circle{fill:#e0707a;}
+  .zone .zd.foul circle{fill:#e9a23f;}
+  .zone .zd.inplay circle{fill:#46c77e;}
+  .zone .zd text{fill:#0b0c0e;font-size:8px;font-weight:700;text-anchor:middle;font-family:"Oswald",sans-serif;}
+  .field{width:120px;height:111px;display:block;}
+  .field .grass{fill:rgba(70,160,90,.10);}
+  .field .foul{stroke:var(--border2,#3a4048);stroke-width:1.2;fill:none;}
+  .field .inf{fill:rgba(180,120,70,.16);stroke:var(--border2,#3a4048);stroke-width:1;}
+  .field .base{fill:#cfd4da;}
+  .field .hit{fill:#e9b949;stroke:#0b0c0e;stroke-width:1.5;}
+  .field .cap{fill:var(--muted,#7e858f);font-size:9px;font-family:"Oswald",sans-serif;font-weight:600;}
 
   /* Right column split vertically into 2 — top ~30% of box 3 */
   .rbox{
@@ -109,7 +148,9 @@
   }
   .c1{top:2.5vh;height:11.4vh;padding:0 26px;display:flex;align-items:center;overflow:hidden;}
   .c2{top:14.9vh;height:22.7vh;padding:0 24px;display:flex;align-items:center;overflow:hidden;}
-  .c3{top:38.6vh;height:45.4vh;}
+  /* 2c split: 2/3 left + 1/3 right */
+  .c3{top:38.6vh;height:45.4vh;right:auto;width:29.3vw;}
+  .c3b{top:38.6vh;height:45.4vh;left:auto;width:14.6vw;}
 
   /* Matchup (box 2b) — pitcher | bases+count | batter */
   .mm{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;width:100%;}
@@ -171,7 +212,8 @@
   <div class="lbox" id="lbox"><span class="tag">1</span></div>
   <div class="cbox c1" id="c1"><span class="tag">2a</span></div>
   <div class="cbox c2" id="c2"><span class="tag">2b</span></div>
-  <div class="cbox c3"><span class="tag">2c</span></div>
+  <div class="cbox c3" id="c3"><span class="tag">2c</span></div>
+  <div class="cbox c3b" id="c3b"><span class="tag">2d</span></div>
   <div class="rbox r1" id="r1"><span class="tag">3a</span></div>
   <div class="rbox r2" id="b3b">
     <div class="bx-tabs" id="bxTabs"></div>
@@ -188,6 +230,7 @@
   const abbr=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p[0][0]+'. '+p.slice(1).join(' '):p[0]||'';};
   const lastN=n=>{const p=String(n||'').trim().split(' ');return p.length>1?p.slice(1).join(' '):p[0]||'';};
   const HEAD=id=>`https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto/v1/people/${id}/headshot/67/current`;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const gTime=g=>{try{return new Date(g.gameDate).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'})+' PT';}catch(e){return '';}};
 
   async function pickGame(){
@@ -301,28 +344,73 @@
 
   const ord=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
   function evClass(ev){const e=(ev||'').toLowerCase();if(/home run/.test(e))return 'hr';if(/single|double|triple/.test(e))return 'hit';if(/walk|hit by pitch|intent/.test(e))return 'bb';if(/strikeout|strikes out/.test(e))return 'k';return 'out';}
-  function feedHTML(g,done,live){
+  function callClass(d){if(!d)return '';if(d.isInPlay)return 'inplay';if(d.isBall)return 'ball';const c=(d.call&&d.call.code)||'';if(c==='F'||/foul/i.test(d.description||''))return 'foul';if(d.isStrike)return 'strike';return '';}
+  function pitchRows(play){
+    const ps=(play.playEvents||[]).filter(e=>e.isPitch);
+    if(!ps.length)return '<div class="pl-empty">No pitches in this play.</div>';
+    return ps.slice().sort((a,b)=>(b.pitchNumber||0)-(a.pitchNumber||0)).map(e=>{
+      const d=e.details||{}, ty=(d.type&&(d.type.description||d.type.code))||'Pitch';
+      const sp=e.pitchData&&e.pitchData.startSpeed?Math.round(e.pitchData.startSpeed)+' mph':'';
+      const res=d.description||(d.call&&d.call.description)||'';
+      return `<div class="prow"><span class="pn">${e.pitchNumber||''}</span><span class="pty">${esc(ty)}</span><span class="pvel">${esc(sp)}</span><span class="pres ${callClass(d)}">${esc(res)}</span></div>`;
+    }).join('');
+  }
+  function zoneSVG(play){
+    const ps=(play.playEvents||[]).filter(e=>e.isPitch&&e.pitchData&&e.pitchData.coordinates&&e.pitchData.coordinates.pX!=null);
+    if(!ps.length)return '';
+    let tops=[],bots=[];ps.forEach(e=>{const p=e.pitchData;if(p.strikeZoneTop)tops.push(p.strikeZoneTop);if(p.strikeZoneBottom)bots.push(p.strikeZoneBottom);});
+    const avg=a=>a.length?a.reduce((s,c)=>s+c,0)/a.length:0;
+    const topFt=avg(tops)||3.4, botFt=avg(bots)||1.55, cx=58, SX=40, pad=1.25;
+    const SY=125/((topFt-botFt)+2*pad), yTop=10, yOf=z=>yTop+((topFt+pad)-z)*SY;
+    const zTopY=yOf(topFt), zBotY=yOf(botFt), zL=cx-28, w=56, h=zBotY-zTopY;
+    const cX=x=>Math.max(7,Math.min(109,x)), cY=y=>Math.max(7,Math.min(138,y));
+    const dots=ps.map(e=>{const c=e.pitchData.coordinates, x=cX(cx+c.pX*SX), y=cY(yOf(c.pZ));
+      return `<g class="zd ${callClass(e.details)}"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/><text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}">${e.pitchNumber||''}</text></g>`;}).join('');
+    return `<svg class="zone" viewBox="0 0 116 145" aria-label="strike zone"><rect class="zbox" x="${zL}" y="${zTopY.toFixed(1)}" width="${w}" height="${h.toFixed(1)}" rx="2"/><line class="zg" x1="${zL+w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL+2*w/3}" y1="${zTopY.toFixed(1)}" x2="${zL+2*w/3}" y2="${zBotY.toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+h/3).toFixed(1)}"/><line class="zg" x1="${zL}" y1="${(zTopY+2*h/3).toFixed(1)}" x2="${zL+w}" y2="${(zTopY+2*h/3).toFixed(1)}"/>${dots}</svg>`;
+  }
+  function fieldSVG(play){
+    let hit=null;for(const e of (play.playEvents||[]))if(e.hitData&&e.hitData.coordinates&&e.hitData.coordinates.coordX!=null)hit=e.hitData;
+    if(!hit)return '';
+    const c=hit.coordinates, fx=100+(c.coordX-125.4)*0.62, fy=150+(c.coordY-203.5)*0.62;
+    const x=Math.max(8,Math.min(192,fx)), y=Math.max(8,Math.min(170,fy));
+    const cap=[hit.totalDistance?hit.totalDistance+' ft':'', hit.launchSpeed?Math.round(hit.launchSpeed)+' mph':''].filter(Boolean).join('  ·  ');
+    return `<svg class="field" viewBox="0 0 200 185" aria-label="hit location"><path class="grass" d="M100 150 L30 64 A 99 99 0 0 1 170 64 Z"/><line class="foul" x1="100" y1="150" x2="28" y2="62"/><line class="foul" x1="100" y1="150" x2="172" y2="62"/><polygon class="inf" points="100,150 133,117 100,84 67,117"/><circle class="base" cx="133" cy="117" r="3"/><circle class="base" cx="100" cy="84" r="3"/><circle class="base" cx="67" cy="117" r="3"/><circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5"/>${cap?`<text class="cap" x="100" y="182" text-anchor="middle">${esc(cap)}</text>`:''}</svg>`;
+  }
+  function atBatDetail(play){
+    const z=zoneSVG(play), f=fieldSVG(play);
+    const viz=[z?`<div class="vz"><div class="vzh">Pitch Locations</div>${z}</div>`:'', f?`<div class="vz"><div class="vzh">Where It Went</div>${f}</div>`:''].join('');
+    return `<div class="abx"><div class="abx-list">${pitchRows(play)}</div>${viz?`<div class="abx-viz">${viz}</div>`:''}</div>`;
+  }
+
+  function feedHTML(g,done){
     if(!done.length)return '<div class="state">No plays yet.</div>';
     const bt=p=>p.about.halfInning==='top'?g.teams.away:g.teams.home;
     const groups=[];let cur=null;
     done.forEach(p=>{const k=p.about.halfInning+p.about.inning;if(!cur||cur.k!==k){cur={k,inn:p.about.inning,half:p.about.halfInning,team:bt(p),plays:[]};groups.push(cur);}cur.plays.push(p);});
-    const order=live?groups.slice().reverse():groups;
-    return order.map(grp=>{
-      const plays=live?grp.plays.slice().reverse():grp.plays;
-      const rows=plays.map(p=>{const ev=(p.result&&p.result.event)||'Play';
-        return `<div class="play${p.about.isScoringPlay?' score':''}"><span class="ev ${evClass(ev)}">${ev}</span><span class="pd">${(p.result&&p.result.description)||''}</span><span class="psc">${(p.result&&p.result.awayScore)??''}–${(p.result&&p.result.homeScore)??''}</span></div>`;}).join('');
+    return groups.slice().reverse().map(grp=>{
+      const rows=grp.plays.slice().reverse().map(p=>{const ev=(p.result&&p.result.event)||'Play';
+        return `<div class="play${p.about.isScoringPlay?' score':''}" data-ab="${p.about.atBatIndex}"><span class="ev ${evClass(ev)}">${ev}</span><span class="pd">${(p.result&&p.result.description)||''}</span><span class="psc">${(p.result&&p.result.awayScore)??''}–${(p.result&&p.result.homeScore)??''}<span class="chev">›</span></span></div>`;}).join('');
       const tnm=grp.team.team.teamName||grp.team.team.name||'';
       return `<div class="inn-h">${grp.half==='top'?'Top':'Bottom'} ${ord(grp.inn)} · ${tnm}</div>${rows}`;
     }).join('');
   }
+  let PLAYS=[];
   function render1(g,pbp){
     const el=document.getElementById('lbox');
     [...el.children].forEach(c=>{if(!c.classList.contains('tag'))c.remove();});
     if(!g)return;
-    const all=(pbp&&pbp.allPlays)||[];
-    const done=all.filter(p=>p.about&&p.about.isComplete);
-    el.insertAdjacentHTML('afterbegin',feedHTML(g,done,g.status.abstractGameState==='Live'));
+    PLAYS=(pbp&&pbp.allPlays)||[];
+    el.insertAdjacentHTML('afterbegin',feedHTML(g,PLAYS.filter(p=>p.about&&p.about.isComplete)));
   }
+  document.getElementById('lbox').addEventListener('click',e=>{
+    const row=e.target.closest('.play');if(!row)return;
+    const nx=row.nextElementSibling;
+    if(nx&&nx.classList.contains('abdetail')){nx.remove();row.classList.remove('open');return;}
+    const play=PLAYS.find(p=>p.about&&p.about.atBatIndex===+row.dataset.ab);if(!play)return;
+    const d=document.createElement('div');d.className='abdetail';
+    try{d.innerHTML=atBatDetail(play);}catch(err){d.innerHTML='<div class="pl-empty">Detail unavailable.</div>';}
+    row.after(d);row.classList.add('open');
+  });
 
   function render2b(g,ls,box){
     const el=document.getElementById('c2');
