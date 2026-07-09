@@ -192,12 +192,13 @@
 
   async function pickGame(){
     if(qp('gamePk')){const f=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&gamePk=${qp('gamePk')}&hydrate=team,linescore,probablePitcher,venue`);return ((f?.dates||[])[0]||{}).games?.[0]||null;}
-    const s=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today()}&hydrate=team,linescore,probablePitcher,venue`);
+    const dY=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(new Date(Date.now()-864e5));
+    const s=await j(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=${dY}&endDate=${today()}&hydrate=team,linescore,probablePitcher,venue`);
     let games=[];for(const d of s?.dates||[])for(const g of d.games||[])games.push(g);
     const team=qp('team');if(team){const f=games.filter(g=>[g.teams.home.team.id,g.teams.away.team.id].includes(+team));if(f.length)games=f;}
     if(!games.length)return null;
     const rank=g=>({Live:0,Final:1,Preview:2}[g.status.abstractGameState]??3);
-    games.sort((a,b)=>rank(a)-rank(b)||Date.parse(a.gameDate)-Date.parse(b.gameDate));
+    games.sort((a,b)=>{const r=rank(a)-rank(b);if(r)return r;const t=Date.parse(a.gameDate)-Date.parse(b.gameDate);return rank(a)===1?-t:t;});
     return games[0];
   }
 
@@ -334,7 +335,7 @@
     const bs=(bBox&&bBox.stats&&bBox.stats.batting)||{}, ps=(pBox&&pBox.stats&&pBox.stats.pitching)||{};
     const bPos=(bBox&&bBox.position&&bBox.position.abbreviation)||'';
     const on=b=>b?' on':'';
-    const base=(cls,x,y)=>`<rect class="base${cls}" x="${x-9}" y="${y-9}" width="18" height="18" transform="rotate(45 ${x} ${y})"/>`;
+    const base=(cls,x,y)=>`<rect class="base${cls}" x="${x-11}" y="${y-11}" width="22" height="22" transform="rotate(45 ${x} ${y})"/>`;
     const mid=`<div class="mm-mid">
       <svg class="mm-diamond" viewBox="0 0 60 60">
         <polygon class="path" points="30,9 51,30 30,51 9,30"/>
