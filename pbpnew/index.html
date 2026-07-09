@@ -187,7 +187,8 @@
   .zhead{position:absolute;left:0;right:0;top:9px;text-align:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);}
   .zwrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:28px 8px 22px;}
   .zcol{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1 1 0;min-width:0;}
-  .zname{font-family:"Oswald",sans-serif;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .zname{display:flex;align-items:center;justify-content:center;gap:5px;font-family:"Oswald",sans-serif;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;max-width:100%;}
+  .zlogo{width:16px;height:16px;object-fit:contain;flex:0 0 auto;}
   .zchart{width:100%;max-width:130px;height:auto;}
   .zchart .zbox{fill:rgba(255,255,255,.03);stroke:var(--border2,#3a4048);stroke-width:1.4;}
   .zchart .zg{stroke:rgba(255,255,255,.09);stroke-width:.8;}
@@ -437,8 +438,8 @@
     const toggle=`<div class="ptog"><div class="ptog-h">Pitch</div>${codes.map(c=>`<button class="pt${zoneFilter===c?' on':''}" data-pt="${c}"><i style="background:${pcolor(c)}"></i>${c}</button>`).join('')}${zoneFilter?`<button class="pt clr" data-pt="">All</button>`:''}</div>`;
     return `<div class="zhead">Strike Zone · Pitch Locations</div>
       <div class="zwrap">
-        <div class="zcol"><div class="zname">${esc(pname(aS)||g.teams.away.team.abbreviation||'')}</div>${zoneChart(aP)}</div>
-        <div class="zcol"><div class="zname">${esc(pname(hS)||g.teams.home.team.abbreviation||'')}</div>${zoneChart(hP)}</div>
+        <div class="zcol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams.away.team.id)}" onerror="this.style.display='none'">${esc(pname(aS)||g.teams.away.team.abbreviation||'')}</div>${zoneChart(aP)}</div>
+        <div class="zcol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams.home.team.id)}" onerror="this.style.display='none'">${esc(pname(hS)||g.teams.home.team.abbreviation||'')}</div>${zoneChart(hP)}</div>
         ${toggle}
       </div>`;
   }
