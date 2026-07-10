@@ -187,7 +187,10 @@
   .tt.on{background:var(--panel2,#15161b);color:#fff;border-color:var(--border2,#2f3540);}
   /* zone slide */
   .zhead{position:absolute;left:0;right:0;top:9px;text-align:center;font-family:"Oswald",sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted,#7e858f);}
-  .zwrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:28px 8px 22px;}
+  .zwrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;padding:26px 8px 42px;}
+  .ocleg{position:absolute;left:0;right:0;bottom:19px;display:flex;justify-content:center;flex-wrap:wrap;gap:9px;z-index:3;}
+  .ocleg span{display:flex;align-items:center;gap:3px;font-family:"Oswald",sans-serif;font-size:8.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted,#7e858f);}
+  .ocleg svg{width:11px;height:11px;flex:0 0 auto;}
   .zcol{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1 1 0;min-width:0;}
   .zname{display:flex;align-items:center;justify-content:center;gap:5px;font-family:"Oswald",sans-serif;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2,#cfd4da);white-space:nowrap;overflow:hidden;max-width:100%;}
   .zlogo{width:16px;height:16px;object-fit:contain;flex:0 0 auto;}
@@ -318,7 +321,7 @@
   let slideIdx=0, sprayTeam='away', zoneFilter=null, FIELDINFO=null;
   const DTIP=document.createElement('div');DTIP.className='dtip';DTIP.style.display='none';document.body.appendChild(DTIP);
   function showTip(c){
-    if(c.dataset.t==='pitch') DTIP.innerHTML=`<b>${c.dataset.desc||'Pitch'}${c.dataset.velo?' · '+c.dataset.velo+' mph':''}</b><span>${[c.dataset.inn,c.dataset.ct?c.dataset.ct:'',c.dataset.b?'vs '+c.dataset.b:''].filter(Boolean).join(' · ')}</span>`;
+    if(c.dataset.t==='pitch') DTIP.innerHTML=`<b>${c.dataset.desc||'Pitch'}${c.dataset.velo?' · '+c.dataset.velo+' mph':''}</b><span>${[c.dataset.out,c.dataset.inn,c.dataset.ct,c.dataset.b?'vs '+c.dataset.b:''].filter(Boolean).join(' · ')}</span>`;
     else DTIP.innerHTML=`<b>${[c.dataset.ev,c.dataset.dist?c.dataset.dist+' ft':'',c.dataset.evz?c.dataset.evz+' mph EV':''].filter(Boolean).join(' · ')}</b><span>${[c.dataset.b?c.dataset.b:'',c.dataset.p?'off '+c.dataset.p:''].filter(Boolean).join(' ')}</span>`;
     const r=c.getBoundingClientRect();
     DTIP.style.display='block';DTIP.style.left=(r.left+r.width/2)+'px';DTIP.style.top=(r.top-6)+'px';
@@ -492,7 +495,7 @@
     const VBW=112,VBH=124, zL=35,zR=77,zT=30,zB=92, w=zR-zL,h=zB-zT, cx=(zL+zR)/2, halfW=0.83;
     const sX=(zR-zL)/(2*halfW), sZ=(zB-zT)/(topFt-botFt);
     const cl=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-    const dots=shown.map(p=>{const x=cl(cx+p.pX*sX,5,VBW-5),y=cl(zB-(p.pZ-botFt)*sZ,5,VBH-5);return `<circle class="pdot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="${pcolor(p.code)}" stroke="#0b0c0e" stroke-width=".6" data-t="pitch" data-desc="${esc(p.desc)}" data-velo="${p.velo||''}" data-inn="${esc(p.inn)}" data-ct="${p.ct}" data-b="${esc(p.batter||'')}"/>`;}).join('');
+    const dots=shown.map(p=>{const x=cl(cx+p.pX*sX,5,VBW-5),y=cl(zB-(p.pZ-botFt)*sZ,5,VBH-5);const k=p.oc?p.oc.k:'';return `<g class="pdot" data-t="pitch" data-desc="${esc(p.desc)}" data-velo="${p.velo||''}" data-inn="${esc(p.inn)}" data-ct="${p.ct}" data-b="${esc(p.batter||'')}" data-out="${esc(p.oc?p.oc.lbl:'')}">${dotShape(x,y,pcolor(p.code),k)}</g>`;}).join('');
     return `<svg class="zchart" viewBox="0 0 ${VBW} ${VBH}">
       <rect class="zbox" x="${zL}" y="${zT}" width="${w}" height="${h}" rx="3"/>
       <line class="zg" x1="${zL+w/3}" y1="${zT}" x2="${zL+w/3}" y2="${zB}"/>
@@ -505,7 +508,7 @@
   function zoneSlide(g){
     const aS=BX&&BX.teams&&BX.teams.away.pitchers&&BX.teams.away.pitchers[0];
     const hS=BX&&BX.teams&&BX.teams.home.pitchers&&BX.teams.home.pitchers[0];
-    const collect=pid=>{const arr=[];if(!pid)return arr;for(const p of PLAYS){if(!p.matchup||!p.matchup.pitcher||p.matchup.pitcher.id!==pid)continue;const inn=p.about&&p.about.inning,half=p.about&&p.about.halfInning,bat=p.matchup&&p.matchup.batter&&p.matchup.batter.fullName;for(const e of (p.playEvents||[])){if(e.isPitch&&e.pitchData&&e.pitchData.coordinates&&e.pitchData.coordinates.pX!=null)arr.push({pX:e.pitchData.coordinates.pX,pZ:e.pitchData.coordinates.pZ,top:e.pitchData.strikeZoneTop,bot:e.pitchData.strikeZoneBottom,code:(e.details&&e.details.type&&e.details.type.code)||'',desc:(e.details&&e.details.type&&e.details.type.description)||'',velo:e.pitchData.startSpeed?Math.round(e.pitchData.startSpeed):null,inn:inn?(half==='top'?'Top ':'Bot ')+ord(inn):'',ct:e.count?e.count.balls+'-'+e.count.strikes:'',batter:bat});}}return arr;};
+    const collect=pid=>{const arr=[];if(!pid)return arr;for(const p of PLAYS){if(!p.matchup||!p.matchup.pitcher||p.matchup.pitcher.id!==pid)continue;const inn=p.about&&p.about.inning,half=p.about&&p.about.halfInning,bat=p.matchup&&p.matchup.batter&&p.matchup.batter.fullName;for(const e of (p.playEvents||[])){if(e.isPitch&&e.pitchData&&e.pitchData.coordinates&&e.pitchData.coordinates.pX!=null)arr.push({pX:e.pitchData.coordinates.pX,pZ:e.pitchData.coordinates.pZ,top:e.pitchData.strikeZoneTop,bot:e.pitchData.strikeZoneBottom,code:(e.details&&e.details.type&&e.details.type.code)||'',desc:(e.details&&e.details.type&&e.details.type.description)||'',velo:e.pitchData.startSpeed?Math.round(e.pitchData.startSpeed):null,inn:inn?(half==='top'?'Top ':'Bot ')+ord(inn):'',ct:e.count?e.count.balls+'-'+e.count.strikes:'',batter:bat,oc:pitchOutcome(e.details)});}}return arr;};
     const aP=collect(aS),hP=collect(hS);
     const pname=pid=>{for(const s of ['away','home']){const pl=BX&&BX.teams&&BX.teams[s]&&BX.teams[s].players&&BX.teams[s].players['ID'+pid];if(pl&&pl.person)return lastN(pl.person.fullName);}return '';};
     const typeMap={};[...aP,...hP].forEach(p=>{if(p.code)typeMap[p.code]=p.desc||p.code;});
@@ -516,6 +519,13 @@
         <div class="zcol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams.away.team.id)}" onerror="this.style.display='none'">${esc(pname(aS)||g.teams.away.team.abbreviation||'')}</div>${zoneChart(aP)}</div>
         <div class="zcol"><div class="zname"><img class="zlogo" src="${LOGO(g.teams.home.team.id)}" onerror="this.style.display='none'">${esc(pname(hS)||g.teams.home.team.abbreviation||'')}</div>${zoneChart(hP)}</div>
         ${toggle}
+      </div>
+      <div class="ocleg">
+        <span><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="#9aa1ad"/></svg>Strike</span>
+        <span><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.2" fill="#9aa1ad"/><circle cx="6" cy="6" r="1.6" fill="#0b0c0e"/></svg>Whiff</span>
+        <span><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="none" stroke="#9aa1ad" stroke-width="1.5"/></svg>Ball</span>
+        <span><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4.2" fill="#9aa1ad" stroke="#fff" stroke-width="1.2"/></svg>In Play</span>
+        <span><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="4" fill="#9aa1ad" opacity=".5"/></svg>Foul</span>
       </div>`;
   }
 
@@ -605,6 +615,20 @@
   const ord=n=>{const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
   function evClass(ev){const e=(ev||'').toLowerCase();if(/home run/.test(e))return 'hr';if(/single|double|triple/.test(e))return 'hit';if(/walk|hit by pitch|intent/.test(e))return 'bb';if(/strikeout|strikes out/.test(e))return 'k';return 'out';}
   function callClass(d){if(!d)return '';if(d.isInPlay)return 'inplay';if(d.isBall)return 'ball';const c=(d.call&&d.call.code)||'';if(c==='F'||/foul/i.test(d.description||''))return 'foul';if(d.isStrike)return 'strike';return '';}
+  function pitchOutcome(d){if(!d)return {k:'',lbl:''};const c=(d.call&&d.call.code)||'',desc=(d.call&&d.call.description)||'';
+    if(d.isInPlay)return {k:'inplay',lbl:desc||'In Play'};
+    if(c==='S'||c==='W')return {k:'swing',lbl:'Swinging Strike'};
+    if(c==='C')return {k:'called',lbl:'Called Strike'};
+    if(c==='F'||c==='T'||c==='L'||c==='O'||/foul/i.test(desc))return {k:'foul',lbl:'Foul'};
+    if(d.isBall)return {k:'ball',lbl:desc||'Ball'};
+    if(d.isStrike)return {k:'called',lbl:desc||'Strike'};
+    return {k:'',lbl:desc};}
+  function dotShape(x,y,col,k){const X=x.toFixed(1),Y=y.toFixed(1);
+    if(k==='ball')return `<circle cx="${X}" cy="${Y}" r="3.7" fill="none" stroke="${col}" stroke-width="1.5"/>`;
+    if(k==='swing')return `<circle cx="${X}" cy="${Y}" r="4" fill="${col}"/><circle cx="${X}" cy="${Y}" r="1.5" fill="#0b0c0e"/>`;
+    if(k==='inplay')return `<circle cx="${X}" cy="${Y}" r="4" fill="${col}" stroke="#fff" stroke-width="1.2"/>`;
+    if(k==='foul')return `<circle cx="${X}" cy="${Y}" r="3.5" fill="${col}" opacity=".5"/>`;
+    return `<circle cx="${X}" cy="${Y}" r="3.8" fill="${col}"/>`;}
   function pitchRows(play){
     const ps=(play.playEvents||[]).filter(e=>e.isPitch);
     if(!ps.length)return '<div class="pl-empty">No pitches in this play.</div>';
