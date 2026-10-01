@@ -49,6 +49,14 @@ function renderTeam(key) {
     ).join('')
   }
 
+  const trophyEl = document.getElementById('trophy-case')
+  if (trophyEl) {
+    const cup = '<svg class="trophy-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.35A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.35 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.73V7zm10 0v2.73A2 2 0 0 0 18 8V7h-1z"/></svg>'
+    trophyEl.innerHTML = (t.trophies ?? []).map(tr =>
+      `<div class="trophy-item">${cup}<span class="trophy-count">&times;${tr.count}</span><span class="trophy-label">${tr.label}</span></div>`
+    ).join('')
+  }
+
   document.querySelector('.stats-season').textContent = `${SEASON} Season`
   document.querySelector('.stats-division').textContent = t.division
 

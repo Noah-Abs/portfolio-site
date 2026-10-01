@@ -16,6 +16,18 @@ const APP_TEAMS = {
     division: 'NL West',
     wsTitles: [1955, 1959, 1963, 1965, 1981, 1988, 2020, 2024, 2025],
     wsLabel: 'Back-to-Back World Series Champions',
+    // Franchise totals (Brooklyn + LA) through the 2025 season
+    trophies: [
+      { label: 'World Series',     count: 9 },
+      { label: 'NL Pennants',      count: 26 },
+      { label: 'All-Star Selections', count: 318 },
+      { label: 'MVP',              count: 14 },
+      { label: 'World Series MVP', count: 11 },
+      { label: 'Cy Young',         count: 12 },
+      { label: 'Rookie of the Year', count: 18 },
+      { label: 'Gold Glove',       count: 47 },
+      { label: 'Silver Slugger',   count: 37 },
+    ],
     bg1: '#002580', bg2: '#000D3A', bg3: '#000510',
     h1: '#001E62', h2: '#003DA5',
   },
